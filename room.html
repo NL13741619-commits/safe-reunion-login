@@ -16,10 +16,10 @@
     .header {
       background: #06C755;
       color: white;
-      padding: 12px 16px;
+      padding: 10px 12px;
       display: flex;
       align-items: center;
-      gap: 12px;
+      gap: 8px;
       position: sticky;
       top: 0;
       z-index: 100;
@@ -27,11 +27,32 @@
     .back {
       color: white;
       text-decoration: none;
-      font-size: 22px;
+      font-size: 24px;
+      line-height: 1;
+      padding: 4px;
     }
-    .header-info { flex: 1; }
-    .header-name { font-weight: 700; font-size: 16px; }
+    .header-info { flex: 1; min-width: 0; }
+    .header-name {
+      font-weight: 700;
+      font-size: 16px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
     .header-status { font-size: 12px; opacity: 0.9; }
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .header-actions button {
+      background: transparent;
+      border: none;
+      color: white;
+      font-size: 18px;
+      padding: 6px;
+      cursor: pointer;
+    }
 
     .messages {
       flex: 1;
@@ -92,6 +113,68 @@
       font-size: 18px;
       cursor: pointer;
     }
+
+    /* 右側選單 */
+    .overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.4);
+      z-index: 200;
+    }
+    .overlay.show { display: block; }
+    .side-menu {
+      position: fixed;
+      top: 0; right: 0;
+      width: 85%;
+      max-width: 320px;
+      height: 100%;
+      background: white;
+      z-index: 201;
+      transform: translateX(100%);
+      transition: transform 0.25s ease;
+      overflow-y: auto;
+    }
+    .side-menu.show { transform: translateX(0); }
+    .menu-header {
+      padding: 16px;
+      border-bottom: 1px solid #eee;
+    }
+    .menu-title { font-size: 16px; font-weight: 700; }
+    .menu-sub { font-size: 13px; color: #888; margin-top: 4px; }
+    .menu-actions {
+      display: flex;
+      justify-content: space-around;
+      padding: 16px 8px;
+      border-bottom: 1px solid #eee;
+    }
+    .menu-action {
+      text-align: center;
+      font-size: 12px;
+      color: #333;
+      width: 64px;
+    }
+    .menu-action-icon {
+      width: 44px; height: 44px;
+      border-radius: 50%;
+      background: #f5f5f5;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      margin: 0 auto 6px;
+    }
+    .menu-list { padding: 8px 0; }
+    .menu-item {
+      padding: 14px 16px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 15px;
+      border-bottom: 1px solid #f5f5f5;
+      cursor: pointer;
+    }
+    .menu-item:active { background: #f9f9f9; }
   </style>
 </head>
 <body>
@@ -99,7 +182,13 @@
     <a class="back" href="chat.html">‹</a>
     <div class="header-info">
       <div class="header-name" id="roomName">家人群組</div>
-      <div class="header-status">5 位成員</div>
+      <div class="header-status" id="roomStatus">5 位成員</div>
+    </div>
+    <div class="header-actions">
+      <button onclick="alert('搜尋訊息（之後做）')">🔍</button>
+      <button onclick="alert('通話（之後做）')">📞</button>
+      <button onclick="alert('行事曆（之後做）')">📅</button>
+      <button onclick="openMenu()">☰</button>
     </div>
   </div>
 
@@ -123,12 +212,47 @@
     <button class="send-btn" onclick="sendMsg()">➤</button>
   </div>
 
+  <div class="overlay" id="overlay" onclick="closeMenu()"></div>
+  <div class="side-menu" id="sideMenu">
+    <div class="menu-header">
+      <div class="menu-title" id="menuTitle">家人群組</div>
+      <div class="menu-sub" id="menuSub">5 位成員</div>
+    </div>
+    <div class="menu-actions">
+      <div class="menu-action" onclick="alert('關閉提醒（之後做）')">
+        <div class="menu-action-icon">🔔</div>
+        提醒
+      </div>
+      <div class="menu-action" onclick="alert('成員列表（之後做）')">
+        <div class="menu-action-icon">👥</div>
+        成員
+      </div>
+      <div class="menu-action" onclick="alert('邀請好友（之後做）')">
+        <div class="menu-action-icon">➕</div>
+        邀請
+      </div>
+      <div class="menu-action" onclick="alert('退出群組（之後做）')">
+        <div class="menu-action-icon">🚪</div>
+        退出
+      </div>
+    </div>
+    <div class="menu-list">
+      <div class="menu-item" onclick="alert('照片・影片（之後做）')">🖼️ 照片・影片</div>
+      <div class="menu-item" onclick="alert('相簿（之後做）')">📁 相簿</div>
+      <div class="menu-item" onclick="alert('記事本（之後做）')">📝 記事本</div>
+      <div class="menu-item" onclick="alert('行事曆（之後做）')">📅 行事曆</div>
+      <div class="menu-item" onclick="alert('活動（之後做）')">🎯 活動</div>
+      <div class="menu-item" onclick="alert('連結（之後做）')">🔗 連結</div>
+      <div class="menu-item" onclick="alert('檔案（之後做）')">📄 檔案</div>
+      <div class="menu-item" onclick="alert('設定（之後做）')">⚙️ 設定</div>
+    </div>
+  </div>
+
   <script>
     function sendMsg() {
       const input = document.getElementById('msgInput');
       const text = input.value.trim();
       if (!text) return;
-
       const messages = document.getElementById('messages');
       const div = document.createElement('div');
       div.className = 'msg me';
@@ -140,11 +264,21 @@
       messages.scrollTop = messages.scrollHeight;
     }
 
-    // 從網址讀取聊天對象名稱（之後可接真實資料）
+    function openMenu() {
+      document.getElementById('overlay').classList.add('show');
+      document.getElementById('sideMenu').classList.add('show');
+    }
+    function closeMenu() {
+      document.getElementById('overlay').classList.remove('show');
+      document.getElementById('sideMenu').classList.remove('show');
+    }
+
     const params = new URLSearchParams(location.search);
     const name = params.get('name');
     if (name) {
-      document.getElementById('roomName').textContent = decodeURIComponent(name);
+      const decoded = decodeURIComponent(name);
+      document.getElementById('roomName').textContent = decoded;
+      document.getElementById('menuTitle').textContent = decoded;
     }
   </script>
 </body>
