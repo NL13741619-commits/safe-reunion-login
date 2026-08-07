@@ -249,10 +249,23 @@
     let gainNode = null;
     let isPlaying = false;
 
-    function closeAlert() {
-      document.getElementById('alertBanner').style.display = 'none';
-      stopSiren();
-    }
+    // 檢查這則警報是否已經看過
+const ALERT_ID = 'alert-20260807'; // 之後有新警報就改這個 ID
+
+function closeAlert() {
+  const banner = document.getElementById('alertBanner');
+  if (banner) banner.style.display = 'none';
+  localStorage.setItem(ALERT_ID, 'seen');
+  stopSiren();
+}
+
+// 頁面載入時檢查
+window.addEventListener('DOMContentLoaded', () => {
+  if (localStorage.getItem(ALERT_ID) === 'seen') {
+    const banner = document.getElementById('alertBanner');
+    if (banner) banner.style.display = 'none';
+  }
+});
 
     function stopSiren() {
       if (oscillator) {
