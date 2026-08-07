@@ -76,6 +76,7 @@
       border-radius: 10px;
       font-size: 13px;
       display: none;
+      word-break: break-all;
     }
     .status.ok { background: #e8f5e9; color: #2e7d32; display: block; }
     .status.err { background: #fdecea; color: #c62828; display: block; }
@@ -96,7 +97,7 @@
     <input type="email" id="email" placeholder="用於登入與找回密碼">
 
     <label>手機號碼</label>
-    <input type="tel" id="phone" placeholder="09xxxxxxxx（用於簡訊驗證）">
+    <input type="tel" id="phone" placeholder="09xxxxxxxx（之後用於簡訊驗證）">
 
     <label>密碼</label>
     <input type="password" id="password" placeholder="至少 6 碼">
@@ -104,12 +105,12 @@
     <label>確認密碼</label>
     <input type="password" id="password2" placeholder="再輸入一次密碼">
 
-    <button class="btn btn-green" onclick="signUp()">註冊</button>
+    <button class="btn btn-green" id="btnRegister">註冊</button>
 
     <div class="divider">或使用以下方式快速註冊</div>
 
-    <button class="btn btn-outline" onclick="signInGoogle()">用 Google 註冊</button>
-    <button class="btn btn-outline" onclick="signInLine()">用 LINE 註冊</button>
+    <button class="btn btn-outline" id="btnGoogle">用 Google 註冊</button>
+    <button class="btn btn-outline" id="btnLine">用 LINE 註冊</button>
 
     <div class="links">
       已有帳號？ <a href="login.html">立即登入</a>
@@ -124,13 +125,13 @@
     const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBlcmZzaXBwZXJuY3Zqb2N6bmhsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODYwMTUyMzAsImV4cCI6MjEwMTU5MTIzMH0.I7vXkV247kAzRJ0RigDZt3Hzn8KJDyMc6o9E3oHJZoY';
     const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-    function showStatus(msg, isError = false) {
+    function showStatus(msg, isError) {
       const el = document.getElementById('status');
       el.textContent = msg;
       el.className = 'status ' + (isError ? 'err' : 'ok');
     }
 
-    async function signUp() {
+    document.getElementById('btnRegister').onclick = async function () {
       const nickname = document.getElementById('nickname').value.trim();
       const username = document.getElementById('username').value.trim();
       const email = document.getElementById('email').value.trim();
@@ -151,42 +152,50 @@
         return;
       }
 
-      const { data, error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          data: {
-            nickname,
-            username,
-            phone
+      showStatus('註冊中，請稍候…');
+
+      try {
+        const { data, error } = await supabase.auth.signUp({
+          email: email,
+          password: password,
+          options: {
+            data: {
+              nickname: nickname,
+              username: username,
+              phone: phone
+            }
           }
+        });
+
+        if (error) {
+          showStatus('註冊失敗：' + error.message, true);
+          return;
         }
-      });
 
-      if (error) {
-        showStatus('註冊失敗：' + error.message, true);
-        return;
+        showStatus('註冊成功！請至信箱收取確認信，然後返回登入。');
+        setTimeout(function () {
+          location.href = 'login.html';
+        }, 2500);
+      } catch (e) {
+        showStatus('發生錯誤：' + e.message, true);
       }
+    };
 
-      showStatus('註冊成功！請至信箱收取確認信，然後返回登入。');
-      setTimeout(() => location.href = 'login.html', 2500);
-    }
-
-    async function signInGoogle() {
+    document.getElementById('btnGoogle').onclick = async function () {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
-        options: { redirectTo: window.location.origin + '/safe-reunion-login/home.html' }
+        options: { redirectTo: 'https://nl13741619-commits.github.io/safe-reunion-login/home.html' }
       });
       if (error) showStatus('Google 失敗：' + error.message, true);
-    }
+    };
 
-    async function signInLine() {
+    document.getElementById('btnLine').onclick = async function () {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'CUSTOM:LINE',
-        options: { redirectTo: window.location.origin + '/safe-reunion-login/home.html' }
+        options: { redirectTo: 'https://nl13741619-commits.github.io/safe-reunion-login/home.html' }
       });
       if (error) showStatus('LINE 失敗：' + error.message, true);
-    }
+    };
   </script>
 </body>
 </html>
