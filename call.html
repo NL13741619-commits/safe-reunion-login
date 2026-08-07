@@ -3,12 +3,14 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>視訊通話 - 安全團聚</title>
+  <title>通話 - 安全團聚</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-      background: #000;
+      background: #111;
       color: white;
       height: 100vh;
       overflow: hidden;
@@ -20,50 +22,104 @@
       width: 100%;
       height: 100%;
       object-fit: cover;
-      background: #222;
+      background: #1a1a1a;
       transform: scaleX(-1);
     }
+    #audioBg {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(160deg, #1b5e20, #0d47a1);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      gap: 12px;
+      z-index: 1;
+    }
+    #audioBg .icon { font-size: 64px; }
+    #audioBg .label { font-size: 18px; font-weight: 600; }
+
     #localVideo {
       position: absolute;
-      top: 60px;
-      right: 16px;
-      width: 110px;
-      height: 150px;
+      top: 56px;
+      right: 12px;
+      width: 100px;
+      height: 140px;
       border-radius: 12px;
       object-fit: cover;
       transform: scaleX(-1);
-      border: 2px solid rgba(255,255,255,0.5);
+      border: 2px solid rgba(255,255,255,0.55);
       z-index: 10;
       background: #333;
+      display: none;
     }
+
+    #miniMapWrap {
+      position: absolute;
+      bottom: 110px;
+      right: 12px;
+      width: 150px;
+      height: 150px;
+      border-radius: 14px;
+      overflow: hidden;
+      border: 2px solid rgba(255,255,255,0.65);
+      z-index: 15;
+      background: #1a1a1a;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.45);
+    }
+    #miniMap { width: 100%; height: 100%; }
+    #miniMapLabel {
+      position: absolute;
+      left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.55);
+      font-size: 11px;
+      text-align: center;
+      padding: 4px;
+      z-index: 11;
+      pointer-events: none;
+    }
+    #miniMapWrap .expand {
+      position: absolute;
+      top: 6px; left: 6px;
+      z-index: 12;
+      background: rgba(0,0,0,0.55);
+      border: none;
+      color: white;
+      font-size: 12px;
+      border-radius: 8px;
+      padding: 4px 8px;
+      cursor: pointer;
+    }
+
     .top-bar {
       position: absolute;
       top: 0; left: 0; right: 0;
-      padding: 16px;
-      padding-top: 50px;
-      background: linear-gradient(rgba(0,0,0,0.6), transparent);
+      padding: 14px 16px;
+      padding-top: 48px;
+      background: linear-gradient(rgba(0,0,0,0.55), transparent);
       z-index: 20;
       text-align: center;
     }
     .top-name { font-size: 17px; font-weight: 600; }
-    .top-status { font-size: 13px; opacity: 0.85; margin-top: 4px; }
+    .top-status { font-size: 12px; opacity: 0.9; margin-top: 4px; }
+
     .controls {
       position: absolute;
       bottom: 0; left: 0; right: 0;
-      padding: 20px 16px 40px;
+      padding: 16px 12px 36px;
       background: linear-gradient(transparent, rgba(0,0,0,0.75));
       display: flex;
       justify-content: center;
-      gap: 18px;
+      gap: 16px;
       z-index: 20;
     }
     .ctrl {
-      width: 56px; height: 56px;
+      width: 54px; height: 54px;
       border-radius: 50%;
       border: none;
-      background: rgba(255,255,255,0.25);
+      background: rgba(255,255,255,0.22);
       color: white;
-      font-size: 22px;
+      font-size: 20px;
       cursor: pointer;
       display: flex;
       align-items: center;
@@ -72,18 +128,29 @@
     .ctrl.off { background: #e53935; }
     .ctrl.hangup {
       background: #e53935;
-      width: 64px; height: 64px;
-      font-size: 26px;
+      width: 60px; height: 60px;
+      font-size: 24px;
     }
   </style>
 </head>
 <body>
   <video id="localVideoFull" autoplay playsinline muted></video>
+  <div id="audioBg">
+    <div class="icon">📞</div>
+    <div class="label">語音通話中</div>
+    <div style="font-size:13px;opacity:0.85">右下角為集合導航地圖</div>
+  </div>
   <video id="localVideo" autoplay playsinline muted></video>
 
+  <div id="miniMapWrap">
+    <button class="expand" onclick="openFullMap()">放大</button>
+    <div id="miniMap"></div>
+    <div id="miniMapLabel">集合導航</div>
+  </div>
+
   <div class="top-bar">
-    <div class="top-name" id="callName">視訊通話</div>
-    <div class="top-status" id="callStatus">連線中…</div>
+    <div class="top-name" id="callName">通話</div>
+    <div class="top-status" id="callStatus">準備中…</div>
   </div>
 
   <div class="controls">
@@ -99,15 +166,101 @@
     let camOn = true;
     let speakerOn = true;
 
+    const params = new URLSearchParams(location.search);
+    const mode = params.get('mode') || 'video'; // audio | video
+    const name = params.get('name');
+    if (name) document.getElementById('callName').textContent = decodeURIComponent(name);
+
+    let miniMap;
+    let memberMarkers = {};
+    let meetLat = 23.9929, meetLng = 121.6015;
+    let members = [
+      { id: 'me', name: '我', lat: null, lng: null, color: '#06C755' },
+      { id: 'aunt', name: '姑姑', lat: 24.15, lng: 120.68, color: '#1e88e5' },
+      { id: 'mom', name: '媽媽', lat: 25.02, lng: 121.46, color: '#f4511e' },
+      { id: 'sis', name: '妹妹', lat: 25.03, lng: 121.56, color: '#8e24aa' }
+    ];
+
+    function initMiniMap() {
+      miniMap = L.map('miniMap', {
+        zoomControl: false,
+        attributionControl: false,
+        dragging: true,
+        scrollWheelZoom: false
+      }).setView([meetLat, meetLng], 7);
+
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 18
+      }).addTo(miniMap);
+
+      L.marker([meetLat, meetLng]).addTo(miniMap);
+
+      members.forEach(function (m) {
+        if (m.lat == null) return;
+        memberMarkers[m.id] = L.circleMarker([m.lat, m.lng], {
+          radius: 6, color: m.color, fillColor: m.color, fillOpacity: 0.9
+        }).addTo(miniMap);
+      });
+
+      setInterval(function () {
+        members.forEach(function (m) {
+          if (m.id === 'me' || m.lat == null) return;
+          m.lat += (meetLat - m.lat) * 0.04;
+          m.lng += (meetLng - m.lng) * 0.04;
+          if (memberMarkers[m.id]) memberMarkers[m.id].setLatLng([m.lat, m.lng]);
+        });
+        if (members[0].lat != null && memberMarkers['me']) {
+          memberMarkers['me'].setLatLng([members[0].lat, members[0].lng]);
+        }
+      }, 5000);
+
+      setTimeout(function () { miniMap.invalidateSize(); }, 400);
+    }
+
+    function openFullMap() {
+      const n = document.getElementById('callName').textContent || '';
+      location.href = 'map.html?name=' + encodeURIComponent(n);
+    }
+
     async function start() {
       try {
-        stream = await navigator.mediaDevices.getUserMedia({
-          audio: true,
-          video: { facingMode: 'user' }
-        });
-        document.getElementById('localVideoFull').srcObject = stream;
-        document.getElementById('localVideo').srcObject = stream;
-        document.getElementById('callStatus').textContent = '本機預覽（尚未連線對方）';
+        if (mode === 'audio') {
+          // 語音：只要麥克風，大畫面顯示語音背景 + 小地圖
+          document.getElementById('audioBg').style.display = 'flex';
+          document.getElementById('localVideoFull').style.display = 'none';
+          document.getElementById('localVideo').style.display = 'none';
+          document.getElementById('btnCam').style.display = 'none';
+
+          stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+          document.getElementById('callStatus').textContent = '語音通話中（小地圖已開啟）';
+        } else {
+          // 視訊：鏡頭 + 子母畫面 + 小地圖
+          document.getElementById('audioBg').style.display = 'none';
+          document.getElementById('localVideo').style.display = 'block';
+
+          stream = await navigator.mediaDevices.getUserMedia({
+            audio: true,
+            video: { facingMode: 'user' }
+          });
+          document.getElementById('localVideoFull').srcObject = stream;
+          document.getElementById('localVideo').srcObject = stream;
+          document.getElementById('callStatus').textContent = '視訊通話中（小地圖已開啟）';
+        }
+
+        if (navigator.geolocation) {
+          navigator.geolocation.watchPosition(function (pos) {
+            members[0].lat = pos.coords.latitude;
+            members[0].lng = pos.coords.longitude;
+            if (!memberMarkers['me'] && miniMap) {
+              memberMarkers['me'] = L.circleMarker(
+                [members[0].lat, members[0].lng],
+                { radius: 6, color: '#06C755', fillColor: '#06C755', fillOpacity: 0.9 }
+              ).addTo(miniMap);
+            } else if (memberMarkers['me']) {
+              memberMarkers['me'].setLatLng([members[0].lat, members[0].lng]);
+            }
+          }, null, { enableHighAccuracy: true, maximumAge: 3000 });
+        }
       } catch (e) {
         document.getElementById('callStatus').textContent = '失敗：' + e.message;
       }
@@ -116,16 +269,16 @@
     function toggleMic() {
       if (!stream) return;
       micOn = !micOn;
-      stream.getAudioTracks().forEach(t => t.enabled = micOn);
+      stream.getAudioTracks().forEach(function (t) { t.enabled = micOn; });
       const btn = document.getElementById('btnMic');
       btn.textContent = micOn ? '🎤' : '🔇';
       btn.classList.toggle('off', !micOn);
     }
 
     function toggleCam() {
-      if (!stream) return;
+      if (!stream || mode === 'audio') return;
       camOn = !camOn;
-      stream.getVideoTracks().forEach(t => t.enabled = camOn);
+      stream.getVideoTracks().forEach(function (t) { t.enabled = camOn; });
       const btn = document.getElementById('btnCam');
       btn.textContent = camOn ? '📹' : '🚫';
       btn.classList.toggle('off', !camOn);
@@ -136,24 +289,17 @@
       const btn = document.getElementById('btnSpeaker');
       btn.textContent = speakerOn ? '🔊' : '🔈';
       btn.classList.toggle('off', !speakerOn);
-      document.getElementById('callStatus').textContent =
-        speakerOn ? '喇叭開啟' : '喇叭關閉（靜音對方）';
     }
 
     function hangup() {
       if (stream) {
-        stream.getTracks().forEach(t => t.stop());
+        stream.getTracks().forEach(function (t) { t.stop(); });
         stream = null;
       }
       location.href = 'chat.html';
     }
 
-    const params = new URLSearchParams(location.search);
-    const name = params.get('name');
-    if (name) {
-      document.getElementById('callName').textContent = decodeURIComponent(name);
-    }
-
+    initMiniMap();
     start();
   </script>
 </body>
