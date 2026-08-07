@@ -113,82 +113,86 @@
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script>
-    const SUPABASE_URL = 'https://perfsipperncvjocznhl.supabase.co';
-    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBlcmZzaXBwZXJuY3Zqb2N6bmhsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODYwMTUyMzAsImV4cCI6MjEwMTU5MTIzMH0.I7vXkV247kAzRJ0RigDZt3Hzn8KJDyMc6o9E3oHJZoY';
-    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-
     function showStatus(msg, isError) {
       const el = document.getElementById('status');
-      el.textContent = msg;
-      el.className = 'status ' + (isError ? 'err' : 'ok');
-    }
-
-    function setRemember(days) {
-      if (days > 0) {
-        localStorage.setItem('remember_until', Date.now() + days * 24 * 60 * 60 * 1000);
-      } else {
-        localStorage.removeItem('remember_until');
+      if (el) {
+        el.textContent = msg;
+        el.className = 'status ' + (isError ? 'err' : 'ok');
       }
+      alert(msg);
     }
 
-    document.getElementById('btnLogin').onclick = async function () {
-      const email = document.getElementById('email').value.trim();
-      const password = document.getElementById('password').value;
-      const remember = document.getElementById('remember').checked;
-
-      if (!email || !password) {
-        showStatus('請輸入 Email 和密碼', true);
+    window.addEventListener('DOMContentLoaded', function () {
+      if (!window.supabase) {
+        showStatus('Supabase 套件載入失敗，請檢查網路', true);
         return;
       }
 
-      showStatus('登入中…');
+      const SUPABASE_URL = 'https://perfsipperncvjocznhl.supabase.co';
+      const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBlcmZzaXBwZXJuY3Zqb2N6bmhsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODYwMTUyMzAsImV4cCI6MjEwMTU5MTIzMH0.I7vXkV247kAzRJ0RigDZt3Hzn8KJDyMc6o9E3oHJZoY';
+      const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-      try {
-        const { data, error } = await supabase.auth.signInWithPassword({
-          email: email,
-          password: password
-        });
+      function setRemember(days) {
+        if (days > 0) {
+          localStorage.setItem('remember_until', Date.now() + days * 24 * 60 * 60 * 1000);
+        } else {
+          localStorage.removeItem('remember_until');
+        }
+      }
 
-        if (error) {
-          showStatus('登入失敗：' + error.message, true);
+      document.getElementById('btnLogin').onclick = async function () {
+        const email = document.getElementById('email').value.trim();
+        const password = document.getElementById('password').value;
+        const remember = document.getElementById('remember').checked;
+
+        if (!email || !password) {
+          showStatus('請輸入 Email 和密碼', true);
           return;
         }
 
-        setRemember(remember ? 15 : 0);
-        showStatus('登入成功，正在進入…');
-        setTimeout(function () {
-          location.href = 'home.html';
-        }, 600);
-      } catch (e) {
-        showStatus('發生錯誤：' + e.message, true);
-      }
-    };
+        showStatus('登入中…');
 
-    document.getElementById('btnGoogle').onclick = async function () {
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
-        options: { redirectTo: 'https://nl13741619-commits.github.io/safe-reunion-login/home.html' }
-      });
-      if (error) showStatus('Google 失敗：' + error.message, true);
-    };
+        try {
+          const { data, error } = await supabase.auth.signInWithPassword({
+            email: email,
+            password: password
+          });
 
-    document.getElementById('btnLine').onclick = async function () {
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: 'CUSTOM:LINE',
-        options: { redirectTo: 'https://nl13741619-commits.github.io/safe-reunion-login/home.html' }
-      });
-      if (error) showStatus('LINE 失敗：' + error.message, true);
-    };
+          if (error) {
+            showStatus('登入失敗：' + error.message, true);
+            return;
+          }
 
-    document.getElementById('btnForgot').onclick = function (e) {
-      e.preventDefault();
-      alert('忘記密碼功能下一步會做');
-    };
+          setRemember(remember ? 15 : 0);
+          showStatus('登入成功，正在進入…');
+          setTimeout(function () {
+            location.href = 'home.html';
+          }, 600);
+        } catch (e) {
+          showStatus('發生錯誤：' + e.message, true);
+        }
+      };
 
-    supabase.auth.getSession().then(function (result) {
-      if (result.data.session) {
-        location.href = 'home.html';
-      }
+      document.getElementById('btnGoogle').onclick = async function () {
+        const { error } = await supabase.auth.signInWithOAuth({
+          provider: 'google',
+          options: { redirectTo: 'https://nl13741619-commits.github.io/safe-reunion-login/home.html' }
+        });
+        if (error) showStatus('Google 失敗：' + error.message, true);
+      };
+
+      document.getElementById('btnLine').onclick = async function () {
+        const { error } = await supabase.auth.signInWithOAuth({
+          provider: 'CUSTOM:LINE',
+          options: { redirectTo: 'https://nl13741619-commits.github.io/safe-reunion-login/home.html' }
+        });
+        if (error) showStatus('LINE 失敗：' + error.message, true);
+      };
+
+      document.getElementById('btnForgot').onclick = function (e) {
+        e.preventDefault();
+        alert('忘記密碼功能下一步會做');
+      };
     });
   </script>
 </body>
