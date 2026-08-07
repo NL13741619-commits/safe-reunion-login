@@ -4,7 +4,6 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>安全團聚 - 登入測試</title>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
@@ -60,7 +59,7 @@
     <p class="subtitle">登入測試頁面</p>
 
     <div id="login-form">
-      <input type="email" id="email" placeholder="Email">
+      <input type="email" id="email" placeholder="Email" value="n_950143@hotmail.com">
       <input type="password" id="password" placeholder="密碼">
       <button class="btn-email" onclick="signInWithEmail()">Email 登入</button>
 
@@ -76,18 +75,35 @@
   </div>
 
   <script>
-    console.log("JavaScript 開始執行");
-    
-    const SUPABASE_URL = 'https://perfsipperncvjocznhl.supabase.co';
-    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBlcmZzaXBwZXJuY3Zqb2N6bmhsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODYwMTUyMzAsImV4cCI6MjEwMTU5MTIzMH0.I7vXkV247kAzRJ0RigDZt3Hzn8KJDyMc6o9E3oHJZoY';
-
-    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-    console.log("Supabase client 建立成功", supabase);
-
-    async function checkUser() {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user) showUser(user);
+    // 先顯示狀態
+    function showStatus(msg, isError = false) {
+      const el = document.getElementById('status');
+      el.textContent = msg;
+      el.className = 'status ' + (isError ? 'error' : 'success');
     }
+
+    showStatus('正在載入系統...');
+
+    // 動態載入 Supabase
+    const script = document.createElement('script');
+    script.src = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2';
+    script.onload = function() {
+      showStatus('系統載入完成，可以登入');
+      
+      const SUPABASE_URL = 'https://perfsipperncvjocznhl.supabase.co';
+      const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBlcmZzaXBwZXJuY3Zqb2N6bmhsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODYwMTUyMzAsImV4cCI6MjEwMTU5MTIzMH0.I7vXkV247kAzRJ0RigDZt3Hzn8KJDyMc6o9E3oHJZoY';
+
+      window.supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+      // 檢查目前登入狀態
+      window.supabaseClient.auth.getUser().then(({ data: { user } }) => {
+        if (user) showUser(user);
+      });
+    };
+    script.onerror = function() {
+      showStatus('載入失敗，請重新整理頁面', true);
+    };
+    document.head.appendChild(script);
 
     function showUser(user) {
       document.getElementById('login-form').style.display = 'none';
@@ -97,17 +113,15 @@
       info.innerHTML = `<strong>登入成功！</strong><br>Email: ${user.email || '無'}<br>UID: ${user.id}`;
     }
 
-    function showStatus(msg, isError = false) {
-      const el = document.getElementById('status');
-      el.textContent = msg;
-      el.className = 'status ' + (isError ? 'error' : 'success');
-    }
-
     async function signInWithEmail() {
+      if (!window.supabaseClient) {
+        showStatus('系統還在載入，請稍等', true);
+        return;
+      }
       const email = document.getElementById('email').value;
       const password = document.getElementById('password').value;
       showStatus('登入中...');
-      const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+      const { data, error } = await window.supabaseClient.auth.signInWithPassword({ email, password });
       if (error) {
         showStatus('登入失敗：' + error.message, true);
       } else {
@@ -117,27 +131,27 @@
     }
 
     async function signInWithGoogle() {
-      const { error } = await supabase.auth.signInWithOAuth({
+      if (!window.supabaseClient) return;
+      const { error } = await window.supabaseClient.auth.signInWithOAuth({
         provider: 'google',
-        options: { redirectTo: window.location.origin }
+        options: { redirectTo: window.location.href }
       });
       if (error) showStatus('Google 失敗：' + error.message, true);
     }
 
     async function signInWithLine() {
-      const { error } = await supabase.auth.signInWithOAuth({
+      if (!window.supabaseClient) return;
+      const { error } = await window.supabaseClient.auth.signInWithOAuth({
         provider: 'custom:line',
-        options: { redirectTo: window.location.origin }
+        options: { redirectTo: window.location.href }
       });
       if (error) showStatus('LINE 失敗：' + error.message, true);
     }
 
     async function signOut() {
-      await supabase.auth.signOut();
+      await window.supabaseClient.auth.signOut();
       location.reload();
     }
-
-    checkUser();
   </script>
 </body>
 </html>
