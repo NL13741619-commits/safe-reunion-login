@@ -39,6 +39,8 @@
     .msg.recalled { background: #f0f0f0; color: #888; font-size: 13px; font-style: italic; }
     .msg-time { font-size: 11px; color: #999; margin-top: 4px; text-align: right; }
     .msg-tag { font-size: 11px; color: #06C755; margin-bottom: 4px; font-weight: 600; }
+    .msg img, .msg video { max-width: 100%; border-radius: 10px; display: block; }
+    .msg audio { width: 100%; }
     .composer {
       background: #f7f7f7; border-top: 1px solid #ddd;
       padding: 8px 8px 12px; position: sticky; bottom: 0; z-index: 50;
@@ -125,8 +127,8 @@
     <div class="sheet-item" id="pickFile">檔案</div>
     <div class="sheet-cancel" id="plusCancel">取消</div>
   </div>
-  <input type="file" id="fileAlbum" accept="image/*,video/*">
-  <input type="file" id="fileAny" accept=".pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.txt,.mp3,.mp4,.mov,.csv">
+  <input type="file" id="fileAlbum" accept="image/*,video/*,audio/*">
+  <input type="file" id="fileAny" accept=".pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.txt,.mp3,.mp4,.mov,.csv,image/*,video/*,audio/*">
   <input type="file" id="fileCamera" accept="image/*,video/*" capture="environment">
 
   <div class="action-mask" id="actionMask"></div>
@@ -169,8 +171,12 @@
       var n = new Date();
       return n.getHours() + ':' + String(n.getMinutes()).padStart(2, '0');
     }
+    function nowTimeFrom(iso) {
+      var d = new Date(iso);
+      return d.getHours() + ':' + String(d.getMinutes()).padStart(2, '0');
+    }
     function escapeHtml(s) {
-      return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+      return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
     }
     function rowToLocal(row) {
       return {
@@ -184,10 +190,6 @@
         recalled: !!row.recalled,
         hiddenLocal: false
       };
-    }
-    function nowTimeFrom(iso) {
-      var d = new Date(iso);
-      return d.getHours() + ':' + String(d.getMinutes()).padStart(2, '0');
     }
 
     function renderMessages() {
@@ -205,10 +207,23 @@
         } else {
           var html = '';
           if (m.all) html += '<div class="msg-tag">@all 全體</div>';
-          if (m.kind === 'sticker') html += '<span style="font-size:36px">' + m.text + '</span>';
-          else if (m.kind === 'media' || m.kind === 'camera') html += '［照片／影片］' + escapeHtml(m.text);
-          else if (m.kind === 'file') html += '［檔案］' + escapeHtml(m.text);
-          else html += escapeHtml(m.text);
+          if (m.kind === 'image') {
+            html += '<img src="' + escapeHtml(m.text) + '" alt="圖片">';
+          } else if (m.kind === 'video') {
+            html += '<video src="' + escapeHtml(m.text) + '" controls playsinline></video>';
+          } else if (m.kind === 'audio') {
+            html += '<audio src="' + escapeHtml(m.text) + '" controls></audio>';
+          } else if (m.kind === 'sticker') {
+            html += '<span style="font-size:36px">' + m.text + '</span>';
+          } else if (m.kind === 'file' || m.kind === 'media' || m.kind === 'camera') {
+            if (/^https?:\/\//.test(m.text)) {
+              html += '<a href="' + escapeHtml(m.text) + '" target="_blank" rel="noopener">開啟檔案</a>';
+            } else {
+              html += '［檔案］' + escapeHtml(m.text);
+            }
+          } else {
+            html += escapeHtml(m.text);
+          }
           html += '<div class="msg-time">' + m.time + '</div>';
           div.innerHTML = html;
         }
@@ -240,6 +255,57 @@
         hiddenLocal: false
       });
       renderMessages();
+    }
+
+    function guessKind(file) {
+      var t = (file.type || '').toLowerCase();
+      if (t.indexOf('image/') === 0) return 'image';
+      if (t.indexOf('video/') === 0) return 'video';
+      if (t.indexOf('audio/') === 0) return 'audio';
+      return 'file';
+    }
+
+    async function uploadAndSend(file) {
+      if (!file) return;
+      if (!myUser || !supabase) {
+        setStatus('請先登入才能傳檔');
+        return;
+      }
+      setStatus('上傳中…');
+      var kind = guessKind(file);
+      var ext = (file.name.split('.').pop() || 'bin').toLowerCase();
+      var path = myUser.id + '/' + Date.now() + '_' + Math.floor(Math.random() * 10000) + '.' + ext;
+
+      var up = await supabase.storage.from('chat-media').upload(path, file, {
+        cacheControl: '3600',
+        upsert: false,
+        contentType: file.type || undefined
+      });
+      if (up.error) {
+        setStatus('上傳失敗：' + up.error.message);
+        return;
+      }
+
+      var pub = supabase.storage.from('chat-media').getPublicUrl(path);
+      var url = pub.data && pub.data.publicUrl;
+      if (!url) {
+        setStatus('無法取得檔案網址');
+        return;
+      }
+
+      var ins = await supabase.from('messages').insert({
+        room_id: roomId,
+        user_id: myUser.id,
+        sender_name: myUser.email || 'user',
+        kind: kind,
+        body: url,
+        is_all: false
+      });
+      if (ins.error) {
+        setStatus('訊息失敗：' + ins.error.message);
+        return;
+      }
+      setStatus('即時通訊已開啟');
     }
 
     async function sendMsg() {
@@ -422,16 +488,23 @@
     document.getElementById('btnCam').onclick = function () { document.getElementById('fileCamera').click(); };
     document.getElementById('actionMask').onclick = closeAction;
 
-    function onFile(kind, input) {
-      var f = input.files && input.files[0];
-      if (!f) return;
-      sendPayload(kind, f.name);
-      input.value = '';
+    document.getElementById('fileAlbum').onchange = function () {
+      var f = this.files && this.files[0];
+      this.value = '';
       closePlus();
-    }
-    document.getElementById('fileAlbum').onchange = function () { onFile('media', this); };
-    document.getElementById('fileAny').onchange = function () { onFile('file', this); };
-    document.getElementById('fileCamera').onchange = function () { onFile('camera', this); };
+      uploadAndSend(f);
+    };
+    document.getElementById('fileAny').onchange = function () {
+      var f = this.files && this.files[0];
+      this.value = '';
+      closePlus();
+      uploadAndSend(f);
+    };
+    document.getElementById('fileCamera').onchange = function () {
+      var f = this.files && this.files[0];
+      this.value = '';
+      uploadAndSend(f);
+    };
 
     document.getElementById('btnSticker').onclick = function () {
       var p = document.getElementById('stickerPanel');
@@ -475,7 +548,6 @@
       recognition.start();
     };
 
-    // 啟動
     setStatus('等待套件…');
     var tries = 0;
     function boot() {
