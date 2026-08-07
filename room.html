@@ -9,47 +9,30 @@
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-      background: #e8e8e8;
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-      color: #111;
+      background: #e8e8e8; min-height: 100vh;
+      display: flex; flex-direction: column; color: #111;
     }
     .header {
-      background: #06C755;
-      color: white;
-      padding: 10px 12px;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      position: sticky;
-      top: 0;
-      z-index: 100;
+      background: #06C755; color: #fff; padding: 10px 12px;
+      display: flex; align-items: center; gap: 8px;
+      position: sticky; top: 0; z-index: 100;
     }
-    .back { color: white; text-decoration: none; font-size: 24px; line-height: 1; padding: 4px; }
+    .back { color: #fff; text-decoration: none; font-size: 24px; padding: 4px; }
     .header-info { flex: 1; min-width: 0; }
     .header-name { font-weight: 700; font-size: 16px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .header-status { font-size: 12px; opacity: 0.9; }
+    .header-status { font-size: 12px; opacity: 0.95; }
     .header-actions { display: flex; gap: 2px; }
     .header-actions button {
-      background: transparent; border: none; color: white;
-      font-size: 13px; padding: 6px 8px; cursor: pointer;
+      background: transparent; border: none; color: #fff;
+      font-size: 13px; padding: 6px 8px;
     }
     .messages {
-      flex: 1;
-      padding: 12px;
-      overflow-y: auto;
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
+      flex: 1; padding: 12px; overflow-y: auto;
+      display: flex; flex-direction: column; gap: 8px;
     }
     .msg {
-      max-width: 78%;
-      padding: 10px 12px;
-      border-radius: 14px;
-      font-size: 15px;
-      line-height: 1.4;
-      word-break: break-word;
+      max-width: 78%; padding: 10px 12px; border-radius: 14px;
+      font-size: 15px; line-height: 1.4; word-break: break-word;
     }
     .msg.them { background: #fff; align-self: flex-start; border-bottom-left-radius: 4px; }
     .msg.me { background: #dcf8c6; align-self: flex-end; border-bottom-right-radius: 4px; }
@@ -57,53 +40,39 @@
     .msg-time { font-size: 11px; color: #999; margin-top: 4px; text-align: right; }
     .msg-tag { font-size: 11px; color: #06C755; margin-bottom: 4px; font-weight: 600; }
     .composer {
-      background: #f7f7f7;
-      border-top: 1px solid #ddd;
-      padding: 8px 8px 12px;
-      position: sticky;
-      bottom: 0;
-      z-index: 50;
+      background: #f7f7f7; border-top: 1px solid #ddd;
+      padding: 8px 8px 12px; position: sticky; bottom: 0; z-index: 50;
     }
+    .settings-bar { display: flex; gap: 12px; padding: 4px 8px 0; font-size: 12px; color: #666; }
     .composer-row { display: flex; align-items: center; gap: 6px; }
-    .icon-btn {
-      width: 36px; height: 36px; border: none; background: transparent;
-      color: #333; font-size: 20px; cursor: pointer; flex-shrink: 0;
-    }
-    .text-btn {
+    .icon-btn, .text-btn {
       border: none; background: transparent; color: #333;
-      font-size: 13px; padding: 6px 4px; cursor: pointer; flex-shrink: 0;
+      font-size: 13px; padding: 6px 4px; flex-shrink: 0;
     }
+    .icon-btn { width: 36px; height: 36px; font-size: 20px; }
     #msgInput {
       flex: 1; min-width: 0; background: #fff; border-radius: 18px;
-      padding: 10px 14px; font-size: 15px; outline: none; border: 1px solid #e0e0e0;
+      padding: 10px 14px; font-size: 15px; border: 1px solid #e0e0e0; outline: none;
     }
     .send-btn {
-      border: none; background: #06C755; color: white; font-size: 13px;
-      font-weight: 600; padding: 8px 12px; border-radius: 16px; cursor: pointer;
+      border: none; background: #06C755; color: #fff; font-size: 13px;
+      font-weight: 600; padding: 8px 12px; border-radius: 16px;
     }
-    .settings-bar {
-      display: flex; gap: 12px; padding: 4px 8px 0; font-size: 12px; color: #666;
-    }
-    .sheet-mask {
+    .sheet-mask, .action-mask {
       display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.35); z-index: 200;
     }
-    .sheet-mask.show { display: block; }
+    .sheet-mask.show, .action-mask.show { display: block; }
     .sheet {
       position: fixed; left: 0; right: 0; bottom: 0; background: #fff;
       border-radius: 14px 14px 0 0; z-index: 201; padding: 8px 0 24px;
-      transform: translateY(100%); transition: transform 0.2s ease;
+      transform: translateY(100%); transition: transform 0.2s;
     }
     .sheet.show { transform: translateY(0); }
     .sheet-item { padding: 16px 20px; font-size: 16px; border-bottom: 1px solid #f0f0f0; }
-    .sheet-cancel { margin-top: 8px; text-align: center; color: #06C755; font-weight: 600; padding: 14px; }
-    .action-mask {
-      display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.35); z-index: 300;
-    }
-    .action-mask.show { display: block; }
+    .sheet-cancel { text-align: center; color: #06C755; font-weight: 600; padding: 14px; }
     .action-box {
-      position: fixed; left: 50%; top: 40%; transform: translate(-50%, -50%);
-      background: #fff; border-radius: 12px; min-width: 200px; overflow: hidden;
-      z-index: 301; display: none;
+      display: none; position: fixed; left: 50%; top: 40%; transform: translate(-50%,-50%);
+      background: #fff; border-radius: 12px; min-width: 200px; z-index: 301; overflow: hidden;
     }
     .action-box.show { display: block; }
     .action-item { padding: 14px 18px; font-size: 15px; border-bottom: 1px solid #f0f0f0; }
@@ -119,17 +88,16 @@
   </style>
 </head>
 <body>
-  <script>alert('新檔有載入');</script>
   <div class="header">
     <a class="back" href="chat.html">‹</a>
     <div class="header-info">
       <div class="header-name" id="roomName">對話</div>
-      <div class="header-status" id="roomStatus">新檔測試123</div>
+      <div class="header-status" id="roomStatus">啟動中…</div>
     </div>
     <div class="header-actions">
-      <button type="button" onclick="go('call.html?mode=audio')">語音</button>
-      <button type="button" onclick="go('call.html?mode=video')">視訊</button>
-      <button type="button" onclick="go('map.html')">地圖</button>
+      <button type="button" id="btnAudio">語音</button>
+      <button type="button" id="btnVideo">視訊</button>
+      <button type="button" id="btnMap">地圖</button>
     </div>
   </div>
 
@@ -142,67 +110,68 @@
       <label><input type="checkbox" id="optVibrate" checked> 震動</label>
     </div>
     <div class="composer-row">
-      <button type="button" class="icon-btn" onclick="openPlus()">＋</button>
-      <button type="button" class="text-btn" onclick="openCamera()">相機</button>
-      <input type="text" id="msgInput" placeholder="輸入訊息，@all 標註全體" autocomplete="off">
-      <button type="button" class="text-btn" onclick="toggleStickers()">表情</button>
-      <button type="button" class="text-btn" id="btnVoice" onclick="toggleVoice()">語音</button>
-      <button type="button" class="send-btn" onclick="sendMsg()">送出</button>
+      <button type="button" class="icon-btn" id="btnPlus">＋</button>
+      <button type="button" class="text-btn" id="btnCam">相機</button>
+      <input type="text" id="msgInput" placeholder="輸入訊息" autocomplete="off">
+      <button type="button" class="text-btn" id="btnSticker">表情</button>
+      <button type="button" class="text-btn" id="btnVoice">語音</button>
+      <button type="button" class="send-btn" id="btnSend">送出</button>
     </div>
   </div>
 
-  <div class="sheet-mask" id="plusMask" onclick="closePlus()"></div>
+  <div class="sheet-mask" id="plusMask"></div>
   <div class="sheet" id="plusSheet">
-    <div class="sheet-item" onclick="pickAlbum()">相簿（照片／影片）</div>
-    <div class="sheet-item" onclick="pickFile()">檔案（PDF、Word、Excel、MP3、MP4…）</div>
-    <div class="sheet-cancel" onclick="closePlus()">取消</div>
+    <div class="sheet-item" id="pickAlbum">相簿（照片／影片）</div>
+    <div class="sheet-item" id="pickFile">檔案</div>
+    <div class="sheet-cancel" id="plusCancel">取消</div>
   </div>
+  <input type="file" id="fileAlbum" accept="image/*,video/*">
+  <input type="file" id="fileAny" accept=".pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.txt,.mp3,.mp4,.mov,.csv">
+  <input type="file" id="fileCamera" accept="image/*,video/*" capture="environment">
 
-  <input type="file" id="fileAlbum" accept="image/*,video/*" onchange="onFilePicked(event,'media')">
-  <input type="file" id="fileAny" accept=".pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.txt,.mp3,.mp4,.mov,.csv" onchange="onFilePicked(event,'file')">
-  <input type="file" id="fileCamera" accept="image/*,video/*" capture="environment" onchange="onFilePicked(event,'camera')">
-
-  <div class="action-mask" id="actionMask" onclick="closeAction()"></div>
+  <div class="action-mask" id="actionMask"></div>
   <div class="action-box" id="actionBox"></div>
 
   <script>
-    document.getElementById('roomStatus').textContent = '腳本開始執行';
-    const SUPABASE_URL = 'https://perfsipperncvjocznhl.supabase.co';
-    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBlcmZzaXBwZXJuY3Zqb2N6bmhsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODYwMTUyMzAsImV4cCI6MjEwMTU5MTIzMH0.I7vXkV247kAzRJ0RigDZt3Hzn8KJDyMc6o9E3oHJZoY';
+  (function () {
+    var statusEl = document.getElementById('roomStatus');
+    function setStatus(t) {
+      if (statusEl) statusEl.textContent = t;
+    }
+    setStatus('腳本開始執行');
 
-    const RECALL_MS = 2 * 60 * 1000;
-    const stickers = ['😀','😅','😂','😊','😍','🤔','👍','👏','🙏','💪','❤️','🔥','✅','❌','🎉','🏠','🚗','📍'];
+    var SUPABASE_URL = 'https://perfsipperncvjocznhl.supabase.co';
+    var SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBlcmZzaXBwZXJuY3Zqb2N6bmhsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODYwMTUyMzAsImV4cCI6MjEwMTU5MTIzMH0.I7vXkV247kAzRJ0RigDZt3Hzn8KJDyMc6o9E3oHJZoY';
+    var RECALL_MS = 2 * 60 * 1000;
+    var stickers = ['😀','😅','😂','😊','😍','🤔','👍','👏','🙏','💪','❤️','🔥','✅','❌','🎉','🏠','🚗','📍'];
 
-    let supabase = null;
-    let messages = [];
-    let selectedId = null;
-    let myUser = null;
-    let recognizing = false;
-    let recognition = null;
+    var supabase = null;
+    var messages = [];
+    var selectedId = null;
+    var myUser = null;
+    var recognizing = false;
+    var recognition = null;
 
-    const params = new URLSearchParams(location.search);
-    const roomName = params.get('name') ? decodeURIComponent(params.get('name')) : '對話';
-    const roomId = params.get('id') || roomName;
+    var params = new URLSearchParams(location.search);
+    var roomName = params.get('name') ? decodeURIComponent(params.get('name')) : '對話';
+    var roomId = params.get('id') || roomName;
     document.getElementById('roomName').textContent = roomName;
 
-    function setStatus(t) {
-      document.getElementById('roomStatus').textContent = t;
-    }
-
     function go(path) {
-      const q = path.indexOf('?') >= 0 ? '&' : '?';
+      var q = path.indexOf('?') >= 0 ? '&' : '?';
       location.href = path + q + 'name=' + encodeURIComponent(roomName);
     }
+    document.getElementById('btnAudio').onclick = function () { go('call.html?mode=audio'); };
+    document.getElementById('btnVideo').onclick = function () { go('call.html?mode=video'); };
+    document.getElementById('btnMap').onclick = function () { go('map.html'); };
 
-    function formatTime(iso) {
-      const d = new Date(iso);
-      return d.getHours() + ':' + String(d.getMinutes()).padStart(2, '0');
+    function nowTime() {
+      var n = new Date();
+      return n.getHours() + ':' + String(n.getMinutes()).padStart(2, '0');
     }
-
     function escapeHtml(s) {
       return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
     }
-
     function rowToLocal(row) {
       return {
         id: row.id,
@@ -210,56 +179,40 @@
         kind: row.kind || 'text',
         text: row.body || '',
         all: !!row.is_all,
-        time: formatTime(row.created_at),
+        time: nowTimeFrom(row.created_at),
         createdAt: new Date(row.created_at).getTime(),
         recalled: !!row.recalled,
         hiddenLocal: false
       };
     }
-
-    function playNotify() {
-      if (document.getElementById('optSound').checked) {
-        try {
-          const ctx = new (window.AudioContext || window.webkitAudioContext)();
-          const o = ctx.createOscillator();
-          const g = ctx.createGain();
-          o.connect(g); g.connect(ctx.destination);
-          o.frequency.value = 880; g.gain.value = 0.05;
-          o.start();
-          setTimeout(function () { o.stop(); ctx.close(); }, 120);
-        } catch (e) {}
-      }
-      if (document.getElementById('optVibrate').checked && navigator.vibrate) {
-        navigator.vibrate(40);
-      }
+    function nowTimeFrom(iso) {
+      var d = new Date(iso);
+      return d.getHours() + ':' + String(d.getMinutes()).padStart(2, '0');
     }
 
     function renderMessages() {
-      const box = document.getElementById('messages');
+      var box = document.getElementById('messages');
       box.innerHTML = '';
       messages.forEach(function (m) {
         if (m.hiddenLocal) return;
-        const div = document.createElement('div');
-        let cls = 'msg ' + (m.mine ? 'me' : 'them');
+        var div = document.createElement('div');
+        var cls = 'msg ' + (m.mine ? 'me' : 'them');
         if (m.recalled) cls += ' recalled';
         div.className = cls;
-
         if (m.recalled) {
           div.innerHTML = (m.mine ? '你已回收一則訊息' : '對方已回收一則訊息') +
             '<div class="msg-time">' + m.time + '</div>';
         } else {
-          let html = '';
+          var html = '';
           if (m.all) html += '<div class="msg-tag">@all 全體</div>';
-          if (m.kind === 'text') html += escapeHtml(m.text);
-          else if (m.kind === 'sticker') html += '<span style="font-size:36px">' + m.text + '</span>';
+          if (m.kind === 'sticker') html += '<span style="font-size:36px">' + m.text + '</span>';
           else if (m.kind === 'media' || m.kind === 'camera') html += '［照片／影片］' + escapeHtml(m.text);
           else if (m.kind === 'file') html += '［檔案］' + escapeHtml(m.text);
           else html += escapeHtml(m.text);
           html += '<div class="msg-time">' + m.time + '</div>';
           div.innerHTML = html;
         }
-
-        let timer = null;
+        var timer = null;
         div.addEventListener('touchstart', function () {
           timer = setTimeout(function () { openAction(m.id); }, 450);
         }, { passive: true });
@@ -269,58 +222,114 @@
           e.preventDefault();
           openAction(m.id);
         });
-
         box.appendChild(div);
       });
       box.scrollTop = box.scrollHeight;
+    }
+
+    function pushLocal(kind, text, all) {
+      messages.push({
+        id: 'local_' + Date.now() + '_' + Math.floor(Math.random() * 1000),
+        mine: true,
+        kind: kind || 'text',
+        text: text,
+        all: !!all,
+        time: nowTime(),
+        createdAt: Date.now(),
+        recalled: false,
+        hiddenLocal: false
+      });
+      renderMessages();
+    }
+
+    async function sendMsg() {
+      var input = document.getElementById('msgInput');
+      var text = input.value.trim();
+      if (!text) return;
+
+      var all = false;
+      if (/^@all\b/i.test(text) || text.indexOf('@全體') === 0) {
+        all = true;
+        text = text.replace(/^@all\b/i, '').replace(/^@全體/, '').trim() || '（全體通知）';
+      }
+      input.value = '';
+
+      if (!myUser || !supabase) {
+        pushLocal('text', text, all);
+        setStatus('本機模式（未登入或未連線）');
+        return;
+      }
+
+      setStatus('送出中…');
+      var res = await supabase.from('messages').insert({
+        room_id: roomId,
+        user_id: myUser.id,
+        sender_name: myUser.email || 'user',
+        kind: 'text',
+        body: text,
+        is_all: all
+      });
+      if (res.error) {
+        setStatus('送出失敗：' + res.error.message);
+        pushLocal('text', text, all);
+        return;
+      }
+      setStatus('即時通訊已開啟');
+    }
+
+    async function sendPayload(kind, text) {
+      if (!myUser || !supabase) {
+        pushLocal(kind, text, false);
+        setStatus('本機模式（未登入）');
+        return;
+      }
+      var res = await supabase.from('messages').insert({
+        room_id: roomId,
+        user_id: myUser.id,
+        sender_name: myUser.email || 'user',
+        kind: kind,
+        body: text,
+        is_all: false
+      });
+      if (res.error) {
+        setStatus('送出失敗：' + res.error.message);
+        pushLocal(kind, text, false);
+      }
     }
 
     async function initRealtime() {
       try {
         setStatus('檢查套件…');
         if (!window.supabase || !window.supabase.createClient) {
-          setStatus('套件載入失敗，請重新整理');
+          setStatus('套件未載入，可先本機聊天');
           return;
         }
         supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
         setStatus('檢查登入…');
-        const sessionPromise = supabase.auth.getSession();
-        const timeoutPromise = new Promise(function (resolve) {
-          setTimeout(function () {
-            resolve({ data: { session: null }, timeout: true });
-          }, 5000);
-        });
-        const result = await Promise.race([sessionPromise, timeoutPromise]);
-
-        if (result.timeout) {
-          setStatus('連線逾時，請重新登入');
-          return;
-        }
-
-        const session = result.data && result.data.session;
+        var sessRes = await supabase.auth.getSession();
+        var session = sessRes.data && sessRes.data.session;
         if (!session) {
-          setStatus('未登入，前往登入頁…');
-          setTimeout(function () { location.href = 'login.html'; }, 1000);
+          setStatus('未登入：可本機聊天，或先去登入');
           return;
         }
 
         myUser = session.user;
         setStatus('已登入，載入訊息…');
 
-        const { data, error } = await supabase
+        var q = await supabase
           .from('messages')
           .select('*')
           .eq('room_id', roomId)
           .order('created_at', { ascending: true })
           .limit(100);
 
-        if (error) {
-          setStatus('載入失敗：' + error.message);
+        if (q.error) {
+          setStatus('載入失敗：' + q.error.message + '（仍可本機聊天）');
           return;
         }
 
-        messages = (data || []).map(rowToLocal);
+        messages = (q.data || []).map(rowToLocal);
         renderMessages();
         setStatus('已連線');
 
@@ -333,77 +342,26 @@
             filter: 'room_id=eq.' + roomId
           }, function (payload) {
             if (payload.eventType === 'INSERT') {
-              const m = rowToLocal(payload.new);
+              var m = rowToLocal(payload.new);
               if (!messages.find(function (x) { return x.id === m.id; })) {
                 messages.push(m);
                 renderMessages();
-                if (!m.mine) playNotify();
               }
             }
             if (payload.eventType === 'UPDATE') {
-              const m = rowToLocal(payload.new);
-              const i = messages.findIndex(function (x) { return x.id === m.id; });
-              if (i >= 0) messages[i] = Object.assign({}, messages[i], m);
-              else messages.push(m);
+              var m2 = rowToLocal(payload.new);
+              var i = messages.findIndex(function (x) { return x.id === m2.id; });
+              if (i >= 0) messages[i] = Object.assign({}, messages[i], m2);
+              else messages.push(m2);
               renderMessages();
             }
           })
           .subscribe(function (status) {
             if (status === 'SUBSCRIBED') setStatus('即時通訊已開啟');
-            if (status === 'CHANNEL_ERROR') setStatus('即時通道錯誤');
           });
       } catch (e) {
-        setStatus('錯誤：' + (e && e.message ? e.message : String(e)));
+        setStatus('錯誤：' + (e && e.message ? e.message : e));
       }
-    }
-
-    async function sendMsg() {
-      const input = document.getElementById('msgInput');
-      let text = input.value.trim();
-      if (!text || !myUser || !supabase) return;
-
-      let all = false;
-      if (/^@all\b/i.test(text) || text.indexOf('@全體') === 0) {
-        all = true;
-        text = text.replace(/^@all\b/i, '').replace(/^@全體/, '').trim() || '（全體通知）';
-      }
-
-      input.value = '';
-      const { error } = await supabase.from('messages').insert({
-        room_id: roomId,
-        user_id: myUser.id,
-        sender_name: myUser.email || 'user',
-        kind: 'text',
-        body: text,
-        is_all: all
-      });
-      if (error) alert('送出失敗：' + error.message);
-    }
-
-    async function sendPayload(kind, text) {
-      if (!myUser || !supabase) return;
-      const { error } = await supabase.from('messages').insert({
-        room_id: roomId,
-        user_id: myUser.id,
-        sender_name: myUser.email || 'user',
-        kind: kind,
-        body: text,
-        is_all: false
-      });
-      if (error) alert('送出失敗：' + error.message);
-    }
-
-    function sendSticker(emoji) {
-      document.getElementById('stickerPanel').classList.remove('show');
-      sendPayload('sticker', emoji);
-    }
-
-    function onFilePicked(ev, kind) {
-      const f = ev.target.files && ev.target.files[0];
-      if (!f) return;
-      sendPayload(kind, f.name);
-      ev.target.value = '';
-      closePlus();
     }
 
     function openPlus() {
@@ -414,70 +372,87 @@
       document.getElementById('plusMask').classList.remove('show');
       document.getElementById('plusSheet').classList.remove('show');
     }
-    function pickAlbum() { document.getElementById('fileAlbum').click(); }
-    function pickFile() { document.getElementById('fileAny').click(); }
-    function openCamera() { document.getElementById('fileCamera').click(); }
-
-    function toggleStickers() {
-      const p = document.getElementById('stickerPanel');
-      p.classList.toggle('show');
-      if (p.classList.contains('show') && !document.getElementById('stickerGrid').children.length) {
-        stickers.forEach(function (s) {
-          const span = document.createElement('span');
-          span.textContent = s;
-          span.onclick = function () { sendSticker(s); };
-          document.getElementById('stickerGrid').appendChild(span);
-        });
-      }
-    }
 
     function openAction(id) {
       selectedId = id;
-      const m = messages.find(function (x) { return x.id === id; });
+      var m = messages.find(function (x) { return x.id === id; });
       if (!m || m.recalled || m.hiddenLocal) return;
-      const box = document.getElementById('actionBox');
-      let html = '';
-      const canRecall = m.mine && !m.recalled && (Date.now() - m.createdAt <= RECALL_MS);
-      if (canRecall) html += '<div class="action-item" onclick="doRecall()">回收（2分鐘內）</div>';
-      html += '<div class="action-item danger" onclick="doDeleteLocal()">刪除（僅此手機）</div>';
-      html += '<div class="action-item" onclick="closeAction()">取消</div>';
+      var box = document.getElementById('actionBox');
+      var html = '';
+      var canRecall = m.mine && !m.recalled && (Date.now() - m.createdAt <= RECALL_MS) && String(m.id).indexOf('local_') !== 0;
+      if (canRecall) html += '<div class="action-item" id="actRecall">回收（2分鐘內）</div>';
+      html += '<div class="action-item danger" id="actDel">刪除（僅此手機）</div>';
+      html += '<div class="action-item" id="actCancel">取消</div>';
       box.innerHTML = html;
       document.getElementById('actionMask').classList.add('show');
       box.classList.add('show');
+      var r = document.getElementById('actRecall');
+      if (r) r.onclick = doRecall;
+      document.getElementById('actDel').onclick = doDeleteLocal;
+      document.getElementById('actCancel').onclick = closeAction;
     }
-
     function closeAction() {
       selectedId = null;
       document.getElementById('actionMask').classList.remove('show');
       document.getElementById('actionBox').classList.remove('show');
     }
-
     async function doRecall() {
-      const m = messages.find(function (x) { return x.id === selectedId; });
-      if (!m || !m.mine || Date.now() - m.createdAt > RECALL_MS) {
-        alert('已超過 2 分鐘，無法回收');
-        closeAction();
-        return;
-      }
-      const { error } = await supabase
-        .from('messages')
-        .update({ recalled: true })
-        .eq('id', m.id)
-        .eq('user_id', myUser.id);
-      if (error) alert('回收失敗：' + error.message);
+      var m = messages.find(function (x) { return x.id === selectedId; });
       closeAction();
+      if (!m || !supabase || !myUser) return;
+      var res = await supabase.from('messages').update({ recalled: true }).eq('id', m.id).eq('user_id', myUser.id);
+      if (res.error) setStatus('回收失敗：' + res.error.message);
     }
-
     function doDeleteLocal() {
-      const m = messages.find(function (x) { return x.id === selectedId; });
+      var m = messages.find(function (x) { return x.id === selectedId; });
       if (m) m.hiddenLocal = true;
       closeAction();
       renderMessages();
     }
 
-    function toggleVoice() {
-      const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-      if (!SR) { alert('此瀏覽器不支援語音轉文字'); return; }
+    document.getElementById('btnSend').onclick = sendMsg;
+    document.getElementById('msgInput').addEventListener('keydown', function (e) {
+      if (e.key === 'Enter') sendMsg();
+    });
+    document.getElementById('btnPlus').onclick = openPlus;
+    document.getElementById('plusMask').onclick = closePlus;
+    document.getElementById('plusCancel').onclick = closePlus;
+    document.getElementById('pickAlbum').onclick = function () { document.getElementById('fileAlbum').click(); };
+    document.getElementById('pickFile').onclick = function () { document.getElementById('fileAny').click(); };
+    document.getElementById('btnCam').onclick = function () { document.getElementById('fileCamera').click(); };
+    document.getElementById('actionMask').onclick = closeAction;
+
+    function onFile(kind, input) {
+      var f = input.files && input.files[0];
+      if (!f) return;
+      sendPayload(kind, f.name);
+      input.value = '';
+      closePlus();
+    }
+    document.getElementById('fileAlbum').onchange = function () { onFile('media', this); };
+    document.getElementById('fileAny').onchange = function () { onFile('file', this); };
+    document.getElementById('fileCamera').onchange = function () { onFile('camera', this); };
+
+    document.getElementById('btnSticker').onclick = function () {
+      var p = document.getElementById('stickerPanel');
+      p.classList.toggle('show');
+      var grid = document.getElementById('stickerGrid');
+      if (p.classList.contains('show') && !grid.children.length) {
+        stickers.forEach(function (s) {
+          var span = document.createElement('span');
+          span.textContent = s;
+          span.onclick = function () {
+            p.classList.remove('show');
+            sendPayload('sticker', s);
+          };
+          grid.appendChild(span);
+        });
+      }
+    };
+
+    document.getElementById('btnVoice').onclick = function () {
+      var SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+      if (!SR) { setStatus('不支援語音轉文字'); return; }
       if (recognizing && recognition) {
         recognition.stop();
         recognizing = false;
@@ -486,10 +461,9 @@
       }
       recognition = new SR();
       recognition.lang = 'zh-TW';
-      recognition.interimResults = false;
       recognition.onresult = function (e) {
-        const t = e.results[0][0].transcript;
-        const input = document.getElementById('msgInput');
+        var t = e.results[0][0].transcript;
+        var input = document.getElementById('msgInput');
         input.value = (input.value ? input.value + ' ' : '') + t;
       };
       recognition.onend = recognition.onerror = function () {
@@ -499,22 +473,24 @@
       recognizing = true;
       document.getElementById('btnVoice').textContent = '聆聽中';
       recognition.start();
-    }
+    };
 
-    document.getElementById('msgInput').addEventListener('keydown', function (e) {
-      if (e.key === 'Enter') sendMsg();
-    });
-
-    // 等套件載入再連線
+    // 啟動
+    setStatus('等待套件…');
+    var tries = 0;
     function boot() {
+      tries += 1;
       if (window.supabase) {
         initRealtime();
+      } else if (tries < 30) {
+        setStatus('等待套件…(' + tries + ')');
+        setTimeout(boot, 200);
       } else {
-        setStatus('等待套件…');
-        setTimeout(boot, 300);
+        setStatus('套件載入失敗，可本機聊天');
       }
     }
     boot();
+  })();
   </script>
 </body>
 </html>
