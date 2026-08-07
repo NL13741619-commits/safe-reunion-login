@@ -142,7 +142,7 @@
     async function signInWithLine() {
       if (!window.supabaseClient) return;
       const { error } = await window.supabaseClient.auth.signInWithOAuth({
-        provider: 'custom:line',
+        provider: 'CUSTOM:LINE',
         options: { redirectTo: window.location.href }
       });
       if (error) showStatus('LINE 失敗：' + error.message, true);
