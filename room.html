@@ -421,6 +421,13 @@
               else messages.push(m2);
               renderMessages();
             }
+            if (payload.eventType === 'DELETE') {
+              var delId = payload.old && payload.old.id;
+              if (delId) {
+                messages = messages.filter(function (x) { return x.id !== delId; });
+                renderMessages();
+              }
+            }
           })
           .subscribe(function (status) {
             if (status === 'SUBSCRIBED') setStatus('即時通訊已開啟');
@@ -447,7 +454,7 @@
       var html = '';
       var canRecall = m.mine && !m.recalled && (Date.now() - m.createdAt <= RECALL_MS) && String(m.id).indexOf('local_') !== 0;
       if (canRecall) html += '<div class="action-item" id="actRecall">回收（2分鐘內）</div>';
-      html += '<div class="action-item danger" id="actDel">刪除（僅此手機）</div>';
+      html += '<div class="action-item danger" id="actDel">刪除</div>';
       html += '<div class="action-item" id="actCancel">取消</div>';
       box.innerHTML = html;
       document.getElementById('actionMask').classList.add('show');
@@ -469,11 +476,39 @@
       var res = await supabase.from('messages').update({ recalled: true }).eq('id', m.id).eq('user_id', myUser.id);
       if (res.error) setStatus('回收失敗：' + res.error.message);
     }
-    function doDeleteLocal() {
+
+    async function doDeleteLocal() {
       var m = messages.find(function (x) { return x.id === selectedId; });
-      if (m) m.hiddenLocal = true;
       closeAction();
+      if (!m) return;
+
+      if (String(m.id).indexOf('local_') === 0) {
+        m.hiddenLocal = true;
+        renderMessages();
+        return;
+      }
+
+      if (!m.mine || !supabase || !myUser) {
+        m.hiddenLocal = true;
+        renderMessages();
+        return;
+      }
+
+      setStatus('刪除中…');
+      var res = await supabase
+        .from('messages')
+        .delete()
+        .eq('id', m.id)
+        .eq('user_id', myUser.id);
+
+      if (res.error) {
+        setStatus('刪除失敗：' + res.error.message);
+        return;
+      }
+
+      messages = messages.filter(function (x) { return x.id !== m.id; });
       renderMessages();
+      setStatus('即時通訊已開啟');
     }
 
     document.getElementById('btnSend').onclick = sendMsg;
