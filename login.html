@@ -189,10 +189,27 @@
         if (error) showStatus('LINE 失敗：' + error.message, true);
       };
 
-      document.getElementById('btnForgot').onclick = function (e) {
-        e.preventDefault();
-        alert('忘記密碼功能下一步會做');
-      };
+      document.getElementById('btnForgot').onclick = async function (e) {
+  e.preventDefault();
+  const email = document.getElementById('email').value.trim();
+  if (!email) {
+    showStatus('請先輸入 Email，再點忘記密碼', true);
+    return;
+  }
+  showStatus('正在寄送重設密碼信…');
+  try {
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: 'https://nl13741619-commits.github.io/safe-reunion-login/reset-password.html'
+    });
+    if (error) {
+      showStatus('寄送失敗：' + error.message, true);
+      return;
+    }
+    showStatus('重設密碼信已寄出，請到信箱查看。');
+  } catch (err) {
+    showStatus('發生錯誤：' + err.message, true);
+  }
+};
     });
   </script>
 </body>
