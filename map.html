@@ -31,6 +31,23 @@
 
     #map { flex: 1; width: 100%; min-height: 220px; }
 
+    #speedAlert {
+      display: none;
+      position: fixed;
+      top: 56px;
+      left: 12px;
+      right: 12px;
+      z-index: 2000;
+      background: #c62828;
+      color: #fff;
+      padding: 12px 14px;
+      border-radius: 12px;
+      font-size: 15px;
+      font-weight: 600;
+      text-align: center;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.25);
+    }
+
     .panel {
       background: white;
       padding: 12px 14px 20px;
@@ -124,6 +141,7 @@
     </div>
   </div>
 
+  <div id="speedAlert"></div>
   <div id="map"></div>
 
   <div class="panel">
@@ -135,7 +153,7 @@
     </div>
 
     <div class="list-title">搜尋並設定集合點</div>
-    <input type="text" id="searchInput" placeholder="搜尋地點（例如：花蓮火車站、台北車站）" onkeydown="if(event.key==='Enter')searchPlace()">
+    <input type="text" id="searchInput" placeholder="搜尋地點（例如：花蓮火車站）" onkeydown="if(event.key==='Enter')searchPlace()">
     <div class="row">
       <button class="btn btn-green" style="flex:1" onclick="searchPlace()">搜尋</button>
       <button class="btn btn-outline" style="flex:1" onclick="setMeetHere()">用目前位置</button>
@@ -170,6 +188,15 @@
     ];
     const memberMarkers = {};
 
+    // 示範測速點（之後可改接警政署開放資料）
+    const speedCams = [
+      { name: '台北示範測速', lat: 25.0330, lng: 121.5654, limit: 50 },
+      { name: '台中示範測速', lat: 24.1477, lng: 120.6736, limit: 60 },
+      { name: '花蓮示範測速', lat: 23.9929, lng: 121.6015, limit: 50 }
+    ];
+    const alertedCams = {};
+    const ALERT_RADIUS_M = 300;
+
     function openShelterMap() {
       window.open('https://adr.npa.gov.tw/map', '_blank');
     }
@@ -189,6 +216,38 @@
       if (km == null || isNaN(km)) return '—';
       if (km < 1) return Math.round(km * 1000) + ' 公尺';
       return km.toFixed(1) + ' 公里';
+    }
+
+    function speak(text) {
+      try {
+        if (!window.speechSynthesis) return;
+        window.speechSynthesis.cancel();
+        const u = new SpeechSynthesisUtterance(text);
+        u.lang = 'zh-TW';
+        u.rate = 1.0;
+        window.speechSynthesis.speak(u);
+      } catch (e) {}
+    }
+
+    function showSpeedAlert(msg) {
+      const el = document.getElementById('speedAlert');
+      el.textContent = msg;
+      el.style.display = 'block';
+      speak(msg);
+      setTimeout(function () { el.style.display = 'none'; }, 5000);
+    }
+
+    function checkSpeedCams() {
+      if (myLat == null || myLng == null) return;
+      const now = Date.now();
+      speedCams.forEach(function (cam) {
+        const meters = haversine(myLat, myLng, cam.lat, cam.lng) * 1000;
+        if (meters > ALERT_RADIUS_M) return;
+        const key = cam.name + '_' + cam.lat + '_' + cam.lng;
+        if (alertedCams[key] && now - alertedCams[key] < 60000) return;
+        alertedCams[key] = now;
+        showSpeedAlert('注意，前方測速照相，速限 ' + cam.limit + ' 公里');
+      });
     }
 
     function setMeetPoint(lat, lng, label) {
@@ -217,26 +276,19 @@
         alert('請輸入要搜尋的地點');
         return;
       }
-
       const box = document.getElementById('searchResults');
       box.style.display = 'block';
       box.innerHTML = '<div class="search-item">搜尋中…</div>';
-
       try {
-        // OpenStreetMap Nominatim（免費，請勿過於頻繁搜尋）
         const url = 'https://nominatim.openstreetmap.org/search?format=json&addressdetails=1&limit=6&countrycodes=tw&q=' + encodeURIComponent(q);
-        const res = await fetch(url, {
-          headers: { 'Accept-Language': 'zh-TW' }
-        });
+        const res = await fetch(url, { headers: { 'Accept-Language': 'zh-TW' } });
         const data = await res.json();
-
         if (!data.length) {
           box.innerHTML = '<div class="search-item">找不到地點，請換關鍵字</div>';
           return;
         }
-
         box.innerHTML = '';
-        data.forEach(item => {
+        data.forEach(function (item) {
           const div = document.createElement('div');
           div.className = 'search-item';
           div.textContent = item.display_name;
@@ -266,7 +318,7 @@
     function renderMembers() {
       const box = document.getElementById('memberList');
       box.innerHTML = '';
-      members.forEach(m => {
+      members.forEach(function (m) {
         if (m.lat != null) {
           if (!memberMarkers[m.id]) {
             memberMarkers[m.id] = L.circleMarker([m.lat, m.lng], {
@@ -276,12 +328,10 @@
             memberMarkers[m.id].setLatLng([m.lat, m.lng]);
           }
         }
-
         let distText = '—';
         if (meetLat != null && m.lat != null) {
           distText = formatDist(haversine(m.lat, m.lng, meetLat, meetLng));
         }
-
         const div = document.createElement('div');
         div.className = 'person';
         div.innerHTML =
@@ -296,7 +346,7 @@
 
     function simulateFamilyMove() {
       if (meetLat == null) return;
-      members.forEach(m => {
+      members.forEach(function (m) {
         if (m.id === 'me' || m.lat == null) return;
         m.lat += (meetLat - m.lat) * 0.03;
         m.lng += (meetLng - m.lng) * 0.03;
@@ -309,6 +359,7 @@
       myLng = pos.coords.longitude;
       updateMyMarker();
       renderMembers();
+      checkSpeedCams();
       const t = new Date();
       document.getElementById('updateInfo').textContent =
         '已更新 ' + t.getHours() + ':' + String(t.getMinutes()).padStart(2,'0') + ':' + String(t.getSeconds()).padStart(2,'0');
@@ -342,18 +393,24 @@
       document.getElementById('btnShare').className = 'btn btn-red';
       document.getElementById('shareStatus').textContent = '定位分享：開啟（約每 5 秒）';
 
+      // 先解鎖語音（iOS 需要使用者手勢）
+      speak('定位已開啟');
+
       watchId = navigator.geolocation.watchPosition(
         onPosition,
-        err => {
+        function (err) {
           alert('定位失敗：' + err.message);
           toggleShare();
         },
         { enableHighAccuracy: true, maximumAge: 3000, timeout: 10000 }
       );
 
-      updateTimer = setInterval(() => {
-        if (myLat != null) onPosition({ coords: { latitude: myLat, longitude: myLng } });
+      updateTimer = setInterval(function () {
+        if (myLat != null) {
+          onPosition({ coords: { latitude: myLat, longitude: myLng } });
+        }
         simulateFamilyMove();
+        checkSpeedCams();
       }, 5000);
     }
 
