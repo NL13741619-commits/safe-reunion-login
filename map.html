@@ -136,7 +136,7 @@
   <div class="header">
     <a class="back" href="chat.html">‹</a>
     <div class="header-info">
-      <div class="header-title" id="groupName">家人群組・定位</div>
+      <div class="header-title" id="groupName">定位集合</div>
       <div class="header-sub" id="updateInfo">尚未開始定位</div>
     </div>
   </div>
@@ -161,7 +161,7 @@
     <div class="search-results" id="searchResults"></div>
     <div class="status" id="meetInfo">尚未設定集合點</div>
 
-    <div class="list-title">成員位置（示意）</div>
+    <div class="list-title">本群組成員位置</div>
     <div id="memberList"></div>
   </div>
 
@@ -179,16 +179,42 @@
     let meetMarker = null;
     let meetLat = null, meetLng = null;
     let updateTimer = null;
-
-    let members = [
-      { id: 'me', name: '我', lat: null, lng: null, color: '#06C755' },
-      { id: 'aunt', name: '姑姑（台中出發）', lat: 24.1477, lng: 120.6736, color: '#1e88e5' },
-      { id: 'mom', name: '媽媽（新北出發）', lat: 25.0169, lng: 121.4628, color: '#f4511e' },
-      { id: 'sis', name: '妹妹（台北出發）', lat: 25.0330, lng: 121.5654, color: '#8e24aa' }
-    ];
     const memberMarkers = {};
 
-    // 示範測速點（之後可改接警政署開放資料）
+    // 依群組名稱決定示範成員（之後改接資料庫真實成員）
+    function buildMembers(groupName) {
+      const me = { id: 'me', name: '我', lat: null, lng: null, color: '#06C755' };
+      const n = groupName || '';
+
+      if (n.indexOf('家人') >= 0) {
+        return [
+          me,
+          { id: 'aunt', name: '姑姑', lat: 24.1477, lng: 120.6736, color: '#1e88e5' },
+          { id: 'mom', name: '媽媽', lat: 25.0169, lng: 121.4628, color: '#f4511e' },
+          { id: 'sis', name: '妹妹', lat: 25.0330, lng: 121.5654, color: '#8e24aa' }
+        ];
+      }
+
+      if (n.indexOf('同學') >= 0 || n.indexOf('碩') >= 0) {
+        return [
+          me,
+          { id: 'c1', name: '同學A', lat: 25.04, lng: 121.52, color: '#1e88e5' },
+          { id: 'c2', name: '同學B', lat: 25.05, lng: 121.54, color: '#8e24aa' }
+        ];
+      }
+
+      // 其他群組：只顯示自己
+      return [me];
+    }
+
+    const params = new URLSearchParams(location.search);
+    const gname = params.get('name') ? decodeURIComponent(params.get('name')) : '';
+    if (gname) {
+      document.getElementById('groupName').textContent = gname + '・定位';
+    }
+    let members = buildMembers(gname);
+
+    // 示範測速點（之後可改接官方資料）
     const speedCams = [
       { name: '台北示範測速', lat: 25.0330, lng: 121.5654, limit: 50 },
       { name: '台中示範測速', lat: 24.1477, lng: 120.6736, limit: 60 },
@@ -203,13 +229,13 @@
 
     function haversine(lat1, lng1, lat2, lng2) {
       const R = 6371;
-      const toRad = d => d * Math.PI / 180;
+      const toRad = function (d) { return d * Math.PI / 180; };
       const dLat = toRad(lat2 - lat1);
       const dLng = toRad(lng2 - lng1);
-      const a = Math.sin(dLat/2)**2 +
+      const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
                 Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) *
-                Math.sin(dLng/2)**2;
-      return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+                Math.sin(dLng/2) * Math.sin(dLng/2);
+      return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
     }
 
     function formatDist(km) {
@@ -318,6 +344,9 @@
     function renderMembers() {
       const box = document.getElementById('memberList');
       box.innerHTML = '';
+      if (members.length <= 1) {
+        box.innerHTML = '<div class="status">目前只有你。其他成員開啟定位後才會出現。</div>';
+      }
       members.forEach(function (m) {
         if (m.lat != null) {
           if (!memberMarkers[m.id]) {
@@ -362,7 +391,7 @@
       checkSpeedCams();
       const t = new Date();
       document.getElementById('updateInfo').textContent =
-        '已更新 ' + t.getHours() + ':' + String(t.getMinutes()).padStart(2,'0') + ':' + String(t.getSeconds()).padStart(2,'0');
+        '已更新 ' + t.getHours() + ':' + String(t.getMinutes()).padStart(2, '0') + ':' + String(t.getSeconds()).padStart(2, '0');
     }
 
     function toggleShare() {
@@ -392,8 +421,6 @@
       document.getElementById('btnShare').textContent = '關閉定位';
       document.getElementById('btnShare').className = 'btn btn-red';
       document.getElementById('shareStatus').textContent = '定位分享：開啟（約每 5 秒）';
-
-      // 先解鎖語音（iOS 需要使用者手勢）
       speak('定位已開啟');
 
       watchId = navigator.geolocation.watchPosition(
@@ -412,12 +439,6 @@
         simulateFamilyMove();
         checkSpeedCams();
       }, 5000);
-    }
-
-    const params = new URLSearchParams(location.search);
-    const gname = params.get('name');
-    if (gname) {
-      document.getElementById('groupName').textContent = decodeURIComponent(gname) + '・定位';
     }
 
     renderMembers();
