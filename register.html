@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>註冊 - 安全團聚</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: #f5f5f5;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .card {
+      background: white;
+      border-radius: 20px;
+      padding: 32px 24px;
+      width: 100%;
+      max-width: 380px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+    }
+    h1 { text-align: center; font-size: 22px; margin-bottom: 6px; }
+    .sub { text-align: center; color: #888; font-size: 14px; margin-bottom: 24px; }
+    label {
+      display: block;
+      font-size: 13px;
+      color: #666;
+      margin-bottom: 4px;
+      margin-top: 12px;
+    }
+    input {
+      width: 100%;
+      padding: 14px 16px;
+      border: 1px solid #e0e0e0;
+      border-radius: 12px;
+      font-size: 15px;
+      outline: none;
+    }
+    input:focus { border-color: #06C755; }
+    .btn {
+      width: 100%;
+      padding: 14px;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 600;
+      border: none;
+      margin-top: 24px;
+      margin-bottom: 12px;
+      cursor: pointer;
+    }
+    .btn-green { background: #06C755; color: white; }
+    .btn-outline {
+      background: white;
+      border: 1px solid #ddd;
+      color: #333;
+    }
+    .divider {
+      text-align: center;
+      color: #aaa;
+      font-size: 13px;
+      margin: 16px 0;
+    }
+    .links {
+      text-align: center;
+      margin-top: 16px;
+      font-size: 14px;
+    }
+    .links a { color: #06C755; text-decoration: none; }
+    .status {
+      margin-top: 16px;
+      padding: 12px;
+      border-radius: 10px;
+      font-size: 13px;
+      display: none;
+    }
+    .status.ok { background: #e8f5e9; color: #2e7d32; display: block; }
+    .status.err { background: #fdecea; color: #c62828; display: block; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>建立帳號</h1>
+    <div class="sub">加入安全團聚</div>
+
+    <label>暱稱</label>
+    <input type="text" id="nickname" placeholder="顯示給朋友看的名字">
+
+    <label>帳號</label>
+    <input type="text" id="username" placeholder="登入用帳號（英文或數字）">
+
+    <label>Email</label>
+    <input type="email" id="email" placeholder="用於登入與找回密碼">
+
+    <label>手機號碼</label>
+    <input type="tel" id="phone" placeholder="09xxxxxxxx（用於簡訊驗證）">
+
+    <label>密碼</label>
+    <input type="password" id="password" placeholder="至少 6 碼">
+
+    <label>確認密碼</label>
+    <input type="password" id="password2" placeholder="再輸入一次密碼">
+
+    <button class="btn btn-green" onclick="signUp()">註冊</button>
+
+    <div class="divider">或使用以下方式快速註冊</div>
+
+    <button class="btn btn-outline" onclick="signInGoogle()">用 Google 註冊</button>
+    <button class="btn btn-outline" onclick="signInLine()">用 LINE 註冊</button>
+
+    <div class="links">
+      已有帳號？ <a href="login.html">立即登入</a>
+    </div>
+
+    <div id="status" class="status"></div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    const SUPABASE_URL = 'https://perfsipperncvjocznhl.supabase.co';
+    const SUPABASE_KEY = 'sb_publishable_qpqAwj49L6HcWqWTnNsTxw_oBEauWBA';
+    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+    function showStatus(msg, isError = false) {
+      const el = document.getElementById('status');
+      el.textContent = msg;
+      el.className = 'status ' + (isError ? 'err' : 'ok');
+    }
+
+    async function signUp() {
+      const nickname = document.getElementById('nickname').value.trim();
+      const username = document.getElementById('username').value.trim();
+      const email = document.getElementById('email').value.trim();
+      const phone = document.getElementById('phone').value.trim();
+      const password = document.getElementById('password').value;
+      const password2 = document.getElementById('password2').value;
+
+      if (!nickname || !username || !email || !password) {
+        showStatus('請填寫暱稱、帳號、Email 和密碼', true);
+        return;
+      }
+      if (password !== password2) {
+        showStatus('兩次密碼不一致', true);
+        return;
+      }
+      if (password.length < 6) {
+        showStatus('密碼至少需要 6 碼', true);
+        return;
+      }
+
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            nickname,
+            username,
+            phone
+          }
+        }
+      });
+
+      if (error) {
+        showStatus('註冊失敗：' + error.message, true);
+        return;
+      }
+
+      showStatus('註冊成功！請至信箱收取確認信，然後返回登入。');
+      setTimeout(() => location.href = 'login.html', 2500);
+    }
+
+    async function signInGoogle() {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: { redirectTo: window.location.origin + '/safe-reunion-login/home.html' }
+      });
+      if (error) showStatus('Google 失敗：' + error.message, true);
+    }
+
+    async function signInLine() {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'CUSTOM:LINE',
+        options: { redirectTo: window.location.origin + '/safe-reunion-login/home.html' }
+      });
+      if (error) showStatus('LINE 失敗：' + error.message, true);
+    }
+  </script>
+</body>
+</html>
