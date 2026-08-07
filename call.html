@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>視訊通話 - 安全團聚</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: #000;
+      color: white;
+      height: 100vh;
+      overflow: hidden;
+      position: relative;
+    }
+    #localVideoFull {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      background: #222;
+      transform: scaleX(-1);
+    }
+    #localVideo {
+      position: absolute;
+      top: 60px;
+      right: 16px;
+      width: 110px;
+      height: 150px;
+      border-radius: 12px;
+      object-fit: cover;
+      transform: scaleX(-1);
+      border: 2px solid rgba(255,255,255,0.5);
+      z-index: 10;
+      background: #333;
+    }
+    .top-bar {
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      padding: 16px;
+      padding-top: 50px;
+      background: linear-gradient(rgba(0,0,0,0.6), transparent);
+      z-index: 20;
+      text-align: center;
+    }
+    .top-name { font-size: 17px; font-weight: 600; }
+    .top-status { font-size: 13px; opacity: 0.85; margin-top: 4px; }
+    .controls {
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      padding: 20px 16px 40px;
+      background: linear-gradient(transparent, rgba(0,0,0,0.75));
+      display: flex;
+      justify-content: center;
+      gap: 18px;
+      z-index: 20;
+    }
+    .ctrl {
+      width: 56px; height: 56px;
+      border-radius: 50%;
+      border: none;
+      background: rgba(255,255,255,0.25);
+      color: white;
+      font-size: 22px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .ctrl.off { background: #e53935; }
+    .ctrl.hangup {
+      background: #e53935;
+      width: 64px; height: 64px;
+      font-size: 26px;
+    }
+  </style>
+</head>
+<body>
+  <video id="localVideoFull" autoplay playsinline muted></video>
+  <video id="localVideo" autoplay playsinline muted></video>
+
+  <div class="top-bar">
+    <div class="top-name" id="callName">視訊通話</div>
+    <div class="top-status" id="callStatus">連線中…</div>
+  </div>
+
+  <div class="controls">
+    <button class="ctrl" id="btnMic" onclick="toggleMic()">🎤</button>
+    <button class="ctrl" id="btnSpeaker" onclick="toggleSpeaker()">🔊</button>
+    <button class="ctrl" id="btnCam" onclick="toggleCam()">📹</button>
+    <button class="ctrl hangup" onclick="hangup()">📞</button>
+  </div>
+
+  <script>
+    let stream = null;
+    let micOn = true;
+    let camOn = true;
+    let speakerOn = true;
+
+    async function start() {
+      try {
+        stream = await navigator.mediaDevices.getUserMedia({
+          audio: true,
+          video: { facingMode: 'user' }
+        });
+        document.getElementById('localVideoFull').srcObject = stream;
+        document.getElementById('localVideo').srcObject = stream;
+        document.getElementById('callStatus').textContent = '本機預覽（尚未連線對方）';
+      } catch (e) {
+        document.getElementById('callStatus').textContent = '失敗：' + e.message;
+      }
+    }
+
+    function toggleMic() {
+      if (!stream) return;
+      micOn = !micOn;
+      stream.getAudioTracks().forEach(t => t.enabled = micOn);
+      const btn = document.getElementById('btnMic');
+      btn.textContent = micOn ? '🎤' : '🔇';
+      btn.classList.toggle('off', !micOn);
+    }
+
+    function toggleCam() {
+      if (!stream) return;
+      camOn = !camOn;
+      stream.getVideoTracks().forEach(t => t.enabled = camOn);
+      const btn = document.getElementById('btnCam');
+      btn.textContent = camOn ? '📹' : '🚫';
+      btn.classList.toggle('off', !camOn);
+    }
+
+    function toggleSpeaker() {
+      speakerOn = !speakerOn;
+      const btn = document.getElementById('btnSpeaker');
+      btn.textContent = speakerOn ? '🔊' : '🔈';
+      btn.classList.toggle('off', !speakerOn);
+      document.getElementById('callStatus').textContent =
+        speakerOn ? '喇叭開啟' : '喇叭關閉（靜音對方）';
+    }
+
+    function hangup() {
+      if (stream) {
+        stream.getTracks().forEach(t => t.stop());
+        stream = null;
+      }
+      location.href = 'chat.html';
+    }
+
+    const params = new URLSearchParams(location.search);
+    const name = params.get('name');
+    if (name) {
+      document.getElementById('callName').textContent = decodeURIComponent(name);
+    }
+
+    start();
+  </script>
+</body>
+</html>
