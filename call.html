@@ -25,6 +25,9 @@
       background: #1a1a1a;
       transform: scaleX(-1);
     }
+    #localVideoFull.beauty {
+      filter: brightness(1.12) contrast(1.05) saturate(1.08) blur(0.35px);
+    }
     #audioBg {
       position: absolute;
       inset: 0;
@@ -52,6 +55,9 @@
       z-index: 10;
       background: #333;
       display: none;
+    }
+    #localVideo.beauty {
+      filter: brightness(1.12) contrast(1.05) saturate(1.08) blur(0.35px);
     }
 
     #miniMapWrap {
@@ -110,26 +116,29 @@
       background: linear-gradient(transparent, rgba(0,0,0,0.75));
       display: flex;
       justify-content: center;
-      gap: 16px;
+      gap: 12px;
       z-index: 20;
+      flex-wrap: wrap;
     }
     .ctrl {
-      width: 54px; height: 54px;
+      width: 52px; height: 52px;
       border-radius: 50%;
       border: none;
       background: rgba(255,255,255,0.22);
       color: white;
-      font-size: 20px;
+      font-size: 13px;
+      font-weight: 600;
       cursor: pointer;
       display: flex;
       align-items: center;
       justify-content: center;
     }
     .ctrl.off { background: #e53935; }
+    .ctrl.on-beauty { background: #f48fb1; color: #111; }
     .ctrl.hangup {
       background: #e53935;
-      width: 60px; height: 60px;
-      font-size: 24px;
+      width: 58px; height: 58px;
+      font-size: 22px;
     }
   </style>
 </head>
@@ -154,10 +163,11 @@
   </div>
 
   <div class="controls">
-    <button class="ctrl" id="btnMic" onclick="toggleMic()">🎤</button>
-    <button class="ctrl" id="btnSpeaker" onclick="toggleSpeaker()">🔊</button>
-    <button class="ctrl" id="btnCam" onclick="toggleCam()">📹</button>
-    <button class="ctrl hangup" onclick="hangup()">📞</button>
+    <button class="ctrl" id="btnMic" onclick="toggleMic()">麥</button>
+    <button class="ctrl" id="btnSpeaker" onclick="toggleSpeaker()">聲</button>
+    <button class="ctrl" id="btnCam" onclick="toggleCam()">鏡頭</button>
+    <button class="ctrl" id="btnBeauty" onclick="toggleBeauty()">美顏</button>
+    <button class="ctrl hangup" onclick="hangup()">掛斷</button>
   </div>
 
   <script>
@@ -165,21 +175,43 @@
     let micOn = true;
     let camOn = true;
     let speakerOn = true;
+    let beautyOn = false;
 
     const params = new URLSearchParams(location.search);
-    const mode = params.get('mode') || 'video'; // audio | video
+    const mode = params.get('mode') || 'video';
     const name = params.get('name');
     if (name) document.getElementById('callName').textContent = decodeURIComponent(name);
 
     let miniMap;
     let memberMarkers = {};
     let meetLat = 23.9929, meetLng = 121.6015;
+    // 示範移動點：之後改成依群組成員動態載入，不要寫死親戚
     let members = [
       { id: 'me', name: '我', lat: null, lng: null, color: '#06C755' },
-      { id: 'aunt', name: '姑姑', lat: 24.15, lng: 120.68, color: '#1e88e5' },
-      { id: 'mom', name: '媽媽', lat: 25.02, lng: 121.46, color: '#f4511e' },
-      { id: 'sis', name: '妹妹', lat: 25.03, lng: 121.56, color: '#8e24aa' }
+      { id: 'p1', name: '成員A', lat: 24.15, lng: 120.68, color: '#1e88e5' },
+      { id: 'p2', name: '成員B', lat: 25.02, lng: 121.46, color: '#f4511e' }
     ];
+
+    function applyBeauty() {
+      var full = document.getElementById('localVideoFull');
+      var pip = document.getElementById('localVideo');
+      if (beautyOn) {
+        full.classList.add('beauty');
+        pip.classList.add('beauty');
+      } else {
+        full.classList.remove('beauty');
+        pip.classList.remove('beauty');
+      }
+      var btn = document.getElementById('btnBeauty');
+      btn.classList.toggle('on-beauty', beautyOn);
+      btn.textContent = beautyOn ? '美顏開' : '美顏';
+    }
+
+    function toggleBeauty() {
+      if (mode === 'audio') return;
+      beautyOn = !beautyOn;
+      applyBeauty();
+    }
 
     function initMiniMap() {
       miniMap = L.map('miniMap', {
@@ -225,16 +257,15 @@
     async function start() {
       try {
         if (mode === 'audio') {
-          // 語音：只要麥克風，大畫面顯示語音背景 + 小地圖
           document.getElementById('audioBg').style.display = 'flex';
           document.getElementById('localVideoFull').style.display = 'none';
           document.getElementById('localVideo').style.display = 'none';
           document.getElementById('btnCam').style.display = 'none';
+          document.getElementById('btnBeauty').style.display = 'none';
 
           stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
           document.getElementById('callStatus').textContent = '語音通話中（小地圖已開啟）';
         } else {
-          // 視訊：鏡頭 + 子母畫面 + 小地圖
           document.getElementById('audioBg').style.display = 'none';
           document.getElementById('localVideo').style.display = 'block';
 
@@ -245,6 +276,7 @@
           document.getElementById('localVideoFull').srcObject = stream;
           document.getElementById('localVideo').srcObject = stream;
           document.getElementById('callStatus').textContent = '視訊通話中（小地圖已開啟）';
+          applyBeauty();
         }
 
         if (navigator.geolocation) {
@@ -271,7 +303,7 @@
       micOn = !micOn;
       stream.getAudioTracks().forEach(function (t) { t.enabled = micOn; });
       const btn = document.getElementById('btnMic');
-      btn.textContent = micOn ? '🎤' : '🔇';
+      btn.textContent = micOn ? '麥' : '靜音';
       btn.classList.toggle('off', !micOn);
     }
 
@@ -280,14 +312,14 @@
       camOn = !camOn;
       stream.getVideoTracks().forEach(function (t) { t.enabled = camOn; });
       const btn = document.getElementById('btnCam');
-      btn.textContent = camOn ? '📹' : '🚫';
+      btn.textContent = camOn ? '鏡頭' : '關鏡';
       btn.classList.toggle('off', !camOn);
     }
 
     function toggleSpeaker() {
       speakerOn = !speakerOn;
       const btn = document.getElementById('btnSpeaker');
-      btn.textContent = speakerOn ? '🔊' : '🔈';
+      btn.textContent = speakerOn ? '聲' : '關聲';
       btn.classList.toggle('off', !speakerOn);
     }
 
