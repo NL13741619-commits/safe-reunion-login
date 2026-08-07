@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>聊天 - 安全團聚</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: #f5f5f5;
+      min-height: 100vh;
+      padding-bottom: 70px;
+      color: #111;
+    }
+    .header {
+      background: #06C755;
+      color: white;
+      padding: 14px 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .header h1 { font-size: 18px; font-weight: 700; }
+    .header-btn {
+      background: transparent;
+      border: none;
+      color: white;
+      font-size: 22px;
+      cursor: pointer;
+    }
+
+    .chat-item {
+      background: white;
+      padding: 14px 16px;
+      display: flex;
+      gap: 12px;
+      border-bottom: 1px solid #f0f0f0;
+      align-items: center;
+    }
+    .avatar {
+      width: 48px; height: 48px;
+      border-radius: 50%;
+      background: #e8f5e9;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+      flex-shrink: 0;
+    }
+    .chat-info { flex: 1; min-width: 0; }
+    .chat-top {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 4px;
+    }
+    .chat-name { font-weight: 600; font-size: 15px; }
+    .chat-time { font-size: 12px; color: #999; }
+    .chat-preview {
+      font-size: 13px;
+      color: #888;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .badge {
+      background: #06C755;
+      color: white;
+      font-size: 11px;
+      padding: 2px 7px;
+      border-radius: 10px;
+      margin-left: 8px;
+    }
+
+    .empty {
+      text-align: center;
+      padding: 60px 20px;
+      color: #999;
+    }
+    .empty-icon { font-size: 48px; margin-bottom: 12px; }
+
+    .bottom-nav {
+      position: fixed;
+      bottom: 0; left: 0; right: 0;
+      background: white;
+      border-top: 1px solid #eaeaea;
+      display: flex;
+      justify-content: space-around;
+      padding: 8px 0 18px;
+      z-index: 100;
+    }
+    .nav-item {
+      text-align: center;
+      color: #999;
+      font-size: 10px;
+      width: 60px;
+      text-decoration: none;
+    }
+    .nav-item.active { color: #06C755; }
+    .nav-icon { font-size: 22px; margin-bottom: 2px; }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>聊天</h1>
+    <button class="header-btn" onclick="alert('之後可新增群組或好友聊天')">＋</button>
+  </div>
+
+  <!-- 範例聊天列表（之後接真實資料） -->
+  <div class="chat-item" onclick="alert('之後進入對話頁')">
+    <div class="avatar">👨</div>
+    <div class="chat-info">
+      <div class="chat-top">
+        <div class="chat-name">家人群組</div>
+        <div class="chat-time">剛剛</div>
+      </div>
+      <div class="chat-preview">今天集合點在公園門口</div>
+    </div>
+    <div class="badge">2</div>
+  </div>
+
+  <div class="chat-item" onclick="alert('之後進入對話頁')">
+    <div class="avatar">👩</div>
+    <div class="chat-info">
+      <div class="chat-top">
+        <div class="chat-name">老婆</div>
+        <div class="chat-time">昨天</div>
+      </div>
+      <div class="chat-preview">物資清單我整理好了</div>
+    </div>
+  </div>
+
+  <div class="chat-item" onclick="alert('之後進入對話頁')">
+    <div class="avatar">👥</div>
+    <div class="chat-info">
+      <div class="chat-top">
+        <div class="chat-name">碩班同學</div>
+        <div class="chat-time">週一</div>
+      </div>
+      <div class="chat-preview">下週報告記得交</div>
+    </div>
+  </div>
+
+  <div class="bottom-nav">
+    <a class="nav-item" href="home.html" style="text-decoration:none; color:inherit;">
+      <div class="nav-icon">🏠</div>
+      首頁
+    </a>
+    <a class="nav-item active" href="chat.html" style="text-decoration:none; color:inherit;">
+      <div class="nav-icon">💬</div>
+      聊天
+    </a>
+    <a class="nav-item" href="contacts.html" style="text-decoration:none; color:inherit;">
+      <div class="nav-icon">👥</div>
+      通訊錄
+    </a>
+    <a class="nav-item" href="me.html" style="text-decoration:none; color:inherit;">
+      <div class="nav-icon">👤</div>
+      我
+    </a>
+  </div>
+</body>
+</html>
