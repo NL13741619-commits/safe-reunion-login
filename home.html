@@ -3,20 +3,20 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>安全團聚 - 主畫面</title>
+  <title>安全團聚</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-      background: #F5F7FA;
+      background: #ffffff;
       min-height: 100vh;
-      padding-bottom: 80px;
+      padding-bottom: 70px;
+      color: #111;
     }
-    /* 頂部 */
     .header {
-      background: #1E3A5F;
+      background: #06C755;
       color: white;
-      padding: 16px 20px;
+      padding: 14px 16px;
       display: flex;
       justify-content: space-between;
       align-items: center;
@@ -24,167 +24,238 @@
       top: 0;
       z-index: 100;
     }
-    .header h1 { font-size: 18px; font-weight: 600; }
-    .header-right { display: flex; align-items: center; gap: 12px; }
-    .avatar {
-      width: 36px; height: 36px;
-      border-radius: 50%;
-      background: #4A6FA5;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 14px; font-weight: 600;
-    }
-    /* 內容區 */
-    .content { padding: 20px 16px; }
+    .header h1 { font-size: 18px; font-weight: 700; }
+    .header-right { display: flex; align-items: center; gap: 16px; font-size: 20px; }
+    .content { padding: 0; }
     .section-title {
-      font-size: 15px; font-weight: 600; color: #1E3A5F;
-      margin-bottom: 12px;
+      padding: 14px 16px 8px;
+      font-size: 13px;
+      color: #888;
+      font-weight: 500;
     }
-    /* 家庭成員卡片 */
-    .member-card {
-      background: white;
-      border-radius: 14px;
-      padding: 14px 16px;
-      margin-bottom: 10px;
+    .member-item {
       display: flex;
       align-items: center;
+      padding: 12px 16px;
+      border-bottom: 1px solid #f0f0f0;
       gap: 12px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.04);
     }
+    .member-item:active { background: #f8f8f8; }
     .member-avatar {
-      width: 44px; height: 44px;
+      width: 48px; height: 48px;
       border-radius: 50%;
-      background: #E8EEF5;
+      background: #e9e9e9;
       display: flex; align-items: center; justify-content: center;
-      font-size: 18px;
-    }
-    .member-info { flex: 1; }
-    .member-name { font-size: 16px; font-weight: 600; color: #1a1a1a; }
-    .member-status { font-size: 13px; color: #666; margin-top: 2px; }
-    .status-dot {
-      width: 10px; height: 10px;
-      border-radius: 50%;
-      margin-left: 8px;
-    }
-    .status-safe { background: #43A047; }
-    .status-unknown { background: #FB8C00; }
-    .status-danger { background: #E53935; }
-    /* SOS 按鈕 */
-    .sos-area {
-      margin: 28px 0;
-      text-align: center;
-    }
-    .sos-btn {
-      width: 160px; height: 160px;
-      border-radius: 50%;
-      background: #E53935;
-      color: white;
-      border: none;
       font-size: 22px;
-      font-weight: 700;
-      box-shadow: 0 8px 24px rgba(229, 57, 53, 0.35);
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      margin: 0 auto;
-      cursor: pointer;
+      flex-shrink: 0;
     }
-    .sos-btn span { font-size: 13px; font-weight: 500; margin-top: 4px; opacity: 0.9; }
-    /* 快捷功能 */
-    .quick-grid {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 12px;
-      margin-top: 8px;
+    .member-info { flex: 1; min-width: 0; }
+    .member-name { font-size: 16px; font-weight: 500; }
+    .member-status { font-size: 13px; color: #999; margin-top: 2px; }
+    .status-safe { color: #06C755; }
+    .status-unknown { color: #f5a623; }
+    .status-danger { color: #e74c3c; }
+    .sos-bar {
+      margin: 16px;
+      background: #e74c3c;
+      color: white;
+      border-radius: 12px;
+      padding: 16px;
+      text-align: center;
+      font-size: 17px;
+      font-weight: 700;
+      box-shadow: 0 4px 12px rgba(231, 76, 60, 0.25);
+    }
+    .quick-row {
+      display: flex;
+      justify-content: space-around;
+      padding: 16px 8px;
+      border-top: 8px solid #f5f5f5;
     }
     .quick-item {
-      background: white;
-      border-radius: 14px;
-      padding: 16px 8px;
       text-align: center;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+      width: 70px;
     }
     .quick-icon {
-      width: 40px; height: 40px;
-      border-radius: 12px;
-      background: #E8EEF5;
+      width: 52px; height: 52px;
+      border-radius: 16px;
+      background: #f5f5f5;
       display: flex; align-items: center; justify-content: center;
-      margin: 0 auto 8px;
-      font-size: 20px;
+      margin: 0 auto 6px;
+      font-size: 24px;
     }
-    .quick-label { font-size: 12px; color: #333; font-weight: 500; }
-    /* 底部導覽 */
+    .quick-label { font-size: 12px; color: #555; }
     .bottom-nav {
       position: fixed;
       bottom: 0; left: 0; right: 0;
       background: white;
-      border-top: 1px solid #eee;
+      border-top: 1px solid #eaeaea;
       display: flex;
       justify-content: space-around;
-      padding: 10px 0 20px;
+      padding: 8px 0 18px;
       z-index: 100;
     }
     .nav-item {
       text-align: center;
       color: #999;
-      font-size: 11px;
+      font-size: 10px;
+      width: 60px;
     }
-    .nav-item.active { color: #1E3A5F; }
+    .nav-item.active { color: #06C755; }
     .nav-icon { font-size: 22px; margin-bottom: 2px; }
   </style>
 </head>
 <body>
-  <!-- 頂部 -->
   <div class="header">
     <h1>安全團聚</h1>
     <div class="header-right">
-      <div style="font-size:20px">🔔</div>
-      <div class="avatar">豪</div>
+      <span>🔍</span>
+      <span>➕</span>
     </div>
   </div>
 
   <div class="content">
-    <!-- 家庭成員 -->
-    <div class="section-title">家庭成員</div>
-    
-    <div class="member-card">
-      <div class="member-avatar">👨</div>
-      <div class="member-info">
-        <div class="member-name">爸爸</div>
-        <div class="member-status">最後回報 10 分鐘前</div>
-      </div>
-      <div class="status-dot status-safe"></div>
+    <div class="sos-bar" onclick="alert('SOS 功能之後會接上真實後端')">
+      🚨 緊急求助 SOS
     </div>
 
-    <div class="member-card">
+    <div class="section-title">家庭成員 · 19 人</div>
+
+    <div class="member-item">
+      <div class="member-avatar">👤</div>
+      <div class="member-info">
+        <div class="member-name">我</div>
+        <div class="member-status status-safe">在線</div>
+      </div>
+    </div>
+    <div class="member-item">
+      <div class="member-avatar">👩</div>
+      <div class="member-info">
+        <div class="member-name">老婆</div>
+        <div class="member-status status-safe">安全</div>
+      </div>
+    </div>
+    <div class="member-item">
       <div class="member-avatar">👩</div>
       <div class="member-info">
         <div class="member-name">媽媽</div>
-        <div class="member-status">最後回報 25 分鐘前</div>
+        <div class="member-status status-safe">安全</div>
       </div>
-      <div class="status-dot status-safe"></div>
     </div>
-
-    <div class="member-card">
+    <div class="member-item">
+      <div class="member-avatar">👨</div>
+      <div class="member-info">
+        <div class="member-name">弟弟</div>
+        <div class="member-status status-unknown">尚未回報</div>
+      </div>
+    </div>
+    <div class="member-item">
+      <div class="member-avatar">👩</div>
+      <div class="member-info">
+        <div class="member-name">姑姑</div>
+        <div class="member-status status-safe">安全</div>
+      </div>
+    </div>
+    <div class="member-item">
+      <div class="member-avatar">👨</div>
+      <div class="member-info">
+        <div class="member-name">叔叔</div>
+        <div class="member-status status-safe">安全</div>
+      </div>
+    </div>
+    <div class="member-item">
+      <div class="member-avatar">👨</div>
+      <div class="member-info">
+        <div class="member-name">舅舅</div>
+        <div class="member-status status-safe">安全</div>
+      </div>
+    </div>
+    <div class="member-item">
+      <div class="member-avatar">👩</div>
+      <div class="member-info">
+        <div class="member-name">姑媽</div>
+        <div class="member-status status-safe">安全</div>
+      </div>
+    </div>
+    <div class="member-item">
+      <div class="member-avatar">👨</div>
+      <div class="member-info">
+        <div class="member-name">妹夫</div>
+        <div class="member-status status-safe">安全</div>
+      </div>
+    </div>
+    <div class="member-item">
+      <div class="member-avatar">👦</div>
+      <div class="member-info">
+        <div class="member-name">侄子</div>
+        <div class="member-status status-safe">安全</div>
+      </div>
+    </div>
+    <div class="member-item">
       <div class="member-avatar">👧</div>
       <div class="member-info">
-        <div class="member-name">小美</div>
-        <div class="member-status">尚未回報</div>
+        <div class="member-name">姪女</div>
+        <div class="member-status status-safe">安全</div>
       </div>
-      <div class="status-dot status-unknown"></div>
+    </div>
+    <div class="member-item">
+      <div class="member-avatar">👨</div>
+      <div class="member-info">
+        <div class="member-name">表哥</div>
+        <div class="member-status status-safe">安全</div>
+      </div>
+    </div>
+    <div class="member-item">
+      <div class="member-avatar">👨</div>
+      <div class="member-info">
+        <div class="member-name">表弟</div>
+        <div class="member-status status-unknown">尚未回報</div>
+      </div>
+    </div>
+    <div class="member-item">
+      <div class="member-avatar">👩</div>
+      <div class="member-info">
+        <div class="member-name">表姐</div>
+        <div class="member-status status-safe">安全</div>
+      </div>
+    </div>
+    <div class="member-item">
+      <div class="member-avatar">👩</div>
+      <div class="member-info">
+        <div class="member-name">表妹</div>
+        <div class="member-status status-safe">安全</div>
+      </div>
+    </div>
+    <div class="member-item">
+      <div class="member-avatar">👨</div>
+      <div class="member-info">
+        <div class="member-name">堂哥</div>
+        <div class="member-status status-safe">安全</div>
+      </div>
+    </div>
+    <div class="member-item">
+      <div class="member-avatar">👩</div>
+      <div class="member-info">
+        <div class="member-name">堂姐</div>
+        <div class="member-status status-safe">安全</div>
+      </div>
+    </div>
+    <div class="member-item">
+      <div class="member-avatar">👨</div>
+      <div class="member-info">
+        <div class="member-name">堂弟</div>
+        <div class="member-status status-safe">安全</div>
+      </div>
+    </div>
+    <div class="member-item">
+      <div class="member-avatar">👩</div>
+      <div class="member-info">
+        <div class="member-name">堂妹</div>
+        <div class="member-status status-safe">安全</div>
+      </div>
     </div>
 
-    <!-- SOS -->
-    <div class="sos-area">
-      <button class="sos-btn" onclick="alert('SOS 功能之後會接上真實後端')">
-        SOS
-        <span>緊急求助</span>
-      </button>
-    </div>
-
-    <!-- 快捷功能 -->
-    <div class="section-title">快捷功能</div>
-    <div class="quick-grid">
+    <div class="quick-row">
       <div class="quick-item">
         <div class="quick-icon">🗺️</div>
         <div class="quick-label">地圖</div>
@@ -204,7 +275,6 @@
     </div>
   </div>
 
-  <!-- 底部導覽 -->
   <div class="bottom-nav">
     <div class="nav-item active">
       <div class="nav-icon">🏠</div>
