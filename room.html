@@ -229,11 +229,12 @@
       <div class="header-status" id="roomStatus">5 位成員</div>
     </div>
     <div class="header-actions">
-      <button onclick="alert('搜尋訊息（之後做）')">🔍</button>
-      <button onclick="startCall()">📞</button>
-      <button onclick="alert('行事曆（之後做）')">📅</button>
-      <button onclick="openMenu()">☰</button>
-    </div>
+  <button onclick="alert('搜尋訊息（之後做）')">🔍</button>
+  <button onclick="startCall()">📞</button>
+  <button onclick="location.href='map.html?name=' + encodeURIComponent(document.getElementById('roomName').textContent)">🛰️</button>
+  <button onclick="alert('行事曆（之後做）')">📅</button>
+  <button onclick="openMenu()">☰</button>
+</div>
   </div>
 
   <div class="messages" id="messages">
