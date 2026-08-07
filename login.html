@@ -78,6 +78,7 @@
       border-radius: 10px;
       font-size: 13px;
       display: none;
+      word-break: break-all;
     }
     .status.ok { background: #e8f5e9; color: #2e7d32; display: block; }
     .status.err { background: #fdecea; color: #c62828; display: block; }
@@ -88,23 +89,23 @@
     <h1>安全團聚</h1>
     <div class="sub">登入你的帳號</div>
 
-    <input type="email" id="email" placeholder="Email 或帳號">
+    <input type="email" id="email" placeholder="Email">
     <input type="password" id="password" placeholder="密碼">
 
     <label class="remember">
       <input type="checkbox" id="remember"> 記住我（15 天）
     </label>
 
-    <button class="btn btn-green" onclick="signInEmail()">登入</button>
+    <button class="btn btn-green" id="btnLogin">登入</button>
 
     <div class="divider">或使用以下方式</div>
 
-    <button class="btn btn-outline" onclick="signInGoogle()">用 Google 登入</button>
-    <button class="btn btn-outline" onclick="signInLine()">用 LINE 登入</button>
+    <button class="btn btn-outline" id="btnGoogle">用 Google 登入</button>
+    <button class="btn btn-outline" id="btnLine">用 LINE 登入</button>
 
     <div class="links">
       <a href="register.html">註冊新帳號</a>
-      <a href="#" onclick="forgotPassword()">忘記密碼</a>
+      <a href="#" id="btnForgot">忘記密碼</a>
     </div>
 
     <div id="status" class="status"></div>
@@ -116,23 +117,21 @@
     const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBlcmZzaXBwZXJuY3Zqb2N6bmhsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODYwMTUyMzAsImV4cCI6MjEwMTU5MTIzMH0.I7vXkV247kAzRJ0RigDZt3Hzn8KJDyMc6o9E3oHJZoY';
     const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-    function showStatus(msg, isError = false) {
+    function showStatus(msg, isError) {
       const el = document.getElementById('status');
       el.textContent = msg;
       el.className = 'status ' + (isError ? 'err' : 'ok');
     }
 
-    // 記住我 15 天
     function setRemember(days) {
       if (days > 0) {
-        const expire = Date.now() + days * 24 * 60 * 60 * 1000;
-        localStorage.setItem('remember_until', expire);
+        localStorage.setItem('remember_until', Date.now() + days * 24 * 60 * 60 * 1000);
       } else {
         localStorage.removeItem('remember_until');
       }
     }
 
-    async function signInEmail() {
+    document.getElementById('btnLogin').onclick = async function () {
       const email = document.getElementById('email').value.trim();
       const password = document.getElementById('password').value;
       const remember = document.getElementById('remember').checked;
@@ -142,40 +141,54 @@
         return;
       }
 
-      const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-      if (error) {
-        showStatus('登入失敗：' + error.message, true);
-        return;
+      showStatus('登入中…');
+
+      try {
+        const { data, error } = await supabase.auth.signInWithPassword({
+          email: email,
+          password: password
+        });
+
+        if (error) {
+          showStatus('登入失敗：' + error.message, true);
+          return;
+        }
+
+        setRemember(remember ? 15 : 0);
+        showStatus('登入成功，正在進入…');
+        setTimeout(function () {
+          location.href = 'home.html';
+        }, 600);
+      } catch (e) {
+        showStatus('發生錯誤：' + e.message, true);
       }
+    };
 
-      setRemember(remember ? 15 : 0);
-      showStatus('登入成功，正在進入…');
-      setTimeout(() => location.href = 'home.html', 600);
-    }
-
-    async function signInGoogle() {
+    document.getElementById('btnGoogle').onclick = async function () {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
-        options: { redirectTo: window.location.origin + '/safe-reunion-login/home.html' }
+        options: { redirectTo: 'https://nl13741619-commits.github.io/safe-reunion-login/home.html' }
       });
-      if (error) showStatus('Google 登入失敗：' + error.message, true);
-    }
+      if (error) showStatus('Google 失敗：' + error.message, true);
+    };
 
-    async function signInLine() {
+    document.getElementById('btnLine').onclick = async function () {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'CUSTOM:LINE',
-        options: { redirectTo: window.location.origin + '/safe-reunion-login/home.html' }
+        options: { redirectTo: 'https://nl13741619-commits.github.io/safe-reunion-login/home.html' }
       });
-      if (error) showStatus('LINE 登入失敗：' + error.message, true);
-    }
+      if (error) showStatus('LINE 失敗：' + error.message, true);
+    };
 
-    function forgotPassword() {
+    document.getElementById('btnForgot').onclick = function (e) {
+      e.preventDefault();
       alert('忘記密碼功能下一步會做');
-    }
+    };
 
-    // 檢查是否已登入
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session) location.href = 'home.html';
+    supabase.auth.getSession().then(function (result) {
+      if (result.data.session) {
+        location.href = 'home.html';
+      }
     });
   </script>
 </body>
