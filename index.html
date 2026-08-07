@@ -106,12 +106,16 @@
     document.head.appendChild(script);
 
     function showUser(user) {
-      document.getElementById('login-form').style.display = 'none';
-      document.getElementById('logout-btn').style.display = 'block';
-      const info = document.getElementById('user-info');
-      info.style.display = 'block';
-      info.innerHTML = `<strong>登入成功！</strong><br>Email: ${user.email || '無'}<br>UID: ${user.id}`;
-    }
+  const info = document.getElementById('user-info');
+  if (info) {
+    info.style.display = 'block';
+    info.innerHTML = `<strong>登入成功！</strong><br>正在進入主畫面...`;
+  }
+  // 0.8 秒後跳轉到主畫面
+  setTimeout(() => {
+    window.location.href = 'home.html';
+  }, 800);
+}
 
     async function signInWithEmail() {
       if (!window.supabaseClient) {
