@@ -272,59 +272,80 @@
     }
 
     async function initRealtime() {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        document.getElementById('roomStatus').textContent = '請先登入';
-        location.href = 'login.html';
-        return;
-      }
-      myUser = session.user;
-      document.getElementById('roomStatus').textContent = '已連線';
+  try {
+    document.getElementById('roomStatus').textContent = '檢查登入…';
 
-      const { data, error } = await supabase
-        .from('messages')
-        .select('*')
-        .eq('room_id', roomId)
-        .order('created_at', { ascending: true })
-        .limit(100);
+    // 最多等 5 秒，避免一直轉
+    const sessionPromise = supabase.auth.getSession();
+    const timeoutPromise = new Promise(function (resolve) {
+      setTimeout(function () { resolve({ data: { session: null }, timeout: true }); }, 5000);
+    });
+    const result = await Promise.race([sessionPromise, timeoutPromise]);
 
-      if (error) {
-        document.getElementById('roomStatus').textContent = '載入失敗：' + error.message;
-      } else {
-        messages = (data || []).map(rowToLocal);
-        renderMessages();
-      }
-
-      supabase
-        .channel('room:' + roomId)
-        .on('postgres_changes', {
-          event: '*',
-          schema: 'public',
-          table: 'messages',
-          filter: 'room_id=eq.' + roomId
-        }, function (payload) {
-          if (payload.eventType === 'INSERT') {
-            const m = rowToLocal(payload.new);
-            if (!messages.find(function (x) { return x.id === m.id; })) {
-              messages.push(m);
-              renderMessages();
-              if (!m.mine) playNotify();
-            }
-          }
-          if (payload.eventType === 'UPDATE') {
-            const m = rowToLocal(payload.new);
-            const i = messages.findIndex(function (x) { return x.id === m.id; });
-            if (i >= 0) messages[i] = Object.assign({}, messages[i], m);
-            else messages.push(m);
-            renderMessages();
-          }
-        })
-        .subscribe(function (status) {
-          if (status === 'SUBSCRIBED') {
-            document.getElementById('roomStatus').textContent = '即時通訊已開啟';
-          }
-        });
+    if (result.timeout) {
+      document.getElementById('roomStatus').textContent = '連線逾時，請重新登入';
+      return;
     }
+
+    const session = result.data && result.data.session;
+    if (!session) {
+      document.getElementById('roomStatus').textContent = '未登入，前往登入頁…';
+      setTimeout(function () { location.href = 'login.html'; }, 1000);
+      return;
+    }
+
+    myUser = session.user;
+    document.getElementById('roomStatus').textContent = '已登入，載入訊息…';
+
+    const { data, error } = await supabase
+      .from('messages')
+      .select('*')
+      .eq('room_id', roomId)
+      .order('created_at', { ascending: true })
+      .limit(100);
+
+    if (error) {
+      document.getElementById('roomStatus').textContent = '載入失敗：' + error.message;
+      return;
+    }
+
+    messages = (data || []).map(rowToLocal);
+    renderMessages();
+    document.getElementById('roomStatus').textContent = '已連線';
+
+    supabase
+      .channel('room:' + roomId)
+      .on('postgres_changes', {
+        event: '*',
+        schema: 'public',
+        table: 'messages',
+        filter: 'room_id=eq.' + roomId
+      }, function (payload) {
+        if (payload.eventType === 'INSERT') {
+          const m = rowToLocal(payload.new);
+          if (!messages.find(function (x) { return x.id === m.id; })) {
+            messages.push(m);
+            renderMessages();
+            if (!m.mine) playNotify();
+          }
+        }
+        if (payload.eventType === 'UPDATE') {
+          const m = rowToLocal(payload.new);
+          const i = messages.findIndex(function (x) { return x.id === m.id; });
+          if (i >= 0) messages[i] = Object.assign({}, messages[i], m);
+          else messages.push(m);
+          renderMessages();
+        }
+      })
+      .subscribe(function (status) {
+        if (status === 'SUBSCRIBED') {
+          document.getElementById('roomStatus').textContent = '即時通訊已開啟';
+        }
+      });
+  } catch (e) {
+    document.getElementById('roomStatus').textContent = '錯誤：' + (e && e.message ? e.message : e);
+  }
+}
 
     async function sendMsg() {
       const input = document.getElementById('msgInput');
