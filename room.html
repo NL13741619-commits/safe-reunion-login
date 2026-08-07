@@ -8,10 +8,11 @@
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-      background: #e5ddd5;
+      background: #e8e8e8;
       min-height: 100vh;
       display: flex;
       flex-direction: column;
+      color: #111;
     }
     .header {
       background: #06C755;
@@ -24,53 +25,35 @@
       top: 0;
       z-index: 100;
     }
-    .back {
-      color: white;
-      text-decoration: none;
-      font-size: 24px;
-      line-height: 1;
-      padding: 4px;
-    }
+    .back { color: white; text-decoration: none; font-size: 24px; line-height: 1; padding: 4px; }
     .header-info { flex: 1; min-width: 0; }
-    .header-name {
-      font-weight: 700;
-      font-size: 16px;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
+    .header-name { font-weight: 700; font-size: 16px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .header-status { font-size: 12px; opacity: 0.9; }
-    .header-actions {
-      display: flex;
-      align-items: center;
-      gap: 4px;
-    }
+    .header-actions { display: flex; gap: 2px; }
     .header-actions button {
-      background: transparent;
-      border: none;
-      color: white;
-      font-size: 18px;
-      padding: 6px;
-      cursor: pointer;
+      background: transparent; border: none; color: white;
+      font-size: 13px; padding: 6px 8px; cursor: pointer;
     }
+
     .messages {
       flex: 1;
-      padding: 16px;
+      padding: 12px 12px 8px;
       overflow-y: auto;
       display: flex;
       flex-direction: column;
-      gap: 10px;
+      gap: 8px;
     }
     .msg {
-      max-width: 75%;
-      padding: 10px 14px;
-      border-radius: 16px;
+      max-width: 78%;
+      padding: 10px 12px;
+      border-radius: 14px;
       font-size: 15px;
       line-height: 1.4;
       word-break: break-word;
+      position: relative;
     }
     .msg.them {
-      background: white;
+      background: #fff;
       align-self: flex-start;
       border-bottom-left-radius: 4px;
     }
@@ -79,280 +62,513 @@
       align-self: flex-end;
       border-bottom-right-radius: 4px;
     }
+    .msg.recalled {
+      background: #f0f0f0;
+      color: #888;
+      font-size: 13px;
+      font-style: italic;
+    }
     .msg-time {
       font-size: 11px;
       color: #999;
       margin-top: 4px;
       text-align: right;
     }
-    .input-bar {
-      background: #f0f0f0;
-      padding: 10px 12px;
-      display: flex;
-      gap: 8px;
-      align-items: center;
+    .msg-tag {
+      font-size: 11px;
+      color: #06C755;
+      margin-bottom: 4px;
+      font-weight: 600;
+    }
+
+    .composer {
+      background: #f7f7f7;
+      border-top: 1px solid #ddd;
+      padding: 8px 8px 12px;
       position: sticky;
       bottom: 0;
+      z-index: 50;
     }
-    .input-bar input {
-      flex: 1;
-      padding: 10px 14px;
+    .composer-row {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .icon-btn {
+      width: 36px;
+      height: 36px;
       border: none;
-      border-radius: 20px;
+      background: transparent;
+      color: #333;
+      font-size: 20px;
+      cursor: pointer;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .icon-btn:active { opacity: 0.5; }
+    .text-btn {
+      border: none;
+      background: transparent;
+      color: #333;
+      font-size: 13px;
+      padding: 6px 4px;
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+    #msgInput {
+      flex: 1;
+      min-width: 0;
+      border: none;
+      background: #fff;
+      border-radius: 18px;
+      padding: 10px 14px;
       font-size: 15px;
       outline: none;
+      border: 1px solid #e0e0e0;
     }
     .send-btn {
-      width: 40px; height: 40px;
-      border-radius: 50%;
+      border: none;
       background: #06C755;
       color: white;
-      border: none;
-      font-size: 18px;
+      font-size: 13px;
+      font-weight: 600;
+      padding: 8px 12px;
+      border-radius: 16px;
       cursor: pointer;
+      flex-shrink: 0;
     }
-    .overlay {
+    .send-btn:disabled { background: #ccc; }
+
+    .sheet-mask {
       display: none;
       position: fixed;
       inset: 0;
-      background: rgba(0,0,0,0.4);
+      background: rgba(0,0,0,0.35);
       z-index: 200;
     }
-    .overlay.show { display: block; }
-    .side-menu {
+    .sheet-mask.show { display: block; }
+    .sheet {
       position: fixed;
-      top: 0; right: 0;
-      width: 85%;
-      max-width: 320px;
-      height: 100%;
-      background: white;
+      left: 0; right: 0; bottom: 0;
+      background: #fff;
+      border-radius: 14px 14px 0 0;
       z-index: 201;
-      transform: translateX(100%);
-      transition: transform 0.25s ease;
-      overflow-y: auto;
+      padding: 8px 0 24px;
+      transform: translateY(100%);
+      transition: transform 0.2s ease;
     }
-    .side-menu.show { transform: translateX(0); }
-    .menu-header {
-      padding: 16px;
-      border-bottom: 1px solid #eee;
-    }
-    .menu-title { font-size: 16px; font-weight: 700; }
-    .menu-sub { font-size: 13px; color: #888; margin-top: 4px; }
-    .menu-actions {
-      display: flex;
-      justify-content: space-around;
-      padding: 16px 8px;
-      border-bottom: 1px solid #eee;
-    }
-    .menu-action {
-      text-align: center;
-      font-size: 12px;
-      color: #333;
-      width: 64px;
-    }
-    .menu-action-icon {
-      width: 44px; height: 44px;
-      border-radius: 50%;
-      background: #f5f5f5;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 20px;
-      margin: 0 auto 6px;
-    }
-    .menu-list { padding: 8px 0; }
-    .menu-item {
-      padding: 14px 16px;
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      font-size: 15px;
-      border-bottom: 1px solid #f5f5f5;
+    .sheet.show { transform: translateY(0); }
+    .sheet-item {
+      padding: 16px 20px;
+      font-size: 16px;
+      border-bottom: 1px solid #f0f0f0;
       cursor: pointer;
     }
-    .menu-item:active { background: #f9f9f9; }
+    .sheet-item:active { background: #f5f5f5; }
+    .sheet-cancel {
+      margin-top: 8px;
+      text-align: center;
+      color: #06C755;
+      font-weight: 600;
+      padding: 14px;
+      cursor: pointer;
+    }
 
-    #callSheet {
+    .action-mask {
       display: none;
       position: fixed;
       inset: 0;
-      background: rgba(0,0,0,0.45);
+      background: rgba(0,0,0,0.35);
       z-index: 300;
-      align-items: flex-end;
-      justify-content: center;
     }
-    #callSheet.show { display: flex; }
-    .sheet-box {
+    .action-mask.show { display: block; }
+    .action-box {
+      position: fixed;
+      left: 50%;
+      top: 40%;
+      transform: translate(-50%, -50%);
       background: #fff;
-      width: 100%;
-      border-radius: 16px 16px 0 0;
-      padding: 20px 16px 32px;
-      text-align: center;
+      border-radius: 12px;
+      min-width: 200px;
+      overflow: hidden;
+      z-index: 301;
+      display: none;
     }
-    .sheet-title {
+    .action-box.show { display: block; }
+    .action-item {
+      padding: 14px 18px;
       font-size: 15px;
-      color: #666;
-      margin-bottom: 16px;
-    }
-    .sheet-options {
-      display: flex;
-      justify-content: center;
-      gap: 40px;
-      margin-bottom: 20px;
-    }
-    .sheet-opt { cursor: pointer; }
-    .sheet-icon {
-      width: 64px; height: 64px;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 28px;
-      margin: 0 auto 8px;
-    }
-    .sheet-icon.audio { background: #e8f5e9; }
-    .sheet-icon.video { background: #e3f2fd; }
-    .sheet-label { font-size: 13px; color: #333; }
-    .sheet-cancel {
-      color: #06C755;
-      font-size: 16px;
-      padding: 10px;
+      border-bottom: 1px solid #f0f0f0;
       cursor: pointer;
     }
+    .action-item:active { background: #f5f5f5; }
+    .action-item.danger { color: #c62828; }
+
+    .sticker-panel {
+      display: none;
+      background: #fff;
+      border-top: 1px solid #ddd;
+      padding: 10px;
+      max-height: 160px;
+      overflow-y: auto;
+    }
+    .sticker-panel.show { display: block; }
+    .sticker-grid {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 8px;
+    }
+    .sticker-grid span {
+      font-size: 28px;
+      text-align: center;
+      cursor: pointer;
+      padding: 4px;
+    }
+
+    .settings-bar {
+      display: flex;
+      gap: 12px;
+      padding: 4px 8px 0;
+      font-size: 12px;
+      color: #666;
+    }
+    .settings-bar label { display: flex; align-items: center; gap: 4px; cursor: pointer; }
+
+    input[type="file"] { display: none; }
   </style>
 </head>
 <body>
   <div class="header">
     <a class="back" href="chat.html">‹</a>
     <div class="header-info">
-      <div class="header-name" id="roomName">家人群組</div>
-      <div class="header-status" id="roomStatus">5 位成員</div>
+      <div class="header-name" id="roomName">對話</div>
+      <div class="header-status" id="roomStatus">點訊息可長按操作</div>
     </div>
     <div class="header-actions">
-  <button onclick="alert('搜尋訊息（之後做）')">🔍</button>
-  <button onclick="startCall()">📞</button>
-  <button onclick="location.href='map.html?name=' + encodeURIComponent(document.getElementById('roomName').textContent)">🛰️</button>
-  <button onclick="alert('行事曆（之後做）')">📅</button>
-  <button onclick="openMenu()">☰</button>
-</div>
-  </div>
-
-  <div class="messages" id="messages">
-    <div class="msg them">
-      今天集合點在公園門口
-      <div class="msg-time">10:20</div>
-    </div>
-    <div class="msg them">
-      大家記得帶水
-      <div class="msg-time">10:21</div>
-    </div>
-    <div class="msg me">
-      收到，我大概 11 點到
-      <div class="msg-time">10:25</div>
+      <button type="button" onclick="location.href='call.html?mode=audio&name=' + encodeURIComponent(document.getElementById('roomName').textContent)">語音</button>
+      <button type="button" onclick="location.href='call.html?mode=video&name=' + encodeURIComponent(document.getElementById('roomName').textContent)">視訊</button>
+      <button type="button" onclick="location.href='map.html?name=' + encodeURIComponent(document.getElementById('roomName').textContent)">地圖</button>
     </div>
   </div>
 
-  <div class="input-bar">
-    <input type="text" id="msgInput" placeholder="輸入訊息…" onkeydown="if(event.key==='Enter')sendMsg()">
-    <button class="send-btn" onclick="sendMsg()">➤</button>
+  <div class="messages" id="messages"></div>
+
+  <div class="sticker-panel" id="stickerPanel">
+    <div class="sticker-grid" id="stickerGrid"></div>
   </div>
 
-  <div class="overlay" id="overlay" onclick="closeMenu()"></div>
-  <div class="side-menu" id="sideMenu">
-    <div class="menu-header">
-      <div class="menu-title" id="menuTitle">家人群組</div>
-      <div class="menu-sub" id="menuSub">5 位成員</div>
+  <div class="composer">
+    <div class="settings-bar">
+      <label><input type="checkbox" id="optSound" checked> 提示音</label>
+      <label><input type="checkbox" id="optVibrate" checked> 震動</label>
     </div>
-    <div class="menu-actions">
-      <div class="menu-action" onclick="alert('關閉提醒（之後做）')">
-        <div class="menu-action-icon">🔔</div>
-        提醒
-      </div>
-      <div class="menu-action" onclick="alert('成員列表（之後做）')">
-        <div class="menu-action-icon">👥</div>
-        成員
-      </div>
-      <div class="menu-action" onclick="alert('邀請好友（之後做）')">
-        <div class="menu-action-icon">➕</div>
-        邀請
-      </div>
-      <div class="menu-action" onclick="alert('退出群組（之後做）')">
-        <div class="menu-action-icon">🚪</div>
-        退出
-      </div>
-    </div>
-    <div class="menu-list">
-      <div class="menu-item" onclick="alert('照片・影片（之後做）')">🖼️ 照片・影片</div>
-      <div class="menu-item" onclick="alert('相簿（之後做）')">📁 相簿</div>
-      <div class="menu-item" onclick="alert('記事本（之後做）')">📝 記事本</div>
-      <div class="menu-item" onclick="alert('行事曆（之後做）')">📅 行事曆</div>
-      <div class="menu-item" onclick="alert('活動（之後做）')">🎯 活動</div>
-      <div class="menu-item" onclick="alert('連結（之後做）')">🔗 連結</div>
-      <div class="menu-item" onclick="alert('檔案（之後做）')">📄 檔案</div>
-      <div class="menu-item" onclick="alert('設定（之後做）')">⚙️ 設定</div>
+    <div class="composer-row">
+      <button type="button" class="icon-btn" onclick="openPlus()" title="更多">＋</button>
+      <button type="button" class="text-btn" onclick="openCamera()" title="相機">相機</button>
+      <input type="text" id="msgInput" placeholder="輸入訊息，@all 可標註全體" autocomplete="off">
+      <button type="button" class="text-btn" onclick="toggleStickers()" title="表情">表情</button>
+      <button type="button" class="text-btn" id="btnVoice" onclick="toggleVoice()" title="語音轉文字">語音</button>
+      <button type="button" class="send-btn" id="btnSend" onclick="sendMsg()">送出</button>
     </div>
   </div>
 
-  <div id="callSheet">
-    <div class="sheet-box">
-      <div class="sheet-title">選擇通話方式</div>
-      <div class="sheet-options">
-        <div class="sheet-opt" onclick="goCall('audio')">
-          <div class="sheet-icon audio">📞</div>
-          <div class="sheet-label">語音通話</div>
-        </div>
-        <div class="sheet-opt" onclick="goCall('video')">
-          <div class="sheet-icon video">📹</div>
-          <div class="sheet-label">視訊通話</div>
-        </div>
-      </div>
-      <div class="sheet-cancel" onclick="closeCallSheet()">取消</div>
-    </div>
+  <div class="sheet-mask" id="plusMask" onclick="closePlus()"></div>
+  <div class="sheet" id="plusSheet">
+    <div class="sheet-item" onclick="pickAlbum()">相簿（照片／影片）</div>
+    <div class="sheet-item" onclick="pickFile()">檔案（PDF、Word、Excel、MP3、MP4…）</div>
+    <div class="sheet-cancel" onclick="closePlus()">取消</div>
   </div>
+
+  <input type="file" id="fileAlbum" accept="image/*,video/*" onchange="onFilePicked(event, 'media')">
+  <input type="file" id="fileAny" accept=".pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.txt,.mp3,.mp4,.mov,.csv" onchange="onFilePicked(event, 'file')">
+  <input type="file" id="fileCamera" accept="image/*,video/*" capture="environment" onchange="onFilePicked(event, 'camera')">
+
+  <div class="action-mask" id="actionMask" onclick="closeAction()"></div>
+  <div class="action-box" id="actionBox"></div>
 
   <script>
+    const RECALL_MS = 2 * 60 * 1000;
+    let messages = [];
+    let selectedId = null;
+    let recognizing = false;
+    let recognition = null;
+
+    const stickers = ['😀','😅','😂','😊','😍','🤔','👍','👏','🙏','💪','❤️','🔥','✅','❌','🎉','🏠','🚗','📍'];
+
+    function nowTime() {
+      const n = new Date();
+      return n.getHours() + ':' + String(n.getMinutes()).padStart(2, '0');
+    }
+
+    function uid() {
+      return 'm_' + Date.now() + '_' + Math.floor(Math.random() * 1000);
+    }
+
+    function playNotify() {
+      if (document.getElementById('optSound').checked) {
+        try {
+          const ctx = new (window.AudioContext || window.webkitAudioContext)();
+          const o = ctx.createOscillator();
+          const g = ctx.createGain();
+          o.connect(g); g.connect(ctx.destination);
+          o.frequency.value = 880;
+          g.gain.value = 0.05;
+          o.start();
+          setTimeout(function () { o.stop(); ctx.close(); }, 120);
+        } catch (e) {}
+      }
+      if (document.getElementById('optVibrate').checked && navigator.vibrate) {
+        navigator.vibrate(40);
+      }
+    }
+
+    function renderMessages() {
+      const box = document.getElementById('messages');
+      box.innerHTML = '';
+      messages.forEach(function (m) {
+        if (m.hiddenLocal) return;
+        const div = document.createElement('div');
+        let cls = 'msg ' + (m.mine ? 'me' : 'them');
+        if (m.recalled) cls += ' recalled';
+        div.className = cls;
+        div.dataset.id = m.id;
+
+        if (m.recalled) {
+          div.innerHTML = (m.mine ? '你已回收一則訊息' : '對方已回收一則訊息') +
+            '<div class="msg-time">' + m.time + '</div>';
+        } else {
+          let html = '';
+          if (m.all) html += '<div class="msg-tag">@all 全體</div>';
+          if (m.kind === 'text') {
+            html += escapeHtml(m.text);
+          } else if (m.kind === 'sticker') {
+            html += '<span style="font-size:36px">' + m.text + '</span>';
+          } else if (m.kind === 'media' || m.kind === 'camera') {
+            html += '［照片／影片］' + escapeHtml(m.text);
+          } else if (m.kind === 'file') {
+            html += '［檔案］' + escapeHtml(m.text);
+          }
+          html += '<div class="msg-time">' + m.time + '</div>';
+          div.innerHTML = html;
+        }
+
+        let timer = null;
+        div.addEventListener('touchstart', function () {
+          timer = setTimeout(function () { openAction(m.id); }, 450);
+        }, { passive: true });
+        div.addEventListener('touchend', function () { clearTimeout(timer); });
+        div.addEventListener('touchmove', function () { clearTimeout(timer); });
+        div.addEventListener('contextmenu', function (e) {
+          e.preventDefault();
+          openAction(m.id);
+        });
+
+        box.appendChild(div);
+      });
+      box.scrollTop = box.scrollHeight;
+    }
+
+    function escapeHtml(s) {
+      return String(s)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;');
+    }
+
     function sendMsg() {
       const input = document.getElementById('msgInput');
-      const text = input.value.trim();
+      let text = input.value.trim();
       if (!text) return;
-      const messages = document.getElementById('messages');
-      const div = document.createElement('div');
-      div.className = 'msg me';
-      const now = new Date();
-      const time = now.getHours() + ':' + String(now.getMinutes()).padStart(2, '0');
-      div.innerHTML = text + '<div class="msg-time">' + time + '</div>';
-      messages.appendChild(div);
+
+      let all = false;
+      if (/^@all\b/i.test(text) || text.indexOf('@全體') === 0) {
+        all = true;
+        text = text.replace(/^@all\b/i, '').replace(/^@全體/, '').trim() || '（全體通知）';
+      }
+
+      messages.push({
+        id: uid(),
+        mine: true,
+        kind: 'text',
+        text: text,
+        all: all,
+        time: nowTime(),
+        createdAt: Date.now(),
+        recalled: false,
+        hiddenLocal: false
+      });
       input.value = '';
-      messages.scrollTop = messages.scrollHeight;
+      renderMessages();
+      playNotify();
     }
 
-    function openMenu() {
-      document.getElementById('overlay').classList.add('show');
-      document.getElementById('sideMenu').classList.add('show');
-    }
-    function closeMenu() {
-      document.getElementById('overlay').classList.remove('show');
-      document.getElementById('sideMenu').classList.remove('show');
+    function sendSticker(emoji) {
+      messages.push({
+        id: uid(),
+        mine: true,
+        kind: 'sticker',
+        text: emoji,
+        time: nowTime(),
+        createdAt: Date.now(),
+        recalled: false,
+        hiddenLocal: false
+      });
+      document.getElementById('stickerPanel').classList.remove('show');
+      renderMessages();
     }
 
-    function startCall() {
-      document.getElementById('callSheet').classList.add('show');
+    function onFilePicked(ev, kind) {
+      const f = ev.target.files && ev.target.files[0];
+      if (!f) return;
+      messages.push({
+        id: uid(),
+        mine: true,
+        kind: kind,
+        text: f.name,
+        time: nowTime(),
+        createdAt: Date.now(),
+        recalled: false,
+        hiddenLocal: false
+      });
+      ev.target.value = '';
+      closePlus();
+      renderMessages();
+      playNotify();
     }
-    function closeCallSheet() {
-      document.getElementById('callSheet').classList.remove('show');
+
+    function openPlus() {
+      document.getElementById('plusMask').classList.add('show');
+      document.getElementById('plusSheet').classList.add('show');
     }
-    function goCall(mode) {
-      const name = document.getElementById('roomName').textContent || '通話';
-      location.href = 'call.html?name=' + encodeURIComponent(name) + '&mode=' + mode;
+    function closePlus() {
+      document.getElementById('plusMask').classList.remove('show');
+      document.getElementById('plusSheet').classList.remove('show');
     }
+    function pickAlbum() {
+      document.getElementById('fileAlbum').click();
+    }
+    function pickFile() {
+      document.getElementById('fileAny').click();
+    }
+    function openCamera() {
+      document.getElementById('fileCamera').click();
+    }
+
+    function toggleStickers() {
+      const p = document.getElementById('stickerPanel');
+      p.classList.toggle('show');
+      if (p.classList.contains('show') && !document.getElementById('stickerGrid').children.length) {
+        const grid = document.getElementById('stickerGrid');
+        stickers.forEach(function (s) {
+          const span = document.createElement('span');
+          span.textContent = s;
+          span.onclick = function () { sendSticker(s); };
+          grid.appendChild(span);
+        });
+      }
+    }
+
+    function openAction(id) {
+      selectedId = id;
+      const m = messages.find(function (x) { return x.id === id; });
+      if (!m || m.recalled || m.hiddenLocal) return;
+
+      const box = document.getElementById('actionBox');
+      let html = '';
+      const canRecall = m.mine && !m.recalled && (Date.now() - m.createdAt <= RECALL_MS);
+      if (canRecall) {
+        html += '<div class="action-item" onclick="doRecall()">回收（2分鐘內）</div>';
+      }
+      html += '<div class="action-item danger" onclick="doDeleteLocal()">刪除（僅此手機）</div>';
+      html += '<div class="action-item" onclick="closeAction()">取消</div>';
+      box.innerHTML = html;
+      document.getElementById('actionMask').classList.add('show');
+      box.classList.add('show');
+    }
+
+    function closeAction() {
+      selectedId = null;
+      document.getElementById('actionMask').classList.remove('show');
+      document.getElementById('actionBox').classList.remove('show');
+    }
+
+    function doRecall() {
+      const m = messages.find(function (x) { return x.id === selectedId; });
+      if (!m) return;
+      if (!m.mine || Date.now() - m.createdAt > RECALL_MS) {
+        alert('已超過 2 分鐘，無法回收');
+        closeAction();
+        return;
+      }
+      m.recalled = true;
+      closeAction();
+      renderMessages();
+    }
+
+    function doDeleteLocal() {
+      const m = messages.find(function (x) { return x.id === selectedId; });
+      if (!m) return;
+      m.hiddenLocal = true;
+      closeAction();
+      renderMessages();
+    }
+
+    function toggleVoice() {
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      if (!SpeechRecognition) {
+        alert('此瀏覽器不支援語音轉文字，請用 Safari／Chrome');
+        return;
+      }
+      if (recognizing && recognition) {
+        recognition.stop();
+        recognizing = false;
+        document.getElementById('btnVoice').textContent = '語音';
+        return;
+      }
+      recognition = new SpeechRecognition();
+      recognition.lang = 'zh-TW';
+      recognition.interimResults = false;
+      recognition.onresult = function (e) {
+        const text = e.results[0][0].transcript;
+        const input = document.getElementById('msgInput');
+        input.value = (input.value ? input.value + ' ' : '') + text;
+      };
+      recognition.onend = function () {
+        recognizing = false;
+        document.getElementById('btnVoice').textContent = '語音';
+      };
+      recognition.onerror = function () {
+        recognizing = false;
+        document.getElementById('btnVoice').textContent = '語音';
+      };
+      recognizing = true;
+      document.getElementById('btnVoice').textContent = '聆聽中';
+      recognition.start();
+    }
+
+    document.getElementById('msgInput').addEventListener('keydown', function (e) {
+      if (e.key === 'Enter') sendMsg();
+    });
 
     const params = new URLSearchParams(location.search);
     const name = params.get('name');
     if (name) {
-      const decoded = decodeURIComponent(name);
-      document.getElementById('roomName').textContent = decoded;
-      document.getElementById('menuTitle').textContent = decoded;
+      document.getElementById('roomName').textContent = decodeURIComponent(name);
     }
+
+    messages.push({
+      id: uid(),
+      mine: false,
+      kind: 'text',
+      text: '到了跟我說一聲',
+      time: nowTime(),
+      createdAt: Date.now() - 60000,
+      recalled: false,
+      hiddenLocal: false
+    });
+    renderMessages();
   </script>
 </body>
 </html>
