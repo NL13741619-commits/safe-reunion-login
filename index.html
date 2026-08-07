@@ -2,160 +2,59 @@
 <html lang="zh-TW">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>安全團聚 - 登入測試</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>安全團聚</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-      background: #f5f5f5;
+      background: linear-gradient(160deg, #06C755 0%, #04a344 100%);
       min-height: 100vh;
       display: flex;
+      flex-direction: column;
       align-items: center;
       justify-content: center;
-      padding: 20px;
+      padding: 24px;
+      color: white;
     }
-    .card {
+    .logo {
+      width: 88px; height: 88px;
       background: white;
-      border-radius: 16px;
-      padding: 28px 24px;
-      width: 100%;
-      max-width: 380px;
-      box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+      border-radius: 22px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 40px;
+      margin-bottom: 20px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.15);
     }
-    h1 { font-size: 22px; text-align: center; margin-bottom: 8px; }
-    .subtitle { text-align: center; color: #666; font-size: 14px; margin-bottom: 24px; }
-    input {
-      width: 100%;
-      padding: 12px 14px;
-      border: 1px solid #ddd;
-      border-radius: 10px;
-      font-size: 16px;
-      margin-bottom: 12px;
-    }
-    button {
-      width: 100%;
-      padding: 13px;
-      border: none;
-      border-radius: 10px;
+    h1 { font-size: 28px; font-weight: 700; margin-bottom: 8px; }
+    .subtitle { font-size: 15px; opacity: 0.9; margin-bottom: 48px; text-align: center; }
+    .btn {
+      width: 100%; max-width: 320px;
+      padding: 16px;
+      border-radius: 14px;
       font-size: 16px;
       font-weight: 600;
-      margin-bottom: 10px;
+      border: none;
+      margin-bottom: 12px;
+      cursor: pointer;
     }
-    .btn-email { background: #22c55e; color: white; }
-    .btn-google { background: #fff; color: #333; border: 1px solid #ddd; }
-    .btn-line { background: #06C755; color: white; }
-    .btn-logout { background: #ef4444; color: white; margin-top: 16px; }
-    .divider { text-align: center; color: #999; font-size: 13px; margin: 18px 0; }
-    .status { margin-top: 20px; padding: 12px; border-radius: 10px; font-size: 14px; display: none; }
-    .status.success { background: #dcfce7; color: #166534; display: block; }
-    .status.error { background: #fee2e2; color: #991b1b; display: block; }
-    .user-info { background: #f0fdf4; border-radius: 10px; padding: 14px; margin-top: 16px; font-size: 14px; display: none; }
+    .btn-white {
+      background: white;
+      color: #06C755;
+    }
+    .btn-outline {
+      background: transparent;
+      color: white;
+      border: 2px solid rgba(255,255,255,0.7);
+    }
   </style>
 </head>
 <body>
-  <div class="card">
-    <h1>安全團聚</h1>
-    <p class="subtitle">登入測試頁面</p>
+  <div class="logo">🛡️</div>
+  <h1>安全團聚</h1>
+  <div class="subtitle">家人與朋友的安全連結平台</div>
 
-    <div id="login-form">
-      <input type="email" id="email" placeholder="Email" value="n_950143@hotmail.com">
-      <input type="password" id="password" placeholder="密碼">
-      <button class="btn-email" onclick="signInWithEmail()">Email 登入</button>
-
-      <div class="divider">或使用以下方式</div>
-
-      <button class="btn-google" onclick="signInWithGoogle()">用 Google 登入</button>
-      <button class="btn-line" onclick="signInWithLine()">用 LINE 登入</button>
-    </div>
-
-    <div id="user-info" class="user-info"></div>
-    <button id="logout-btn" class="btn-logout" style="display:none" onclick="signOut()">登出</button>
-    <div id="status" class="status"></div>
-  </div>
-
-  <script>
-    // 先顯示狀態
-    function showStatus(msg, isError = false) {
-      const el = document.getElementById('status');
-      el.textContent = msg;
-      el.className = 'status ' + (isError ? 'error' : 'success');
-    }
-
-    showStatus('正在載入系統...');
-
-    // 動態載入 Supabase
-    const script = document.createElement('script');
-    script.src = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2';
-    script.onload = function() {
-      showStatus('系統載入完成，可以登入');
-      
-      const SUPABASE_URL = 'https://perfsipperncvjocznhl.supabase.co';
-      const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBlcmZzaXBwZXJuY3Zqb2N6bmhsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODYwMTUyMzAsImV4cCI6MjEwMTU5MTIzMH0.I7vXkV247kAzRJ0RigDZt3Hzn8KJDyMc6o9E3oHJZoY';
-
-      window.supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-
-      // 檢查目前登入狀態
-      window.supabaseClient.auth.getUser().then(({ data: { user } }) => {
-        if (user) showUser(user);
-      });
-    };
-    script.onerror = function() {
-      showStatus('載入失敗，請重新整理頁面', true);
-    };
-    document.head.appendChild(script);
-
-    function showUser(user) {
-  const info = document.getElementById('user-info');
-  if (info) {
-    info.style.display = 'block';
-    info.innerHTML = `<strong>登入成功！</strong><br>正在進入主畫面...`;
-  }
-  // 0.8 秒後跳轉到主畫面
-  setTimeout(() => {
-    window.location.href = 'home.html';
-  }, 800);
-}
-
-    async function signInWithEmail() {
-      if (!window.supabaseClient) {
-        showStatus('系統還在載入，請稍等', true);
-        return;
-      }
-      const email = document.getElementById('email').value;
-      const password = document.getElementById('password').value;
-      showStatus('登入中...');
-      const { data, error } = await window.supabaseClient.auth.signInWithPassword({ email, password });
-      if (error) {
-        showStatus('登入失敗：' + error.message, true);
-      } else {
-        showUser(data.user);
-        showStatus('Email 登入成功！');
-      }
-    }
-
-    async function signInWithGoogle() {
-      if (!window.supabaseClient) return;
-      const { error } = await window.supabaseClient.auth.signInWithOAuth({
-        provider: 'google',
-        options: { redirectTo: window.location.href }
-      });
-      if (error) showStatus('Google 失敗：' + error.message, true);
-    }
-
-    async function signInWithLine() {
-      if (!window.supabaseClient) return;
-      const { error } = await window.supabaseClient.auth.signInWithOAuth({
-        provider: 'CUSTOM:LINE',
-        options: { redirectTo: window.location.href }
-      });
-      if (error) showStatus('LINE 失敗：' + error.message, true);
-    }
-
-    async function signOut() {
-      await window.supabaseClient.auth.signOut();
-      location.reload();
-    }
-  </script>
+  <button class="btn btn-white" onclick="location.href='login.html'">登入</button>
+  <button class="btn btn-outline" onclick="location.href='register.html'">註冊新帳號</button>
 </body>
 </html>
