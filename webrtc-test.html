@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>影音測試 - 安全團聚</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: #111;
+      min-height: 100vh;
+      color: white;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 16px;
+    }
+    h1 { font-size: 18px; margin-bottom: 8px; }
+    .sub { color: #aaa; font-size: 13px; margin-bottom: 16px; text-align: center; }
+    video {
+      width: 100%;
+      max-width: 360px;
+      aspect-ratio: 3/4;
+      background: #333;
+      border-radius: 16px;
+      object-fit: cover;
+      transform: scaleX(-1); /* 自拍鏡像 */
+    }
+    .btns {
+      width: 100%;
+      max-width: 360px;
+      margin-top: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .btn {
+      padding: 14px;
+      border-radius: 12px;
+      font-size: 15px;
+      font-weight: 600;
+      border: none;
+      cursor: pointer;
+    }
+    .btn-green { background: #06C755; color: white; }
+    .btn-red { background: #e53935; color: white; }
+    .btn-gray { background: #333; color: white; }
+    .status {
+      margin-top: 16px;
+      font-size: 13px;
+      color: #ccc;
+      text-align: center;
+      line-height: 1.5;
+    }
+  </style>
+</head>
+<body>
+  <h1>語音 + 視訊測試</h1>
+  <div class="sub">WebRTC 第一步：取得鏡頭與麥克風</div>
+
+  <video id="localVideo" autoplay playsinline muted></video>
+
+  <div class="btns">
+    <button class="btn btn-green" onclick="startAV()">開啟鏡頭與麥克風</button>
+    <button class="btn btn-red" onclick="stopAV()">關閉</button>
+    <button class="btn btn-gray" onclick="location.href='chat.html'">返回聊天</button>
+  </div>
+
+  <div class="status" id="status">尚未開始</div>
+
+  <script>
+    let stream = null;
+
+    async function startAV() {
+      const status = document.getElementById('status');
+      const video = document.getElementById('localVideo');
+      try {
+        stream = await navigator.mediaDevices.getUserMedia({
+          audio: true,
+          video: {
+            facingMode: 'user', // 前置鏡頭
+            width: { ideal: 640 },
+            height: { ideal: 480 }
+          }
+        });
+
+        video.srcObject = stream;
+
+        const audioOk = stream.getAudioTracks().length > 0;
+        const videoOk = stream.getVideoTracks().length > 0;
+        status.innerHTML =
+          (audioOk ? '✅ 麥克風已開啟<br>' : '❌ 沒有麥克風<br>') +
+          (videoOk ? '✅ 鏡頭已開啟<br>' : '❌ 沒有鏡頭<br>') +
+          '鏡頭：' + (stream.getVideoTracks()[0]?.label || '未知');
+      } catch (e) {
+        status.innerHTML = '❌ 失敗<br>' + e.name + '<br>' + e.message;
+      }
+    }
+
+    function stopAV() {
+      if (stream) {
+        stream.getTracks().forEach(t => t.stop());
+        stream = null;
+      }
+      document.getElementById('localVideo').srcObject = null;
+      document.getElementById('status').textContent = '已關閉';
+    }
+  </script>
+</body>
+</html>
