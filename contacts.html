@@ -60,6 +60,7 @@
     .btn-green { background: #06C755; color: #fff; }
     .btn-gray { background: #eee; color: #333; }
     .btn-outline { background: #fff; color: #06C755; border: 1px solid #06C755; }
+    .actions { display: flex; gap: 6px; flex-shrink: 0; flex-wrap: wrap; justify-content: flex-end; }
 
     .tabbar {
       position: fixed; left: 0; right: 0; bottom: 0;
@@ -85,16 +86,13 @@
     }
     .sheet.show { transform: translateY(0); }
     .sheet h3 { text-align: center; margin-bottom: 12px; font-size: 16px; }
-    .sheet input, .sheet textarea {
+    .sheet input {
       width: 100%; border: 1px solid #e0e0e0; border-radius: 10px;
       padding: 12px; font-size: 15px; margin-bottom: 10px; outline: none;
     }
     .sheet .row-btns { display: flex; gap: 10px; }
     .sheet .row-btns button {
       flex: 1; border: none; border-radius: 12px; padding: 12px; font-size: 15px; font-weight: 600;
-    }
-    .actions {
-      display: flex; gap: 6px; flex-shrink: 0;
     }
   </style>
 </head>
@@ -116,6 +114,10 @@
     <div class="icon-box" style="background:#06C755">群</div>
     <div class="name">群組</div>
   </div>
+  <div class="menu-item" id="btnOpenCallWait">
+    <div class="icon-box" style="background:#1e88e5">📞</div>
+    <div class="name">等待來電（保持開啟）</div>
+  </div>
 
   <div id="searchSection" style="display:none">
     <div class="section">搜尋結果</div>
@@ -135,14 +137,13 @@
     <a class="tab" href="me.html"><div class="ico">我</div>我</a>
   </div>
 
-  <!-- 加好友／選單 -->
   <div class="sheet-mask" id="mask"></div>
   <div class="sheet" id="sheetAdd">
     <h3>加好友</h3>
-    <input id="addKeyword" placeholder="輸入對方帳號或暱稱">
+    <input id="addKeyword" placeholder="輸入對方帳號或暱稱（不用加 @）">
     <div class="row-btns">
-      <button type="button" class="btn-gray" id="btnCancelAdd" style="background:#eee">取消</button>
-      <button type="button" class="btn-green" id="btnDoSearch" style="background:#06C755;color:#fff">搜尋</button>
+      <button type="button" style="background:#eee" id="btnCancelAdd">取消</button>
+      <button type="button" style="background:#06C755;color:#fff" id="btnDoSearch">搜尋</button>
     </div>
   </div>
 
@@ -196,10 +197,25 @@
 
     function avatarHtml(p) {
       if (p && p.avatar_url) {
-        return '<img class="avatar" src="' + p.avatar_url.replace(/"/g, '') + '" alt="">';
+        return '<img class="avatar" src="' + String(p.avatar_url).replace(/"/g, '') + '" alt="">';
       }
       var n = (p && (p.nickname || p.username)) ? (p.nickname || p.username) : '?';
-      return '<div class="avatar">' + n.slice(0, 1) + '</div>';
+      return '<div class="avatar">' + String(n).slice(0, 1) + '</div>';
+    }
+
+    function goChat(uid, displayName) {
+      location.href = 'room.html?id=' + encodeURIComponent(dmRoomId(me.id, uid)) +
+        '&name=' + encodeURIComponent(displayName || '好友');
+    }
+    function goVideo(uid, displayName) {
+      location.href = 'call.html?mode=video'
+        + '&to=' + encodeURIComponent(uid)
+        + '&name=' + encodeURIComponent(displayName || '視訊');
+    }
+    function goAudio(uid, displayName) {
+      location.href = 'call.html?mode=audio'
+        + '&to=' + encodeURIComponent(uid)
+        + '&name=' + encodeURIComponent(displayName || '語音');
     }
 
     async function ensureProfile() {
@@ -208,11 +224,13 @@
         myProfile = data;
         return;
       }
-      var nick = (me.user_metadata && (me.user_metadata.nickname || me.user_metadata.username)) || (me.email ? me.email.split('@')[0] : 'user');
+      var nick = (me.user_metadata && (me.user_metadata.nickname || me.user_metadata.username)) ||
+        (me.email ? me.email.split('@')[0] : 'user');
       var username = (me.user_metadata && me.user_metadata.username) || nick;
+      username = String(username).toLowerCase().replace(/\s+/g, '_').slice(0, 24);
       var ins = await supabase.from('profiles').insert({
         id: me.id,
-        username: String(username).toLowerCase().replace(/\s+/g, '_').slice(0, 24),
+        username: username,
         nickname: nick
       }).select().maybeSingle();
       myProfile = ins.data || { id: me.id, username: username, nickname: nick };
@@ -249,26 +267,23 @@
 
       ids.forEach(function (uid) {
         var p = map[uid] || { id: uid, nickname: uid.slice(0, 8), username: '' };
+        var display = p.nickname || p.username || '使用者';
         var div = document.createElement('div');
         div.className = 'person';
         div.innerHTML =
           avatarHtml(p) +
-          '<div class="name">' +
-            (p.nickname || p.username || '使用者') +
+          '<div class="name">' + display +
             (p.username ? '<div class="sub">@' + p.username + '</div>' : '') +
           '</div>' +
           '<div class="actions">' +
             '<button class="btn-sm btn-green" type="button">聊天</button>' +
-            '<button class="btn-sm btn-gray" type="button">視訊</button>' +
+            '<button class="btn-sm btn-gray" type="button">語音</button>' +
+            '<button class="btn-sm btn-green" type="button">視訊</button>' +
           '</div>';
         var btns = div.querySelectorAll('button');
-        btns[0].onclick = function () {
-          location.href = 'room.html?id=' + encodeURIComponent(dmRoomId(me.id, uid)) +
-            '&name=' + encodeURIComponent(p.nickname || p.username || '好友');
-        };
-        btns[1].onclick = function () {
-          location.href = 'call.html?mode=video&name=' + encodeURIComponent(p.nickname || '視訊');
-        };
+        btns[0].onclick = function () { goChat(uid, display); };
+        btns[1].onclick = function () { goAudio(uid, display); };
+        btns[2].onclick = function () { goVideo(uid, display); };
         box.appendChild(div);
       });
     }
@@ -278,13 +293,13 @@
         .from('group_members')
         .select('group_id')
         .eq('user_id', me.id);
+      var box = $('groupList');
+      box.innerHTML = '';
       if (error) {
-        $('groupList').innerHTML = '<div class="person"><div class="name" style="color:#888">' + error.message + '</div></div>';
+        box.innerHTML = '<div class="person"><div class="name" style="color:#888">' + error.message + '</div></div>';
         return;
       }
       var gids = (mems || []).map(function (m) { return m.group_id; });
-      var box = $('groupList');
-      box.innerHTML = '';
       if (!gids.length) {
         box.innerHTML = '<div class="person"><div class="name" style="color:#888">尚無群組</div></div>';
         return;
@@ -338,7 +353,6 @@
         var btns = div.querySelectorAll('button');
         btns[0].onclick = async function () {
           await supabase.from('friendships').update({ status: 'accepted' }).eq('id', r.id);
-          // 互為好友：補一筆反向 accepted（方便查詢）
           await supabase.from('friendships').upsert({
             user_id: me.id,
             friend_id: r.user_id,
@@ -357,16 +371,14 @@
     }
 
     async function searchPeople(keyword) {
-      keyword = (keyword || '').trim();
+      keyword = (keyword || '').trim().replace(/^@/, '');
       if (!keyword) {
         $('searchSection').style.display = 'none';
         return;
       }
       setStatus('搜尋中…');
-      var q1 = supabase.from('profiles').select('*').ilike('username', '%' + keyword + '%').limit(20);
-      var q2 = supabase.from('profiles').select('*').ilike('nickname', '%' + keyword + '%').limit(20);
-      var r1 = await q1;
-      var r2 = await q2;
+      var r1 = await supabase.from('profiles').select('*').ilike('username', '%' + keyword + '%').limit(20);
+      var r2 = await supabase.from('profiles').select('*').ilike('nickname', '%' + keyword + '%').limit(20);
       var map = {};
       (r1.data || []).concat(r2.data || []).forEach(function (p) {
         if (p.id !== me.id) map[p.id] = p;
@@ -395,7 +407,7 @@
             status: 'pending'
           });
           if (res.error) {
-            if (String(res.error.message).indexOf('duplicate') >= 0) {
+            if (String(res.error.message).toLowerCase().indexOf('duplicate') >= 0) {
               setStatus('已送過邀請或已是好友');
             } else {
               setStatus('失敗：' + res.error.message);
@@ -434,7 +446,6 @@
         return;
       }
       hideSheets();
-      setStatus('群組已建立');
       location.href = 'room.html?id=' + encodeURIComponent(g.data.id) +
         '&name=' + encodeURIComponent(name);
     }
@@ -456,7 +467,8 @@
         await ensureProfile();
         await loadFriends();
         await loadGroups();
-        setStatus('帳號：@' + (myProfile && myProfile.username ? myProfile.username : me.email));
+        setStatus('帳號：@' + (myProfile && myProfile.username ? myProfile.username : 'user') +
+          ' · 視訊前請對方也打開通訊錄或「等待來電」');
       } catch (e) {
         setStatus('錯誤：' + (e.message || e));
       }
@@ -470,6 +482,9 @@
     $('btnCreateGroup').onclick = function () {
       $('groupName').value = '';
       showSheet('sheetGroup');
+    };
+    $('btnOpenCallWait').onclick = function () {
+      location.href = 'call.html';
     };
     $('mask').onclick = hideSheets;
     $('btnCancelAdd').onclick = hideSheets;
