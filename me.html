@@ -136,29 +136,79 @@
     </div>
   </div>
 
-<div style="position:fixed;left:0;right:0;bottom:0;height:58px;background:#fff;border-top:1px solid #e8e8e8;display:grid;grid-template-columns:1fr 1fr 1fr 1fr;z-index:9999;">
+<div id="bottomNav" style="position:fixed;left:0;right:0;bottom:0;height:58px;background:#fff;border-top:1px solid #e8e8e8;display:flex;z-index:9999;">
 
-  <a href="chat.html" style="display:flex;flex-direction:column;align-items:center;justify-content:center;text-decoration:none;color:#888;font-size:11px;">
-    <span style="font-size:20px;">💬</span>
-    <span>聊天</span>
+  <a data-page="chat.html" href="chat.html" style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-decoration:none;font-size:11px;color:#888;">
+
+    <span style="font-size:20px;line-height:22px;">💬</span>
+
+    <span class="navText">聊天</span>
+
   </a>
 
-  <a href="contacts.html" style="display:flex;flex-direction:column;align-items:center;justify-content:center;text-decoration:none;color:#888;font-size:11px;">
-    <span style="font-size:20px;">👥</span>
-    <span>通訊錄</span>
+  <a data-page="contacts.html" href="contacts.html" style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-decoration:none;font-size:11px;color:#888;">
+
+    <span style="font-size:20px;line-height:22px;">👥</span>
+
+    <span class="navText">通訊錄</span>
+
   </a>
 
-  <a href="home.html" style="display:flex;flex-direction:column;align-items:center;justify-content:center;text-decoration:none;color:#888;font-size:11px;">
-    <span style="font-size:20px;">🧭</span>
-    <span>發現</span>
+  <a data-page="home.html" href="home.html" style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-decoration:none;font-size:11px;color:#888;">
+
+    <span style="font-size:20px;line-height:22px;">🧭</span>
+
+    <span class="navText">發現</span>
+
   </a>
 
-  <a href="me.html" style="display:flex;flex-direction:column;align-items:center;justify-content:center;text-decoration:none;color:#06C755;font-size:11px;font-weight:600;">
-    <span style="font-size:20px;">👤</span>
-    <span>我</span>
+  <a data-page="me.html" href="me.html" style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-decoration:none;font-size:11px;color:#888;">
+
+    <span style="font-size:20px;line-height:22px;">👤</span>
+
+    <span class="navText">我</span>
+
   </a>
 
 </div>
+
+<script>
+
+(function () {
+
+  var currentPage = location.pathname.split('/').pop();
+
+  if (!currentPage) {
+
+    currentPage = 'home.html';
+
+  }
+
+  var links = document.querySelectorAll('#bottomNav a');
+
+  links.forEach(function (link) {
+
+    if (link.getAttribute('data-page') === currentPage) {
+
+      link.style.color = '#06C755';
+
+      link.style.fontWeight = '600';
+
+      var text = link.querySelector('.navText');
+
+      if (text) {
+
+        text.style.color = '#06C755';
+
+      }
+
+    }
+
+  });
+
+})();
+
+</script>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="call-notify.js"></script>
