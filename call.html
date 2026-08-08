@@ -4,22 +4,21 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>通話 - 安全團聚</title>
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
       background: #111; color: #fff; height: 100vh; overflow: hidden; position: relative;
     }
-    #localVideoFull {
+    #remoteVideo {
       position: absolute; inset: 0; width: 100%; height: 100%;
-      object-fit: cover; background: #1a1a1a; transform: scaleX(-1);
+      object-fit: cover; background: #1a1a1a;
     }
     #localVideo {
       position: absolute; top: 56px; right: 12px; width: 100px; height: 140px;
       border-radius: 12px; object-fit: cover; transform: scaleX(-1);
-      border: 2px solid rgba(255,255,255,0.55); z-index: 10; background: #333; display: none;
+      border: 2px solid rgba(255,255,255,0.55); z-index: 10; background: #333;
     }
     #audioBg {
       position: absolute; inset: 0;
@@ -27,450 +26,370 @@
       display: none; align-items: center; justify-content: center;
       flex-direction: column; gap: 12px; z-index: 1;
     }
-    #audioBg .icon { font-size: 64px; }
-    #audioBg .label { font-size: 18px; font-weight: 600; }
-
-    #miniMapWrap {
-      position: absolute; bottom: 110px; right: 12px; width: 150px; height: 150px;
-      border-radius: 14px; overflow: hidden; border: 2px solid rgba(255,255,255,0.65);
-      z-index: 15; background: #1a1a1a; box-shadow: 0 4px 16px rgba(0,0,0,0.45);
-    }
-    #miniMap { width: 100%; height: 100%; }
-    #miniMapLabel {
-      position: absolute; left: 0; right: 0; bottom: 0;
-      background: rgba(0,0,0,0.55); font-size: 11px; text-align: center; padding: 4px; z-index: 11;
-    }
-    #miniMapWrap .expand {
-      position: absolute; top: 6px; left: 6px; z-index: 12;
-      background: rgba(0,0,0,0.55); border: none; color: #fff;
-      font-size: 12px; border-radius: 8px; padding: 4px 8px;
-    }
-
     .top-bar {
-      position: absolute; top: 0; left: 0; right: 0;
-      padding: 48px 16px 14px;
+      position: absolute; top: 0; left: 0; right: 0; z-index: 20;
+      padding: 48px 16px 14px; text-align: center;
       background: linear-gradient(rgba(0,0,0,0.55), transparent);
-      z-index: 20; text-align: center;
     }
     .top-name { font-size: 17px; font-weight: 600; }
-    .top-status { font-size: 12px; opacity: 0.9; margin-top: 4px; }
-
+    .top-status { font-size: 13px; opacity: 0.95; margin-top: 6px; }
     .controls {
-      position: absolute; bottom: 0; left: 0; right: 0;
-      padding: 16px 10px 34px;
+      position: absolute; bottom: 0; left: 0; right: 0; z-index: 20;
+      padding: 16px 12px 36px;
       background: linear-gradient(transparent, rgba(0,0,0,0.78));
-      display: flex; justify-content: center; gap: 10px; z-index: 20; flex-wrap: wrap;
+      display: flex; justify-content: center; gap: 12px; flex-wrap: wrap;
     }
     .ctrl {
-      min-width: 52px; height: 52px; border-radius: 50%; border: none;
+      min-width: 54px; height: 54px; border-radius: 50%; border: none;
       background: rgba(255,255,255,0.22); color: #fff;
       font-size: 12px; font-weight: 600; padding: 0 8px;
     }
     .ctrl.off { background: #e53935; }
-    .ctrl.active { background: #f48fb1; color: #111; }
-    .ctrl.hangup { background: #e53935; width: 58px; height: 58px; font-size: 14px; }
-
-    /* 美顏面板 */
-    .beauty-mask {
-      display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.35); z-index: 40;
+    .ctrl.hangup { background: #e53935; width: 58px; height: 58px; }
+    .ctrl.accept { background: #06C755; width: 58px; height: 58px; }
+    #incomingPanel {
+      display: none; position: absolute; inset: 0; z-index: 30;
+      background: rgba(0,0,0,0.88);
+      flex-direction: column; align-items: center; justify-content: center; gap: 16px;
     }
-    .beauty-mask.show { display: block; }
-    .beauty-panel {
-      position: fixed; left: 0; right: 0; bottom: 0; z-index: 41;
-      background: rgba(20,20,20,0.96);
-      border-radius: 18px 18px 0 0;
-      padding: 12px 16px 28px;
-      transform: translateY(110%);
-      transition: transform 0.22s ease;
-      max-height: 58vh; overflow-y: auto;
-    }
-    .beauty-panel.show { transform: translateY(0); }
-    .beauty-title {
-      text-align: center; font-size: 15px; font-weight: 700; margin-bottom: 10px;
-    }
-    .beauty-row {
-      display: flex; align-items: center; gap: 10px; margin: 10px 0;
-      font-size: 13px;
-    }
-    .beauty-row label { width: 64px; flex-shrink: 0; opacity: 0.95; }
-    .beauty-row input[type=range] { flex: 1; }
-    .beauty-row .val { width: 36px; text-align: right; font-size: 12px; opacity: 0.85; }
-    .lip-colors {
-      display: flex; gap: 8px; flex-wrap: wrap; margin: 6px 0 4px 74px;
-    }
-    .lip-dot {
-      width: 28px; height: 28px; border-radius: 50%; border: 2px solid transparent;
-      cursor: pointer;
-    }
-    .lip-dot.on { border-color: #fff; transform: scale(1.08); }
-    .beauty-actions {
-      display: flex; gap: 10px; margin-top: 12px;
-    }
-    .beauty-actions button {
-      flex: 1; border: none; border-radius: 12px; padding: 12px;
-      font-size: 14px; font-weight: 600;
-    }
-    .btn-reset { background: #333; color: #fff; }
-    .btn-close { background: #06C755; color: #fff; }
-    .note {
-      font-size: 11px; opacity: 0.7; margin-top: 8px; line-height: 1.4;
-    }
+    #incomingPanel.show { display: flex; }
+    #incomingPanel .big { font-size: 22px; font-weight: 700; }
   </style>
 </head>
 <body>
-  <video id="localVideoFull" autoplay playsinline muted></video>
+  <video id="remoteVideo" autoplay playsinline></video>
   <div id="audioBg">
-    <div class="icon">📞</div>
-    <div class="label">語音通話中</div>
-    <div style="font-size:13px;opacity:0.85">右下角為集合導航地圖</div>
+    <div style="font-size:64px">📞</div>
+    <div style="font-size:18px;font-weight:600">語音通話</div>
   </div>
   <video id="localVideo" autoplay playsinline muted></video>
-
-  <div id="miniMapWrap">
-    <button class="expand" onclick="openFullMap()">放大</button>
-    <div id="miniMap"></div>
-    <div id="miniMapLabel">集合導航</div>
-  </div>
 
   <div class="top-bar">
     <div class="top-name" id="callName">通話</div>
     <div class="top-status" id="callStatus">準備中…</div>
   </div>
 
-  <div class="controls">
-    <button class="ctrl" id="btnMic" onclick="toggleMic()">麥</button>
-    <button class="ctrl" id="btnSpeaker" onclick="toggleSpeaker()">聲</button>
-    <button class="ctrl" id="btnCam" onclick="toggleCam()">鏡頭</button>
-    <button class="ctrl" id="btnBeauty" onclick="openBeautyPanel()">美顏</button>
-    <button class="ctrl hangup" onclick="hangup()">掛斷</button>
+  <div id="incomingPanel">
+    <div class="big" id="incomingTitle">來電</div>
+    <div id="incomingSub">邀請你通話</div>
+    <div style="display:flex;gap:24px;margin-top:20px">
+      <button class="ctrl hangup" type="button" id="btnReject">拒接</button>
+      <button class="ctrl accept" type="button" id="btnAccept">接聽</button>
+    </div>
   </div>
 
-  <div class="beauty-mask" id="beautyMask" onclick="closeBeautyPanel()"></div>
-  <div class="beauty-panel" id="beautyPanel">
-    <div class="beauty-title">美顏／化妝調整（只套在自己）</div>
-
-    <div class="beauty-row">
-      <label>總開關</label>
-      <input type="checkbox" id="beautyMaster" checked onchange="applyBeauty()">
-      <span style="font-size:12px;opacity:.85">開啟後下列調整才生效</span>
-    </div>
-
-    <div class="beauty-row">
-      <label>美顏</label>
-      <input type="range" id="sSmooth" min="0" max="100" value="35" oninput="applyBeauty()">
-      <span class="val" id="vSmooth">35</span>
-    </div>
-    <div class="beauty-row">
-      <label>美白</label>
-      <input type="range" id="sWhiten" min="0" max="100" value="25" oninput="applyBeauty()">
-      <span class="val" id="vWhiten">25</span>
-    </div>
-    <div class="beauty-row">
-      <label>美體</label>
-      <input type="range" id="sBody" min="0" max="100" value="0" oninput="applyBeauty()">
-      <span class="val" id="vBody">0</span>
-    </div>
-    <div class="beauty-row">
-      <label>美聲</label>
-      <input type="range" id="sVoice" min="0" max="100" value="0" oninput="applyBeauty()">
-      <span class="val" id="vVoice">0</span>
-    </div>
-    <div class="beauty-row">
-      <label>牙齒美白</label>
-      <input type="range" id="sTeeth" min="0" max="100" value="0" oninput="applyBeauty()">
-      <span class="val" id="vTeeth">0</span>
-    </div>
-    <div class="beauty-row">
-      <label>眉毛</label>
-      <input type="range" id="sBrow" min="0" max="100" value="0" oninput="applyBeauty()">
-      <span class="val" id="vBrow">0</span>
-    </div>
-    <div class="beauty-row">
-      <label>口紅濃度</label>
-      <input type="range" id="sLip" min="0" max="100" value="0" oninput="applyBeauty()">
-      <span class="val" id="vLip">0</span>
-    </div>
-
-    <div class="lip-colors" id="lipColors">
-      <!-- 顏色點由 JS 產生 -->
-    </div>
-
-    <div class="beauty-actions">
-      <button class="btn-reset" type="button" onclick="resetBeauty()">全部歸零</button>
-      <button class="btn-close" type="button" onclick="closeBeautyPanel()">完成</button>
-    </div>
-    <div class="note">
-      目前是即時畫面美顏（自己螢幕）。若要讓對方也收到處理後的影像，下一步要用 Canvas 處理後再送出串流。
-    </div>
+  <div class="controls" id="controls">
+    <button class="ctrl" id="btnMic" type="button">麥</button>
+    <button class="ctrl" id="btnCam" type="button">鏡頭</button>
+    <button class="ctrl hangup" id="btnHang" type="button">掛斷</button>
   </div>
 
   <script>
-    let stream = null;
-    let micOn = true;
-    let camOn = true;
-    let speakerOn = true;
-    let lipColor = '#e91e63';
+  (function () {
+    var SUPABASE_URL = 'https://perfsipperncvjocznhl.supabase.co';
+    var SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBlcmZzaXBwZXJuY3Zqb2N6bmhsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODYwMTUyMzAsImV4cCI6MjEwMTU5MTIzMH0.I7vXkV247kAzRJ0RigDZt3Hzn8KJDyMc6o9E3oHJZoY';
 
-    // 美聲
-    let audioCtx = null;
-    let voiceSource = null;
-    let voiceFilter = null;
-    let voiceGain = null;
+    var params = new URLSearchParams(location.search);
+    var mode = params.get('mode') || 'video';
+    var toUser = params.get('to') || '';
+    var callId = params.get('call') || '';
+    var name = params.get('name') ? decodeURIComponent(params.get('name')) : '通話';
+    document.getElementById('callName').textContent = name;
 
-    const lipPalette = [
-      '#e91e63', '#c2185b', '#ad1457', '#f48fb1',
-      '#ff5252', '#d50000', '#ff8a65', '#bf360c',
-      '#ce93d8', '#7b1fa2', '#4a148c', '#000000'
-    ];
+    var supabase = null;
+    var me = null;
+    var pc = null;
+    var localStream = null;
+    var callRowId = callId || null;
+    var isCaller = false;
+    var micOn = true, camOn = true;
+    var ringTimer = null;
+    var audioCtx = null;
 
-    const params = new URLSearchParams(location.search);
-    const mode = params.get('mode') || 'video';
-    const name = params.get('name');
-    if (name) document.getElementById('callName').textContent = decodeURIComponent(name);
-
-    let miniMap, memberMarkers = {};
-    let meetLat = 23.9929, meetLng = 121.6015;
-    let members = [
-      { id: 'me', name: '我', lat: null, lng: null, color: '#06C755' },
-      { id: 'p1', name: '成員A', lat: 24.15, lng: 120.68, color: '#1e88e5' },
-      { id: 'p2', name: '成員B', lat: 25.02, lng: 121.46, color: '#f4511e' }
-    ];
-
-    function $(id) { return document.getElementById(id); }
-
-    function openBeautyPanel() {
-      if (mode === 'audio') {
-        $('callStatus').textContent = '語音模式僅可調美聲';
-      }
-      $('beautyMask').classList.add('show');
-      $('beautyPanel').classList.add('show');
-      $('btnBeauty').classList.add('active');
-    }
-    function closeBeautyPanel() {
-      $('beautyMask').classList.remove('show');
-      $('beautyPanel').classList.remove('show');
+    function setStatus(t) {
+      document.getElementById('callStatus').textContent = t;
     }
 
-    function syncLabels() {
-      ['Smooth','Whiten','Body','Voice','Teeth','Brow','Lip'].forEach(function (k) {
-        var s = $('s' + k), v = $('v' + k);
-        if (s && v) v.textContent = s.value;
-      });
+    // ----- 鈴聲（免音檔）-----
+    function ensureAudio() {
+      if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      if (audioCtx.state === 'suspended') audioCtx.resume();
+      return audioCtx;
+    }
+    function beep(freq, dur, type) {
+      try {
+        var ctx = ensureAudio();
+        var o = ctx.createOscillator();
+        var g = ctx.createGain();
+        o.type = type || 'sine';
+        o.frequency.value = freq;
+        g.gain.value = 0.08;
+        o.connect(g); g.connect(ctx.destination);
+        o.start();
+        o.stop(ctx.currentTime + (dur || 0.2));
+      } catch (e) {}
+    }
+    function startDialTone() {
+      stopRing();
+      ringTimer = setInterval(function () {
+        beep(440, 0.15); setTimeout(function () { beep(480, 0.15); }, 180);
+      }, 1200);
+    }
+    function startIncomingRing() {
+      stopRing();
+      if (navigator.vibrate) navigator.vibrate([300, 200, 300, 200, 300]);
+      ringTimer = setInterval(function () {
+        beep(880, 0.25); setTimeout(function () { beep(980, 0.25); }, 300);
+        if (navigator.vibrate) navigator.vibrate(200);
+      }, 1500);
+    }
+    function stopRing() {
+      if (ringTimer) { clearInterval(ringTimer); ringTimer = null; }
     }
 
-    function buildLipColors() {
-      var box = $('lipColors');
-      box.innerHTML = '';
-      lipPalette.forEach(function (c) {
-        var d = document.createElement('div');
-        d.className = 'lip-dot' + (c === lipColor ? ' on' : '');
-        d.style.background = c;
-        d.onclick = function () {
-          lipColor = c;
-          buildLipColors();
-          applyBeauty();
-        };
-        box.appendChild(d);
-      });
-    }
-
-    function hexToRgb(hex) {
-      var h = hex.replace('#', '');
-      if (h.length === 3) h = h[0]+h[0]+h[1]+h[1]+h[2]+h[2];
+    function iceServers() {
       return {
-        r: parseInt(h.slice(0,2), 16),
-        g: parseInt(h.slice(2,4), 16),
-        b: parseInt(h.slice(4,6), 16)
+        iceServers: [
+          { urls: 'stun:stun.l.google.com:19302' },
+          { urls: 'stun:stun1.l.google.com:19302' }
+        ]
       };
     }
 
-    function applyBeauty() {
-      syncLabels();
-      var master = $('beautyMaster').checked;
-      var smooth = Number($('sSmooth').value);   // 美顏磨皮
-      var whiten = Number($('sWhiten').value);   // 美白
-      var body = Number($('sBody').value);       // 美體（輕微）
-      var teeth = Number($('sTeeth').value);     // 牙齒美白感
-      var brow = Number($('sBrow').value);       // 眉毛對比
-      var lip = Number($('sLip').value);         // 口紅濃度
-      var voice = Number($('sVoice').value);     // 美聲
-
-      var full = $('localVideoFull');
-      var pip = $('localVideo');
-
-      if (!master || mode === 'audio') {
-        full.style.filter = 'none';
-        pip.style.filter = 'none';
-        full.style.transform = 'scaleX(-1)';
-        pip.style.transform = 'scaleX(-1)';
+    async function getMedia() {
+      var constraints = mode === 'audio'
+        ? { audio: true, video: false }
+        : { audio: true, video: { facingMode: 'user' } };
+      localStream = await navigator.mediaDevices.getUserMedia(constraints);
+      var localVideo = document.getElementById('localVideo');
+      if (mode === 'audio') {
+        document.getElementById('audioBg').style.display = 'flex';
+        document.getElementById('remoteVideo').style.display = 'none';
+        localVideo.style.display = 'none';
+        document.getElementById('btnCam').style.display = 'none';
       } else {
-        // 基礎美顏
-        var brightness = 1 + whiten * 0.0025 + teeth * 0.001;      // 美白 / 齒白感
-        var contrast = 1 + brow * 0.0015 + teeth * 0.0008;        // 眉色、齒白
-        var saturate = 1 + lip * 0.002;                            // 口紅帶一點氣色
-        var blur = (smooth * 0.008).toFixed(3) + 'px';              // 磨皮
-        var rgb = hexToRgb(lipColor);
-        // 用 drop-shadow 很淡的色暈模擬唇彩氛圍（非精準貼唇）
-        var lipGlow = lip > 0
-          ? 'drop-shadow(0 0 ' + (lip * 0.04) + 'px rgba(' + rgb.r + ',' + rgb.g + ',' + rgb.b + ',' + (lip / 200) + '))'
-          : '';
-
-        var filter = 'brightness(' + brightness.toFixed(3) + ') contrast(' + contrast.toFixed(3) +
-          ') saturate(' + saturate.toFixed(3) + ') blur(' + blur + ') ' + lipGlow;
-
-        full.style.filter = filter;
-        pip.style.filter = filter;
-
-        // 美體：極輕微垂直拉伸（示意，不是真瘦身演算法）
-        var scaleY = 1 + body * 0.0004;
-        var scaleX = 1 - body * 0.00025;
-        full.style.transform = 'scaleX(-' + scaleX.toFixed(4) + ') scaleY(' + scaleY.toFixed(4) + ')';
-        pip.style.transform = 'scaleX(-' + scaleX.toFixed(4) + ') scaleY(' + scaleY.toFixed(4) + ')';
+        localVideo.srcObject = localStream;
+        localVideo.style.display = 'block';
       }
-
-      applyVoiceBeauty(voice);
-      $('btnBeauty').classList.toggle('active', master && (smooth + whiten + body + lip + teeth + brow + voice) > 0);
+      return localStream;
     }
 
-    function applyVoiceBeauty(level) {
-      // 簡易美聲：提高一點高頻、壓一點低頻感（需有音訊軌）
-      if (!stream) return;
-      try {
-        if (!audioCtx) {
-          audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-          voiceSource = audioCtx.createMediaStreamSource(stream);
-          voiceFilter = audioCtx.createBiquadFilter();
-          voiceFilter.type = 'peaking';
-          voiceGain = audioCtx.createGain();
-          voiceSource.connect(voiceFilter);
-          voiceFilter.connect(voiceGain);
-          // 不接到 destination，避免自己喇叭回授尖叫；只調處理鏈示意
-          // 真要送出美聲給對方，要接 MediaStreamDestination 再替換音軌
+    function createPc() {
+      pc = new RTCPeerConnection(iceServers());
+      localStream.getTracks().forEach(function (t) { pc.addTrack(t, localStream); });
+      pc.ontrack = function (ev) {
+        var remote = document.getElementById('remoteVideo');
+        if (mode === 'audio') {
+          // 語音：只接聲音
+          remote.srcObject = ev.streams[0];
+          remote.style.display = 'none';
+        } else {
+          remote.srcObject = ev.streams[0];
         }
-        if (level <= 0) {
-          voiceFilter.gain.value = 0;
-          voiceFilter.frequency.value = 1000;
+        setStatus('通話中');
+        stopRing();
+      };
+      pc.onicecandidate = function (ev) {
+        // 簡化：依賴 SDP 內 candidate（無 trickle）；正式可再加 ICE 表
+      };
+      return pc;
+    }
+
+    async function hangup(updateDb) {
+      stopRing();
+      if (pc) { try { pc.close(); } catch (e) {} pc = null; }
+      if (localStream) {
+        localStream.getTracks().forEach(function (t) { t.stop(); });
+        localStream = null;
+      }
+      if (updateDb && callRowId && supabase) {
+        await supabase.from('call_sessions').update({ status: 'ended' }).eq('id', callRowId);
+      }
+      location.href = 'contacts.html';
+    }
+
+    async function startAsCaller() {
+      isCaller = true;
+      setStatus('撥號中…');
+      startDialTone();
+      await getMedia();
+      createPc();
+
+      var offer = await pc.createOffer();
+      await pc.setLocalDescription(offer);
+
+      var ins = await supabase.from('call_sessions').insert({
+        caller_id: me.id,
+        callee_id: toUser,
+        mode: mode,
+        status: 'ringing',
+        offer: offer
+      }).select().single();
+
+      if (ins.error) {
+        stopRing();
+        setStatus('撥號失敗：' + ins.error.message);
+        return;
+      }
+      callRowId = ins.data.id;
+
+      // 等對方 answer
+      supabase.channel('call-' + callRowId)
+        .on('postgres_changes', {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'call_sessions',
+          filter: 'id=eq.' + callRowId
+        }, async function (payload) {
+          var row = payload.new;
+          if (row.status === 'rejected') {
+            stopRing();
+            setStatus('對方已拒接');
+            setTimeout(function () { hangup(false); }, 1000);
+            return;
+          }
+          if (row.status === 'ended') {
+            hangup(false);
+            return;
+          }
+          if (row.answer && pc && !pc.currentRemoteDescription) {
+            await pc.setRemoteDescription(row.answer);
+            setStatus('已接通');
+            stopRing();
+          }
+        })
+        .subscribe();
+    }
+
+    async function showIncoming(row) {
+      callRowId = row.id;
+      mode = row.mode || mode;
+      document.getElementById('incomingPanel').classList.add('show');
+      document.getElementById('incomingTitle').textContent = '來電';
+      document.getElementById('incomingSub').textContent =
+        (mode === 'audio' ? '語音' : '視訊') + '通話邀請';
+      startIncomingRing();
+      setStatus('來電中');
+    }
+
+    async function acceptCall() {
+      stopRing();
+      document.getElementById('incomingPanel').classList.remove('show');
+      setStatus('接聽中…');
+      await getMedia();
+      createPc();
+
+      var { data: row } = await supabase.from('call_sessions').select('*').eq('id', callRowId).single();
+      if (!row || !row.offer) {
+        setStatus('來電已失效');
+        return;
+      }
+      await pc.setRemoteDescription(row.offer);
+      var answer = await pc.createAnswer();
+      await pc.setLocalDescription(answer);
+      await supabase.from('call_sessions').update({
+        status: 'accepted',
+        answer: answer
+      }).eq('id', callRowId);
+      setStatus('通話中');
+    }
+
+    async function rejectCall() {
+      stopRing();
+      if (callRowId) {
+        await supabase.from('call_sessions').update({ status: 'rejected' }).eq('id', callRowId);
+      }
+      location.href = 'contacts.html';
+    }
+
+    async function listenIncoming() {
+      // 監聽打給我的來電
+      supabase.channel('incoming-' + me.id)
+        .on('postgres_changes', {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'call_sessions',
+          filter: 'callee_id=eq.' + me.id
+        }, function (payload) {
+          if (payload.new.status === 'ringing' && !isCaller) {
+            showIncoming(payload.new);
+          }
+        })
+        .subscribe();
+
+      // 進頁時檢查是否已有未接 ringing
+      var { data } = await supabase.from('call_sessions')
+        .select('*')
+        .eq('callee_id', me.id)
+        .eq('status', 'ringing')
+        .order('created_at', { ascending: false })
+        .limit(1);
+      if (data && data[0] && !toUser) {
+        showIncoming(data[0]);
+      }
+    }
+
+    document.getElementById('btnHang').onclick = function () { hangup(true); };
+    document.getElementById('btnAccept').onclick = acceptCall;
+    document.getElementById('btnReject').onclick = rejectCall;
+    document.getElementById('btnMic').onclick = function () {
+      if (!localStream) return;
+      micOn = !micOn;
+      localStream.getAudioTracks().forEach(function (t) { t.enabled = micOn; });
+      document.getElementById('btnMic').textContent = micOn ? '麥' : '靜音';
+      document.getElementById('btnMic').classList.toggle('off', !micOn);
+    };
+    document.getElementById('btnCam').onclick = function () {
+      if (!localStream || mode === 'audio') return;
+      camOn = !camOn;
+      localStream.getVideoTracks().forEach(function (t) { t.enabled = camOn; });
+      document.getElementById('btnCam').textContent = camOn ? '鏡頭' : '關鏡';
+      document.getElementById('btnCam').classList.toggle('off', !camOn);
+    };
+
+    async function boot() {
+      if (!window.supabase) {
+        setStatus('套件載入失敗');
+        return;
+      }
+      supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+      var sess = await supabase.auth.getSession();
+      if (!sess.data.session) {
+        location.href = 'login.html';
+        return;
+      }
+      me = sess.data.session.user;
+
+      // 使用者手勢後才能出聲：點頁任意處
+      document.body.addEventListener('click', function once() {
+        ensureAudio();
+      }, { once: true });
+
+      await listenIncoming();
+
+      if (toUser) {
+        if (toUser === me.id) {
+          setStatus('不能打給自己');
           return;
         }
-        voiceFilter.frequency.value = 1800;
-        voiceFilter.Q.value = 1.2;
-        voiceFilter.gain.value = level / 20; // 0~5 dB 感
-      } catch (e) {}
-    }
-
-    function resetBeauty() {
-      $('beautyMaster').checked = true;
-      $('sSmooth').value = 0;
-      $('sWhiten').value = 0;
-      $('sBody').value = 0;
-      $('sVoice').value = 0;
-      $('sTeeth').value = 0;
-      $('sBrow').value = 0;
-      $('sLip').value = 0;
-      lipColor = '#e91e63';
-      buildLipColors();
-      applyBeauty();
-    }
-
-    function initMiniMap() {
-      miniMap = L.map('miniMap', {
-        zoomControl: false, attributionControl: false, dragging: true, scrollWheelZoom: false
-      }).setView([meetLat, meetLng], 7);
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 18 }).addTo(miniMap);
-      L.marker([meetLat, meetLng]).addTo(miniMap);
-      members.forEach(function (m) {
-        if (m.lat == null) return;
-        memberMarkers[m.id] = L.circleMarker([m.lat, m.lng], {
-          radius: 6, color: m.color, fillColor: m.color, fillOpacity: 0.9
-        }).addTo(miniMap);
-      });
-      setInterval(function () {
-        members.forEach(function (m) {
-          if (m.id === 'me' || m.lat == null) return;
-          m.lat += (meetLat - m.lat) * 0.04;
-          m.lng += (meetLng - m.lng) * 0.04;
-          if (memberMarkers[m.id]) memberMarkers[m.id].setLatLng([m.lat, m.lng]);
-        });
-        if (members[0].lat != null && memberMarkers['me']) {
-          memberMarkers['me'].setLatLng([members[0].lat, members[0].lng]);
+        await startAsCaller();
+      } else if (callId) {
+        var { data } = await supabase.from('call_sessions').select('*').eq('id', callId).single();
+        if (data && data.status === 'ringing') showIncoming(data);
+        else setStatus('等待來電或從通訊錄撥打');
+      } else {
+        setStatus('等待來電…（或從通訊錄按視訊）');
+        // 本機預覽可選
+        try {
+          await getMedia();
+        } catch (e) {
+          setStatus('請允許麥克風／相機');
         }
-      }, 5000);
-      setTimeout(function () { miniMap.invalidateSize(); }, 400);
-    }
-
-    function openFullMap() {
-      location.href = 'map.html?name=' + encodeURIComponent($('callName').textContent || '');
-    }
-
-    async function start() {
-      try {
-        if (mode === 'audio') {
-          $('audioBg').style.display = 'flex';
-          $('localVideoFull').style.display = 'none';
-          $('localVideo').style.display = 'none';
-          $('btnCam').style.display = 'none';
-          stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
-          $('callStatus').textContent = '語音通話中（可開美顏面板調美聲）';
-        } else {
-          $('audioBg').style.display = 'none';
-          $('localVideo').style.display = 'block';
-          stream = await navigator.mediaDevices.getUserMedia({
-            audio: true,
-            video: { facingMode: 'user' }
-          });
-          $('localVideoFull').srcObject = stream;
-          $('localVideo').srcObject = stream;
-          $('callStatus').textContent = '視訊通話中 · 點「美顏」可調整';
-          applyBeauty();
-        }
-
-        if (navigator.geolocation) {
-          navigator.geolocation.watchPosition(function (pos) {
-            members[0].lat = pos.coords.latitude;
-            members[0].lng = pos.coords.longitude;
-            if (!memberMarkers['me'] && miniMap) {
-              memberMarkers['me'] = L.circleMarker(
-                [members[0].lat, members[0].lng],
-                { radius: 6, color: '#06C755', fillColor: '#06C755', fillOpacity: 0.9 }
-              ).addTo(miniMap);
-            } else if (memberMarkers['me']) {
-              memberMarkers['me'].setLatLng([members[0].lat, members[0].lng]);
-            }
-          }, null, { enableHighAccuracy: true, maximumAge: 3000 });
-        }
-      } catch (e) {
-        $('callStatus').textContent = '失敗：' + e.message;
       }
     }
 
-    function toggleMic() {
-      if (!stream) return;
-      micOn = !micOn;
-      stream.getAudioTracks().forEach(function (t) { t.enabled = micOn; });
-      $('btnMic').textContent = micOn ? '麥' : '靜音';
-      $('btnMic').classList.toggle('off', !micOn);
-    }
-    function toggleCam() {
-      if (!stream || mode === 'audio') return;
-      camOn = !camOn;
-      stream.getVideoTracks().forEach(function (t) { t.enabled = camOn; });
-      $('btnCam').textContent = camOn ? '鏡頭' : '關鏡';
-      $('btnCam').classList.toggle('off', !camOn);
-    }
-    function toggleSpeaker() {
-      speakerOn = !speakerOn;
-      $('btnSpeaker').textContent = speakerOn ? '聲' : '關聲';
-      $('btnSpeaker').classList.toggle('off', !speakerOn);
-    }
-    function hangup() {
-      if (stream) stream.getTracks().forEach(function (t) { t.stop(); });
-      if (audioCtx) { try { audioCtx.close(); } catch (e) {} }
-      location.href = 'chat.html';
-    }
-
-    buildLipColors();
-    initMiniMap();
-    start();
+    boot();
+  })();
   </script>
 </body>
 </html>
