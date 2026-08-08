@@ -111,6 +111,7 @@
       font-size: 13px;
       padding: 15px;
       min-height: 45px;
+      line-height: 1.5;
     }
     #avatarFile {
       display: none;
@@ -119,63 +120,125 @@
 </head>
 <body>
   <div class="top">
-    <button class="back" id="btnBack" type="button">‹</button>
+    <button class="back" id="btnBack">‹</button>
     群組設定
   </div>
   <div class="card">
-    <div class="avatar-box">
-      <label for="avatarFile">
-        <div class="group-avatar" id="groupAvatar">
-          群
-        </div>
-      </label>
-      <div class="avatar-tip">
-        點擊頭像修改
-      </div>
-      <input
-        type="file"
-        id="avatarFile"
-        accept="image/*"
-      >
+<div class="avatar-box">
+  <label for="avatarFile">
+    <div class="group-avatar" id="groupAvatar">
+      群
     </div>
-    <div class="field">
-      <label for="groupName">群組名稱</label>
-      <input
-        id="groupName"
-        type="text"
-        maxlength="50"
-        placeholder="輸入群組名稱"
-      >
-    </div>
-    <button
-      class="save"
-      id="btnSave"
-      type="button"
-    >
-      儲存修改
-    </button>
-    <div class="status" id="status"></div>
+  </label>
+  <div class="avatar-tip">
+    點擊頭像修改
+  </div>
+  <input
+    type="file"
+    id="avatarFile"
+    accept="image/*"
+  >
+</div>
+<div class="field">
+  <label>
+    群組名稱
+  </label>
+  <input
+    id="groupName"
+    type="text"
+    maxlength="50"
+    placeholder="輸入群組名稱"
+  >
+</div>
+<button
+  class="save"
+  id="btnSave"
+  type="button"
+>
+  儲存修改
+</button>
+<div
+  class="status"
+  id="status"
+></div>
   </div>
 <script>
 (function () {
+  /* ==============================
+     Supabase 設定
+     ============================== */
   var SUPABASE_URL =
     'https://perfsipperncvjocznhl.supabase.co';
   var SUPABASE_KEY =
     'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBlcmZzaXBwZXJuY3Zqb2N6bmhsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODYwMTUyMzAsImV4cCI6MjEwMTU5MTIzMH0.I7vXkV247kAzRJ0RigDZt3Hzn8KJDyMc6o9E3oHJZoY';
   var supabase = null;
-  var me = null;
   var groupId = null;
   var groupData = null;
-  var selectedAvatarFile = null;
+  /* ==============================
+     取得元素
+     ============================== */
   function $(id) {
     return document.getElementById(id);
   }
+  /* ==============================
+     顯示狀態
+     ============================== */
   function setStatus(text) {
     $('status').textContent = text;
   }
+  /* ==============================
+     讀取群組
+     
+     注意：
+     這裡只能 SELECT
+     不能 UPDATE
+     ============================== */
+  async function loadGroup() {
+    setStatus('正在讀取群組資料…');
+    var result =
+      await supabase
+        .from('chat_groups')
+        .select('*')
+        .eq('id', groupId)
+        .maybeSingle();
+    if (result.error) {
+      setStatus(
+        '讀取失敗：' +
+        result.error.message
+      );
+      return;
+    }
+    if (!result.data) {
+      setStatus(
+        '找不到這個群組'
+      );
+      return;
+    }
+    groupData =
+      result.data;
+    /* 顯示群組名稱 */
+    $('groupName').value =
+      groupData.name || '';
+    /* 顯示群組頭像 */
+    if (groupData.avatar_url) {
+      $('groupAvatar').innerHTML =
+        '<img src="' +
+        groupData.avatar_url +
+        '" alt="群組頭像">';
+    } else {
+      $('groupAvatar').textContent =
+        '群';
+    }
+    setStatus('');
+  }
+  /* ==============================
+     啟動
+     ============================== */
   async function boot() {
     if (!window.supabase) {
-      setStatus('Supabase 載入失敗');
+      setStatus(
+        'Supabase 載入失敗'
+      );
       return;
     }
     try {
@@ -184,60 +247,34 @@
           SUPABASE_URL,
           SUPABASE_KEY
         );
+      /* 檢查登入 */
       var sessionResult =
         await supabase.auth.getSession();
       if (!sessionResult.data.session) {
-        location.href = 'login.html';
+        location.href =
+          'login.html';
         return;
       }
-      me =
-        sessionResult.data.session.user;
+      /* 取得網址 ?id= */
       var params =
-        new URLSearchParams(location.search);
+        new URLSearchParams(
+          location.search
+        );
       groupId =
         params.get('id');
       if (!groupId) {
-        setStatus('找不到群組 ID');
-        return;
-      }
-      setStatus('載入群組資料…');
-      /*
-       * 讀取目前群組
-       * 使用 chat_groups
-       */
-      var result =
-        await supabase
-          .from('chat_groups')
-          .select('*')
-          .eq('id', groupId)
-          .maybeSingle();
-      if (result.error) {
         setStatus(
-          '讀取失敗：' +
-          result.error.message
+          '找不到群組 ID'
         );
         return;
       }
-      if (!result.data) {
-        setStatus(
-          '找不到這個群組'
-        );
-        return;
-      }
-      groupData =
-        result.data;
-      $('groupName').value =
-        groupData.name || '';
-      if (groupData.avatar_url) {
-        $('groupAvatar').innerHTML =
-          '<img src="' +
-          groupData.avatar_url +
-          '" alt="群組頭像">';
-      } else {
-        $('groupAvatar').textContent =
-          '群';
-      }
-      setStatus('');
+      /* 顯示目前 ID 方便測試 */
+      console.log(
+        '目前群組 ID：',
+        groupId
+      );
+      /* 開始讀取 */
+      await loadGroup();
     } catch (e) {
       setStatus(
         '錯誤：' +
@@ -245,16 +282,19 @@
       );
     }
   }
-  /*
-   * 返回上一頁
-   */
+  /* ==============================
+     返回
+     ============================== */
   $('btnBack').onclick =
     function () {
       history.back();
     };
-  /*
-   * 儲存群組名稱
-   */
+  /* ==============================
+     儲存群組名稱
+     
+     注意：
+     這裡才使用 UPDATE
+     ============================== */
   $('btnSave').onclick =
     async function () {
       var name =
@@ -269,13 +309,15 @@
       }
       if (!groupId) {
         setStatus(
-          '找不到群組 ID'
+          '沒有群組 ID'
         );
         return;
       }
       $('btnSave').disabled =
         true;
-      setStatus('儲存中…');
+      setStatus(
+        '正在儲存…'
+      );
       try {
         var result =
           await supabase
@@ -293,11 +335,10 @@
             false;
           return;
         }
-        /*
-         * 更新畫面上的資料
-         */
+        /* 更新本地資料 */
         if (groupData) {
-          groupData.name = name;
+          groupData.name =
+            name;
         }
         setStatus(
           '群組名稱修改成功'
@@ -311,10 +352,10 @@
       $('btnSave').disabled =
         false;
     };
-  /*
-   * 選擇群組頭像
-   * 目前先做本機預覽
-   */
+  /* ==============================
+     選擇頭像
+     目前只做預覽
+     ============================== */
   $('avatarFile').onchange =
     function () {
       var file =
@@ -326,11 +367,8 @@
         setStatus(
           '請選擇圖片'
         );
-        this.value = '';
         return;
       }
-      selectedAvatarFile =
-        file;
       var reader =
         new FileReader();
       reader.onload =
@@ -345,9 +383,9 @@
         };
       reader.readAsDataURL(file);
     };
-  /*
-   * 啟動
-   */
+  /* ==============================
+     開始
+     ============================== */
   boot();
 })();
 </script>
