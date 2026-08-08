@@ -225,30 +225,7 @@
           }
         }
 
-        // 3) 近期有訊息、但不在上面的房間（保險）
-        var recent = await supabase
-          .from('messages')
-          .select('room_id,created_at')
-          .order('created_at', { ascending: false })
-          .limit(80);
-
-        var extraRooms = [];
-        (recent.data || []).forEach(function (m) {
-          if (m.room_id && !seen[m.room_id] && extraRooms.indexOf(m.room_id) < 0) {
-            extraRooms.push(m.room_id);
-          }
-        });
-        for (var k = 0; k < extraRooms.length; k++) {
-          var er = extraRooms[k];
-          var elast = await lastMessage(er);
-          items.push({
-            id: er,
-            title: String(er).indexOf('dm_') === 0 ? '私訊' : '對話',
-            isGroup: String(er).indexOf('dm_') !== 0,
-            last: elast,
-            sort: elast ? new Date(elast.created_at).getTime() : 0
-          });
-        }
+        
 
         // 有訊息的排前面
         items.sort(function (a, b) { return b.sort - a.sort; });
