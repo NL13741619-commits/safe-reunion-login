@@ -242,7 +242,7 @@ var SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSI
 
       var result =
         await supabase
-          .from('chat_groups')
+          .from('groups')
           .select('*')
           .eq('id', groupId)
           .maybeSingle();
@@ -320,7 +320,7 @@ var SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSI
 
       var result =
         await supabase
-          .from('chat_groups')
+          .from('groups')
           .update({
             name: name
           })
