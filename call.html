@@ -92,7 +92,6 @@
     var params = new URLSearchParams(location.search);
     var mode = params.get('mode') || 'video';
     var toUser = params.get('to') || '';
-    var callId = params.get('call') || '';
     var name = params.get('name') ? decodeURIComponent(params.get('name')) : '通話';
     document.getElementById('callName').textContent = name;
 
@@ -100,28 +99,30 @@
     var me = null;
     var pc = null;
     var localStream = null;
-    var callRowId = callId || null;
+    var callRowId = null;
     var isCaller = false;
     var micOn = true, camOn = true;
     var ringTimer = null;
     var audioCtx = null;
+    var appliedIce = {};
+    var pollTimer = null;
+    var channel = null;
 
     function setStatus(t) {
       document.getElementById('callStatus').textContent = t;
     }
 
-    // ----- 鈴聲（免音檔）-----
     function ensureAudio() {
       if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
       if (audioCtx.state === 'suspended') audioCtx.resume();
       return audioCtx;
     }
-    function beep(freq, dur, type) {
+    function beep(freq, dur) {
       try {
         var ctx = ensureAudio();
         var o = ctx.createOscillator();
         var g = ctx.createGain();
-        o.type = type || 'sine';
+        o.type = 'sine';
         o.frequency.value = freq;
         g.gain.value = 0.08;
         o.connect(g); g.connect(ctx.destination);
@@ -132,14 +133,16 @@
     function startDialTone() {
       stopRing();
       ringTimer = setInterval(function () {
-        beep(440, 0.15); setTimeout(function () { beep(480, 0.15); }, 180);
+        beep(440, 0.15);
+        setTimeout(function () { beep(480, 0.15); }, 180);
       }, 1200);
     }
     function startIncomingRing() {
       stopRing();
-      if (navigator.vibrate) navigator.vibrate([300, 200, 300, 200, 300]);
+      if (navigator.vibrate) navigator.vibrate([300, 200, 300, 200]);
       ringTimer = setInterval(function () {
-        beep(880, 0.25); setTimeout(function () { beep(980, 0.25); }, 300);
+        beep(880, 0.25);
+        setTimeout(function () { beep(980, 0.25); }, 300);
         if (navigator.vibrate) navigator.vibrate(200);
       }, 1500);
     }
@@ -174,36 +177,122 @@
       return localStream;
     }
 
-    function createPc() {
+    async function pushIce(role, candidate) {
+      if (!candidate || !callRowId) return;
+      var col = role === 'caller' ? 'caller_ice' : 'callee_ice';
+      try {
+        var cur = await supabase.from('call_sessions').select(col).eq('id', callRowId).single();
+        var arr = (cur.data && cur.data[col]) ? cur.data[col] : [];
+        if (!Array.isArray(arr)) arr = [];
+        arr.push(candidate);
+        var patch = {};
+        patch[col] = arr;
+        await supabase.from('call_sessions').update(patch).eq('id', callRowId);
+      } catch (e) {}
+    }
+
+    async function applyRemoteIce(list) {
+      if (!pc || !list || !list.length) return;
+      for (var i = 0; i < list.length; i++) {
+        var c = list[i];
+        var key = JSON.stringify(c);
+        if (appliedIce[key]) continue;
+        appliedIce[key] = true;
+        try {
+          await pc.addIceCandidate(c);
+        } catch (e) {}
+      }
+    }
+
+    function createPc(role) {
       pc = new RTCPeerConnection(iceServers());
-      localStream.getTracks().forEach(function (t) { pc.addTrack(t, localStream); });
+      localStream.getTracks().forEach(function (t) {
+        pc.addTrack(t, localStream);
+      });
+
       pc.ontrack = function (ev) {
         var remote = document.getElementById('remoteVideo');
-        if (mode === 'audio') {
-          // 語音：只接聲音
+        if (ev.streams && ev.streams[0]) {
           remote.srcObject = ev.streams[0];
-          remote.style.display = 'none';
         } else {
-          remote.srcObject = ev.streams[0];
+          remote.srcObject = new MediaStream([ev.track]);
         }
-        setStatus('通話中');
+        if (mode !== 'audio') remote.style.display = 'block';
+        remote.play().catch(function () {});
+        setStatus('通話中（已收到對方媒體）');
         stopRing();
       };
-      pc.onicecandidate = function (ev) {
-        // 簡化：依賴 SDP 內 candidate（無 trickle）；正式可再加 ICE 表
+
+      pc.oniceconnectionstatechange = function () {
+        setStatus('連線：' + pc.iceConnectionState);
+        if (pc.iceConnectionState === 'failed') {
+          setStatus('連線失敗（網路限制，可能需 TURN）');
+        }
       };
+
+      pc.onicecandidate = function (ev) {
+        if (ev.candidate) {
+          pushIce(role, ev.candidate.toJSON());
+        }
+      };
+
       return pc;
+    }
+
+    function subscribeCallRow() {
+      if (!callRowId) return;
+      if (channel) {
+        try { supabase.removeChannel(channel); } catch (e) {}
+      }
+      channel = supabase.channel('call-row-' + callRowId)
+        .on('postgres_changes', {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'call_sessions',
+          filter: 'id=eq.' + callRowId
+        }, async function (payload) {
+          await handleCallUpdate(payload.new);
+        })
+        .subscribe();
+    }
+
+    async function handleCallUpdate(row) {
+      if (!row) return;
+      if (row.status === 'rejected') {
+        stopRing();
+        setStatus('對方已拒接');
+        setTimeout(function () { hangup(false); }, 800);
+        return;
+      }
+      if (row.status === 'ended') {
+        hangup(false);
+        return;
+      }
+      if (isCaller && row.answer && pc && !pc.currentRemoteDescription) {
+        try {
+          await pc.setRemoteDescription(row.answer);
+          setStatus('已接通，建立媒體中…');
+          stopRing();
+        } catch (e) {
+          setStatus('設定 answer 失敗');
+        }
+      }
+      if (isCaller) await applyRemoteIce(row.callee_ice);
+      else await applyRemoteIce(row.caller_ice);
     }
 
     async function hangup(updateDb) {
       stopRing();
+      if (pollTimer) { clearInterval(pollTimer); pollTimer = null; }
       if (pc) { try { pc.close(); } catch (e) {} pc = null; }
       if (localStream) {
         localStream.getTracks().forEach(function (t) { t.stop(); });
         localStream = null;
       }
       if (updateDb && callRowId && supabase) {
-        await supabase.from('call_sessions').update({ status: 'ended' }).eq('id', callRowId);
+        try {
+          await supabase.from('call_sessions').update({ status: 'ended' }).eq('id', callRowId);
+        } catch (e) {}
       }
       location.href = 'contacts.html';
     }
@@ -212,8 +301,14 @@
       isCaller = true;
       setStatus('撥號中…');
       startDialTone();
-      await getMedia();
-      createPc();
+      try {
+        await getMedia();
+      } catch (e) {
+        stopRing();
+        setStatus('請允許麥克風／相機');
+        return;
+      }
+      createPc('caller');
 
       var offer = await pc.createOffer();
       await pc.setLocalDescription(offer);
@@ -223,7 +318,9 @@
         callee_id: toUser,
         mode: mode,
         status: 'ringing',
-        offer: offer
+        offer: offer,
+        caller_ice: [],
+        callee_ice: []
       }).select().single();
 
       if (ins.error) {
@@ -232,66 +329,62 @@
         return;
       }
       callRowId = ins.data.id;
+      subscribeCallRow();
 
-      // 等對方 answer
-      supabase.channel('call-' + callRowId)
-        .on('postgres_changes', {
-          event: 'UPDATE',
-          schema: 'public',
-          table: 'call_sessions',
-          filter: 'id=eq.' + callRowId
-        }, async function (payload) {
-          var row = payload.new;
-          if (row.status === 'rejected') {
-            stopRing();
-            setStatus('對方已拒接');
-            setTimeout(function () { hangup(false); }, 1000);
-            return;
-          }
-          if (row.status === 'ended') {
-            hangup(false);
-            return;
-          }
-          if (row.answer && pc && !pc.currentRemoteDescription) {
-            await pc.setRemoteDescription(row.answer);
-            setStatus('已接通');
-            stopRing();
-          }
-        })
-        .subscribe();
+      // 輪詢備援（防 Realtime 漏）
+      pollTimer = setInterval(async function () {
+        var res = await supabase.from('call_sessions').select('*').eq('id', callRowId).single();
+        if (res.data) await handleCallUpdate(res.data);
+      }, 2000);
     }
 
-    async function showIncoming(row) {
+    function showIncoming(row) {
+      if (document.getElementById('incomingPanel').classList.contains('show')) return;
       callRowId = row.id;
       mode = row.mode || mode;
       document.getElementById('incomingPanel').classList.add('show');
-      document.getElementById('incomingTitle').textContent = '來電';
       document.getElementById('incomingSub').textContent =
         (mode === 'audio' ? '語音' : '視訊') + '通話邀請';
       startIncomingRing();
       setStatus('來電中');
+      subscribeCallRow();
     }
 
     async function acceptCall() {
       stopRing();
       document.getElementById('incomingPanel').classList.remove('show');
       setStatus('接聽中…');
-      await getMedia();
-      createPc();
+      try {
+        await getMedia();
+      } catch (e) {
+        setStatus('請允許麥克風／相機');
+        return;
+      }
+      createPc('callee');
 
-      var { data: row } = await supabase.from('call_sessions').select('*').eq('id', callRowId).single();
-      if (!row || !row.offer) {
+      var { data: row, error } = await supabase.from('call_sessions').select('*').eq('id', callRowId).single();
+      if (error || !row || !row.offer) {
         setStatus('來電已失效');
         return;
       }
-      await pc.setRemoteDescription(row.offer);
-      var answer = await pc.createAnswer();
-      await pc.setLocalDescription(answer);
-      await supabase.from('call_sessions').update({
-        status: 'accepted',
-        answer: answer
-      }).eq('id', callRowId);
-      setStatus('通話中');
+      try {
+        await pc.setRemoteDescription(row.offer);
+        var answer = await pc.createAnswer();
+        await pc.setLocalDescription(answer);
+        await supabase.from('call_sessions').update({
+          status: 'accepted',
+          answer: answer
+        }).eq('id', callRowId);
+        await applyRemoteIce(row.caller_ice);
+        setStatus('通話中');
+      } catch (e) {
+        setStatus('接聽失敗：' + (e.message || e));
+      }
+
+      pollTimer = setInterval(async function () {
+        var res = await supabase.from('call_sessions').select('*').eq('id', callRowId).single();
+        if (res.data) await handleCallUpdate(res.data);
+      }, 2000);
     }
 
     async function rejectCall() {
@@ -303,30 +396,34 @@
     }
 
     async function listenIncoming() {
-      // 監聽打給我的來電
-      supabase.channel('incoming-' + me.id)
-        .on('postgres_changes', {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'call_sessions',
-          filter: 'callee_id=eq.' + me.id
-        }, function (payload) {
-          if (payload.new.status === 'ringing' && !isCaller) {
-            showIncoming(payload.new);
-          }
-        })
-        .subscribe();
+      try {
+        supabase.channel('incoming-' + me.id)
+          .on('postgres_changes', {
+            event: 'INSERT',
+            schema: 'public',
+            table: 'call_sessions',
+            filter: 'callee_id=eq.' + me.id
+          }, function (payload) {
+            if (payload.new && payload.new.status === 'ringing' && !isCaller) {
+              showIncoming(payload.new);
+            }
+          })
+          .subscribe();
+      } catch (e) {}
 
-      // 進頁時檢查是否已有未接 ringing
-      var { data } = await supabase.from('call_sessions')
-        .select('*')
-        .eq('callee_id', me.id)
-        .eq('status', 'ringing')
-        .order('created_at', { ascending: false })
-        .limit(1);
-      if (data && data[0] && !toUser) {
-        showIncoming(data[0]);
+      async function checkOnce() {
+        if (isCaller) return;
+        if (document.getElementById('incomingPanel').classList.contains('show')) return;
+        var res = await supabase.from('call_sessions')
+          .select('*')
+          .eq('callee_id', me.id)
+          .eq('status', 'ringing')
+          .order('created_at', { ascending: false })
+          .limit(1);
+        if (res.data && res.data[0]) showIncoming(res.data[0]);
       }
+      await checkOnce();
+      setInterval(checkOnce, 2000);
     }
 
     document.getElementById('btnHang').onclick = function () { hangup(true); };
@@ -360,8 +457,7 @@
       }
       me = sess.data.session.user;
 
-      // 使用者手勢後才能出聲：點頁任意處
-      document.body.addEventListener('click', function once() {
+      document.body.addEventListener('click', function () {
         ensureAudio();
       }, { once: true });
 
@@ -373,18 +469,9 @@
           return;
         }
         await startAsCaller();
-      } else if (callId) {
-        var { data } = await supabase.from('call_sessions').select('*').eq('id', callId).single();
-        if (data && data.status === 'ringing') showIncoming(data);
-        else setStatus('等待來電或從通訊錄撥打');
       } else {
-        setStatus('等待來電…（或從通訊錄按視訊）');
-        // 本機預覽可選
-        try {
-          await getMedia();
-        } catch (e) {
-          setStatus('請允許麥克風／相機');
-        }
+        setStatus('等待來電…（請保持此頁開啟）');
+        try { await getMedia(); } catch (e) {}
       }
     }
 
