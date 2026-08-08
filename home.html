@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>安全團聚</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
@@ -26,7 +27,7 @@
     }
     .header h1 { font-size: 18px; font-weight: 700; }
     .header-right { display: flex; align-items: center; gap: 14px; font-size: 20px; }
-    
+
     .alert-banner {
       background: #fdecea;
       border-left: 5px solid #e74c3c;
@@ -48,6 +49,7 @@
       gap: 10px;
       margin-top: 10px;
       align-items: center;
+      flex-wrap: wrap;
     }
     .alert-link {
       font-size: 13px;
@@ -79,7 +81,7 @@
     }
 
     .content { padding: 16px 12px; }
-    
+
     .empty-state {
       background: white;
       border-radius: 14px;
@@ -92,11 +94,12 @@
       border-radius: 50%;
       background: #e8f5e9;
       display: flex; align-items: center; justify-content: center;
-      margin: 0 auto 14px;
+      margin: 0 auto 12px;
       font-size: 28px;
     }
-    .empty-title { font-size: 16px; font-weight: 600; margin-bottom: 6px; }
-    .empty-desc { font-size: 13px; color: #888; margin-bottom: 18px; }
+    .empty-title { font-size: 16px; font-weight: 700; margin-bottom: 6px; }
+    .empty-desc { font-size: 13px; color: #888; margin-bottom: 16px; line-height: 1.4; }
+
     .btn {
       display: inline-block;
       padding: 10px 20px;
@@ -136,6 +139,8 @@
       border-radius: 12px;
       padding: 14px 6px;
       text-align: center;
+      text-decoration: none;
+      color: inherit;
     }
     .quick-icon {
       width: 44px; height: 44px;
@@ -162,6 +167,7 @@
       color: #999;
       font-size: 10px;
       width: 60px;
+      text-decoration: none;
     }
     .nav-item.active { color: #06C755; }
     .nav-icon { font-size: 22px; margin-bottom: 2px; }
@@ -184,15 +190,15 @@
         [演習預告] 8/10 中部地區及 8/13 北部地區將實施城鎮韌性（防空）演習，行動網路可能受影響。
       </div>
       <div class="alert-actions">
-        <a class="alert-link" href="https://gov.tw/KxS" target="_blank">查看詳細資訊 →</a>
-        <button class="siren-btn" onclick="playSiren()">▶ 播放警笛</button>
+        <a class="alert-link" href="https://gov.tw/KxS" target="_blank" rel="noopener">查看詳細資訊 →</a>
+        <button type="button" class="siren-btn" id="btnSiren">▶ 播放警笛</button>
       </div>
     </div>
-    <div class="alert-close" onclick="closeAlert()">✕</div>
+    <div class="alert-close" id="btnCloseAlert">✕</div>
   </div>
 
   <div class="content">
-    <div class="sos-bar" onclick="alert('SOS 功能之後會接上真實後端')">
+    <div class="sos-bar" id="btnSos">
       🚨 緊急求助 SOS
     </div>
 
@@ -200,79 +206,77 @@
       <div class="empty-icon">👥</div>
       <div class="empty-title">尚未加入任何成員</div>
       <div class="empty-desc">邀請家人或同學加入，即可即時掌握彼此安全狀態</div>
-      <button class="btn btn-primary" onclick="alert('邀請功能之後會接上')">邀請加入</button>
-      <button class="btn btn-outline" onclick="alert('建立群組功能之後會接上')">建立群組</button>
+      <button type="button" class="btn btn-primary" onclick="location.href='contacts.html'">去通訊錄</button>
+      <button type="button" class="btn btn-outline" onclick="location.href='contacts.html'">建立群組</button>
     </div>
 
     <div class="quick-row">
-      <div class="quick-item">
+      <a class="quick-item" href="map.html">
         <div class="quick-icon">🗺️</div>
         <div class="quick-label">地圖</div>
-      </div>
-      <div class="quick-item">
+      </a>
+      <a class="quick-item" href="chat.html">
         <div class="quick-icon">💬</div>
         <div class="quick-label">聊天</div>
-      </div>
-      <div class="quick-item">
+      </a>
+      <a class="quick-item" href="me.html">
         <div class="quick-icon">📦</div>
         <div class="quick-label">物資</div>
-      </div>
-      <div class="quick-item">
+      </a>
+      <a class="quick-item" href="map.html">
         <div class="quick-icon">📍</div>
         <div class="quick-label">集合點</div>
-      </div>
+      </a>
     </div>
   </div>
 
   <div class="bottom-nav">
-  <a class="nav-item active" href="home.html" style="text-decoration:none; color:inherit;">
-    <div class="nav-icon">🏠</div>
-    首頁
-  </a>
-  <a class="nav-item" href="chat.html" style="text-decoration:none; color:inherit;">
-    <div class="nav-icon">💬</div>
-    聊天
-  </a>
-  <a class="nav-item" href="contacts.html" style="text-decoration:none; color:inherit;">
-    <div class="nav-icon">👥</div>
-    通訊錄
-  </a>
-  <a class="nav-item" href="me.html" style="text-decoration:none; color:inherit;">
-    <div class="nav-icon">👤</div>
-    我
-  </a>
-</div>
+    <a class="nav-item active" href="home.html">
+      <div class="nav-icon">🏠</div>
+      首頁
+    </a>
+    <a class="nav-item" href="chat.html">
+      <div class="nav-icon">💬</div>
+      聊天
+    </a>
+    <a class="nav-item" href="contacts.html">
+      <div class="nav-icon">👥</div>
+      通訊錄
+    </a>
+    <a class="nav-item" href="me.html">
+      <div class="nav-icon">👤</div>
+      我
+    </a>
+  </div>
 
   <script>
-    let audioCtx = null;
-    let oscillator = null;
-    let gainNode = null;
-    let isPlaying = false;
+  (function () {
+    var audioCtx = null;
+    var oscillator = null;
+    var gainNode = null;
+    var isPlaying = false;
+    var stopTimer = null;
+    var sweepTimer = null;
 
-    // 檢查這則警報是否已經看過
-const ALERT_ID = 'alert-20260807'; // 之後有新警報就改這個 ID
+    var ALERT_ID = 'alert-20260807';
 
-function closeAlert() {
-  const banner = document.getElementById('alertBanner');
-  if (banner) banner.style.display = 'none';
-  localStorage.setItem(ALERT_ID, 'seen');
-  stopSiren();
-}
-
-// 頁面載入時檢查
-window.addEventListener('DOMContentLoaded', () => {
-  if (localStorage.getItem(ALERT_ID) === 'seen') {
-    const banner = document.getElementById('alertBanner');
-    if (banner) banner.style.display = 'none';
-  }
-});
+    function closeAlert() {
+      var banner = document.getElementById('alertBanner');
+      if (banner) banner.style.display = 'none';
+      try { localStorage.setItem(ALERT_ID, 'seen'); } catch (e) {}
+      stopSiren();
+    }
 
     function stopSiren() {
+      if (stopTimer) { clearTimeout(stopTimer); stopTimer = null; }
+      if (sweepTimer) { clearInterval(sweepTimer); sweepTimer = null; }
       if (oscillator) {
-        try { oscillator.stop(); } catch(e) {}
+        try { oscillator.stop(); } catch (e) {}
         oscillator = null;
       }
       isPlaying = false;
+      var btn = document.getElementById('btnSiren');
+      if (btn) btn.textContent = '▶ 播放警笛';
     }
 
     function playSiren() {
@@ -280,29 +284,80 @@ window.addEventListener('DOMContentLoaded', () => {
         stopSiren();
         return;
       }
-      isPlaying = true;
 
-      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-      oscillator = audioCtx.createOscillator();
-      gainNode = audioCtx.createGain();
+      try {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      } catch (e) {
+        alert('此裝置不支援網頁音效');
+        return;
+      }
 
-      oscillator.type = 'sawtooth';
-      oscillator.frequency.setValueAtTime(800, audioCtx.currentTime);
-      oscillator.frequency.linearRampToValueAtTime(1200, audioCtx.currentTime + 0.5);
-      oscillator.frequency.linearRampToValueAtTime(800, audioCtx.currentTime + 1);
+      function startTone() {
+        isPlaying = true;
+        var btn = document.getElementById('btnSiren');
+        if (btn) btn.textContent = '■ 停止警笛';
 
-      gainNode.gain.setValueAtTime(0.15, audioCtx.currentTime);
+        oscillator = audioCtx.createOscillator();
+        gainNode = audioCtx.createGain();
+        oscillator.type = 'sawtooth';
+        gainNode.gain.setValueAtTime(0.12, audioCtx.currentTime);
 
-      oscillator.connect(gainNode);
-      gainNode.connect(audioCtx.destination);
-      oscillator.start();
+        oscillator.connect(gainNode);
+        gainNode.connect(audioCtx.destination);
 
-      // 約 8 秒後自動停止
-      setTimeout(() => {
-        stopSiren();
-      }, 8000);
+        var t0 = audioCtx.currentTime;
+        oscillator.frequency.setValueAtTime(800, t0);
+        oscillator.frequency.linearRampToValueAtTime(1200, t0 + 0.5);
+        oscillator.frequency.linearRampToValueAtTime(800, t0 + 1);
+        oscillator.start();
+
+        // 重複高低掃頻，比較像警笛
+        var phase = 0;
+        sweepTimer = setInterval(function () {
+          if (!oscillator || !audioCtx) return;
+          phase += 1;
+          var now = audioCtx.currentTime;
+          try {
+            if (phase % 2 === 1) {
+              oscillator.frequency.cancelScheduledValues(now);
+              oscillator.frequency.setValueAtTime(800, now);
+              oscillator.frequency.linearRampToValueAtTime(1200, now + 0.5);
+            } else {
+              oscillator.frequency.cancelScheduledValues(now);
+              oscillator.frequency.setValueAtTime(1200, now);
+              oscillator.frequency.linearRampToValueAtTime(800, now + 0.5);
+            }
+          } catch (e) {}
+        }, 500);
+
+        stopTimer = setTimeout(function () {
+          stopSiren();
+        }, 8000);
+      }
+
+      if (audioCtx.state === 'suspended') {
+        audioCtx.resume().then(startTone).catch(function () {
+          alert('請再點一次播放警笛（需解除靜音）');
+        });
+      } else {
+        startTone();
+      }
     }
-   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    document.getElementById('btnSiren').onclick = playSiren;
+    document.getElementById('btnCloseAlert').onclick = closeAlert;
+    document.getElementById('btnSos').onclick = function () {
+      alert('SOS 功能之後會接上真實後端');
+    };
+
+    try {
+      if (localStorage.getItem(ALERT_ID) === 'seen') {
+        var banner = document.getElementById('alertBanner');
+        if (banner) banner.style.display = 'none';
+      }
+    } catch (e) {}
+  })();
+  </script>
   <script src="call-notify.js"></script>
 </body>
 </html>
