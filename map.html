@@ -6,6 +6,7 @@
   <title>定位集合 - 安全團聚</title>
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
@@ -97,7 +98,7 @@
       <div class="mode-hint" id="modeHint">目前：一般</div>
     </div>
 
-    <button class="btn btn-shelter" id="btnShelter" onclick="openShelterMap()">🛡️ 附近防空避難（官方地圖）</button>
+    <button class="btn btn-shelter" id="btnShelter" style="display:none" onclick="openShelterMap()">🛡️ 附近防空避難（官方地圖）</button>
 
     <div class="row">
       <div class="status" id="shareStatus">定位分享：關閉</div>
@@ -118,6 +119,10 @@
   </div>
 
   <script>
+    var SUPABASE_URL = 'https://perfsipperncvjocznhl.supabase.co';
+    var SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBlcmZzaXBwZXJuY3Zqb2N6bmhsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODYwMTUyMzAsImV4cCI6MjEwMTU5MTIzMH0.I7vXkV247kAzRJ0RigDZt3Hzn8KJDyMc6o9E3oHJZoY';
+    var shelterFeatureOn = false;
+
     const map = L.map('map').setView([23.97, 121.0], 8);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       maxZoom: 19,
@@ -126,15 +131,15 @@
 
     let shareOn = false;
     let watchId = null;
-    let myLat = null, myLng = null;       // 原始 WGS-84
+    let myLat = null, myLng = null;
     let myMarker = null;
-    let meetLat = null, meetLng = null;   // 儲存用 WGS-84
+    let meetLat = null, meetLng = null;
     let meetMarker = null;
     let updateTimer = null;
-    let effectiveRegion = 'normal'; // normal | cn（自動判斷後的結果）
+    let effectiveRegion = 'normal';
+    let memberMarkers = {};
 
-    // ---------- 地圖模式：手動 + 自動 ----------
-    const MODE_KEY = 'map_region_mode'; // auto | cn | normal
+    const MODE_KEY = 'map_region_mode';
 
     function getSavedMode() {
       var m = localStorage.getItem(MODE_KEY) || 'auto';
@@ -147,7 +152,6 @@
     }
 
     function isInMainlandRough(lat, lng) {
-      // 粗略大陸框，並排除台灣本島
       if (isInTaiwanRough(lat, lng)) return false;
       return lat >= 18 && lat <= 54 && lng >= 73 && lng <= 135;
     }
@@ -156,12 +160,10 @@
       var mode = getSavedMode();
       if (mode === 'cn') return 'cn';
       if (mode === 'normal') return 'normal';
-      // auto
       if (lat == null || lng == null) return effectiveRegion || 'normal';
       return isInMainlandRough(lat, lng) ? 'cn' : 'normal';
     }
 
-    // WGS-84 → GCJ-02（大陸地圖常用）
     function outOfChina(lat, lng) {
       return (lng < 72.004 || lng > 137.8347 || lat < 0.8293 || lat > 55.8271);
     }
@@ -194,7 +196,6 @@
       return { lat: lat + dLat, lng: lng + dLng };
     }
 
-    /** 顯示用地圖座標：大陸模式轉 GCJ，一般模式用原始 WGS */
     function displayCoord(lat, lng) {
       if (lat == null || lng == null) return null;
       if (effectiveRegion === 'cn') return wgs84ToGcj02(lat, lng);
@@ -213,9 +214,30 @@
         text = '目前：一般（手動）· 維持現有地圖邏輯';
       }
       document.getElementById('modeHint').textContent = text;
-      // 大陸模式隱藏台灣防空避難
-      document.getElementById('btnShelter').style.display =
-        (effectiveRegion === 'cn') ? 'none' : 'block';
+
+      // 只有後台開啟 + 非大陸模式才顯示防空避難
+      var showShelter = shelterFeatureOn && effectiveRegion !== 'cn';
+      document.getElementById('btnShelter').style.display = showShelter ? 'block' : 'none';
+    }
+
+    async function loadShelterSetting() {
+      try {
+        if (!window.supabase) {
+          shelterFeatureOn = false;
+          refreshModeUI();
+          return;
+        }
+        var client = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        var res = await client
+          .from('app_settings')
+          .select('value')
+          .eq('key', 'shelter_enabled')
+          .maybeSingle();
+        shelterFeatureOn = res.data && String(res.data.value).toLowerCase() === 'true';
+      } catch (e) {
+        shelterFeatureOn = false;
+      }
+      refreshModeUI();
     }
 
     function applyRegionFromPosition() {
@@ -232,7 +254,6 @@
       applyRegionFromPosition();
     }
 
-    // ---------- 群組成員（示意，之後接真實資料）----------
     function buildMembers(gname) {
       var me = { id: 'me', name: '我', lat: null, lng: null, color: '#06C755' };
       if (gname && gname.indexOf('家人') >= 0) {
@@ -251,7 +272,6 @@
       document.getElementById('groupName').textContent = gname + '・定位';
     }
     let members = buildMembers(gname);
-    let memberMarkers = {};
 
     const speedCams = [
       { name: '台北示範測速', lat: 25.0330, lng: 121.5654, limit: 50 },
@@ -327,7 +347,8 @@
       meetLat = lat;
       meetLng = lng;
       updateMeetMarker();
-      map.setView([displayCoord(lat, lng).lat, displayCoord(lat, lng).lng], 14);
+      var d = displayCoord(lat, lng);
+      map.setView([d.lat, d.lng], 14);
       document.getElementById('meetInfo').textContent =
         '集合點：' + (label || (lat.toFixed(5) + ', ' + lng.toFixed(5)));
       renderMembers();
@@ -496,11 +517,11 @@
       }, 5000);
     }
 
-    // 初始化模式
     document.getElementById('regionMode').value = getSavedMode();
     effectiveRegion = getSavedMode() === 'cn' ? 'cn' : 'normal';
     refreshModeUI();
     renderMembers();
+    loadShelterSetting();
   </script>
 </body>
 </html>
