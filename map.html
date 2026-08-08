@@ -82,12 +82,21 @@
     <div class="status" id="partStatus">參與者：—</div>
 
     <div class="list-title">新增行程／集合點（編號為先後順序）</div>
-    <input id="wpTitle" placeholder="地點名稱（例如：花蓮車站）">
-    <input id="wpTime" type="datetime-local">
-    <div class="row">
-      <button type="button" class="btn btn-green" id="btnAddHere" style="flex:1">用目前位置新增</button>
-      <button type="button" class="btn btn-outline" id="btnAddMap" style="flex:1">用地圖中心新增</button>
-    </div>
+<input id="wpTitle" placeholder="地點名稱（例如：花蓮車站）">
+<input id="wpTime" type="datetime-local">
+
+<div class="list-title">搜尋地址設為集合點</div>
+<input id="searchInput" placeholder="搜尋地址（例如：台北車站、花蓮火車站）"
+       onkeydown="if(event.key==='Enter')searchPlace()">
+<div class="row">
+  <button type="button" class="btn btn-green" id="btnSearch" style="flex:1">搜尋</button>
+</div>
+<div id="searchResults" style="display:none;border:1px solid #eee;border-radius:10px;margin-bottom:10px;max-height:160px;overflow:auto;"></div>
+
+<div class="row">
+  <button type="button" class="btn btn-green" id="btnAddHere" style="flex:1">用目前位置新增</button>
+  <button type="button" class="btn btn-outline" id="btnAddMap" style="flex:1">用地圖中心新增</button>
+</div>
 
     <div class="list-title">行程列表</div>
     <div id="wpList"></div>
@@ -236,7 +245,100 @@
       document.getElementById('wpTitle').value = '';
       await loadWaypoints();
     }
+    async function searchPlace() {
+  var q = document.getElementById('searchInput').value.trim();
 
+  if (!q) {
+    alert('請輸入要搜尋的地址或地名');
+    return;
+  }
+
+  var box = document.getElementById('searchResults');
+
+  box.style.display = 'block';
+  box.innerHTML = '<div style="padding:10px;font-size:13px;color:#888">搜尋中…</div>';
+
+  try {
+    var url = 'https://nominatim.openstreetmap.org/search?format=json&q=' +
+      encodeURIComponent(q) +
+      '&limit=6&accept-language=zh-TW';
+
+    var res = await fetch(url, {
+      headers: {
+        'Accept': 'application/json'
+      }
+    });
+
+    var arr = await res.json();
+
+    box.innerHTML = '';
+
+    if (!arr || !arr.length) {
+      box.innerHTML =
+        '<div style="padding:10px;font-size:13px;color:#888">找不到地點</div>';
+      return;
+    }
+
+    arr.forEach(function (item) {
+
+      var div = document.createElement('div');
+
+      div.style.cssText =
+        'padding:10px 12px;' +
+        'border-bottom:1px solid #f5f5f5;' +
+        'font-size:13px;' +
+        'cursor:pointer;';
+
+      div.textContent = item.display_name;
+
+      div.onclick = async function () {
+
+        var lat = parseFloat(item.lat);
+        var lng = parseFloat(item.lon);
+
+        var shortName =
+          (item.display_name || q).split(',')[0];
+
+        // 如果地點名稱沒有輸入，
+        // 自動使用搜尋結果名稱
+        var titleInput =
+          document.getElementById('wpTitle');
+
+        if (!titleInput.value.trim()) {
+          titleInput.value = shortName;
+        }
+
+        // 地圖移動到搜尋的位置
+        map.setView([lat, lng], 16);
+
+        // 在地圖上顯示搜尋位置
+        L.circleMarker([lat, lng], {
+          radius: 6,
+          color: '#1565c0',
+          fillColor: '#1565c0',
+          fillOpacity: 0.8
+        }).addTo(map);
+
+        // 隱藏搜尋結果
+        box.style.display = 'none';
+
+        // 直接建立集合點
+        await addWaypoint(lat, lng);
+      };
+
+      box.appendChild(div);
+    });
+
+  } catch (e) {
+
+    box.innerHTML =
+      '<div style="padding:10px;font-size:13px;color:#c62828">' +
+      '搜尋失敗（網路或服務限制）' +
+      '</div>';
+  }
+}
+
+document.getElementById('btnSearch').onclick = searchPlace;
     async function deleteWp(id) {
       if (!sb || !me) return;
       var res = await sb.from('meetup_waypoints').delete().eq('id', id).eq('created_by', me.id);
