@@ -97,9 +97,9 @@
       <div class="header-status" id="roomStatus">啟動中…</div>
     </div>
     <div class="header-actions">
-      <button type="button" id="btnAudio">語音</button>
-      <button type="button" id="btnVideo">視訊</button>
-      <button type="button" id="btnMap">地圖</button>
+    <button type="button" id="btnMeet">📍集合</button>
+    <button type="button" id="btnAudio">語音</button>
+    <button type="button" id="btnVideo">視訊</button>
     </div>
   </div>
 
@@ -182,9 +182,12 @@
     }
     document.getElementById('btnAudio').onclick = function () { goCall('audio'); };
     document.getElementById('btnVideo').onclick = function () { goCall('video'); };
-    document.getElementById('btnMap').onclick = function () {
-      location.href = 'map.html?name=' + encodeURIComponent(roomName);
-    };
+    document.getElementById('btnMeet').onclick = function () {
+  location.href = 'map.html?id=' + encodeURIComponent(roomId) +
+    '&name=' + encodeURIComponent(roomName);
+};
+document.getElementById('btnAudio').onclick = function () { goCall('audio'); };
+document.getElementById('btnVideo').onclick = function () { goCall('video'); };
 
     function nowTime() {
       var n = new Date();
