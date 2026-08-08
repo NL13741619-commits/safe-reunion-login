@@ -240,13 +240,17 @@ var SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSI
 
       setStatus('載入群組資料…');
 
-      var result =
-        await supabase
-          .from('groups')
-          .select('*')
-          .eq('id', groupId)
-          .maybeSingle();
+      var result = await supabase
 
+  .from('groups')
+
+  .update({
+
+    name: name
+
+  })
+
+  .eq('id', groupId);
       if (result.error) {
         setStatus(
           '讀取失敗：' +
