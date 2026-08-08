@@ -4,158 +4,274 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>聊天 - 安全團聚</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-      background: #f5f5f5;
-      min-height: 100vh;
-      padding-bottom: 70px;
+      background: #f5f5f5; color: #111; min-height: 100vh; padding-bottom: 70px;
     }
-    .header {
-      background: #06C755;
-      color: white;
-      padding: 14px 16px;
-      font-size: 18px;
-      font-weight: 700;
-      position: sticky;
-      top: 0;
-      z-index: 100;
+    .top {
+      background: #fff; padding: 14px 16px 12px;
+      position: sticky; top: 0; z-index: 20;
+      border-bottom: 1px solid #eee; text-align: center;
+      font-size: 17px; font-weight: 700;
+    }
+    .status {
+      font-size: 12px; color: #888; text-align: center; padding: 8px;
     }
     .chat-item {
-      background: white;
-      padding: 14px 16px;
-      display: flex;
-      gap: 12px;
-      align-items: center;
+      display: flex; align-items: center; gap: 12px;
+      background: #fff; padding: 12px 16px;
       border-bottom: 1px solid #f0f0f0;
-      cursor: pointer;
     }
     .avatar {
-      width: 48px; height: 48px;
-      border-radius: 50%;
-      background: #e8f5e9;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 22px;
-      flex-shrink: 0;
+      width: 48px; height: 48px; border-radius: 10px;
+      background: #e0e0e0; flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 700; color: #555; font-size: 18px;
     }
+    .avatar.group { background: #06C755; color: #fff; font-size: 14px; }
     .meta { flex: 1; min-width: 0; }
-    .name-row {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 8px;
+    .row1 {
+      display: flex; justify-content: space-between; align-items: baseline; gap: 8px;
     }
-    .name { font-weight: 600; font-size: 15px; }
-    .time { font-size: 12px; color: #999; }
+    .title {
+      font-size: 16px; font-weight: 600;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .time { font-size: 11px; color: #999; flex-shrink: 0; }
     .preview {
-      font-size: 13px;
-      color: #888;
-      margin-top: 4px;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
+      font-size: 13px; color: #888; margin-top: 4px;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
     }
-    .badge {
-      background: #e53935;
-      color: white;
-      font-size: 11px;
-      min-width: 18px;
-      height: 18px;
-      border-radius: 9px;
-      display: none;
-      align-items: center;
-      justify-content: center;
-      padding: 0 5px;
-      font-weight: 600;
+    .tabbar {
+      position: fixed; left: 0; right: 0; bottom: 0;
+      height: 58px; background: #fff; border-top: 1px solid #e8e8e8;
+      display: flex; z-index: 30;
     }
-    .badge.show { display: flex; }
-    .bottom-nav {
-      position: fixed;
-      bottom: 0; left: 0; right: 0;
-      background: white;
-      border-top: 1px solid #eaeaea;
-      display: flex;
-      justify-content: space-around;
-      padding: 8px 0 18px;
-      z-index: 100;
+    .tab {
+      flex: 1; display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      font-size: 11px; color: #888; text-decoration: none;
     }
-    .nav-item {
-      text-align: center;
-      color: #999;
-      font-size: 10px;
-      width: 60px;
-      text-decoration: none;
+    .tab.on { color: #06C755; font-weight: 600; }
+    .tab .ico { font-size: 20px; line-height: 1.2; }
+    .empty {
+      text-align: center; color: #999; padding: 40px 20px; font-size: 14px;
     }
-    .nav-item.active { color: #06C755; }
-    .nav-icon { font-size: 22px; margin-bottom: 2px; }
   </style>
 </head>
 <body>
-  <div class="header">聊天</div>
+  <div class="top">聊天</div>
+  <div class="status" id="status">載入中…</div>
+  <div id="list"></div>
 
-  <div id="chatList"></div>
-
-  <div class="bottom-nav">
-    <a class="nav-item" href="home.html">
-      <div class="nav-icon">🏠</div>首頁
-    </a>
-    <a class="nav-item active" href="chat.html">
-      <div class="nav-icon">💬</div>聊天
-    </a>
-    <a class="nav-item" href="contacts.html">
-      <div class="nav-icon">👥</div>通訊錄
-    </a>
-    <a class="nav-item" href="me.html">
-      <div class="nav-icon">👤</div>我
-    </a>
+  <div class="tabbar">
+    <a class="tab on" href="chat.html"><div class="ico">💬</div>聊天</a>
+    <a class="tab" href="contacts.html"><div class="ico">👥</div>通訊錄</a>
+    <a class="tab" href="home.html"><div class="ico">🧭</div>發現</a>
+    <a class="tab" href="me.html"><div class="ico">👤</div>我</a>
   </div>
 
   <script>
-    // 示範聊天（之後改接資料庫）
-    const chats = [
-      { id: 'family', name: '家人群組', icon: '👨‍👩‍👧‍👦', preview: '今天集合點在公園門口', time: '10:21', unread: 2 },
-      { id: 'class', name: '碩班同學', icon: '🎓', preview: '作業什麼時候交？', time: '昨天', unread: 0 },
-      { id: 'wife', name: '老婆', icon: '👩', preview: '到家了嗎', time: '週一', unread: 1 }
-    ];
+  (function () {
+    var SUPABASE_URL = 'https://perfsipperncvjocznhl.supabase.co';
+    var SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBlcmZzaXBwZXJuY3Zqb2N6bmhsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODYwMTUyMzAsImV4cCI6MjEwMTU5MTIzMH0.I7vXkV247kAzRJ0RigDZt3Hzn8KJDyMc6o9E3oHJZoY';
 
-    function getUnread(id, defaultUnread) {
-      const key = 'read_' + id;
-      if (localStorage.getItem(key) === '1') return 0;
-      return defaultUnread || 0;
+    var supabase = null;
+    var me = null;
+
+    function setStatus(t) {
+      document.getElementById('status').textContent = t;
     }
 
-    function openChat(id, name) {
-      localStorage.setItem('read_' + id, '1'); // 點進去 = 已讀
-      location.href = 'room.html?id=' + encodeURIComponent(id) + '&name=' + encodeURIComponent(name);
+    function dmId(a, b) {
+      var x = String(a), y = String(b);
+      return 'dm_' + (x < y ? x + '_' + y : y + '_' + x);
     }
 
-    function render() {
-      const box = document.getElementById('chatList');
-      box.innerHTML = '';
-      chats.forEach(function (c) {
-        const unread = getUnread(c.id, c.unread);
-        const div = document.createElement('div');
-        div.className = 'chat-item';
-        div.onclick = function () { openChat(c.id, c.name); };
-        div.innerHTML =
-          '<div class="avatar">' + c.icon + '</div>' +
-          '<div class="meta">' +
-            '<div class="name-row">' +
-              '<div class="name">' + c.name + '</div>' +
-              '<div class="time">' + c.time + '</div>' +
-            '</div>' +
-            '<div class="preview">' + c.preview + '</div>' +
+    function previewText(row) {
+      if (!row) return '尚無訊息，點擊開始聊天';
+      if (row.recalled) return '有一則訊息已回收';
+      var k = row.kind || 'text';
+      var b = row.body || '';
+      if (k === 'image') return '[圖片]';
+      if (k === 'video') return '[影片]';
+      if (k === 'audio') return '[語音／音訊]';
+      if (k === 'sticker') return '[貼圖] ' + b;
+      if (k === 'file' || k === 'media' || k === 'camera') return '[檔案]';
+      return b || '…';
+    }
+
+    function timeText(iso) {
+      if (!iso) return '';
+      var d = new Date(iso);
+      var now = new Date();
+      var hh = d.getHours() + ':' + String(d.getMinutes()).padStart(2, '0');
+      if (d.toDateString() === now.toDateString()) return hh;
+      return (d.getMonth() + 1) + '/' + d.getDate();
+    }
+
+    function openRoom(id, name) {
+      location.href = 'room.html?id=' + encodeURIComponent(id) +
+        '&name=' + encodeURIComponent(name || '對話');
+    }
+
+    async function lastMessage(roomId) {
+      var res = await supabase
+        .from('messages')
+        .select('body,kind,recalled,created_at')
+        .eq('room_id', roomId)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      return res.data || null;
+    }
+
+    function renderItem(opt) {
+      // opt: { id, title, isGroup, last }
+      var div = document.createElement('div');
+      div.className = 'chat-item';
+      var avClass = opt.isGroup ? 'avatar group' : 'avatar';
+      var avText = opt.isGroup ? '群' : String(opt.title || '?').slice(0, 1);
+      div.innerHTML =
+        '<div class="' + avClass + '">' + avText + '</div>' +
+        '<div class="meta">' +
+          '<div class="row1">' +
+            '<div class="title"></div>' +
+            '<div class="time"></div>' +
           '</div>' +
-          '<div class="badge' + (unread > 0 ? ' show' : '') + '">' + (unread > 0 ? unread : '') + '</div>';
-        box.appendChild(div);
-      });
+          '<div class="preview"></div>' +
+        '</div>';
+      div.querySelector('.title').textContent = opt.title || '對話';
+      div.querySelector('.time').textContent = timeText(opt.last && opt.last.created_at);
+      div.querySelector('.preview').textContent = previewText(opt.last);
+      div.onclick = function () { openRoom(opt.id, opt.title); };
+      return div;
     }
 
-    render();
-   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    async function boot() {
+      setStatus('檢查登入…');
+      if (!window.supabase) {
+        setStatus('套件載入失敗');
+        return;
+      }
+      try {
+        supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        var sess = await supabase.auth.getSession();
+        if (!sess.data.session) {
+          setStatus('未登入');
+          location.href = 'login.html';
+          return;
+        }
+        me = sess.data.session.user;
+        setStatus('載入聊天列表…');
+
+        var items = [];
+        var seen = {};
+
+        // 1) 已接受好友 → 一律出現（即使還沒傳過訊）
+        var fr = await supabase
+          .from('friendships')
+          .select('*')
+          .eq('status', 'accepted')
+          .or('user_id.eq.' + me.id + ',friend_id.eq.' + me.id);
+
+        var friendIds = [];
+        (fr.data || []).forEach(function (r) {
+          var oid = r.user_id === me.id ? r.friend_id : r.user_id;
+          if (friendIds.indexOf(oid) < 0) friendIds.push(oid);
+        });
+
+        var nameMap = {};
+        if (friendIds.length) {
+          var pr = await supabase.from('profiles').select('*').in('id', friendIds);
+          (pr.data || []).forEach(function (p) {
+            nameMap[p.id] = p.nickname || p.username || '好友';
+          });
+        }
+
+        for (var i = 0; i < friendIds.length; i++) {
+          var uid = friendIds[i];
+          var rid = dmId(me.id, uid);
+          seen[rid] = true;
+          var last = await lastMessage(rid);
+          items.push({
+            id: rid,
+            title: nameMap[uid] || '好友',
+            isGroup: false,
+            last: last,
+            sort: last ? new Date(last.created_at).getTime() : 0
+          });
+        }
+
+        // 2) 我的群組
+        var mems = await supabase.from('group_members').select('group_id').eq('user_id', me.id);
+        var gids = (mems.data || []).map(function (m) { return m.group_id; });
+        if (gids.length) {
+          var gs = await supabase.from('chat_groups').select('*').in('id', gids);
+          for (var j = 0; j < (gs.data || []).length; j++) {
+            var g = gs.data[j];
+            seen[g.id] = true;
+            var glast = await lastMessage(g.id);
+            items.push({
+              id: g.id,
+              title: g.name || '群組',
+              isGroup: true,
+              last: glast,
+              sort: glast ? new Date(glast.created_at).getTime() : 0
+            });
+          }
+        }
+
+        // 3) 近期有訊息、但不在上面的房間（保險）
+        var recent = await supabase
+          .from('messages')
+          .select('room_id,created_at')
+          .order('created_at', { ascending: false })
+          .limit(80);
+
+        var extraRooms = [];
+        (recent.data || []).forEach(function (m) {
+          if (m.room_id && !seen[m.room_id] && extraRooms.indexOf(m.room_id) < 0) {
+            extraRooms.push(m.room_id);
+          }
+        });
+        for (var k = 0; k < extraRooms.length; k++) {
+          var er = extraRooms[k];
+          var elast = await lastMessage(er);
+          items.push({
+            id: er,
+            title: String(er).indexOf('dm_') === 0 ? '私訊' : '對話',
+            isGroup: String(er).indexOf('dm_') !== 0,
+            last: elast,
+            sort: elast ? new Date(elast.created_at).getTime() : 0
+          });
+        }
+
+        // 有訊息的排前面
+        items.sort(function (a, b) { return b.sort - a.sort; });
+
+        var list = document.getElementById('list');
+        list.innerHTML = '';
+        if (!items.length) {
+          list.innerHTML = '<div class="empty">尚無聊天<br>到通訊錄加好友或建立群組後，對話會出現在這裡</div>';
+          setStatus('尚無會話');
+          return;
+        }
+        items.forEach(function (it) {
+          list.appendChild(renderItem(it));
+        });
+        setStatus('共 ' + items.length + ' 個聊天');
+      } catch (e) {
+        setStatus('錯誤：' + (e && e.message ? e.message : e));
+      }
+    }
+
+    boot();
+  })();
+  </script>
   <script src="call-notify.js"></script>
 </body>
 </html>
