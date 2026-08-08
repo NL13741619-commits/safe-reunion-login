@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>定位集合 - 安全團聚</title>
+  <title>集合地圖 - 安全團聚</title>
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -14,515 +14,419 @@
       height: 100vh; display: flex; flex-direction: column; background: #f5f5f5;
     }
     .header {
-      background: #06C755; color: white; padding: 12px 14px;
+      background: #06C755; color: #fff; padding: 12px 14px;
       display: flex; align-items: center; gap: 10px; z-index: 1000;
     }
-    .back { color: white; text-decoration: none; font-size: 24px; }
-    .header-info { flex: 1; }
+    .back { color: #fff; text-decoration: none; font-size: 24px; }
+    .header-info { flex: 1; min-width: 0; }
     .header-title { font-weight: 700; font-size: 16px; }
-    .header-sub { font-size: 12px; opacity: 0.9; }
-    #map { flex: 1; width: 100%; min-height: 220px; }
-    #speedAlert {
-      display: none; position: fixed; top: 56px; left: 12px; right: 12px; z-index: 2000;
-      background: #c62828; color: #fff; padding: 12px 14px; border-radius: 12px;
-      font-size: 15px; font-weight: 600; text-align: center;
-      box-shadow: 0 4px 16px rgba(0,0,0,0.25);
-    }
+    .header-sub { font-size: 12px; opacity: 0.95; }
+    #map { flex: 1; width: 100%; min-height: 240px; }
     .panel {
-      background: white; padding: 12px 14px 20px; border-top: 1px solid #eee;
-      max-height: 48vh; overflow-y: auto;
+      background: #fff; padding: 12px 14px 18px; border-top: 1px solid #eee;
+      max-height: 46vh; overflow-y: auto;
     }
-    .row {
-      display: flex; align-items: center; justify-content: space-between;
-      margin-bottom: 10px; gap: 8px;
-    }
+    .row { display: flex; gap: 8px; align-items: center; margin-bottom: 8px; flex-wrap: wrap; }
     .btn {
-      border: none; border-radius: 10px; padding: 10px 14px;
-      font-size: 14px; font-weight: 600; cursor: pointer;
+      border: none; border-radius: 10px; padding: 10px 12px;
+      font-size: 13px; font-weight: 600; cursor: pointer;
     }
-    .btn-green { background: #06C755; color: white; }
-    .btn-red { background: #e53935; color: white; }
-    .btn-outline { background: white; border: 1px solid #ddd; color: #333; }
-    .btn-shelter { background: #1565c0; color: white; width: 100%; margin-bottom: 10px; }
-    .status { font-size: 13px; color: #555; line-height: 1.4; }
-    .list-title { font-size: 13px; color: #888; margin: 12px 0 6px; }
-    .person {
-      display: flex; justify-content: space-between; align-items: center;
-      padding: 10px 0; border-bottom: 1px solid #f0f0f0; font-size: 14px;
-    }
-    .person-name { font-weight: 600; }
-    .person-meta { font-size: 12px; color: #888; margin-top: 2px; }
-    .dist { color: #06C755; font-weight: 600; font-size: 13px; white-space: nowrap; }
-    input[type="text"], select {
+    .btn-green { background: #06C755; color: #fff; }
+    .btn-red { background: #e53935; color: #fff; }
+    .btn-orange { background: #fb8c00; color: #fff; }
+    .btn-outline { background: #fff; border: 1px solid #ddd; color: #333; }
+    .status { font-size: 13px; color: #555; flex: 1; }
+    .list-title { font-size: 13px; color: #888; margin: 10px 0 6px; }
+    input, select {
       width: 100%; padding: 10px 12px; border: 1px solid #e0e0e0;
       border-radius: 10px; font-size: 14px; margin-bottom: 8px; outline: none;
-      background: #fff;
     }
-    input:focus, select:focus { border-color: #06C755; }
-    .search-results {
-      border: 1px solid #eee; border-radius: 10px; margin-bottom: 8px;
-      max-height: 160px; overflow-y: auto; display: none;
+    .wp-item {
+      display: flex; gap: 10px; align-items: flex-start;
+      padding: 10px 0; border-bottom: 1px solid #f0f0f0; font-size: 13px;
     }
-    .search-item {
-      padding: 10px 12px; border-bottom: 1px solid #f5f5f5;
-      font-size: 13px; cursor: pointer;
+    .num {
+      width: 26px; height: 26px; border-radius: 50%; background: #06C755; color: #fff;
+      display: flex; align-items: center; justify-content: center; font-weight: 700; flex-shrink: 0;
     }
-    .search-item:active, .search-item:hover { background: #f5f5f5; }
-    .mode-box {
-      background: #f7f7f7; border-radius: 10px; padding: 10px 12px; margin-bottom: 10px;
+    .sos-banner {
+      display: none; background: #c62828; color: #fff; padding: 10px 12px;
+      font-size: 14px; font-weight: 600; text-align: center;
     }
-    .mode-box label { font-size: 13px; color: #666; display: block; margin-bottom: 6px; }
-    .mode-hint { font-size: 12px; color: #888; margin-top: 6px; line-height: 1.4; }
+    .sos-banner.show { display: block; }
+    .marker-num {
+      background: #06C755; color: #fff; border-radius: 50%;
+      width: 28px; height: 28px; line-height: 28px; text-align: center;
+      font-weight: 700; border: 2px solid #fff; box-shadow: 0 1px 4px rgba(0,0,0,.3);
+    }
   </style>
 </head>
 <body>
   <div class="header">
-    <a class="back" href="chat.html">‹</a>
+    <a class="back" id="btnBack" href="chat.html">‹</a>
     <div class="header-info">
-      <div class="header-title" id="groupName">定位集合</div>
-      <div class="header-sub" id="updateInfo">尚未開始定位</div>
+      <div class="header-title" id="title">集合地圖</div>
+      <div class="header-sub" id="sub">尚未定位</div>
     </div>
   </div>
 
-  <div id="speedAlert"></div>
+  <div class="sos-banner" id="sosBanner"></div>
   <div id="map"></div>
 
   <div class="panel">
-    <div class="mode-box">
-      <label>地圖模式（入境大陸可切換）</label>
-      <select id="regionMode" onchange="onRegionModeChange()">
-        <option value="auto">自動（依目前位置判斷）</option>
-        <option value="cn">大陸（座標轉換）</option>
-        <option value="normal">一般（維持現況）</option>
-      </select>
-      <div class="mode-hint" id="modeHint">目前：一般</div>
-    </div>
-
-    <button class="btn btn-shelter" id="btnShelter" style="display:none" onclick="openShelterMap()">🛡️ 附近防空避難（官方地圖）</button>
-
     <div class="row">
-      <div class="status" id="shareStatus">定位分享：關閉</div>
-      <button class="btn btn-green" id="btnShare" onclick="toggleShare()">開啟定位</button>
+      <div class="status" id="shareStatus">定位：關閉</div>
+      <button type="button" class="btn btn-green" id="btnShare">開啟定位</button>
+      <button type="button" class="btn btn-red" id="btnSos">SOS</button>
     </div>
+    <div class="status" id="partStatus">參與者：—</div>
 
-    <div class="list-title">搜尋並設定集合點</div>
-    <input type="text" id="searchInput" placeholder="搜尋地點（例如：花蓮火車站）" onkeydown="if(event.key==='Enter')searchPlace()">
+    <div class="list-title">新增行程／集合點（編號為先後順序）</div>
+    <input id="wpTitle" placeholder="地點名稱（例如：花蓮車站）">
+    <input id="wpTime" type="datetime-local">
     <div class="row">
-      <button class="btn btn-green" style="flex:1" onclick="searchPlace()">搜尋</button>
-      <button class="btn btn-outline" style="flex:1" onclick="setMeetHere()">用目前位置</button>
+      <button type="button" class="btn btn-green" id="btnAddHere" style="flex:1">用目前位置新增</button>
+      <button type="button" class="btn btn-outline" id="btnAddMap" style="flex:1">用地圖中心新增</button>
     </div>
-    <div class="search-results" id="searchResults"></div>
-    <div class="status" id="meetInfo">尚未設定集合點</div>
 
-    <div class="list-title">本群組成員位置</div>
-    <div id="memberList"></div>
+    <div class="list-title">行程列表</div>
+    <div id="wpList"></div>
   </div>
 
   <script>
+  (function () {
     var SUPABASE_URL = 'https://perfsipperncvjocznhl.supabase.co';
     var SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBlcmZzaXBwZXJuY3Zqb2N6bmhsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODYwMTUyMzAsImV4cCI6MjEwMTU5MTIzMH0.I7vXkV247kAzRJ0RigDZt3Hzn8KJDyMc6o9E3oHJZoY';
-    var shelterFeatureOn = false;
 
-    const map = L.map('map').setView([23.97, 121.0], 8);
+    var params = new URLSearchParams(location.search);
+    var roomId = params.get('id') || params.get('room') || 'general';
+    var roomName = params.get('name') ? decodeURIComponent(params.get('name')) : '集合地圖';
+    document.getElementById('title').textContent = roomName + '・集合';
+    document.getElementById('btnBack').href = roomId !== 'general'
+      ? ('room.html?id=' + encodeURIComponent(roomId) + '&name=' + encodeURIComponent(roomName))
+      : 'chat.html';
+
+    var map = L.map('map').setView([23.97, 121.0], 8);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       maxZoom: 19,
       attribution: '&copy; OpenStreetMap'
     }).addTo(map);
 
-    let shareOn = false;
-    let watchId = null;
-    let myLat = null, myLng = null;
-    let myMarker = null;
-    let meetLat = null, meetLng = null;
-    let meetMarker = null;
-    let updateTimer = null;
-    let effectiveRegion = 'normal';
-    let memberMarkers = {};
+    var sb = null, me = null;
+    var shareOn = false, watchId = null, uploadTimer = null;
+    var myLat = null, myLng = null, myMarker = null;
+    var wpMarkers = {};
+    var peerMarkers = {};
+    var waypoints = [];
 
-    const MODE_KEY = 'map_region_mode';
+    function setSub(t) { document.getElementById('sub').textContent = t; }
+    function setShareStatus(t) { document.getElementById('shareStatus').textContent = t; }
 
-    function getSavedMode() {
-      var m = localStorage.getItem(MODE_KEY) || 'auto';
-      if (m !== 'auto' && m !== 'cn' && m !== 'normal') m = 'auto';
-      return m;
-    }
-
-    function isInTaiwanRough(lat, lng) {
-      return lat >= 21.8 && lat <= 25.4 && lng >= 120.0 && lng <= 122.15;
-    }
-
-    function isInMainlandRough(lat, lng) {
-      if (isInTaiwanRough(lat, lng)) return false;
-      return lat >= 18 && lat <= 54 && lng >= 73 && lng <= 135;
-    }
-
-    function resolveEffectiveRegion(lat, lng) {
-      var mode = getSavedMode();
-      if (mode === 'cn') return 'cn';
-      if (mode === 'normal') return 'normal';
-      if (lat == null || lng == null) return effectiveRegion || 'normal';
-      return isInMainlandRough(lat, lng) ? 'cn' : 'normal';
-    }
-
-    function outOfChina(lat, lng) {
-      return (lng < 72.004 || lng > 137.8347 || lat < 0.8293 || lat > 55.8271);
-    }
-    function transformLat(x, y) {
-      var ret = -100.0 + 2.0 * x + 3.0 * y + 0.2 * y * y + 0.1 * x * y + 0.2 * Math.sqrt(Math.abs(x));
-      ret += (20.0 * Math.sin(6.0 * x * Math.PI) + 20.0 * Math.sin(2.0 * x * Math.PI)) * 2.0 / 3.0;
-      ret += (20.0 * Math.sin(y * Math.PI) + 40.0 * Math.sin(y / 3.0 * Math.PI)) * 2.0 / 3.0;
-      ret += (160.0 * Math.sin(y / 12.0 * Math.PI) + 320 * Math.sin(y * Math.PI / 30.0)) * 2.0 / 3.0;
-      return ret;
-    }
-    function transformLng(x, y) {
-      var ret = 300.0 + x + 2.0 * y + 0.1 * x * x + 0.1 * x * y + 0.1 * Math.sqrt(Math.abs(x));
-      ret += (20.0 * Math.sin(6.0 * x * Math.PI) + 20.0 * Math.sin(2.0 * x * Math.PI)) * 2.0 / 3.0;
-      ret += (20.0 * Math.sin(x * Math.PI) + 40.0 * Math.sin(x / 3.0 * Math.PI)) * 2.0 / 3.0;
-      ret += (150.0 * Math.sin(x / 12.0 * Math.PI) + 300.0 * Math.sin(x / 30.0 * Math.PI)) * 2.0 / 3.0;
-      return ret;
-    }
-    function wgs84ToGcj02(lat, lng) {
-      if (outOfChina(lat, lng)) return { lat: lat, lng: lng };
-      var a = 6378245.0;
-      var ee = 0.00669342162296594323;
-      var dLat = transformLat(lng - 105.0, lat - 35.0);
-      var dLng = transformLng(lng - 105.0, lat - 35.0);
-      var radLat = lat / 180.0 * Math.PI;
-      var magic = Math.sin(radLat);
-      magic = 1 - ee * magic * magic;
-      var sqrtMagic = Math.sqrt(magic);
-      dLat = (dLat * 180.0) / ((a * (1 - ee)) / (magic * sqrtMagic) * Math.PI);
-      dLng = (dLng * 180.0) / (a / sqrtMagic * Math.cos(radLat) * Math.PI);
-      return { lat: lat + dLat, lng: lng + dLng };
-    }
-
-    function displayCoord(lat, lng) {
-      if (lat == null || lng == null) return null;
-      if (effectiveRegion === 'cn') return wgs84ToGcj02(lat, lng);
-      return { lat: lat, lng: lng };
-    }
-
-    function refreshModeUI() {
-      var mode = getSavedMode();
-      document.getElementById('regionMode').value = mode;
-      var text = '';
-      if (mode === 'auto') {
-        text = '目前：' + (effectiveRegion === 'cn' ? '大陸' : '一般') + '（自動偵測）';
-      } else if (mode === 'cn') {
-        text = '目前：大陸（手動）· 座標已轉換 GCJ-02';
-      } else {
-        text = '目前：一般（手動）· 維持現有地圖邏輯';
-      }
-      document.getElementById('modeHint').textContent = text;
-
-      // 只有後台開啟 + 非大陸模式才顯示防空避難
-      var showShelter = shelterFeatureOn && effectiveRegion !== 'cn';
-      document.getElementById('btnShelter').style.display = showShelter ? 'block' : 'none';
-    }
-
-    async function loadShelterSetting() {
-      try {
-        if (!window.supabase) {
-          shelterFeatureOn = false;
-          refreshModeUI();
-          return;
-        }
-        var client = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-        var res = await client
-          .from('app_settings')
-          .select('value')
-          .eq('key', 'shelter_enabled')
-          .maybeSingle();
-        shelterFeatureOn = res.data && String(res.data.value).toLowerCase() === 'true';
-      } catch (e) {
-        shelterFeatureOn = false;
-      }
-      refreshModeUI();
-    }
-
-    function applyRegionFromPosition() {
-      effectiveRegion = resolveEffectiveRegion(myLat, myLng);
-      refreshModeUI();
-      updateMyMarker();
-      if (meetLat != null) updateMeetMarker();
-      renderMembers();
-    }
-
-    function onRegionModeChange() {
-      var v = document.getElementById('regionMode').value;
-      localStorage.setItem(MODE_KEY, v);
-      applyRegionFromPosition();
-    }
-
-    function buildMembers(gname) {
-      var me = { id: 'me', name: '我', lat: null, lng: null, color: '#06C755' };
-      if (gname && gname.indexOf('家人') >= 0) {
-        return [
-          me,
-          { id: 'p1', name: '成員A', lat: 24.15, lng: 120.68, color: '#1e88e5' },
-          { id: 'p2', name: '成員B', lat: 25.02, lng: 121.46, color: '#f4511e' }
-        ];
-      }
-      return [me];
-    }
-
-    const params = new URLSearchParams(location.search);
-    const gname = params.get('name') ? decodeURIComponent(params.get('name')) : '';
-    if (gname) {
-      document.getElementById('groupName').textContent = gname + '・定位';
-    }
-    let members = buildMembers(gname);
-
-    const speedCams = [
-      { name: '台北示範測速', lat: 25.0330, lng: 121.5654, limit: 50 },
-      { name: '台中示範測速', lat: 24.1477, lng: 120.6736, limit: 60 },
-      { name: '花蓮示範測速', lat: 23.9929, lng: 121.6015, limit: 50 }
-    ];
-    const alertedCams = {};
-    const ALERT_RADIUS_M = 300;
-
-    function openShelterMap() {
-      window.open('https://adr.npa.gov.tw/map', '_blank');
-    }
-
-    function haversine(lat1, lng1, lat2, lng2) {
-      const R = 6371;
-      const toRad = function (d) { return d * Math.PI / 180; };
-      const dLat = toRad(lat2 - lat1);
-      const dLng = toRad(lng2 - lng1);
-      const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-        Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) *
-        Math.sin(dLng / 2) * Math.sin(dLng / 2);
-      return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-    }
-
-    function formatDist(km) {
-      if (km == null || isNaN(km)) return '—';
-      if (km < 1) return Math.round(km * 1000) + ' 公尺';
-      return km.toFixed(1) + ' 公里';
-    }
-
-    function speak(text) {
-      try {
-        if (!window.speechSynthesis) return;
-        window.speechSynthesis.cancel();
-        const u = new SpeechSynthesisUtterance(text);
-        u.lang = 'zh-TW';
-        window.speechSynthesis.speak(u);
-      } catch (e) {}
-    }
-
-    function showSpeedAlert(msg) {
-      const el = document.getElementById('speedAlert');
-      el.textContent = msg;
-      el.style.display = 'block';
-      speak(msg);
-      setTimeout(function () { el.style.display = 'none'; }, 5000);
-    }
-
-    function checkSpeedCams() {
-      if (myLat == null || myLng == null) return;
-      const now = Date.now();
-      speedCams.forEach(function (cam) {
-        const meters = haversine(myLat, myLng, cam.lat, cam.lng) * 1000;
-        if (meters > ALERT_RADIUS_M) return;
-        const key = cam.name;
-        if (alertedCams[key] && now - alertedCams[key] < 60000) return;
-        alertedCams[key] = now;
-        showSpeedAlert('注意，前方測速照相，速限 ' + cam.limit + ' 公里');
+    function numIcon(n) {
+      return L.divIcon({
+        className: '',
+        html: '<div class="marker-num">' + n + '</div>',
+        iconSize: [28, 28],
+        iconAnchor: [14, 14]
       });
     }
 
-    function updateMeetMarker() {
-      if (meetLat == null) return;
-      var d = displayCoord(meetLat, meetLng);
-      if (meetMarker) {
-        meetMarker.setLatLng([d.lat, d.lng]);
-      } else {
-        meetMarker = L.marker([d.lat, d.lng]).addTo(map);
-      }
+    function geoErrorText(err) {
+      if (!err) return '未知錯誤';
+      if (err.code === 1) return '權限被拒：請到 iPhone設定→Safari→位置→允許';
+      if (err.code === 2) return '目前無法取得位置（訊號／系統）';
+      if (err.code === 3) return '定位逾時，請到戶外再試';
+      return err.message || String(err);
     }
 
-    function setMeetPoint(lat, lng, label) {
-      meetLat = lat;
-      meetLng = lng;
-      updateMeetMarker();
-      var d = displayCoord(lat, lng);
-      map.setView([d.lat, d.lng], 14);
-      document.getElementById('meetInfo').textContent =
-        '集合點：' + (label || (lat.toFixed(5) + ', ' + lng.toFixed(5)));
-      renderMembers();
-    }
-
-    function setMeetHere() {
-      if (myLat == null) {
-        alert('請先開啟定位');
+    async function bootAuth() {
+      if (!window.supabase) {
+        setSub('套件未載入');
         return;
       }
-      setMeetPoint(myLat, myLng, '目前位置');
+      sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+      var sess = await sb.auth.getSession();
+      if (!sess.data.session) {
+        setSub('未登入（仍可本機定位）');
+        return;
+      }
+      me = sess.data.session.user;
+      setSub('已登入');
+      await loadWaypoints();
+      await loadPeers();
+      listenSos();
+      setInterval(loadPeers, 8000);
     }
 
-    function searchPlace() {
-      var q = document.getElementById('searchInput').value.trim();
-      if (!q) return;
-      var box = document.getElementById('searchResults');
-      box.style.display = 'block';
-      box.innerHTML = '<div class="search-item">搜尋中…</div>';
-      fetch('https://nominatim.openstreetmap.org/search?format=json&q=' + encodeURIComponent(q) + '&limit=6', {
-        headers: { 'Accept-Language': 'zh-TW' }
-      })
-        .then(function (r) { return r.json(); })
-        .then(function (arr) {
-          box.innerHTML = '';
-          if (!arr || !arr.length) {
-            box.innerHTML = '<div class="search-item">找不到地點</div>';
-            return;
-          }
-          arr.forEach(function (item) {
-            var div = document.createElement('div');
-            div.className = 'search-item';
-            div.textContent = item.display_name;
-            div.onclick = function () {
-              setMeetPoint(parseFloat(item.lat), parseFloat(item.lon), item.display_name.split(',')[0]);
-              box.style.display = 'none';
-            };
-            box.appendChild(div);
-          });
-        })
-        .catch(function () {
-          box.innerHTML = '<div class="search-item">搜尋失敗（網路或服務限制）</div>';
-        });
+    async function loadWaypoints() {
+      if (!sb) return;
+      var res = await sb.from('meetup_waypoints')
+        .select('*')
+        .eq('room_id', roomId)
+        .order('seq', { ascending: true });
+      if (res.error) {
+        setSub('行程載入失敗：' + res.error.message);
+        return;
+      }
+      waypoints = res.data || [];
+      renderWaypoints();
+    }
+
+    function renderWaypoints() {
+      Object.keys(wpMarkers).forEach(function (k) {
+        map.removeLayer(wpMarkers[k]);
+      });
+      wpMarkers = {};
+
+      var box = document.getElementById('wpList');
+      box.innerHTML = '';
+      if (!waypoints.length) {
+        box.innerHTML = '<div style="color:#888;font-size:13px;padding:8px 0">尚未設定行程點</div>';
+        return;
+      }
+
+      var bounds = [];
+      waypoints.forEach(function (w) {
+        var m = L.marker([w.lat, w.lng], { icon: numIcon(w.seq) }).addTo(map);
+        var timeStr = w.meet_at ? new Date(w.meet_at).toLocaleString() : '時間未定';
+        m.bindPopup('<b>#' + w.seq + ' ' + w.title + '</b><br>' + timeStr);
+        wpMarkers[w.id] = m;
+        bounds.push([w.lat, w.lng]);
+
+        var div = document.createElement('div');
+        div.className = 'wp-item';
+        div.innerHTML =
+          '<div class="num">' + w.seq + '</div>' +
+          '<div style="flex:1">' +
+            '<div style="font-weight:600">' + w.title + '</div>' +
+            '<div style="color:#888;margin-top:2px">' + timeStr + '</div>' +
+          '</div>' +
+          '<button type="button" class="btn btn-outline" data-id="' + w.id + '">刪</button>';
+        div.querySelector('button').onclick = function () { deleteWp(w.id); };
+        box.appendChild(div);
+      });
+      if (bounds.length) map.fitBounds(bounds, { padding: [40, 40] });
+    }
+
+    async function addWaypoint(lat, lng) {
+      if (!me || !sb) {
+        alert('請先登入才能設定集合點');
+        location.href = 'login.html';
+        return;
+      }
+      var title = document.getElementById('wpTitle').value.trim() || ('集合點 ' + (waypoints.length + 1));
+      var t = document.getElementById('wpTime').value;
+      var meetAt = t ? new Date(t).toISOString() : null;
+      var seq = waypoints.length ? (waypoints[waypoints.length - 1].seq + 1) : 1;
+
+      var res = await sb.from('meetup_waypoints').insert({
+        room_id: roomId,
+        seq: seq,
+        title: title,
+        lat: lat,
+        lng: lng,
+        meet_at: meetAt,
+        created_by: me.id
+      }).select().single();
+
+      if (res.error) {
+        alert('新增失敗：' + res.error.message);
+        return;
+      }
+      document.getElementById('wpTitle').value = '';
+      await loadWaypoints();
+    }
+
+    async function deleteWp(id) {
+      if (!sb || !me) return;
+      var res = await sb.from('meetup_waypoints').delete().eq('id', id).eq('created_by', me.id);
+      if (res.error) alert('刪除失敗：' + res.error.message);
+      await loadWaypoints();
     }
 
     function updateMyMarker() {
       if (myLat == null) return;
-      var d = displayCoord(myLat, myLng);
-      members[0].lat = myLat;
-      members[0].lng = myLng;
-      if (myMarker) {
-        myMarker.setLatLng([d.lat, d.lng]);
-      } else {
-        myMarker = L.circleMarker([d.lat, d.lng], {
+      if (myMarker) myMarker.setLatLng([myLat, myLng]);
+      else {
+        myMarker = L.circleMarker([myLat, myLng], {
           radius: 8, color: '#06C755', fillColor: '#06C755', fillOpacity: 0.9
-        }).addTo(map);
+        }).addTo(map).bindPopup('我');
       }
     }
 
-    function renderMembers() {
-      members.forEach(function (m) {
-        if (m.lat == null) return;
-        var d = displayCoord(m.lat, m.lng);
-        if (memberMarkers[m.id]) {
-          memberMarkers[m.id].setLatLng([d.lat, d.lng]);
-        } else if (m.id !== 'me') {
-          memberMarkers[m.id] = L.circleMarker([d.lat, d.lng], {
-            radius: 7, color: m.color, fillColor: m.color, fillOpacity: 0.9
-          }).addTo(map);
-        }
-      });
-
-      var box = document.getElementById('memberList');
-      box.innerHTML = '';
-      members.forEach(function (m) {
-        var distText = '—';
-        if (m.lat != null && meetLat != null) {
-          distText = formatDist(haversine(m.lat, m.lng, meetLat, meetLng));
-        }
-        var div = document.createElement('div');
-        div.className = 'person';
-        div.innerHTML =
-          '<div><div class="person-name">' + m.name + '</div>' +
-          '<div class="person-meta">' +
-          (m.lat != null ? m.lat.toFixed(4) + ', ' + m.lng.toFixed(4) : '尚無座標') +
-          (effectiveRegion === 'cn' && m.lat != null ? ' · 已轉顯示座標' : '') +
-          '</div></div>' +
-          '<div class="dist">距集合點 ' + distText + '</div>';
-        box.appendChild(div);
+    async function uploadLocation() {
+      if (!sb || !me || myLat == null) return;
+      await sb.from('location_shares').upsert({
+        user_id: me.id,
+        room_id: roomId,
+        lat: myLat,
+        lng: myLng,
+        display_name: (me.email || 'user').split('@')[0],
+        updated_at: new Date().toISOString()
       });
     }
 
-    function simulateFamilyMove() {
-      if (meetLat == null) return;
-      members.forEach(function (m) {
-        if (m.id === 'me' || m.lat == null) return;
-        m.lat += (meetLat - m.lat) * 0.03;
-        m.lng += (meetLng - m.lng) * 0.03;
+    async function loadPeers() {
+      if (!sb || !roomId) return;
+      var res = await sb.from('location_shares')
+        .select('*')
+        .eq('room_id', roomId)
+        .gte('updated_at', new Date(Date.now() - 30 * 60 * 1000).toISOString());
+      var rows = res.data || [];
+      var count = 0;
+      Object.keys(peerMarkers).forEach(function (k) {
+        map.removeLayer(peerMarkers[k]);
       });
-      renderMembers();
+      peerMarkers = {};
+      rows.forEach(function (r) {
+        if (me && r.user_id === me.id) return;
+        if (r.lat == null) return;
+        count += 1;
+        peerMarkers[r.user_id] = L.circleMarker([r.lat, r.lng], {
+          radius: 7, color: '#1e88e5', fillColor: '#1e88e5', fillOpacity: 0.9
+        }).addTo(map).bindPopup(r.display_name || '成員');
+      });
+      document.getElementById('partStatus').textContent =
+        '目前分享定位人數：' + (count + (shareOn && myLat != null ? 1 : 0)) +
+        '（含行程點 ' + waypoints.length + ' 個）';
     }
 
     function onPosition(pos) {
       myLat = pos.coords.latitude;
       myLng = pos.coords.longitude;
-      if (getSavedMode() === 'auto') {
-        effectiveRegion = resolveEffectiveRegion(myLat, myLng);
-      } else {
-        effectiveRegion = getSavedMode() === 'cn' ? 'cn' : 'normal';
-      }
-      refreshModeUI();
       updateMyMarker();
-      renderMembers();
-      checkSpeedCams();
-      const t = new Date();
-      document.getElementById('updateInfo').textContent =
-        '已更新 ' + t.getHours() + ':' + String(t.getMinutes()).padStart(2, '0') + ':' +
-        String(t.getSeconds()).padStart(2, '0') +
-        (effectiveRegion === 'cn' ? ' · 大陸模式' : '');
+      var t = new Date();
+      setSub('定位中 ' + t.getHours() + ':' + String(t.getMinutes()).padStart(2, '0') + ':' +
+        String(t.getSeconds()).padStart(2, '0'));
+      uploadLocation();
+      loadPeers();
     }
 
-    function toggleShare() {
-      if (shareOn) {
-        shareOn = false;
-        if (watchId != null) {
-          navigator.geolocation.clearWatch(watchId);
-          watchId = null;
-        }
-        if (updateTimer) {
-          clearInterval(updateTimer);
-          updateTimer = null;
-        }
-        document.getElementById('btnShare').textContent = '開啟定位';
-        document.getElementById('btnShare').className = 'btn btn-green';
-        document.getElementById('shareStatus').textContent = '定位分享：關閉';
-        document.getElementById('updateInfo').textContent = '定位已關閉';
+    function stopShare() {
+      shareOn = false;
+      if (watchId != null) {
+        navigator.geolocation.clearWatch(watchId);
+        watchId = null;
+      }
+      if (uploadTimer) {
+        clearInterval(uploadTimer);
+        uploadTimer = null;
+      }
+      document.getElementById('btnShare').textContent = '開啟定位';
+      document.getElementById('btnShare').className = 'btn btn-green';
+      setShareStatus('定位：關閉');
+      setSub('定位已關閉');
+    }
+
+    function startShare() {
+      if (!window.isSecureContext && location.protocol !== 'https:') {
+        alert('定位需要 HTTPS。請用 GitHub Pages 網址開啟，不要用檔案直接開。');
         return;
       }
-
       if (!navigator.geolocation) {
-        alert('此裝置不支援定位');
+        alert('此裝置／瀏覽器不支援定位');
         return;
       }
-
       shareOn = true;
       document.getElementById('btnShare').textContent = '關閉定位';
       document.getElementById('btnShare').className = 'btn btn-red';
-      document.getElementById('shareStatus').textContent = '定位分享：開啟（約每 5 秒）';
-      speak('定位已開啟');
+      setShareStatus('定位：開啟中…');
+      setSub('正在請求定位權限…');
+
+      navigator.geolocation.getCurrentPosition(function (pos) {
+        onPosition(pos);
+        map.setView([myLat, myLng], 15);
+        setShareStatus('定位：開啟');
+      }, function (err) {
+        stopShare();
+        alert('定位失敗：' + geoErrorText(err));
+      }, { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 });
 
       watchId = navigator.geolocation.watchPosition(
         onPosition,
         function (err) {
-          alert('定位失敗：' + err.message);
-          toggleShare();
+          setSub('定位異常：' + geoErrorText(err));
         },
-        { enableHighAccuracy: true, maximumAge: 3000, timeout: 10000 }
+        { enableHighAccuracy: true, timeout: 15000, maximumAge: 3000 }
       );
 
-      updateTimer = setInterval(function () {
-        if (myLat != null) {
-          onPosition({ coords: { latitude: myLat, longitude: myLng } });
-        }
-        simulateFamilyMove();
-        checkSpeedCams();
+      uploadTimer = setInterval(function () {
+        if (myLat != null) uploadLocation();
       }, 5000);
     }
 
-    document.getElementById('regionMode').value = getSavedMode();
-    effectiveRegion = getSavedMode() === 'cn' ? 'cn' : 'normal';
-    refreshModeUI();
-    renderMembers();
-    loadShelterSetting();
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    document.getElementById('btnShare').onclick = function () {
+      if (shareOn) stopShare();
+      else startShare();
+    };
+
+    document.getElementById('btnAddHere').onclick = function () {
+      if (myLat == null) {
+        alert('請先開啟定位');
+        return;
+      }
+      addWaypoint(myLat, myLng);
+    };
+    document.getElementById('btnAddMap').onclick = function () {
+      var c = map.getCenter();
+      addWaypoint(c.lat, c.lng);
+    };
+
+    document.getElementById('btnSos').onclick = async function () {
+      if (!me || !sb) {
+        alert('請先登入');
+        return;
+      }
+      if (!confirm('向本群組／活動發送 SOS 求助？')) return;
+      var res = await sb.from('sos_events').insert({
+        room_id: roomId,
+        user_id: me.id,
+        display_name: (me.email || 'user').split('@')[0],
+        lat: myLat,
+        lng: myLng,
+        message: '遇到危險或迷路，需要協助'
+      });
+      if (res.error) {
+        alert('SOS 失敗：' + res.error.message);
+        return;
+      }
+      if (myLat != null) {
+        L.circleMarker([myLat, myLng], {
+          radius: 12, color: '#c62828', fillColor: '#c62828', fillOpacity: 0.5
+        }).addTo(map).bindPopup('SOS').openPopup();
+      }
+      alert('已向群組發送 SOS');
+      if (navigator.vibrate) navigator.vibrate([200, 100, 200, 100, 400]);
+    };
+
+    function listenSos() {
+      if (!sb) return;
+      sb.channel('sos-' + roomId)
+        .on('postgres_changes', {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'sos_events',
+          filter: 'room_id=eq.' + roomId
+        }, function (payload) {
+          var row = payload.new;
+          if (!row) return;
+          var ban = document.getElementById('sosBanner');
+          ban.textContent = '🚨 SOS ' + (row.display_name || '成員') + '：' + (row.message || '需要協助');
+          ban.classList.add('show');
+          if (row.lat != null) {
+            L.circleMarker([row.lat, row.lng], {
+              radius: 12, color: '#c62828', fillColor: '#c62828', fillOpacity: 0.5
+            }).addTo(map).bindPopup('SOS ' + (row.display_name || '')).openPopup();
+            map.setView([row.lat, row.lng], 15);
+          }
+          if (navigator.vibrate) navigator.vibrate([300, 150, 300]);
+        })
+        .subscribe();
+    }
+
+    bootAuth();
+  })();
+  </script>
   <script src="call-notify.js"></script>
 </body>
 </html>
