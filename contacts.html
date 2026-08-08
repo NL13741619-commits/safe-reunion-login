@@ -427,33 +427,64 @@
     }
 
     async function createGroup() {
-      var name = $('groupName').value.trim();
-      if (!name) {
-        setStatus('請輸入群組名稱');
-        return;
-      }
-      setStatus('建立群組中…');
-      var g = await supabase.from('chat_groups').insert({
-        name: name,
-        owner_id: me.id
-      }).select().single();
-      if (g.error) {
-        setStatus('建立失敗：' + g.error.message);
-        return;
-      }
-      var m = await supabase.from('group_members').insert({
-        group_id: g.data.id,
-        user_id: me.id,
-        role: 'owner'
-      });
-      if (m.error) {
-        setStatus('加入群組失敗：' + m.error.message);
-        return;
-      }
-      hideSheets();
-      location.href = 'room.html?id=' + encodeURIComponent(g.data.id) +
-        '&name=' + encodeURIComponent(name);
-    }
+  alert('1：已進入 createGroup');
+
+  var name = $('groupName').value.trim();
+
+  if (!name) {
+    alert('2：沒有輸入群組名稱');
+    setStatus('請輸入群組名稱');
+    return;
+  }
+
+  alert('2：群組名稱 = ' + name);
+
+  if (!supabase) {
+    alert('3：Supabase 沒有連線');
+    return;
+  }
+
+  if (!me) {
+    alert('4：目前沒有登入使用者');
+    return;
+  }
+
+  alert('3：準備寫入 chat_groups');
+
+  var g = await supabase.from('chat_groups').insert({
+    name: name,
+    owner_id: me.id
+  }).select().single();
+
+  if (g.error) {
+    alert('❌ chat_groups 建立失敗：\n' + g.error.message);
+    setStatus('建立失敗：' + g.error.message);
+    return;
+  }
+
+  alert('4：chat_groups 建立成功！ID = ' + g.data.id);
+
+  var m = await supabase.from('group_members').insert({
+    group_id: g.data.id,
+    user_id: me.id,
+    role: 'owner'
+  });
+
+  if (m.error) {
+    alert('❌ group_members 加入失敗：\n' + m.error.message);
+    setStatus('加入群組失敗：' + m.error.message);
+    return;
+  }
+
+  alert('5：群組建立完成！');
+
+  hideSheets();
+
+  location.href = 'room.html?id=' +
+    encodeURIComponent(g.data.id) +
+    '&name=' +
+    encodeURIComponent(name);
+}
 
     async function boot() {
       setStatus('檢查套件…');
