@@ -159,13 +159,32 @@
     var roomId = params.get('id') || roomName;
     document.getElementById('roomName').textContent = roomName;
 
-    function go(path) {
-      var q = path.indexOf('?') >= 0 ? '&' : '?';
-      location.href = path + q + 'name=' + encodeURIComponent(roomName);
+    function peerIdFromRoom() {
+      if (!myUser || !roomId || String(roomId).indexOf('dm_') !== 0) return '';
+      var rest = String(roomId).slice(3);
+      var parts = rest.split('_');
+      if (parts.length < 2) return '';
+      // uuid 含 -，格式 dm_uuid_uuid
+      var mid = rest.indexOf(myUser.id);
+      if (mid < 0) return '';
+      if (rest.indexOf(myUser.id) === 0) {
+        return rest.slice(myUser.id.length + 1);
+      }
+      return rest.slice(0, rest.length - myUser.id.length - 1);
     }
-    document.getElementById('btnAudio').onclick = function () { go('call.html?mode=audio'); };
-    document.getElementById('btnVideo').onclick = function () { go('call.html?mode=video'); };
-    document.getElementById('btnMap').onclick = function () { go('map.html'); };
+
+    function goCall(mode) {
+      var to = peerIdFromRoom();
+      var url = 'call.html?mode=' + encodeURIComponent(mode) +
+        '&name=' + encodeURIComponent(roomName);
+      if (to) url += '&to=' + encodeURIComponent(to);
+      location.href = url;
+    }
+    document.getElementById('btnAudio').onclick = function () { goCall('audio'); };
+    document.getElementById('btnVideo').onclick = function () { goCall('video'); };
+    document.getElementById('btnMap').onclick = function () {
+      location.href = 'map.html?name=' + encodeURIComponent(roomName);
+    };
 
     function nowTime() {
       var n = new Date();
@@ -190,6 +209,24 @@
         recalled: !!row.recalled,
         hiddenLocal: false
       };
+    }
+
+    function playNotify() {
+      try {
+        if (document.getElementById('optSound') && document.getElementById('optSound').checked) {
+          var ctx = new (window.AudioContext || window.webkitAudioContext)();
+          var o = ctx.createOscillator();
+          var g = ctx.createGain();
+          o.frequency.value = 880;
+          g.gain.value = 0.06;
+          o.connect(g); g.connect(ctx.destination);
+          o.start();
+          o.stop(ctx.currentTime + 0.12);
+        }
+        if (document.getElementById('optVibrate') && document.getElementById('optVibrate').checked && navigator.vibrate) {
+          navigator.vibrate(120);
+        }
+      } catch (e) {}
     }
 
     function renderMessages() {
@@ -412,6 +449,7 @@
               if (!messages.find(function (x) { return x.id === m.id; })) {
                 messages.push(m);
                 renderMessages();
+                if (!m.mine) playNotify();
               }
             }
             if (payload.eventType === 'UPDATE') {
@@ -598,7 +636,7 @@
     }
     boot();
   })();
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  </script>
   <script src="call-notify.js"></script>
 </body>
 </html>
