@@ -503,7 +503,10 @@
       $('searchInput').value = k;
       searchPeople(k);
     };
-    $('btnDoCreateGroup').onclick = createGroup;
+    $('btnDoCreateGroup').onclick = function () {
+  alert('有按到建立按鈕！');
+  createGroup();
+};
 
     var searchTimer = null;
     $('searchInput').addEventListener('input', function () {
