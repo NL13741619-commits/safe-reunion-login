@@ -242,7 +242,7 @@ var SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSI
 
       var result = await supabase
 
-  .from('groups')
+  .from('chat_groups')
 
   .update({
 
@@ -324,7 +324,7 @@ var SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSI
 
       var result =
         await supabase
-          .from('groups')
+          .from('chat_groups')
           .update({
             name: name
           })
