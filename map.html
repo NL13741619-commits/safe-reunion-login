@@ -10,126 +10,68 @@
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-      height: 100vh;
-      display: flex;
-      flex-direction: column;
-      background: #f5f5f5;
+      height: 100vh; display: flex; flex-direction: column; background: #f5f5f5;
     }
     .header {
-      background: #06C755;
-      color: white;
-      padding: 12px 14px;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      z-index: 1000;
+      background: #06C755; color: white; padding: 12px 14px;
+      display: flex; align-items: center; gap: 10px; z-index: 1000;
     }
     .back { color: white; text-decoration: none; font-size: 24px; }
     .header-info { flex: 1; }
     .header-title { font-weight: 700; font-size: 16px; }
     .header-sub { font-size: 12px; opacity: 0.9; }
-
     #map { flex: 1; width: 100%; min-height: 220px; }
-
     #speedAlert {
-      display: none;
-      position: fixed;
-      top: 56px;
-      left: 12px;
-      right: 12px;
-      z-index: 2000;
-      background: #c62828;
-      color: #fff;
-      padding: 12px 14px;
-      border-radius: 12px;
-      font-size: 15px;
-      font-weight: 600;
-      text-align: center;
+      display: none; position: fixed; top: 56px; left: 12px; right: 12px; z-index: 2000;
+      background: #c62828; color: #fff; padding: 12px 14px; border-radius: 12px;
+      font-size: 15px; font-weight: 600; text-align: center;
       box-shadow: 0 4px 16px rgba(0,0,0,0.25);
     }
-
     .panel {
-      background: white;
-      padding: 12px 14px 20px;
-      border-top: 1px solid #eee;
-      max-height: 48vh;
-      overflow-y: auto;
+      background: white; padding: 12px 14px 20px; border-top: 1px solid #eee;
+      max-height: 48vh; overflow-y: auto;
     }
     .row {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-bottom: 10px;
-      gap: 8px;
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 10px; gap: 8px;
     }
     .btn {
-      border: none;
-      border-radius: 10px;
-      padding: 10px 14px;
-      font-size: 14px;
-      font-weight: 600;
-      cursor: pointer;
+      border: none; border-radius: 10px; padding: 10px 14px;
+      font-size: 14px; font-weight: 600; cursor: pointer;
     }
     .btn-green { background: #06C755; color: white; }
     .btn-red { background: #e53935; color: white; }
-    .btn-outline {
-      background: white;
-      border: 1px solid #ddd;
-      color: #333;
-    }
-    .btn-shelter {
-      background: #1565c0;
-      color: white;
-      width: 100%;
-      margin-bottom: 10px;
-    }
-    .status {
-      font-size: 13px;
-      color: #555;
-      line-height: 1.4;
-    }
-    .list-title {
-      font-size: 13px;
-      color: #888;
-      margin: 12px 0 6px;
-    }
+    .btn-outline { background: white; border: 1px solid #ddd; color: #333; }
+    .btn-shelter { background: #1565c0; color: white; width: 100%; margin-bottom: 10px; }
+    .status { font-size: 13px; color: #555; line-height: 1.4; }
+    .list-title { font-size: 13px; color: #888; margin: 12px 0 6px; }
     .person {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 10px 0;
-      border-bottom: 1px solid #f0f0f0;
-      font-size: 14px;
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 10px 0; border-bottom: 1px solid #f0f0f0; font-size: 14px;
     }
     .person-name { font-weight: 600; }
     .person-meta { font-size: 12px; color: #888; margin-top: 2px; }
     .dist { color: #06C755; font-weight: 600; font-size: 13px; white-space: nowrap; }
-    input[type="text"] {
-      width: 100%;
-      padding: 10px 12px;
-      border: 1px solid #e0e0e0;
-      border-radius: 10px;
-      font-size: 14px;
-      margin-bottom: 8px;
-      outline: none;
+    input[type="text"], select {
+      width: 100%; padding: 10px 12px; border: 1px solid #e0e0e0;
+      border-radius: 10px; font-size: 14px; margin-bottom: 8px; outline: none;
+      background: #fff;
     }
-    input:focus { border-color: #06C755; }
+    input:focus, select:focus { border-color: #06C755; }
     .search-results {
-      border: 1px solid #eee;
-      border-radius: 10px;
-      margin-bottom: 8px;
-      max-height: 160px;
-      overflow-y: auto;
-      display: none;
+      border: 1px solid #eee; border-radius: 10px; margin-bottom: 8px;
+      max-height: 160px; overflow-y: auto; display: none;
     }
     .search-item {
-      padding: 10px 12px;
-      border-bottom: 1px solid #f5f5f5;
-      font-size: 13px;
-      cursor: pointer;
+      padding: 10px 12px; border-bottom: 1px solid #f5f5f5;
+      font-size: 13px; cursor: pointer;
     }
     .search-item:active, .search-item:hover { background: #f5f5f5; }
-    .search-item:last-child { border-bottom: none; }
+    .mode-box {
+      background: #f7f7f7; border-radius: 10px; padding: 10px 12px; margin-bottom: 10px;
+    }
+    .mode-box label { font-size: 13px; color: #666; display: block; margin-bottom: 6px; }
+    .mode-hint { font-size: 12px; color: #888; margin-top: 6px; line-height: 1.4; }
   </style>
 </head>
 <body>
@@ -145,7 +87,17 @@
   <div id="map"></div>
 
   <div class="panel">
-    <button class="btn btn-shelter" onclick="openShelterMap()">🛡️ 附近防空避難（官方地圖）</button>
+    <div class="mode-box">
+      <label>地圖模式（入境大陸可切換）</label>
+      <select id="regionMode" onchange="onRegionModeChange()">
+        <option value="auto">自動（依目前位置判斷）</option>
+        <option value="cn">大陸（座標轉換）</option>
+        <option value="normal">一般（維持現況）</option>
+      </select>
+      <div class="mode-hint" id="modeHint">目前：一般</div>
+    </div>
+
+    <button class="btn btn-shelter" id="btnShelter" onclick="openShelterMap()">🛡️ 附近防空避難（官方地圖）</button>
 
     <div class="row">
       <div class="status" id="shareStatus">定位分享：關閉</div>
@@ -174,36 +126,122 @@
 
     let shareOn = false;
     let watchId = null;
-    let myLat = null, myLng = null;
+    let myLat = null, myLng = null;       // 原始 WGS-84
     let myMarker = null;
+    let meetLat = null, meetLng = null;   // 儲存用 WGS-84
     let meetMarker = null;
-    let meetLat = null, meetLng = null;
     let updateTimer = null;
-    const memberMarkers = {};
+    let effectiveRegion = 'normal'; // normal | cn（自動判斷後的結果）
 
-    // 依群組名稱決定示範成員（之後改接資料庫真實成員）
-    function buildMembers(groupName) {
-      const me = { id: 'me', name: '我', lat: null, lng: null, color: '#06C755' };
-      const n = groupName || '';
+    // ---------- 地圖模式：手動 + 自動 ----------
+    const MODE_KEY = 'map_region_mode'; // auto | cn | normal
 
-      if (n.indexOf('家人') >= 0) {
+    function getSavedMode() {
+      var m = localStorage.getItem(MODE_KEY) || 'auto';
+      if (m !== 'auto' && m !== 'cn' && m !== 'normal') m = 'auto';
+      return m;
+    }
+
+    function isInTaiwanRough(lat, lng) {
+      return lat >= 21.8 && lat <= 25.4 && lng >= 120.0 && lng <= 122.15;
+    }
+
+    function isInMainlandRough(lat, lng) {
+      // 粗略大陸框，並排除台灣本島
+      if (isInTaiwanRough(lat, lng)) return false;
+      return lat >= 18 && lat <= 54 && lng >= 73 && lng <= 135;
+    }
+
+    function resolveEffectiveRegion(lat, lng) {
+      var mode = getSavedMode();
+      if (mode === 'cn') return 'cn';
+      if (mode === 'normal') return 'normal';
+      // auto
+      if (lat == null || lng == null) return effectiveRegion || 'normal';
+      return isInMainlandRough(lat, lng) ? 'cn' : 'normal';
+    }
+
+    // WGS-84 → GCJ-02（大陸地圖常用）
+    function outOfChina(lat, lng) {
+      return (lng < 72.004 || lng > 137.8347 || lat < 0.8293 || lat > 55.8271);
+    }
+    function transformLat(x, y) {
+      var ret = -100.0 + 2.0 * x + 3.0 * y + 0.2 * y * y + 0.1 * x * y + 0.2 * Math.sqrt(Math.abs(x));
+      ret += (20.0 * Math.sin(6.0 * x * Math.PI) + 20.0 * Math.sin(2.0 * x * Math.PI)) * 2.0 / 3.0;
+      ret += (20.0 * Math.sin(y * Math.PI) + 40.0 * Math.sin(y / 3.0 * Math.PI)) * 2.0 / 3.0;
+      ret += (160.0 * Math.sin(y / 12.0 * Math.PI) + 320 * Math.sin(y * Math.PI / 30.0)) * 2.0 / 3.0;
+      return ret;
+    }
+    function transformLng(x, y) {
+      var ret = 300.0 + x + 2.0 * y + 0.1 * x * x + 0.1 * x * y + 0.1 * Math.sqrt(Math.abs(x));
+      ret += (20.0 * Math.sin(6.0 * x * Math.PI) + 20.0 * Math.sin(2.0 * x * Math.PI)) * 2.0 / 3.0;
+      ret += (20.0 * Math.sin(x * Math.PI) + 40.0 * Math.sin(x / 3.0 * Math.PI)) * 2.0 / 3.0;
+      ret += (150.0 * Math.sin(x / 12.0 * Math.PI) + 300.0 * Math.sin(x / 30.0 * Math.PI)) * 2.0 / 3.0;
+      return ret;
+    }
+    function wgs84ToGcj02(lat, lng) {
+      if (outOfChina(lat, lng)) return { lat: lat, lng: lng };
+      var a = 6378245.0;
+      var ee = 0.00669342162296594323;
+      var dLat = transformLat(lng - 105.0, lat - 35.0);
+      var dLng = transformLng(lng - 105.0, lat - 35.0);
+      var radLat = lat / 180.0 * Math.PI;
+      var magic = Math.sin(radLat);
+      magic = 1 - ee * magic * magic;
+      var sqrtMagic = Math.sqrt(magic);
+      dLat = (dLat * 180.0) / ((a * (1 - ee)) / (magic * sqrtMagic) * Math.PI);
+      dLng = (dLng * 180.0) / (a / sqrtMagic * Math.cos(radLat) * Math.PI);
+      return { lat: lat + dLat, lng: lng + dLng };
+    }
+
+    /** 顯示用地圖座標：大陸模式轉 GCJ，一般模式用原始 WGS */
+    function displayCoord(lat, lng) {
+      if (lat == null || lng == null) return null;
+      if (effectiveRegion === 'cn') return wgs84ToGcj02(lat, lng);
+      return { lat: lat, lng: lng };
+    }
+
+    function refreshModeUI() {
+      var mode = getSavedMode();
+      document.getElementById('regionMode').value = mode;
+      var text = '';
+      if (mode === 'auto') {
+        text = '目前：' + (effectiveRegion === 'cn' ? '大陸' : '一般') + '（自動偵測）';
+      } else if (mode === 'cn') {
+        text = '目前：大陸（手動）· 座標已轉換 GCJ-02';
+      } else {
+        text = '目前：一般（手動）· 維持現有地圖邏輯';
+      }
+      document.getElementById('modeHint').textContent = text;
+      // 大陸模式隱藏台灣防空避難
+      document.getElementById('btnShelter').style.display =
+        (effectiveRegion === 'cn') ? 'none' : 'block';
+    }
+
+    function applyRegionFromPosition() {
+      effectiveRegion = resolveEffectiveRegion(myLat, myLng);
+      refreshModeUI();
+      updateMyMarker();
+      if (meetLat != null) updateMeetMarker();
+      renderMembers();
+    }
+
+    function onRegionModeChange() {
+      var v = document.getElementById('regionMode').value;
+      localStorage.setItem(MODE_KEY, v);
+      applyRegionFromPosition();
+    }
+
+    // ---------- 群組成員（示意，之後接真實資料）----------
+    function buildMembers(gname) {
+      var me = { id: 'me', name: '我', lat: null, lng: null, color: '#06C755' };
+      if (gname && gname.indexOf('家人') >= 0) {
         return [
           me,
-          { id: 'aunt', name: '姑姑', lat: 24.1477, lng: 120.6736, color: '#1e88e5' },
-          { id: 'mom', name: '媽媽', lat: 25.0169, lng: 121.4628, color: '#f4511e' },
-          { id: 'sis', name: '妹妹', lat: 25.0330, lng: 121.5654, color: '#8e24aa' }
+          { id: 'p1', name: '成員A', lat: 24.15, lng: 120.68, color: '#1e88e5' },
+          { id: 'p2', name: '成員B', lat: 25.02, lng: 121.46, color: '#f4511e' }
         ];
       }
-
-      if (n.indexOf('同學') >= 0 || n.indexOf('碩') >= 0) {
-        return [
-          me,
-          { id: 'c1', name: '同學A', lat: 25.04, lng: 121.52, color: '#1e88e5' },
-          { id: 'c2', name: '同學B', lat: 25.05, lng: 121.54, color: '#8e24aa' }
-        ];
-      }
-
-      // 其他群組：只顯示自己
       return [me];
     }
 
@@ -213,8 +251,8 @@
       document.getElementById('groupName').textContent = gname + '・定位';
     }
     let members = buildMembers(gname);
+    let memberMarkers = {};
 
-    // 示範測速點（之後可改接官方資料）
     const speedCams = [
       { name: '台北示範測速', lat: 25.0330, lng: 121.5654, limit: 50 },
       { name: '台中示範測速', lat: 24.1477, lng: 120.6736, limit: 60 },
@@ -232,9 +270,9 @@
       const toRad = function (d) { return d * Math.PI / 180; };
       const dLat = toRad(lat2 - lat1);
       const dLng = toRad(lng2 - lng1);
-      const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
-                Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) *
-                Math.sin(dLng/2) * Math.sin(dLng/2);
+      const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+        Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) *
+        Math.sin(dLng / 2) * Math.sin(dLng / 2);
       return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
     }
 
@@ -250,7 +288,6 @@
         window.speechSynthesis.cancel();
         const u = new SpeechSynthesisUtterance(text);
         u.lang = 'zh-TW';
-        u.rate = 1.0;
         window.speechSynthesis.speak(u);
       } catch (e) {}
     }
@@ -269,23 +306,31 @@
       speedCams.forEach(function (cam) {
         const meters = haversine(myLat, myLng, cam.lat, cam.lng) * 1000;
         if (meters > ALERT_RADIUS_M) return;
-        const key = cam.name + '_' + cam.lat + '_' + cam.lng;
+        const key = cam.name;
         if (alertedCams[key] && now - alertedCams[key] < 60000) return;
         alertedCams[key] = now;
         showSpeedAlert('注意，前方測速照相，速限 ' + cam.limit + ' 公里');
       });
     }
 
+    function updateMeetMarker() {
+      if (meetLat == null) return;
+      var d = displayCoord(meetLat, meetLng);
+      if (meetMarker) {
+        meetMarker.setLatLng([d.lat, d.lng]);
+      } else {
+        meetMarker = L.marker([d.lat, d.lng]).addTo(map);
+      }
+    }
+
     function setMeetPoint(lat, lng, label) {
       meetLat = lat;
       meetLng = lng;
-      if (meetMarker) map.removeLayer(meetMarker);
-      meetMarker = L.marker([lat, lng]).addTo(map).bindPopup(label || '集合點').openPopup();
+      updateMeetMarker();
+      map.setView([displayCoord(lat, lng).lat, displayCoord(lat, lng).lng], 14);
       document.getElementById('meetInfo').textContent =
-        '集合點：' + (label || '') + '（' + lat.toFixed(5) + ', ' + lng.toFixed(5) + '）';
-      document.getElementById('searchResults').style.display = 'none';
+        '集合點：' + (label || (lat.toFixed(5) + ', ' + lng.toFixed(5)));
       renderMembers();
-      map.setView([lat, lng], 14);
     }
 
     function setMeetHere() {
@@ -296,77 +341,79 @@
       setMeetPoint(myLat, myLng, '目前位置');
     }
 
-    async function searchPlace() {
-      const q = document.getElementById('searchInput').value.trim();
-      if (!q) {
-        alert('請輸入要搜尋的地點');
-        return;
-      }
-      const box = document.getElementById('searchResults');
+    function searchPlace() {
+      var q = document.getElementById('searchInput').value.trim();
+      if (!q) return;
+      var box = document.getElementById('searchResults');
       box.style.display = 'block';
       box.innerHTML = '<div class="search-item">搜尋中…</div>';
-      try {
-        const url = 'https://nominatim.openstreetmap.org/search?format=json&addressdetails=1&limit=6&countrycodes=tw&q=' + encodeURIComponent(q);
-        const res = await fetch(url, { headers: { 'Accept-Language': 'zh-TW' } });
-        const data = await res.json();
-        if (!data.length) {
-          box.innerHTML = '<div class="search-item">找不到地點，請換關鍵字</div>';
-          return;
-        }
-        box.innerHTML = '';
-        data.forEach(function (item) {
-          const div = document.createElement('div');
-          div.className = 'search-item';
-          div.textContent = item.display_name;
-          div.onclick = function () {
-            setMeetPoint(parseFloat(item.lat), parseFloat(item.lon), item.display_name.split(',')[0]);
-          };
-          box.appendChild(div);
+      fetch('https://nominatim.openstreetmap.org/search?format=json&q=' + encodeURIComponent(q) + '&limit=6', {
+        headers: { 'Accept-Language': 'zh-TW' }
+      })
+        .then(function (r) { return r.json(); })
+        .then(function (arr) {
+          box.innerHTML = '';
+          if (!arr || !arr.length) {
+            box.innerHTML = '<div class="search-item">找不到地點</div>';
+            return;
+          }
+          arr.forEach(function (item) {
+            var div = document.createElement('div');
+            div.className = 'search-item';
+            div.textContent = item.display_name;
+            div.onclick = function () {
+              setMeetPoint(parseFloat(item.lat), parseFloat(item.lon), item.display_name.split(',')[0]);
+              box.style.display = 'none';
+            };
+            box.appendChild(div);
+          });
+        })
+        .catch(function () {
+          box.innerHTML = '<div class="search-item">搜尋失敗（網路或服務限制）</div>';
         });
-      } catch (e) {
-        box.innerHTML = '<div class="search-item">搜尋失敗，請稍後再試</div>';
-      }
     }
 
     function updateMyMarker() {
       if (myLat == null) return;
-      if (!myMarker) {
-        myMarker = L.circleMarker([myLat, myLng], {
-          radius: 10, color: '#06C755', fillColor: '#06C755', fillOpacity: 0.9
-        }).addTo(map).bindPopup('我');
-      } else {
-        myMarker.setLatLng([myLat, myLng]);
-      }
+      var d = displayCoord(myLat, myLng);
       members[0].lat = myLat;
       members[0].lng = myLng;
+      if (myMarker) {
+        myMarker.setLatLng([d.lat, d.lng]);
+      } else {
+        myMarker = L.circleMarker([d.lat, d.lng], {
+          radius: 8, color: '#06C755', fillColor: '#06C755', fillOpacity: 0.9
+        }).addTo(map);
+      }
     }
 
     function renderMembers() {
-      const box = document.getElementById('memberList');
-      box.innerHTML = '';
-      if (members.length <= 1) {
-        box.innerHTML = '<div class="status">目前只有你。其他成員開啟定位後才會出現。</div>';
-      }
       members.forEach(function (m) {
-        if (m.lat != null) {
-          if (!memberMarkers[m.id]) {
-            memberMarkers[m.id] = L.circleMarker([m.lat, m.lng], {
-              radius: 8, color: m.color, fillColor: m.color, fillOpacity: 0.85
-            }).addTo(map).bindPopup(m.name);
-          } else {
-            memberMarkers[m.id].setLatLng([m.lat, m.lng]);
-          }
+        if (m.lat == null) return;
+        var d = displayCoord(m.lat, m.lng);
+        if (memberMarkers[m.id]) {
+          memberMarkers[m.id].setLatLng([d.lat, d.lng]);
+        } else if (m.id !== 'me') {
+          memberMarkers[m.id] = L.circleMarker([d.lat, d.lng], {
+            radius: 7, color: m.color, fillColor: m.color, fillOpacity: 0.9
+          }).addTo(map);
         }
-        let distText = '—';
-        if (meetLat != null && m.lat != null) {
+      });
+
+      var box = document.getElementById('memberList');
+      box.innerHTML = '';
+      members.forEach(function (m) {
+        var distText = '—';
+        if (m.lat != null && meetLat != null) {
           distText = formatDist(haversine(m.lat, m.lng, meetLat, meetLng));
         }
-        const div = document.createElement('div');
+        var div = document.createElement('div');
         div.className = 'person';
         div.innerHTML =
           '<div><div class="person-name">' + m.name + '</div>' +
           '<div class="person-meta">' +
           (m.lat != null ? m.lat.toFixed(4) + ', ' + m.lng.toFixed(4) : '尚無座標') +
+          (effectiveRegion === 'cn' && m.lat != null ? ' · 已轉顯示座標' : '') +
           '</div></div>' +
           '<div class="dist">距集合點 ' + distText + '</div>';
         box.appendChild(div);
@@ -386,12 +433,20 @@
     function onPosition(pos) {
       myLat = pos.coords.latitude;
       myLng = pos.coords.longitude;
+      if (getSavedMode() === 'auto') {
+        effectiveRegion = resolveEffectiveRegion(myLat, myLng);
+      } else {
+        effectiveRegion = getSavedMode() === 'cn' ? 'cn' : 'normal';
+      }
+      refreshModeUI();
       updateMyMarker();
       renderMembers();
       checkSpeedCams();
       const t = new Date();
       document.getElementById('updateInfo').textContent =
-        '已更新 ' + t.getHours() + ':' + String(t.getMinutes()).padStart(2, '0') + ':' + String(t.getSeconds()).padStart(2, '0');
+        '已更新 ' + t.getHours() + ':' + String(t.getMinutes()).padStart(2, '0') + ':' +
+        String(t.getSeconds()).padStart(2, '0') +
+        (effectiveRegion === 'cn' ? ' · 大陸模式' : '');
     }
 
     function toggleShare() {
@@ -441,6 +496,10 @@
       }, 5000);
     }
 
+    // 初始化模式
+    document.getElementById('regionMode').value = getSavedMode();
+    effectiveRegion = getSavedMode() === 'cn' ? 'cn' : 'normal';
+    refreshModeUI();
     renderMembers();
   </script>
 </body>
