@@ -1,4 +1,4 @@
-<!DOCTYPE html><!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="zh-TW">
 <head>
 <meta charset="UTF-8">
@@ -90,8 +90,69 @@ body {
   gap: 8px;
 }
 
-.msg {
+/* =========================
+   MESSAGE ROW + AVATAR
+========================= */
+
+.message-row {
+  width: 100%;
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.message-row.me {
+  justify-content: flex-end;
+}
+
+.message-row.them {
+  justify-content: flex-start;
+}
+
+.message-avatar {
+  width: 38px;
+  height: 38px;
+  min-width: 38px;
+  border-radius: 50%;
+  overflow: hidden;
+  background: #cfcfcf;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 15px;
+  font-weight: 700;
+  color: #555;
+  margin-top: 2px;
+  box-shadow: 0 1px 3px rgba(0,0,0,.15);
+}
+
+.message-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.message-content {
   max-width: 78%;
+  min-width: 0;
+}
+
+.message-name {
+  font-size: 11px;
+  color: #666;
+  margin-bottom: 3px;
+  padding-left: 3px;
+  font-weight: 600;
+}
+
+.message-row.me .message-name {
+  text-align: right;
+  padding-right: 3px;
+}
+
+.msg {
+  max-width: 100%;
   padding: 10px 12px;
   border-radius: 14px;
   font-size: 15px;
@@ -145,6 +206,7 @@ body {
 
 /* =========================
    SOS
+   注意：SOS 樣式保持原本
 ========================= */
 
 .sos-card {
@@ -414,6 +476,26 @@ input[type="file"] {
 #inviteList {
   font-size: 14px;
 }
+
+.member-avatar {
+  width: 40px;
+  height: 40px;
+  min-width: 40px;
+  border-radius: 50%;
+  overflow: hidden;
+  background: #ddd;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  color: #666;
+}
+
+.member-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
 </style>
 </head>
 
@@ -490,7 +572,6 @@ input[type="file"] {
     </label>
 
   </div>
-
 
   <div class="composer-row">
 
@@ -691,6 +772,14 @@ input[type="file"] {
 
   var groupMembers = [];
 
+  /*
+    ============================================
+    新增：使用者 profile 快取
+    ============================================
+  */
+
+  var profileCache = {};
+
 
   /* =====================================================
      URL
@@ -717,657 +806,170 @@ input[type="file"] {
 
 
   /* =====================================================
-     SOS 本機刪除
-     
-     注意：
-     這裡只使用 localStorage。
-     絕對不 DELETE Supabase 資料。
+     PROFILE
   ===================================================== */
 
-  var deletedSOS = {};
+  function profileName(profile, fallback) {
+
+    if (profile) {
+
+      return (
+        profile.nickname ||
+        profile.username ||
+        fallback ||
+        '成員'
+      );
+
+    }
+
+    return fallback || '成員';
+
+  }
 
 
-  function sosLocalKey(id) {
+  function getInitial(name) {
+
+    var s =
+      String(
+        name ||
+        '成員'
+      ).trim();
+
+    if (!s) {
+      return '成';
+    }
+
+    return s.charAt(0);
+
+  }
+
+
+  function getMyFallbackName() {
+
+    if (!myUser) {
+      return '你';
+    }
+
+    var metadata =
+      myUser.user_metadata ||
+      {};
 
     return (
-      'safe_reunion_deleted_sos_' +
-      String(roomId) +
-      '_' +
-      String(id)
+      metadata.nickname ||
+      metadata.username ||
+      (
+        myUser.email
+          ? myUser.email.split('@')[0]
+          : '你'
+      )
     );
 
   }
 
 
-  function isSOSDeletedLocally(id) {
+  function getProfileForUser(uid) {
 
-    try {
-
-      return (
-        localStorage.getItem(
-          sosLocalKey(id)
-        ) === '1'
-      );
-
-    } catch (e) {
-
-      return false;
-
+    if (!uid) {
+      return null;
     }
+
+    return profileCache[uid] || null;
 
   }
 
 
-  function deleteSOSLocally(id) {
+  async function loadProfilesForUsers(userIds) {
 
-    if (!id) return;
-
-
-    try {
-
-      localStorage.setItem(
-        sosLocalKey(id),
-        '1'
-      );
-
-      deletedSOS[id] = true;
-
-    } catch (e) {}
-
-
-    var el =
-      document.getElementById(
-        'sos_' + id
-      );
-
-    if (el) {
-      el.remove();
-    }
-
-  }
-
-
-  /* =====================================================
-     SOS 解除狀態
-     
-     優先更新 sos_alerts。
-     如果找不到 alert，就不刪事件。
-  ===================================================== */
-
-  async function resolveSOS(sos) {
-
-    if (!sos || !supabase || !myUser) {
+    if (
+      !supabase ||
+      !userIds ||
+      !userIds.length
+    ) {
       return;
     }
 
 
-    var confirmResolve =
-      confirm(
-        '確定要解除這個 SOS 救援通知嗎？\n\n' +
-        '解除後代表目前已不需要持續求救。'
-      );
+    var ids = [];
+
+    userIds.forEach(
+      function (id) {
+
+        if (
+          id &&
+          ids.indexOf(id) < 0
+        ) {
+
+          ids.push(id);
+
+        }
+
+      }
+    );
 
 
-    if (!confirmResolve) {
+    if (!ids.length) {
       return;
     }
 
 
-    setStatus('解除 SOS 中…');
+    var missing = ids.filter(
+      function (id) {
+
+        return !profileCache[id];
+
+      }
+    );
+
+
+    if (!missing.length) {
+      return;
+    }
 
 
     try {
 
       var result =
         await supabase
-          .from('sos_alerts')
-          .update({
-            status: 'resolved',
-            resolved_by: myUser.id,
-            resolved_at: new Date().toISOString()
-          })
-          .eq(
-            'event_id',
-            sos.id
+          .from('profiles')
+          .select(
+            'id,username,nickname,avatar_url'
+          )
+          .in(
+            'id',
+            missing
           );
 
 
       if (result.error) {
 
-        setStatus(
-          '解除 SOS 失敗：' +
+        console.log(
+          'profiles 載入失敗：',
           result.error.message
         );
 
         return;
-      }
-
-
-      updateSOSCardResolved(
-        sos.id
-      );
-
-
-      setStatus(
-        'SOS 已解除'
-      );
-
-
-    } catch (e) {
-
-      setStatus(
-        '解除 SOS 失敗：' +
-        (e && e.message
-          ? e.message
-          : e)
-      );
-
-    }
-
-  }
-
-
-  function updateSOSCardResolved(id) {
-
-    var card =
-      document.getElementById(
-        'sos_' + id
-      );
-
-    if (!card) return;
-
-
-    var status =
-      card.querySelector(
-        '.sos-status'
-      );
-
-    if (status) {
-
-      status.textContent =
-        '✓ SOS 已解除';
-
-    }
-
-
-    var resolveButton =
-      card.querySelector(
-        '.sos-resolve-btn'
-      );
-
-    if (resolveButton) {
-
-      resolveButton.disabled =
-        true;
-
-      resolveButton.textContent =
-        '已解除';
-
-      resolveButton.style.opacity =
-        '0.6';
-
-    }
-
-  }
-
-
-  /* =====================================================
-     SOS 讀取 alert 狀態
-  ===================================================== */
-
-  async function getSOSAlertStatus(
-    eventId
-  ) {
-
-    if (!supabase || !eventId) {
-      return null;
-    }
-
-
-    try {
-
-      var result =
-        await supabase
-          .from('sos_alerts')
-          .select(
-            'id,status,resolved_by,resolved_at'
-          )
-          .eq(
-            'event_id',
-            eventId
-          )
-          .order(
-            'created_at',
-            { ascending: false }
-          )
-          .limit(1)
-          .maybeSingle();
-
-
-      if (result.error) {
-        return null;
-      }
-
-
-      return result.data || null;
-
-
-    } catch (e) {
-
-      return null;
-
-    }
-
-  }
-
-
-  /* =====================================================
-     SOS 顯示
-  ===================================================== */
-
-  async function renderSOS(
-    sos,
-    options
-  ) {
-
-    options =
-      options || {};
-
-
-    if (!sos || !sos.id) {
-      return;
-    }
-
-
-    /*
-      如果使用者之前在自己的手機
-      刪除過這個 SOS，就不要重新顯示。
-    */
-
-    if (
-      isSOSDeletedLocally(
-        sos.id
-      )
-    ) {
-
-      return;
-
-    }
-
-
-    var box =
-      document.getElementById(
-        'messages'
-      );
-
-    if (!box) return;
-
-
-    var old =
-      document.getElementById(
-        'sos_' + sos.id
-      );
-
-
-    if (old) {
-      old.remove();
-    }
-
-
-    var alertStatus =
-      await getSOSAlertStatus(
-        sos.id
-      );
-
-
-    var resolved =
-      alertStatus &&
-      alertStatus.status === 'resolved';
-
-
-    var div =
-      document.createElement(
-        'div'
-      );
-
-
-    div.id =
-      'sos_' + sos.id;
-
-
-    div.className =
-      'sos-card';
-
-
-    var name =
-      sos.display_name ||
-      '群組成員';
-
-
-    var message =
-      sos.message ||
-      '緊急求救';
-
-
-    var lat =
-      sos.lat !== undefined &&
-      sos.lat !== null
-        ? sos.lat
-        : null;
-
-
-    var lng =
-      sos.lng !== undefined &&
-      sos.lng !== null
-        ? sos.lng
-        : null;
-
-
-    var time =
-      sos.created_at
-        ? nowTimeFrom(
-            sos.created_at
-          )
-        : '';
-
-
-    var locationHtml = '';
-
-
-    if (
-      lat !== null &&
-      lng !== null
-    ) {
-
-      locationHtml =
-        '<div class="sos-location">' +
-          '📍 緯度：' +
-          escapeHtml(
-            String(lat)
-          ) +
-          '<br>' +
-          '　　經度：' +
-          escapeHtml(
-            String(lng)
-          ) +
-        '</div>';
-
-    }
-
-
-    var statusHtml =
-      resolved
-        ? '<div class="sos-status">✓ SOS 已解除</div>'
-        : '<div class="sos-status">🚨 正在求救</div>';
-
-
-    var resolveButton =
-      resolved
-        ? '<button ' +
-            'type="button" ' +
-            'class="sos-btn sos-resolve-btn" ' +
-            'disabled ' +
-            'style="opacity:.6">' +
-              '已解除' +
-          '</button>'
-        : '<button ' +
-            'type="button" ' +
-            'class="sos-btn sos-resolve-btn">' +
-              '解除 SOS' +
-          '</button>';
-
-
-    var mapButton = '';
-
-
-    if (
-      lat !== null &&
-      lng !== null
-    ) {
-
-      mapButton =
-        '<button ' +
-          'type="button" ' +
-          'class="sos-btn sos-map-btn">' +
-          '📍 查看位置' +
-        '</button>';
-
-    }
-
-
-    div.innerHTML =
-
-      '<div class="sos-title">' +
-        '🚨 SOS 緊急求救' +
-      '</div>' +
-
-      '<div class="sos-name">' +
-        escapeHtml(
-          name
-        ) +
-      '</div>' +
-
-      '<div class="sos-message">' +
-        escapeHtml(
-          message
-        ) +
-      '</div>' +
-
-      locationHtml +
-
-      '<div class="sos-time">' +
-        time +
-      '</div>' +
-
-      statusHtml +
-
-      '<div class="sos-actions">' +
-
-        resolveButton +
-
-        mapButton +
-
-        '<button ' +
-          'type="button" ' +
-          'class="sos-btn sos-delete-btn">' +
-          '🗑️ 刪除本機通知' +
-        '</button>' +
-
-      '</div>';
-
-
-    /* =========================
-       刪除：只刪自己手機
-    ========================= */
-
-    var deleteBtn =
-      div.querySelector(
-        '.sos-delete-btn'
-      );
-
-
-    if (deleteBtn) {
-
-      deleteBtn.onclick =
-        function () {
-
-          deleteSOSLocally(
-            sos.id
-          );
-
-        };
-
-    }
-
-
-    /* =========================
-       解除 SOS
-    ========================= */
-
-    var resolveBtn =
-      div.querySelector(
-        '.sos-resolve-btn'
-      );
-
-
-    if (
-      resolveBtn &&
-      !resolved
-    ) {
-
-      resolveBtn.onclick =
-        function () {
-
-          resolveSOS(
-            sos
-          );
-
-        };
-
-    }
-
-
-    /* =========================
-       查看位置
-    ========================= */
-
-    var mapBtn =
-      div.querySelector(
-        '.sos-map-btn'
-      );
-
-
-    if (mapBtn) {
-
-      mapBtn.onclick =
-        function () {
-
-          var url =
-            'https://www.google.com/maps/search/?api=1&query=' +
-            encodeURIComponent(
-              String(lat) +
-              ',' +
-              String(lng)
-            );
-
-
-          window.open(
-            url,
-            '_blank'
-          );
-
-        };
-
-    }
-
-
-    box.appendChild(
-      div
-    );
-
-
-    /*
-      新 SOS 才自動捲到底
-    */
-
-    if (
-      options.scroll !== false
-    ) {
-
-      box.scrollTop =
-        box.scrollHeight;
-
-    }
-
-  }
-
-
-  /* =====================================================
-     載入目前群組 SOS
-  ===================================================== */
-
-  async function loadSOS() {
-
-    if (
-      !supabase ||
-      !myUser ||
-      !isGroup
-    ) {
-
-      return;
-
-    }
-
-
-    try {
-
-      var res =
-        await supabase
-          .from('sos_events')
-          .select('*')
-          .eq(
-            'room_id',
-            roomId
-          )
-          .order(
-            'created_at',
-            {
-              ascending: true
-            }
-          )
-          .limit(100);
-
-
-      if (res.error) {
-
-        console.log(
-          'SOS 載入失敗：',
-          res.error.message
-        );
-
-        return;
 
       }
 
 
-      var rows =
-        res.data || [];
+      (
+        result.data ||
+        []
+      ).forEach(
+        function (profile) {
 
+          profileCache[
+            profile.id
+          ] = profile;
 
-      for (
-        var i = 0;
-        i < rows.length;
-        i++
-      ) {
-
-        await renderSOS(
-          rows[i],
-          {
-            scroll: false
-          }
-        );
-
-      }
-
-
-      var box =
-        document.getElementById(
-          'messages'
-        );
-
-
-      if (box) {
-
-        box.scrollTop =
-          box.scrollHeight;
-
-      }
+        }
+      );
 
 
     } catch (e) {
 
       console.log(
-        'SOS 載入錯誤：',
+        'profiles 錯誤：',
         e
       );
 
@@ -1376,1597 +978,82 @@ input[type="file"] {
   }
 
 
-  /* =====================================================
-     SOS Realtime
-  ===================================================== */
-
-  function subscribeSOS() {
+  async function loadMyProfile() {
 
     if (
       !supabase ||
-      !isGroup
+      !myUser
     ) {
-
       return;
-
     }
 
 
-    supabase
-      .channel(
-        'sos-room-' +
-        String(roomId)
-      )
+    /*
+      先使用 auth metadata 當備用資料
+    */
 
-      .on(
-        'postgres_changes',
-        {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'sos_events',
-          filter:
-            'room_id=eq.' +
-            String(roomId)
-        },
+    var metadata =
+      myUser.user_metadata ||
+      {};
 
-        async function (payload) {
 
-          var sos =
-            payload.new;
-
-
-          if (!sos) return;
-
-
-          if (
-            String(
-              sos.room_id
-            ) !== String(
-              roomId
-            )
-          ) {
-
-            return;
-
-          }
-
-
-          /*
-            新 SOS：
-            立即顯示
-          */
-
-          await renderSOS(
-            sos
-          );
-
-
-          /*
-            SOS 與一般聊天
-            使用同一個提示音函式。
-          */
-
-          playNotify();
-
-
-          setStatus(
-            '🚨 收到新的 SOS 求救'
-          );
-
-        }
-      )
-
-      .on(
-        'postgres_changes',
-        {
-          event: 'UPDATE',
-          schema: 'public',
-          table: 'sos_events',
-          filter:
-            'room_id=eq.' +
-            String(roomId)
-        },
-
-        async function (payload) {
-
-          var sos =
-            payload.new;
-
-
-          if (!sos) return;
-
-
-          if (
-            String(
-              sos.room_id
-            ) !== String(
-              roomId
-            )
-          ) {
-
-            return;
-
-          }
-
-
-          await renderSOS(
-            sos
-          );
-
-        }
-      )
-
-      .subscribe(
-        function (status) {
-
-          console.log(
-            'SOS Realtime:',
-            status
-          );
-
-        }
-      );
-
-  }
-
-
-  /* =====================================================
-     DM
-  ===================================================== */
-
-  function peerIdFromRoom() {
-
-    if (
-      !myUser ||
-      !roomId ||
-      String(roomId).indexOf('dm_') !== 0
-    ) {
-
-      return '';
-
-    }
-
-
-    var rest =
-      String(roomId).slice(3);
-
-
-    var myIndex =
-      rest.indexOf(
-        myUser.id
-      );
-
-
-    if (myIndex < 0) {
-      return '';
-    }
-
-
-    if (
-      myIndex === 0
-    ) {
-
-      return rest.slice(
-        myUser.id.length + 1
-      );
-
-    }
-
-
-    return rest.slice(
-      0,
-      rest.length -
-      myUser.id.length -
-      1
-    );
-
-  }
-
-
-  function goCall(mode) {
-
-    var to =
-      peerIdFromRoom();
-
-
-    var url =
-      'call.html?mode=' +
-      encodeURIComponent(
-        mode
-      ) +
-      '&name=' +
-      encodeURIComponent(
-        roomName
-      );
-
-
-    if (to) {
-
-      url +=
-        '&to=' +
-        encodeURIComponent(
-          to
-        );
-
-    }
-
-
-    location.href =
-      url;
-
-  }
-
-
-  document.getElementById(
-    'btnAudio'
-  ).onclick =
-    function () {
-
-      goCall(
-        'audio'
-      );
-
-    };
-
-
-  document.getElementById(
-    'btnVideo'
-  ).onclick =
-    function () {
-
-      goCall(
-        'video'
-      );
-
-    };
-
-
-  document.getElementById(
-    'btnMap'
-  ).onclick =
-    function () {
-
-      location.href =
-        'map.html?id=' +
-        encodeURIComponent(
-          roomId
-        ) +
-        '&name=' +
-        encodeURIComponent(
-          roomName
-        );
-
-    };
-
-
-  /* =====================================================
-     時間
-  ===================================================== */
-
-  function nowTime() {
-
-    var n =
-      new Date();
-
-    return (
-      n.getHours() +
-      ':' +
-      String(
-        n.getMinutes()
-      ).padStart(
-        2,
-        '0'
-      )
-    );
-
-  }
-
-
-  function nowTimeFrom(iso) {
-
-    var d =
-      new Date(
-        iso
-      );
-
-
-    return (
-      d.getHours() +
-      ':' +
-      String(
-        d.getMinutes()
-      ).padStart(
-        2,
-        '0'
-      )
-    );
-
-  }
-
-
-  /* =====================================================
-     HTML Escape
-  ===================================================== */
-
-  function escapeHtml(s) {
-
-    return String(s)
-      .replace(
-        /&/g,
-        '&amp;'
-      )
-      .replace(
-        /</g,
-        '&lt;'
-      )
-      .replace(
-        />/g,
-        '&gt;'
-      )
-      .replace(
-        /"/g,
-        '&quot;'
-      );
-
-  }
-
-
-  /* =====================================================
-     Message Row
-  ===================================================== */
-
-  function rowToLocal(row) {
-
-    return {
+    profileCache[
+      myUser.id
+    ] = {
 
       id:
-        row.id,
-
-      mine:
-        myUser &&
-        row.user_id ===
         myUser.id,
 
-      kind:
-        row.kind ||
-        'text',
-
-      text:
-        row.body ||
+      username:
+        metadata.username ||
         '',
 
-      all:
-        !!row.is_all,
+      nickname:
+        metadata.nickname ||
+        '',
 
-      time:
-        nowTimeFrom(
-          row.created_at
-        ),
-
-      createdAt:
-        new Date(
-          row.created_at
-        ).getTime(),
-
-      recalled:
-        !!row.recalled,
-
-      hiddenLocal:
-        false,
-
-      senderName:
-        row.sender_name ||
-        '成員',
-
-      userId:
-        row.user_id
+      avatar_url:
+        metadata.avatar_url ||
+        ''
 
     };
 
-  }
 
-
-  /* =====================================================
-     通知
-  ===================================================== */
-
-  function playNotify() {
+    /*
+      再以 profiles 資料庫為準
+    */
 
     try {
 
-      if (
-        document.getElementById(
-          'optSound'
-        ) &&
-        document.getElementById(
-          'optSound'
-        ).checked
-      ) {
-
-        var ctx =
-          new (
-            window.AudioContext ||
-            window.webkitAudioContext
-          )();
-
-
-        var o =
-          ctx.createOscillator();
-
-
-        var g =
-          ctx.createGain();
-
-
-        o.frequency.value =
-          880;
-
-
-        g.gain.value =
-          0.06;
-
-
-        o.connect(g);
-
-        g.connect(
-          ctx.destination
-        );
-
-
-        o.start();
-
-        o.stop(
-          ctx.currentTime +
-          0.12
-        );
-
-      }
-
-
-      if (
-        document.getElementById(
-          'optVibrate'
-        ) &&
-        document.getElementById(
-          'optVibrate'
-        ).checked &&
-        navigator.vibrate
-      ) {
-
-        navigator.vibrate(
-          120
-        );
-
-      }
-
-    } catch (e) {}
-
-  }
-
-
-  /* =====================================================
-     Render Messages
-  ===================================================== */
-
-  function renderMessages() {
-
-    var box =
-      document.getElementById(
-        'messages'
-      );
-
-
-    box.innerHTML =
-      '';
-
-
-    messages.forEach(
-      function (m) {
-
-        if (
-          m.hiddenLocal
-        ) {
-
-          return;
-
-        }
-
-
-        var div =
-          document.createElement(
-            'div'
-          );
-
-
-        var cls =
-          'msg ' +
-          (
-            m.mine
-              ? 'me'
-              : 'them'
-          );
-
-
-        if (
-          m.recalled
-        ) {
-
-          cls +=
-            ' recalled';
-
-        }
-
-
-        div.className =
-          cls;
-
-
-        if (
-          m.recalled
-        ) {
-
-          div.innerHTML =
-            (
-              m.mine
-                ? '你已回收一則訊息'
-                : '對方已回收一則訊息'
-            ) +
-            '<div class="msg-time">' +
-            m.time +
-            '</div>';
-
-        } else {
-
-          var html =
-            '';
-
-
-          if (
-            !m.mine &&
-            isGroup
-          ) {
-
-            html +=
-              '<div class="msg-tag" ' +
-              'style="color:#555;font-weight:600;margin-bottom:2px">' +
-              escapeHtml(
-                m.senderName
-              ) +
-              '</div>';
-
-          }
-
-
-          if (
-            m.all
-          ) {
-
-            html +=
-              '<div class="msg-tag">@all 全體</div>';
-
-          }
-
-
-          if (
-            m.kind ===
-            'image'
-          ) {
-
-            html +=
-              '<img src="' +
-              escapeHtml(
-                m.text
-              ) +
-              '" alt="圖片">';
-
-          } else if (
-            m.kind ===
-            'video'
-          ) {
-
-            html +=
-              '<video src="' +
-              escapeHtml(
-                m.text
-              ) +
-              '" controls playsinline></video>';
-
-          } else if (
-            m.kind ===
-            'audio'
-          ) {
-
-            html +=
-              '<audio src="' +
-              escapeHtml(
-                m.text
-              ) +
-              '" controls></audio>';
-
-          } else if (
-            m.kind ===
-            'sticker'
-          ) {
-
-            html +=
-              '<span style="font-size:36px">' +
-              m.text +
-              '</span>';
-
-          } else if (
-            m.kind === 'file' ||
-            m.kind === 'media' ||
-            m.kind === 'camera'
-          ) {
-
-            if (
-              /^https?:\/\//.test(
-                m.text
-              )
-            ) {
-
-              html +=
-                '<a href="' +
-                escapeHtml(
-                  m.text
-                ) +
-                '" target="_blank" rel="noopener">' +
-                '開啟檔案' +
-                '</a>';
-
-            } else {
-
-              html +=
-                '［檔案］' +
-                escapeHtml(
-                  m.text
-                );
-
-            }
-
-          } else {
-
-            html +=
-              escapeHtml(
-                m.text
-              );
-
-          }
-
-
-          html +=
-            '<div class="msg-time">' +
-            m.time +
-            '</div>';
-
-
-          div.innerHTML =
-            html;
-
-        }
-
-
-        var timer =
-          null;
-
-
-        div.addEventListener(
-          'touchstart',
-          function () {
-
-            timer =
-              setTimeout(
-                function () {
-
-                  openAction(
-                    m.id
-                  );
-
-                },
-                450
-              );
-
-          },
-          {
-            passive: true
-          }
-        );
-
-
-        div.addEventListener(
-          'touchend',
-          function () {
-
-            clearTimeout(
-              timer
-            );
-
-          }
-        );
-
-
-        div.addEventListener(
-          'touchmove',
-          function () {
-
-            clearTimeout(
-              timer
-            );
-
-          }
-        );
-
-
-        div.addEventListener(
-          'contextmenu',
-          function (e) {
-
-            e.preventDefault();
-
-            openAction(
-              m.id
-            );
-
-          }
-        );
-
-
-        box.appendChild(
-          div
-        );
-
-      }
-    );
-
-
-    box.scrollTop =
-      box.scrollHeight;
-
-  }
-
-
-  /* =====================================================
-     Local Message
-  ===================================================== */
-
-  function pushLocal(
-    kind,
-    text,
-    all
-  ) {
-
-    messages.push({
-
-      id:
-        'local_' +
-        Date.now() +
-        '_' +
-        Math.floor(
-          Math.random() *
-          1000
-        ),
-
-      mine:
-        true,
-
-      kind:
-        kind ||
-        'text',
-
-      text:
-        text,
-
-      all:
-        !!all,
-
-      time:
-        nowTime(),
-
-      createdAt:
-        Date.now(),
-
-      recalled:
-        false,
-
-      hiddenLocal:
-        false
-
-    });
-
-
-    renderMessages();
-
-  }
-
-
-  /* =====================================================
-     File Kind
-  ===================================================== */
-
-  function guessKind(
-    file
-  ) {
-
-    var t =
-      (
-        file.type ||
-        ''
-      ).toLowerCase();
-
-
-    if (
-      t.indexOf(
-        'image/'
-      ) === 0
-    ) {
-
-      return 'image';
-
-    }
-
-
-    if (
-      t.indexOf(
-        'video/'
-      ) === 0
-    ) {
-
-      return 'video';
-
-    }
-
-
-    if (
-      t.indexOf(
-        'audio/'
-      ) === 0
-    ) {
-
-      return 'audio';
-
-    }
-
-
-    return 'file';
-
-  }
-
-
-  /* =====================================================
-     Upload
-  ===================================================== */
-
-  async function uploadAndSend(
-    file
-  ) {
-
-    if (!file) {
-      return;
-    }
-
-
-    if (
-      !myUser ||
-      !supabase
-    ) {
-
-      setStatus(
-        '請先登入才能傳檔'
-      );
-
-      return;
-
-    }
-
-
-    setStatus(
-      '上傳中…'
-    );
-
-
-    var kind =
-      guessKind(
-        file
-      );
-
-
-    var ext =
-      (
-        file.name
-          .split('.')
-          .pop() ||
-        'bin'
-      ).toLowerCase();
-
-
-    var path =
-      myUser.id +
-      '/' +
-      Date.now() +
-      '_' +
-      Math.floor(
-        Math.random() *
-        10000
-      ) +
-      '.' +
-      ext;
-
-
-    var up =
-      await supabase
-        .storage
-        .from(
-          'chat-media'
-        )
-        .upload(
-          path,
-          file,
-          {
-            cacheControl:
-              '3600',
-            upsert:
-              false,
-            contentType:
-              file.type ||
-              undefined
-          }
-        );
-
-
-    if (up.error) {
-
-      setStatus(
-        '上傳失敗：' +
-        up.error.message
-      );
-
-      return;
-
-    }
-
-
-    var pub =
-      supabase
-        .storage
-        .from(
-          'chat-media'
-        )
-        .getPublicUrl(
-          path
-        );
-
-
-    var url =
-      pub.data &&
-      pub.data.publicUrl;
-
-
-    if (!url) {
-
-      setStatus(
-        '無法取得檔案網址'
-      );
-
-      return;
-
-    }
-
-
-    var ins =
-      await supabase
-        .from(
-          'messages'
-        )
-        .insert({
-
-          room_id:
-            roomId,
-
-          user_id:
-            myUser.id,
-
-          sender_name:
-            (
-              myUser.user_metadata &&
-              (
-                myUser.user_metadata.nickname ||
-                myUser.user_metadata.username
-              )
-            ) ||
-            (
-              myUser.email
-                ? myUser.email.split('@')[0]
-                : '成員'
-            ),
-
-          kind:
-            kind,
-
-          body:
-            url,
-
-          is_all:
-            false
-
-        });
-
-
-    if (ins.error) {
-
-      setStatus(
-        '訊息失敗：' +
-        ins.error.message
-      );
-
-      return;
-
-    }
-
-
-    setStatus(
-      '即時通訊已開啟'
-    );
-
-  }
-
-
-  /* =====================================================
-     Send Message
-  ===================================================== */
-
-  async function sendMsg() {
-
-    var input =
-      document.getElementById(
-        'msgInput'
-      );
-
-
-    var text =
-      input.value.trim();
-
-
-    if (!text) {
-      return;
-    }
-
-
-    var all =
-      false;
-
-
-    if (
-      /^@all\b/i.test(
-        text
-      ) ||
-      text.indexOf(
-        '@全體'
-      ) === 0
-    ) {
-
-      all =
-        true;
-
-
-      text =
-        text
-          .replace(
-            /^@all\b/i,
-            ''
-          )
-          .replace(
-            /^@全體/,
-            ''
-          )
-          .trim() ||
-        '（全體通知）';
-
-    }
-
-
-    input.value =
-      '';
-
-
-    if (
-      !myUser ||
-      !supabase
-    ) {
-
-      pushLocal(
-        'text',
-        text,
-        all
-      );
-
-
-      setStatus(
-        '本機模式（未登入或未連線）'
-      );
-
-      return;
-
-    }
-
-
-    setStatus(
-      '送出中…'
-    );
-
-
-    var res =
-      await supabase
-        .from(
-          'messages'
-        )
-        .insert({
-
-          room_id:
-            roomId,
-
-          user_id:
-            myUser.id,
-
-          sender_name:
-            myUser.email ||
-            'user',
-
-          kind:
-            'text',
-
-          body:
-            text,
-
-          is_all:
-            all
-
-        });
-
-
-    if (res.error) {
-
-      setStatus(
-        '送出失敗：' +
-        res.error.message
-      );
-
-
-      pushLocal(
-        'text',
-        text,
-        all
-      );
-
-
-      return;
-
-    }
-
-
-    setStatus(
-      '即時通訊已開啟'
-    );
-
-  }
-
-
-  /* =====================================================
-     Payload
-  ===================================================== */
-
-  async function sendPayload(
-    kind,
-    text
-  ) {
-
-    if (
-      !myUser ||
-      !supabase
-    ) {
-
-      pushLocal(
-        kind,
-        text,
-        false
-      );
-
-
-      setStatus(
-        '本機模式（未登入）'
-      );
-
-
-      return;
-
-    }
-
-
-    var res =
-      await supabase
-        .from(
-          'messages'
-        )
-        .insert({
-
-          room_id:
-            roomId,
-
-          user_id:
-            myUser.id,
-
-          sender_name:
-            myUser.email ||
-            'user',
-
-          kind:
-            kind,
-
-          body:
-            text,
-
-          is_all:
-            false
-
-        });
-
-
-    if (res.error) {
-
-      setStatus(
-        '送出失敗：' +
-        res.error.message
-      );
-
-
-      pushLocal(
-        kind,
-        text,
-        false
-      );
-
-    }
-
-  }
-
-
-  /* =====================================================
-     INIT REALTIME
-  ===================================================== */
-
-  async function initRealtime() {
-
-    try {
-
-      setStatus(
-        '檢查套件…'
-      );
-
-
-      if (
-        !window.supabase ||
-        !window.supabase.createClient
-      ) {
-
-        setStatus(
-          '套件未載入，可先本機聊天'
-        );
-
-        return;
-
-      }
-
-
-      supabase =
-        window.supabase.createClient(
-          SUPABASE_URL,
-          SUPABASE_KEY
-        );
-
-
-      setStatus(
-        '檢查登入…'
-      );
-
-
-      var sessRes =
+      var result =
         await supabase
-          .auth
-          .getSession();
-
-
-      var session =
-        sessRes.data &&
-        sessRes.data.session;
-
-
-      if (!session) {
-
-        setStatus(
-          '未登入：可本機聊天，或先去登入'
-        );
-
-        return;
-
-      }
-
-
-      myUser =
-        session.user;
-
-
-      setStatus(
-        '已登入，載入訊息…'
-      );
-
-
-      /* =========================
-         載入聊天訊息
-      ========================= */
-
-      var q =
-        await supabase
-          .from(
-            'messages'
+          .from('profiles')
+          .select(
+            'id,username,nickname,avatar_url'
           )
-          .select('*')
           .eq(
-            'room_id',
-            roomId
+            'id',
+            myUser.id
           )
-          .order(
-            'created_at',
-            {
-              ascending:
-                true
-            }
-          )
-          .limit(
-            100
-          );
+          .maybeSingle();
 
 
-      if (q.error) {
+      if (
+        result.data
+      ) {
 
-        setStatus(
-          '載入失敗：' +
-          q.error.message +
-          '（仍可本機聊天）'
-        );
-
-        return;
+        profileCache[
+          myUser.id
+        ] =
+          result.data;
 
       }
-
-
-      messages =
-        (
-          q.data ||
-          []
-        ).map(
-          rowToLocal
-        );
-
-
-      renderMessages();
-
-
-      setStatus(
-        '已連線'
-      );
-
-
-      /* =========================
-         群組功能
-      ========================= */
-
-      if (isGroup) {
-
-        await checkOwnerAndShowMembersBtn();
-
-
-        /*
-          載入歷史 SOS
-        */
-
-        await loadSOS();
-
-
-        /*
-          即時 SOS
-        */
-
-        subscribeSOS();
-
-      }
-
-
-      /* =========================
-         Messages Realtime
-      ========================= */
-
-      supabase
-        .channel(
-          'room:' +
-          roomId
-        )
-
-        .on(
-          'postgres_changes',
-          {
-            event:
-              '*',
-
-            schema:
-              'public',
-
-            table:
-              'messages',
-
-            filter:
-              'room_id=eq.' +
-              roomId
-          },
-
-          function (
-            payload
-          ) {
-
-            if (
-              payload.eventType ===
-              'INSERT'
-            ) {
-
-              var m =
-                rowToLocal(
-                  payload.new
-                );
-
-
-              if (
-                !messages.find(
-                  function (x) {
-
-                    return (
-                      x.id ===
-                      m.id
-                    );
-
-                  }
-                )
-              ) {
-
-                messages.push(
-                  m
-                );
-
-
-                renderMessages();
-
-
-                if (
-                  !m.mine
-                ) {
-
-                  playNotify();
-
-                }
-
-              }
-
-            }
-
-
-            if (
-              payload.eventType ===
-              'UPDATE'
-            ) {
-
-              var m2 =
-                rowToLocal(
-                  payload.new
-                );
-
-
-              var i =
-                messages.findIndex(
-                  function (x) {
-
-                    return (
-                      x.id ===
-                      m2.id
-                    );
-
-                  }
-                );
-
-
-              if (i >= 0) {
-
-                messages[i] =
-                  Object.assign(
-                    {},
-                    messages[i],
-                    m2
-                  );
-
-              } else {
-
-                messages.push(
-                  m2
-                );
-
-              }
-
-
-              renderMessages();
-
-            }
-
-
-            if (
-              payload.eventType ===
-              'DELETE'
-            ) {
-
-              var delId =
-                payload.old &&
-                payload.old.id;
-
-
-              if (delId) {
-
-                messages =
-                  messages.filter(
-                    function (x) {
-
-                      return (
-                        x.id !==
-                        delId
-                      );
-
-                    }
-                  );
-
-
-                renderMessages();
-
-              }
-
-            }
-
-          }
-        )
-
-        .subscribe(
-          function (
-            status
-          ) {
-
-            if (
-              status ===
-              'SUBSCRIBED'
-            ) {
-
-              setStatus(
-                '即時通訊已開啟'
-              );
-
-            }
-
-          }
-        );
-
 
     } catch (e) {
 
-      setStatus(
-        '錯誤：' +
-        (
-          e &&
-          e.message
-            ? e.message
-            : e
-        )
+      console.log(
+        '自己的 profile 載入失敗：',
+        e
       );
 
     }
@@ -2974,2127 +1061,92 @@ input[type="file"] {
   }
 
 
-  /* =====================================================
-     群組成員管理
-  ===================================================== */
-
-  async function checkOwnerAndShowMembersBtn() {
-
-    if (
-      !supabase ||
-      !myUser
-    ) {
-
-      return;
-
-    }
-
-
-    var g =
-      await supabase
-        .from(
-          'chat_groups'
-        )
-        .select(
-          'owner_id'
-        )
-        .eq(
-          'id',
-          roomId
-        )
-        .maybeSingle();
-
-
-    if (
-      g.data &&
-      g.data.owner_id ===
-      myUser.id
-    ) {
-
-      isOwner =
-        true;
-
-
-      document.getElementById(
-        'btnMembers'
-      ).style.display =
-        'inline-block';
-
-
-      return;
-
-    }
-
-
-    var m =
-      await supabase
-        .from(
-          'group_members'
-        )
-        .select(
-          'role'
-        )
-        .eq(
-          'group_id',
-          roomId
-        )
-        .eq(
-          'user_id',
-          myUser.id
-        )
-        .maybeSingle();
-
-
-    if (
-      m.data &&
-      m.data.role ===
-      'owner'
-    ) {
-
-      isOwner =
-        true;
-
-
-      document.getElementById(
-        'btnMembers'
-      ).style.display =
-        'inline-block';
-
-    }
-
-  }
-
-
-  document.getElementById(
-    'btnMembers'
-  ).onclick =
-    openMembersSheet;
-
-
-  document.getElementById(
-    'membersClose'
-  ).onclick =
-    closeMembersSheet;
-
-
-  document.getElementById(
-    'membersMask'
-  ).onclick =
-    closeMembersSheet;
-
-
-  function openMembersSheet() {
-
-    document.getElementById(
-      'membersMask'
-    ).classList.add(
-      'show'
-    );
-
-
-    document.getElementById(
-      'membersSheet'
-    ).classList.add(
-      'show'
-    );
-
-
-    loadMembersAndFriends();
-
-  }
-
-
-  function closeMembersSheet() {
-
-    document.getElementById(
-      'membersMask'
-    ).classList.remove(
-      'show'
-    );
-
-
-    document.getElementById(
-      'membersSheet'
-    ).classList.remove(
-      'show'
-    );
-
-  }
-
-
-  async function loadMembersAndFriends() {
-
-    if (
-      !supabase ||
-      !myUser
-    ) {
-
-      return;
-
-    }
-
-
-    var memBox =
-      document.getElementById(
-        'membersList'
-      );
-
-
-    var invBox =
-      document.getElementById(
-        'inviteList'
-      );
-
-
-    memBox.innerHTML =
-      '載入中…';
-
-
-    invBox.innerHTML =
-      '';
-
-
-    var mems =
-      await supabase
-        .from(
-          'group_members'
-        )
-        .select(
-          'user_id, role'
-        )
-        .eq(
-          'group_id',
-          roomId
-        );
-
-
-    var memberIds =
-      (
-        mems.data ||
-        []
-      ).map(
-        function (m) {
-
-          return m.user_id;
-
-        }
-      );
-
-
-    groupMembers =
-      memberIds;
-
-
-    var profiles = {};
-
-
-    if (
-      memberIds.length
-    ) {
-
-      var pr =
-        await supabase
-          .from(
-            'profiles'
-          )
-          .select('*')
-          .in(
-            'id',
-            memberIds
-          );
-
-
-      (
-        pr.data ||
-        []
-      ).forEach(
-        function (p) {
-
-          profiles[p.id] =
-            p;
-
-        }
-      );
-
-    }
-
-
-    memBox.innerHTML =
-      '';
-
-
-    (
-      mems.data ||
-      []
-    ).forEach(
-      function (m) {
-
-        var p =
-          profiles[
-            m.user_id
-          ] ||
-          {};
-
-
-        var name =
-          p.nickname ||
-          p.username ||
-          m.user_id.slice(
-            0,
-            8
-          );
-
-
-        var div =
-          document.createElement(
-            'div'
-          );
-
-
-        div.style.cssText =
-          'display:flex;' +
-          'align-items:center;' +
-          'justify-content:space-between;' +
-          'padding:10px 0;' +
-          'border-bottom:1px solid #f0f0f0;';
-
-
-        div.innerHTML =
-          '<div>' +
-          escapeHtml(
-            name
-          ) +
-          (
-            m.role ===
-            'owner'
-              ? '（群主）'
-              : ''
-          ) +
-          '</div>';
-
-
-        if (
-          isOwner &&
-          m.user_id !==
-          myUser.id
-        ) {
-
-          var btn =
-            document.createElement(
-              'button'
-            );
-
-
-          btn.textContent =
-            '移除';
-
-
-          btn.style.cssText =
-            'border:none;' +
-            'background:#e53935;' +
-            'color:#fff;' +
-            'border-radius:8px;' +
-            'padding:6px 12px;' +
-            'font-size:13px;';
-
-
-          btn.onclick =
-            function () {
-
-              removeMember(
-                m.user_id,
-                name
-              );
-
-            };
-
-
-          div.appendChild(
-            btn
-          );
-
-        }
-
-
-        memBox.appendChild(
-          div
-        );
-
-      }
-    );
-
-
-    var fr =
-      await supabase
-        .from(
-          'friendships'
-        )
-        .select('*')
-        .eq(
-          'status',
-          'accepted'
-        )
-        .or(
-          'user_id.eq.' +
-          myUser.id +
-          ',friend_id.eq.' +
-          myUser.id
-        );
-
-
-    var friendIds =
-      [];
-
-
-    (
-      fr.data ||
-      []
-    ).forEach(
-      function (r) {
-
-        var oid =
-          r.user_id ===
-          myUser.id
-            ? r.friend_id
-            : r.user_id;
-
-
-        if (
-          friendIds.indexOf(
-            oid
-          ) < 0 &&
-          memberIds.indexOf(
-            oid
-          ) < 0
-        ) {
-
-          friendIds.push(
-            oid
-          );
-
-        }
-
-      }
-    );
-
-
-    if (
-      !friendIds.length
-    ) {
-
-      invBox.innerHTML =
-        '<div style="color:#888;padding:8px 0">' +
-        '沒有可邀請的好友' +
-        '</div>';
-
-      return;
-
-    }
-
-
-    var fpr =
-      await supabase
-        .from(
-          'profiles'
-        )
-        .select('*')
-        .in(
-          'id',
-          friendIds
-        );
-
-
-    (
-      fpr.data ||
-      []
-    ).forEach(
-      function (p) {
-
-        var name =
-          p.nickname ||
-          p.username ||
-          '好友';
-
-
-        var div =
-          document.createElement(
-            'div'
-          );
-
-
-        div.style.cssText =
-          'display:flex;' +
-          'align-items:center;' +
-          'justify-content:space-between;' +
-          'padding:10px 0;' +
-          'border-bottom:1px solid #f0f0f0;';
-
-
-        div.innerHTML =
-          '<div>' +
-          escapeHtml(
-            name
-          ) +
-          '</div>';
-
-
-        var btn =
-          document.createElement(
-            'button'
-          );
-
-
-        btn.textContent =
-          '邀請';
-
-
-        btn.style.cssText =
-          'border:none;' +
-          'background:#06C755;' +
-          'color:#fff;' +
-          'border-radius:8px;' +
-          'padding:6px 12px;' +
-          'font-size:13px;';
-
-
-        btn.onclick =
-          function () {
-
-            inviteMember(
-              p.id,
-              name
-            );
-
-          };
-
-
-        div.appendChild(
-          btn
-        );
-
-
-        invBox.appendChild(
-          div
-        );
-
-      }
-    );
-
-  }
-
-
-  async function inviteMember(
+  function createAvatar(
     uid,
-    name
+    name,
+    size
   ) {
 
-    if (
-      !confirm(
-        '確定邀請「' +
-        name +
-        '」加入這個群組？'
-      )
-    ) {
+    var profile =
+      getProfileForUser(uid);
 
-      return;
-
-    }
+    var avatarUrl =
+      profile &&
+      profile.avatar_url
+        ? profile.avatar_url
+        : '';
 
 
-    var res =
-      await supabase
-        .from(
-          'group_members'
-        )
-        .insert({
-
-          group_id:
-            roomId,
-
-          user_id:
-            uid,
-
-          role:
-            'member'
-
-        });
-
-
-    if (res.error) {
-
-      alert(
-        '邀請失敗：' +
-        res.error.message
+    var avatar =
+      document.createElement(
+        'div'
       );
 
-      return;
+
+    avatar.className =
+      'message-avatar';
+
+
+    if (size) {
+
+      avatar.style.width =
+        size + 'px';
+
+      avatar.style.height =
+        size + 'px';
+
+      avatar.style.minWidth =
+        size + 'px';
 
     }
 
 
-    alert(
-      '已邀請 ' +
-      name
-    );
+    if (avatarUrl) {
 
-
-    loadMembersAndFriends();
-
-  }
-
-
-  async function removeMember(
-    uid,
-    name
-  ) {
-
-    if (
-      !confirm(
-        '確定把「' +
-        name +
-        '」移出群組？'
-      )
-    ) {
-
-      return;
-
-    }
-
-
-    var res =
-      await supabase
-        .from(
-          'group_members'
-        )
-        .delete()
-        .eq(
-          'group_id',
-          roomId
-        )
-        .eq(
-          'user_id',
-          uid
+      var img =
+        document.createElement(
+          'img'
         );
 
+      img.src =
+        avatarUrl;
 
-    if (res.error) {
+      img.alt =
+        name || '頭像';
 
-      alert(
-        '移除失敗：' +
-        res.error.message
-      );
 
-      return;
-
-    }
-
-
-    alert(
-      '已移除 ' +
-      name
-    );
-
-
-    loadMembersAndFriends();
-
-  }
-
-
-  /* =====================================================
-     PLUS
-  ===================================================== */
-
-  function openPlus() {
-
-    document.getElementById(
-      'plusMask'
-    ).classList.add(
-      'show'
-    );
-
-
-    document.getElementById(
-      'plusSheet'
-    ).classList.add(
-      'show'
-    );
-
-  }
-
-
-  function closePlus() {
-
-    document.getElementById(
-      'plusMask'
-    ).classList.remove(
-      'show'
-    );
-
-
-    document.getElementById(
-      'plusSheet'
-    ).classList.remove(
-      'show'
-    );
-
-  }
-
-
-  /* =====================================================
-     Message Action
-  ===================================================== */
-
-  function openAction(
-    id
-  ) {
-
-    selectedId =
-      id;
-
-
-    var m =
-      messages.find(
-        function (x) {
-
-          return x.id === id;
-
-        }
-      );
-
-
-    if (
-      !m ||
-      m.recalled ||
-      m.hiddenLocal
-    ) {
-
-      return;
-
-    }
-
-
-    var box =
-      document.getElementById(
-        'actionBox'
-      );
-
-
-    var html =
-      '';
-
-
-    var canRecall =
-      m.mine &&
-      !m.recalled &&
-      (
-        Date.now() -
-        m.createdAt <=
-        RECALL_MS
-      ) &&
-      String(
-        m.id
-      ).indexOf(
-        'local_'
-      ) !== 0;
-
-
-    if (canRecall) {
-
-      html +=
-        '<div class="action-item" id="actRecall">' +
-        '回收（2分鐘內）' +
-        '</div>';
-
-    }
-
-
-    html +=
-      '<div class="action-item danger" id="actDel">' +
-      '刪除' +
-      '</div>';
-
-
-    html +=
-      '<div class="action-item" id="actCancel">' +
-      '取消' +
-      '</div>';
-
-
-    box.innerHTML =
-      html;
-
-
-    document.getElementById(
-      'actionMask'
-    ).classList.add(
-      'show'
-    );
-
-
-    box.classList.add(
-      'show'
-    );
-
-
-    var r =
-      document.getElementById(
-        'actRecall'
-      );
-
-
-    if (r) {
-
-      r.onclick =
-        doRecall;
-
-    }
-
-
-    document.getElementById(
-      'actDel'
-    ).onclick =
-      doDeleteLocal;
-
-
-    document.getElementById(
-      'actCancel'
-    ).onclick =
-      closeAction;
-
-  }
-
-
-  function closeAction() {
-
-    selectedId =
-      null;
-
-
-    document.getElementById(
-      'actionMask'
-    ).classList.remove(
-      'show'
-    );
-
-
-    document.getElementById(
-      'actionBox'
-    ).classList.remove(
-      'show'
-    );
-
-  }
-
-
-  async function doRecall() {
-
-    var m =
-      messages.find(
-        function (x) {
-
-          return x.id ===
-            selectedId;
-
-        }
-      );
-
-
-    closeAction();
-
-
-    if (
-      !m ||
-      !supabase ||
-      !myUser
-    ) {
-
-      return;
-
-    }
-
-
-    var res =
-      await supabase
-        .from(
-          'messages'
-        )
-        .update({
-          recalled:
-            true
-        })
-        .eq(
-          'id',
-          m.id
-        )
-        .eq(
-          'user_id',
-          myUser.id
-        );
-
-
-    if (res.error) {
-
-      setStatus(
-        '回收失敗：' +
-        res.error.message
-      );
-
-    }
-
-  }
-
-
-  /*
-    一般聊天訊息刪除
-    維持原本功能。
-    
-    注意：
-    這裡只處理 messages。
-    SOS 完全不會走到這裡。
-  */
-
-  async function doDeleteLocal() {
-
-    var m =
-      messages.find(
-        function (x) {
-
-          return x.id ===
-            selectedId;
-
-        }
-      );
-
-
-    closeAction();
-
-
-    if (!m) {
-      return;
-    }
-
-
-    if (
-      String(
-        m.id
-      ).indexOf(
-        'local_'
-      ) === 0
-    ) {
-
-      m.hiddenLocal =
-        true;
-
-
-      renderMessages();
-
-      return;
-
-    }
-
-
-    if (
-      !m.mine ||
-      !supabase ||
-      !myUser
-    ) {
-
-      m.hiddenLocal =
-        true;
-
-
-      renderMessages();
-
-      return;
-
-    }
-
-
-    setStatus(
-      '刪除中…'
-    );
-
-
-    var res =
-      await supabase
-        .from(
-          'messages'
-        )
-        .delete()
-        .eq(
-          'id',
-          m.id
-        )
-        .eq(
-          'user_id',
-          myUser.id
-        );
-
-
-    if (res.error) {
-
-      setStatus(
-        '刪除失敗：' +
-        res.error.message
-      );
-
-      return;
-
-    }
-
-
-    messages =
-      messages.filter(
-        function (x) {
-
-          return x.id !==
-            m.id;
-
-        }
-      );
-
-
-    renderMessages();
-
-
-    setStatus(
-      '即時通訊已開啟'
-    );
-
-  }
-
-
-  /* =====================================================
-     Button Events
-  ===================================================== */
-
-  document.getElementById(
-    'btnSend'
-  ).onclick =
-    sendMsg;
-
-
-  document.getElementById(
-    'msgInput'
-  ).addEventListener(
-    'keydown',
-    function (e) {
-
-      if (
-        e.key ===
-        'Enter'
-      ) {
-
-        sendMsg();
-
-      }
-
-    }
-  );
-
-
-  document.getElementById(
-    'btnPlus'
-  ).onclick =
-    openPlus;
-
-
-  document.getElementById(
-    'plusMask'
-  ).onclick =
-    closePlus;
-
-
-  document.getElementById(
-    'plusCancel'
-  ).onclick =
-    closePlus;
-
-
-  document.getElementById(
-    'pickAlbum'
-  ).onclick =
-    function () {
-
-      document.getElementById(
-        'fileAlbum'
-      ).click();
-
-    };
-
-
-  document.getElementById(
-    'pickFile'
-  ).onclick =
-    function () {
-
-      document.getElementById(
-        'fileAny'
-      ).click();
-
-    };
-
-
-  document.getElementById(
-    'btnCam'
-  ).onclick =
-    function () {
-
-      document.getElementById(
-        'fileCamera'
-      ).click();
-
-    };
-
-
-  document.getElementById(
-    'actionMask'
-  ).onclick =
-    closeAction;
-
-
-  /* =====================================================
-     File
-  ===================================================== */
-
-  document.getElementById(
-    'fileAlbum'
-  ).onchange =
-    function () {
-
-      var f =
-        this.files &&
-        this.files[0];
-
-
-      this.value =
-        '';
-
-
-      closePlus();
-
-
-      uploadAndSend(
-        f
-      );
-
-    };
-
-
-  document.getElementById(
-    'fileAny'
-  ).onchange =
-    function () {
-
-      var f =
-        this.files &&
-        this.files[0];
-
-
-      this.value =
-        '';
-
-
-      closePlus();
-
-
-      uploadAndSend(
-        f
-      );
-
-    };
-
-
-  document.getElementById(
-    'fileCamera'
-  ).onchange =
-    function () {
-
-      var f =
-        this.files &&
-        this.files[0];
-
-
-      this.value =
-        '';
-
-
-      uploadAndSend(
-        f
-      );
-
-    };
-
-
-  /* =====================================================
-     Sticker
-  ===================================================== */
-
-  document.getElementById(
-    'btnSticker'
-  ).onclick =
-    function () {
-
-      var p =
-        document.getElementById(
-          'stickerPanel'
-        );
-
-
-      p.classList.toggle(
-        'show'
-      );
-
-
-      var grid =
-        document.getElementById(
-          'stickerGrid'
-        );
-
-
-      if (
-        p.classList.contains(
-          'show'
-        ) &&
-        !grid.children.length
-      ) {
-
-        stickers.forEach(
-          function (s) {
-
-            var span =
-              document.createElement(
-                'span'
-              );
-
-
-            span.textContent =
-              s;
-
-
-            span.onclick =
-              function () {
-
-                p.classList.remove(
-                  'show'
-                );
-
-
-                sendPayload(
-                  'sticker',
-                  s
-                );
-
-              };
-
-
-            grid.appendChild(
-              span
-            );
-
-          }
-        );
-
-      }
-
-    };
-
-
-  /* =====================================================
-     Speech Recognition
-  ===================================================== */
-
-  document.getElementById(
-    'btnVoice'
-  ).onclick =
-    function () {
-
-      var SR =
-        window.SpeechRecognition ||
-        window.webkitSpeechRecognition;
-
-
-      if (!SR) {
-
-        setStatus(
-          '不支援語音轉文字'
-        );
-
-        return;
-
-      }
-
-
-      if (
-        recognizing &&
-        recognition
-      ) {
-
-        recognition.stop();
-
-        recognizing =
-          false;
-
-
-        document.getElementById(
-          'btnVoice'
-        ).textContent =
-          '語音';
-
-
-        return;
-
-      }
-
-
-      recognition =
-        new SR();
-
-
-      recognition.lang =
-        'zh-TW';
-
-
-      recognition.onresult =
-        function (e) {
-
-          var t =
-            e.results[0][0]
-              .transcript;
-
-
-          var input =
-            document.getElementById(
-              'msgInput'
-            );
-
-
-          input.value =
-            (
-              input.value
-                ? input.value + ' '
-                : ''
-            ) +
-            t;
-
-        };
-
-
-      recognition.onend =
-      recognition.onerror =
+      img.onerror =
         function () {
 
-          recognizing =
-            false;
+          avatar.innerHTML =
+            '';
 
-
-          document.getElementById(
-            'btnVoice'
-          ).textContent =
-            '語音';
+          avatar.textContent =
+            getInitial(name);
 
         };
 
 
-      recognizing =
-        true;
-
-
-      document.getElementById(
-        'btnVoice'
-      ).textContent =
-        '聆聽中';
-
-
-      recognition.start();
-
-    };
-
-
-  /* =====================================================
-     Boot
-  ===================================================== */
-
-  setStatus(
-    '等待套件…'
-  );
-
-
-  var tries =
-    0;
-
-
-  function boot() {
-
-    tries +=
-      1;
-
-
-    if (
-      window.supabase
-    ) {
-
-      initRealtime();
-
-    } else if (
-      tries < 30
-    ) {
-
-      setStatus(
-        '等待套件…(' +
-        tries +
-        ')'
-      );
-
-
-      setTimeout(
-        boot,
-        200
+      avatar.appendChild(
+        img
       );
 
     } else {
 
-      setStatus(
-        '套件載入失敗，可本機聊天'
-      );
+      avatar.textContent =
+        getInitial(name);
 
     }
 
+
+    return avatar;
+
   }
-
-
-  boot();
-
-})();
-
-</script>
-
-
-<script src="call-notify.js"></script>
-
-</body>
-</html>
-
-<html lang="zh-TW">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>對話 - 安全團聚</title>
-
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
-<style>
-* {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
-}
-
-body {
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  background: #e8e8e8;
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  color: #111;
-}
-
-/* =========================
-   HEADER
-========================= */
-
-.header {
-  background: #06C755;
-  color: #fff;
-  padding: 10px 12px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  position: sticky;
-  top: 0;
-  z-index: 100;
-}
-
-.back {
-  color: #fff;
-  text-decoration: none;
-  font-size: 24px;
-  padding: 4px;
-}
-
-.header-info {
-  flex: 1;
-  min-width: 0;
-}
-
-.header-name {
-  font-weight: 700;
-  font-size: 16px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.header-status {
-  font-size: 12px;
-  opacity: 0.95;
-}
-
-.header-actions {
-  display: flex;
-  gap: 2px;
-}
-
-.header-actions button {
-  background: transparent;
-  border: none;
-  color: #fff;
-  font-size: 13px;
-  padding: 6px 8px;
-}
-
-/* =========================
-   MESSAGE AREA
-========================= */
-
-.messages {
-  flex: 1;
-  padding: 12px;
-  overflow-y: auto;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.msg {
-  max-width: 78%;
-  padding: 10px 12px;
-  border-radius: 14px;
-  font-size: 15px;
-  line-height: 1.4;
-  word-break: break-word;
-}
-
-.msg.them {
-  background: #fff;
-  align-self: flex-start;
-  border-bottom-left-radius: 4px;
-}
-
-.msg.me {
-  background: #dcf8c6;
-  align-self: flex-end;
-  border-bottom-right-radius: 4px;
-}
-
-.msg.recalled {
-  background: #f0f0f0;
-  color: #888;
-  font-size: 13px;
-  font-style: italic;
-}
-
-.msg-time {
-  font-size: 11px;
-  color: #999;
-  margin-top: 4px;
-  text-align: right;
-}
-
-.msg-tag {
-  font-size: 11px;
-  color: #06C755;
-  margin-bottom: 4px;
-  font-weight: 600;
-}
-
-.msg img,
-.msg video {
-  max-width: 100%;
-  border-radius: 10px;
-  display: block;
-}
-
-.msg audio {
-  width: 100%;
-}
-
-/* =========================
-   SOS
-========================= */
-
-.sos-card {
-  width: 100%;
-  background: #d32f2f;
-  color: #fff;
-  border-radius: 14px;
-  padding: 14px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.18);
-  margin: 4px 0;
-  align-self: stretch;
-  border: 2px solid #b71c1c;
-}
-
-.sos-title {
-  font-size: 18px;
-  font-weight: 800;
-  margin-bottom: 6px;
-}
-
-.sos-name {
-  font-size: 14px;
-  font-weight: 700;
-  margin-bottom: 5px;
-}
-
-.sos-message {
-  font-size: 14px;
-  line-height: 1.5;
-}
-
-.sos-location {
-  font-size: 12px;
-  margin-top: 7px;
-  opacity: .95;
-}
-
-.sos-time {
-  font-size: 11px;
-  margin-top: 7px;
-  opacity: .8;
-}
-
-.sos-status {
-  display: inline-block;
-  margin-top: 8px;
-  background: #fff;
-  color: #c62828;
-  padding: 4px 8px;
-  border-radius: 8px;
-  font-size: 11px;
-  font-weight: 700;
-}
-
-.sos-actions {
-  display: flex;
-  gap: 8px;
-  margin-top: 12px;
-  flex-wrap: wrap;
-}
-
-.sos-btn {
-  border: 0;
-  border-radius: 8px;
-  padding: 8px 12px;
-  font-size: 13px;
-  font-weight: 700;
-  cursor: pointer;
-}
-
-.sos-delete-btn {
-  background: #fff;
-  color: #c62828;
-}
-
-.sos-resolve-btn {
-  background: #8bc34a;
-  color: #fff;
-}
-
-.sos-map-btn {
-  background: #fff;
-  color: #333;
-}
-
-/* =========================
-   COMPOSER
-========================= */
-
-.composer {
-  background: #f7f7f7;
-  border-top: 1px solid #ddd;
-  padding: 8px 8px 12px;
-  position: sticky;
-  bottom: 0;
-  z-index: 50;
-}
-
-.settings-bar {
-  display: flex;
-  gap: 12px;
-  padding: 4px 8px 0;
-  font-size: 12px;
-  color: #666;
-}
-
-.composer-row {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.icon-btn,
-.text-btn {
-  border: none;
-  background: transparent;
-  color: #333;
-  font-size: 13px;
-  padding: 6px 4px;
-  flex-shrink: 0;
-}
-
-.icon-btn {
-  width: 36px;
-  height: 36px;
-  font-size: 20px;
-}
-
-#msgInput {
-  flex: 1;
-  min-width: 0;
-  background: #fff;
-  border-radius: 18px;
-  padding: 10px 14px;
-  font-size: 15px;
-  border: 1px solid #e0e0e0;
-  outline: none;
-}
-
-.send-btn {
-  border: none;
-  background: #06C755;
-  color: #fff;
-  font-size: 13px;
-  font-weight: 600;
-  padding: 8px 12px;
-  border-radius: 16px;
-}
-
-/* =========================
-   SHEET
-========================= */
-
-.sheet-mask,
-.action-mask {
-  display: none;
-  position: fixed;
-  inset: 0;
-  background: rgba(0,0,0,0.35);
-  z-index: 200;
-}
-
-.sheet-mask.show,
-.action-mask.show {
-  display: block;
-}
-
-.sheet {
-  position: fixed;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: #fff;
-  border-radius: 14px 14px 0 0;
-  z-index: 201;
-  padding: 8px 0 24px;
-  transform: translateY(100%);
-  transition: transform 0.2s;
-}
-
-.sheet.show {
-  transform: translateY(0);
-}
-
-.sheet-item {
-  padding: 16px 20px;
-  font-size: 16px;
-  border-bottom: 1px solid #f0f0f0;
-}
-
-.sheet-cancel {
-  text-align: center;
-  color: #06C755;
-  font-weight: 600;
-  padding: 14px;
-}
-
-/* =========================
-   ACTION BOX
-========================= */
-
-.action-box {
-  display: none;
-  position: fixed;
-  left: 50%;
-  top: 40%;
-  transform: translate(-50%,-50%);
-  background: #fff;
-  border-radius: 12px;
-  min-width: 200px;
-  z-index: 301;
-  overflow: hidden;
-}
-
-.action-box.show {
-  display: block;
-}
-
-.action-item {
-  padding: 14px 18px;
-  font-size: 15px;
-  border-bottom: 1px solid #f0f0f0;
-}
-
-.action-item.danger {
-  color: #c62828;
-}
-
-/* =========================
-   STICKERS
-========================= */
-
-.sticker-panel {
-  display: none;
-  background: #fff;
-  border-top: 1px solid #ddd;
-  padding: 10px;
-  max-height: 160px;
-  overflow-y: auto;
-}
-
-.sticker-panel.show {
-  display: block;
-}
-
-.sticker-grid {
-  display: grid;
-  grid-template-columns: repeat(6, 1fr);
-  gap: 8px;
-}
-
-.sticker-grid span {
-  font-size: 28px;
-  text-align: center;
-  padding: 4px;
-}
-
-input[type="file"] {
-  display: none;
-}
-
-/* =========================
-   MEMBERS
-========================= */
-
-#membersList,
-#inviteList {
-  font-size: 14px;
-}
-</style>
-</head>
-
-<body>
-
-<!-- =========================
-     HEADER
-========================= -->
-
-<div class="header">
-
-  <a class="back" href="chat.html">‹</a>
-
-  <div class="header-info">
-    <div class="header-name" id="roomName">對話</div>
-    <div class="header-status" id="roomStatus">啟動中…</div>
-  </div>
-
-  <div class="header-actions">
-
-    <button type="button" id="btnAudio">
-      語音
-    </button>
-
-    <button type="button" id="btnVideo">
-      視訊
-    </button>
-
-    <button type="button" id="btnMap">
-      地圖
-    </button>
-
-    <button type="button" id="btnMembers" style="display:none">
-      成員
-    </button>
-
-  </div>
-
-</div>
-
-
-<!-- =========================
-     MESSAGES
-========================= -->
-
-<div class="messages" id="messages"></div>
-
-
-<!-- =========================
-     STICKER
-========================= -->
-
-<div class="sticker-panel" id="stickerPanel">
-  <div class="sticker-grid" id="stickerGrid"></div>
-</div>
-
-
-<!-- =========================
-     COMPOSER
-========================= -->
-
-<div class="composer">
-
-  <div class="settings-bar">
-
-    <label>
-      <input type="checkbox" id="optSound" checked>
-      提示音
-    </label>
-
-    <label>
-      <input type="checkbox" id="optVibrate" checked>
-      震動
-    </label>
-
-  </div>
-
-
-  <div class="composer-row">
-
-    <button
-      type="button"
-      class="icon-btn"
-      id="btnPlus">
-      ＋
-    </button>
-
-    <button
-      type="button"
-      class="text-btn"
-      id="btnCam">
-      相機
-    </button>
-
-    <input
-      type="text"
-      id="msgInput"
-      placeholder="輸入訊息"
-      autocomplete="off">
-
-    <button
-      type="button"
-      class="text-btn"
-      id="btnSticker">
-      表情
-    </button>
-
-    <button
-      type="button"
-      class="text-btn"
-      id="btnVoice">
-      語音
-    </button>
-
-    <button
-      type="button"
-      class="send-btn"
-      id="btnSend">
-      送出
-    </button>
-
-  </div>
-
-</div>
-
-
-<!-- =========================
-     PLUS SHEET
-========================= -->
-
-<div class="sheet-mask" id="plusMask"></div>
-
-<div class="sheet" id="plusSheet">
-
-  <div class="sheet-item" id="pickAlbum">
-    相簿（照片／影片）
-  </div>
-
-  <div class="sheet-item" id="pickFile">
-    檔案
-  </div>
-
-  <div class="sheet-cancel" id="plusCancel">
-    取消
-  </div>
-
-</div>
-
-
-<input
-  type="file"
-  id="fileAlbum"
-  accept="image/*,video/*,audio/*">
-
-<input
-  type="file"
-  id="fileAny"
-  accept=".pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.txt,.mp3,.mp4,.mov,.csv,image/*,video/*,audio/*">
-
-<input
-  type="file"
-  id="fileCamera"
-  accept="image/*,video/*"
-  capture="environment">
-
-
-<!-- =========================
-     ACTION BOX
-========================= -->
-
-<div class="action-mask" id="actionMask"></div>
-
-<div class="action-box" id="actionBox"></div>
-
-
-<!-- =========================
-     GROUP MEMBERS
-========================= -->
-
-<div class="sheet-mask" id="membersMask"></div>
-
-<div class="sheet" id="membersSheet">
-
-  <div style="
-    text-align:center;
-    font-weight:700;
-    padding:12px 0 8px;
-    font-size:16px;">
-    群組成員管理
-  </div>
-
-  <div
-    id="membersList"
-    style="
-      max-height:35vh;
-      overflow:auto;
-      padding:0 12px;">
-  </div>
-
-  <div style="
-    font-size:13px;
-    color:#888;
-    padding:12px 16px 6px;">
-    邀請好友加入
-  </div>
-
-  <div
-    id="inviteList"
-    style="
-      max-height:30vh;
-      overflow:auto;
-      padding:0 12px 16px;">
-  </div>
-
-  <div
-    class="sheet-cancel"
-    id="membersClose">
-    關閉
-  </div>
-
-</div>
-
-
-<script>
-
-(function () {
-
-  /* =====================================================
-     基本設定
-  ===================================================== */
-
-  var statusEl =
-    document.getElementById('roomStatus');
-
-  function setStatus(t) {
-    if (statusEl) {
-      statusEl.textContent = t;
-    }
-  }
-
-  setStatus('腳本開始執行');
-
-
-  var SUPABASE_URL =
-    'https://perfsipperncvjocznhl.supabase.co';
-
-  var SUPABASE_KEY =
-    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBlcmZzaXBwZXJuY3Zqb2N6bmhsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODYwMTUyMzAsImV4cCI6MjEwMTU5MTIzMH0.I7vXkV247kAzRJ0RigDZt3Hzn8KJDyMc6o9E3oHJZoY';
-
-
-  var RECALL_MS =
-    2 * 60 * 1000;
-
-
-  var stickers = [
-    '😀','😅','😂','😊','😍','🤔',
-    '👍','👏','🙏','💪','❤️','🔥',
-    '✅','❌','🎉','🏠','🚗','📍'
-  ];
-
-
-  var supabase = null;
-
-  var messages = [];
-
-  var selectedId = null;
-
-  var myUser = null;
-
-  var recognizing = false;
-
-  var recognition = null;
-
-  var isOwner = false;
-
-  var groupMembers = [];
-
-
-  /* =====================================================
-     URL
-  ===================================================== */
-
-  var params =
-    new URLSearchParams(location.search);
-
-  var roomName =
-    params.get('name')
-      ? decodeURIComponent(params.get('name'))
-      : '對話';
-
-  var roomId =
-    params.get('id') || roomName;
-
-
-  var isGroup =
-    String(roomId).indexOf('dm_') !== 0;
-
-
-  document.getElementById('roomName').textContent =
-    roomName;
 
 
   /* =====================================================
      SOS 本機刪除
-     
+
      注意：
      這裡只使用 localStorage。
      絕對不 DELETE Supabase 資料。
@@ -5165,9 +1217,6 @@ input[type="file"] {
 
   /* =====================================================
      SOS 解除狀態
-     
-     優先更新 sos_alerts。
-     如果找不到 alert，就不刪事件。
   ===================================================== */
 
   async function resolveSOS(sos) {
@@ -5339,6 +1388,8 @@ input[type="file"] {
 
   /* =====================================================
      SOS 顯示
+     
+     這一區保持原本 SOS 邏輯
   ===================================================== */
 
   async function renderSOS(
@@ -5354,11 +1405,6 @@ input[type="file"] {
       return;
     }
 
-
-    /*
-      如果使用者之前在自己的手機
-      刪除過這個 SOS，就不要重新顯示。
-    */
 
     if (
       isSOSDeletedLocally(
@@ -5418,6 +1464,40 @@ input[type="file"] {
     var name =
       sos.display_name ||
       '群組成員';
+
+
+    /*
+      如果 SOS 沒有 display_name，
+      嘗試從 profiles 取得暱稱。
+    */
+
+    if (
+      !sos.display_name &&
+      sos.user_id
+    ) {
+
+      await loadProfilesForUsers([
+        sos.user_id
+      ]);
+
+
+      var sosProfile =
+        getProfileForUser(
+          sos.user_id
+        );
+
+
+      if (sosProfile) {
+
+        name =
+          profileName(
+            sosProfile,
+            name
+          );
+
+      }
+
+    }
 
 
     var message =
@@ -5552,10 +1632,6 @@ input[type="file"] {
       '</div>';
 
 
-    /* =========================
-       刪除：只刪自己手機
-    ========================= */
-
     var deleteBtn =
       div.querySelector(
         '.sos-delete-btn'
@@ -5575,10 +1651,6 @@ input[type="file"] {
 
     }
 
-
-    /* =========================
-       解除 SOS
-    ========================= */
 
     var resolveBtn =
       div.querySelector(
@@ -5602,10 +1674,6 @@ input[type="file"] {
 
     }
 
-
-    /* =========================
-       查看位置
-    ========================= */
 
     var mapBtn =
       div.querySelector(
@@ -5637,14 +1705,15 @@ input[type="file"] {
     }
 
 
+    /*
+      SOS 仍然直接加入 messages 容器。
+      不經過一般聊天 renderMessages。
+    */
+
     box.appendChild(
       div
     );
 
-
-    /*
-      新 SOS 才自動捲到底
-    */
 
     if (
       options.scroll !== false
@@ -5807,20 +1876,10 @@ input[type="file"] {
           }
 
 
-          /*
-            新 SOS：
-            立即顯示
-          */
-
           await renderSOS(
             sos
           );
 
-
-          /*
-            SOS 與一般聊天
-            使用同一個提示音函式。
-          */
 
           playNotify();
 
@@ -6093,6 +2152,24 @@ input[type="file"] {
 
   function rowToLocal(row) {
 
+    var profile =
+      getProfileForUser(
+        row.user_id
+      );
+
+
+    var fallbackName =
+      row.sender_name ||
+      '成員';
+
+
+    var displayName =
+      profileName(
+        profile,
+        fallbackName
+      );
+
+
     return {
 
       id:
@@ -6131,8 +2208,7 @@ input[type="file"] {
         false,
 
       senderName:
-        row.sender_name ||
-        '成員',
+        displayName,
 
       userId:
         row.user_id
@@ -6232,6 +2308,29 @@ input[type="file"] {
       );
 
 
+    /*
+      注意：
+      這裡會重新畫一般聊天訊息。
+      SOS 不放在 messages 陣列裡，
+      所以不會被一般聊天刪除。
+    */
+
+    var existingSOS = [];
+
+
+    box.querySelectorAll(
+      '.sos-card'
+    ).forEach(
+      function (el) {
+
+        existingSOS.push(
+          el
+        );
+
+      }
+    );
+
+
     box.innerHTML =
       '';
 
@@ -6247,6 +2346,91 @@ input[type="file"] {
 
         }
 
+
+        var profile =
+          getProfileForUser(
+            m.userId
+          );
+
+
+        var displayName =
+          profileName(
+            profile,
+            m.senderName
+          );
+
+
+        /*
+          外層訊息 row
+        */
+
+        var row =
+          document.createElement(
+            'div'
+          );
+
+
+        row.className =
+          'message-row ' +
+          (
+            m.mine
+              ? 'me'
+              : 'them'
+          );
+
+
+        /*
+          頭像
+        */
+
+        var avatar =
+          createAvatar(
+            m.userId,
+            displayName,
+            38
+          );
+
+
+        /*
+          內容區
+        */
+
+        var content =
+          document.createElement(
+            'div'
+          );
+
+
+        content.className =
+          'message-content';
+
+
+        /*
+          暱稱
+        */
+
+        var nameEl =
+          document.createElement(
+            'div'
+          );
+
+
+        nameEl.className =
+          'message-name';
+
+
+        nameEl.textContent =
+          displayName;
+
+
+        content.appendChild(
+          nameEl
+        );
+
+
+        /*
+          訊息泡泡
+        */
 
         var div =
           document.createElement(
@@ -6288,29 +2472,15 @@ input[type="file"] {
                 : '對方已回收一則訊息'
             ) +
             '<div class="msg-time">' +
-            m.time +
+            escapeHtml(
+              m.time
+            ) +
             '</div>';
 
         } else {
 
           var html =
             '';
-
-
-          if (
-            !m.mine &&
-            isGroup
-          ) {
-
-            html +=
-              '<div class="msg-tag" ' +
-              'style="color:#555;font-weight:600;margin-bottom:2px">' +
-              escapeHtml(
-                m.senderName
-              ) +
-              '</div>';
-
-          }
 
 
           if (
@@ -6366,7 +2536,9 @@ input[type="file"] {
 
             html +=
               '<span style="font-size:36px">' +
-              m.text +
+              escapeHtml(
+                m.text
+              ) +
               '</span>';
 
           } else if (
@@ -6412,7 +2584,9 @@ input[type="file"] {
 
           html +=
             '<div class="msg-time">' +
-            m.time +
+            escapeHtml(
+              m.time
+            ) +
             '</div>';
 
 
@@ -6421,6 +2595,10 @@ input[type="file"] {
 
         }
 
+
+        /*
+          長按／右鍵功能
+        */
 
         var timer =
           null;
@@ -6487,8 +2665,58 @@ input[type="file"] {
         );
 
 
-        box.appendChild(
+        content.appendChild(
           div
+        );
+
+
+        /*
+          最後組合：
+          他人：頭像 + 內容
+          自己：內容 + 頭像
+        */
+
+        if (m.mine) {
+
+          row.appendChild(
+            content
+          );
+
+          row.appendChild(
+            avatar
+          );
+
+        } else {
+
+          row.appendChild(
+            avatar
+          );
+
+          row.appendChild(
+            content
+          );
+
+        }
+
+
+        box.appendChild(
+          row
+        );
+
+      }
+    );
+
+
+    /*
+      SOS 必須重新放回去。
+      SOS 本身不會被 messages 管理。
+    */
+
+    existingSOS.forEach(
+      function (sosEl) {
+
+        box.appendChild(
+          sosEl
         );
 
       }
@@ -6545,7 +2773,15 @@ input[type="file"] {
         false,
 
       hiddenLocal:
-        false
+        false,
+
+      senderName:
+        getMyFallbackName(),
+
+      userId:
+        myUser
+          ? myUser.id
+          : null
 
     });
 
@@ -6728,6 +2964,19 @@ input[type="file"] {
     }
 
 
+    var myProfile =
+      getProfileForUser(
+        myUser.id
+      );
+
+
+    var senderName =
+      profileName(
+        myProfile,
+        getMyFallbackName()
+      );
+
+
     var ins =
       await supabase
         .from(
@@ -6742,18 +2991,7 @@ input[type="file"] {
             myUser.id,
 
           sender_name:
-            (
-              myUser.user_metadata &&
-              (
-                myUser.user_metadata.nickname ||
-                myUser.user_metadata.username
-              )
-            ) ||
-            (
-              myUser.email
-                ? myUser.email.split('@')[0]
-                : '成員'
-            ),
+            senderName,
 
           kind:
             kind,
@@ -6865,6 +3103,19 @@ input[type="file"] {
     }
 
 
+    var myProfile =
+      getProfileForUser(
+        myUser.id
+      );
+
+
+    var senderName =
+      profileName(
+        myProfile,
+        getMyFallbackName()
+      );
+
+
     setStatus(
       '送出中…'
     );
@@ -6884,8 +3135,7 @@ input[type="file"] {
             myUser.id,
 
           sender_name:
-            myUser.email ||
-            'user',
+            senderName,
 
           kind:
             'text',
@@ -6927,7 +3177,7 @@ input[type="file"] {
 
 
   /* =====================================================
-     Payload
+     Send Payload
   ===================================================== */
 
   async function sendPayload(
@@ -6957,6 +3207,19 @@ input[type="file"] {
     }
 
 
+    var myProfile =
+      getProfileForUser(
+        myUser.id
+      );
+
+
+    var senderName =
+      profileName(
+        myProfile,
+        getMyFallbackName()
+      );
+
+
     var res =
       await supabase
         .from(
@@ -6971,8 +3234,7 @@ input[type="file"] {
             myUser.id,
 
           sender_name:
-            myUser.email ||
-            'user',
+            senderName,
 
           kind:
             kind,
@@ -7070,6 +3332,13 @@ input[type="file"] {
         session.user;
 
 
+      /*
+        先載入自己的暱稱與頭像
+      */
+
+      await loadMyProfile();
+
+
       setStatus(
         '已登入，載入訊息…'
       );
@@ -7112,6 +3381,28 @@ input[type="file"] {
         return;
 
       }
+
+
+      /*
+        先抓所有發言者的 profile
+      */
+
+      var senderIds =
+        (
+          q.data ||
+          []
+        ).map(
+          function (row) {
+
+            return row.user_id;
+
+          }
+        );
+
+
+      await loadProfilesForUsers(
+        senderIds
+      );
 
 
       messages =
@@ -7183,7 +3474,7 @@ input[type="file"] {
               roomId
           },
 
-          function (
+          async function (
             payload
           ) {
 
@@ -7191,6 +3482,20 @@ input[type="file"] {
               payload.eventType ===
               'INSERT'
             ) {
+
+              var newUserId =
+                payload.new &&
+                payload.new.user_id;
+
+
+              /*
+                先取得這個人的 profile
+              */
+
+              await loadProfilesForUsers([
+                newUserId
+              ]);
+
 
               var m =
                 rowToLocal(
@@ -7236,6 +3541,12 @@ input[type="file"] {
               payload.eventType ===
               'UPDATE'
             ) {
+
+              await loadProfilesForUsers([
+                payload.new &&
+                payload.new.user_id
+              ]);
+
 
               var m2 =
                 rowToLocal(
@@ -7561,38 +3872,22 @@ input[type="file"] {
       memberIds;
 
 
+    await loadProfilesForUsers(
+      memberIds
+    );
+
+
     var profiles = {};
 
 
-    if (
-      memberIds.length
-    ) {
+    memberIds.forEach(
+      function (id) {
 
-      var pr =
-        await supabase
-          .from(
-            'profiles'
-          )
-          .select('*')
-          .in(
-            'id',
-            memberIds
-          );
+        profiles[id] =
+          getProfileForUser(id);
 
-
-      (
-        pr.data ||
-        []
-      ).forEach(
-        function (p) {
-
-          profiles[p.id] =
-            p;
-
-        }
-      );
-
-    }
+      }
+    );
 
 
     memBox.innerHTML =
@@ -7613,11 +3908,12 @@ input[type="file"] {
 
 
         var name =
-          p.nickname ||
-          p.username ||
-          m.user_id.slice(
-            0,
-            8
+          profileName(
+            p,
+            m.user_id.slice(
+              0,
+              8
+            )
           );
 
 
@@ -7635,18 +3931,100 @@ input[type="file"] {
           'border-bottom:1px solid #f0f0f0;';
 
 
-        div.innerHTML =
-          '<div>' +
-          escapeHtml(
-            name
-          ) +
+        var left =
+          document.createElement(
+            'div'
+          );
+
+
+        left.style.cssText =
+          'display:flex;' +
+          'align-items:center;' +
+          'gap:10px;' +
+          'min-width:0;';
+
+
+        var av =
+          document.createElement(
+            'div'
+          );
+
+
+        av.className =
+          'member-avatar';
+
+
+        if (
+          p.avatar_url
+        ) {
+
+          var img =
+            document.createElement(
+              'img'
+            );
+
+
+          img.src =
+            p.avatar_url;
+
+
+          img.alt =
+            name;
+
+
+          img.onerror =
+            function () {
+
+              av.innerHTML =
+                '';
+
+              av.textContent =
+                getInitial(name);
+
+            };
+
+
+          av.appendChild(
+            img
+          );
+
+        } else {
+
+          av.textContent =
+            getInitial(name);
+
+        }
+
+
+        left.appendChild(
+          av
+        );
+
+
+        var nameDiv =
+          document.createElement(
+            'div'
+          );
+
+
+        nameDiv.textContent =
+          name +
           (
             m.role ===
             'owner'
               ? '（群主）'
               : ''
-          ) +
-          '</div>';
+          );
+
+
+        left.appendChild(
+          nameDiv
+        );
+
+
+        div.appendChild(
+          left
+        );
 
 
         if (
@@ -7768,28 +4146,28 @@ input[type="file"] {
     }
 
 
-    var fpr =
-      await supabase
-        .from(
-          'profiles'
-        )
-        .select('*')
-        .in(
-          'id',
-          friendIds
-        );
+    await loadProfilesForUsers(
+      friendIds
+    );
 
 
     (
-      fpr.data ||
-      []
+      friendIds
     ).forEach(
-      function (p) {
+      function (friendId) {
+
+        var p =
+          getProfileForUser(
+            friendId
+          ) ||
+          {};
+
 
         var name =
-          p.nickname ||
-          p.username ||
-          '好友';
+          profileName(
+            p,
+            '好友'
+          );
 
 
         var div =
@@ -7806,12 +4184,93 @@ input[type="file"] {
           'border-bottom:1px solid #f0f0f0;';
 
 
-        div.innerHTML =
-          '<div>' +
-          escapeHtml(
-            name
-          ) +
-          '</div>';
+        var left =
+          document.createElement(
+            'div'
+          );
+
+
+        left.style.cssText =
+          'display:flex;' +
+          'align-items:center;' +
+          'gap:10px;';
+
+
+        var av =
+          document.createElement(
+            'div'
+          );
+
+
+        av.className =
+          'member-avatar';
+
+
+        if (
+          p.avatar_url
+        ) {
+
+          var img =
+            document.createElement(
+              'img'
+            );
+
+
+          img.src =
+            p.avatar_url;
+
+
+          img.alt =
+            name;
+
+
+          img.onerror =
+            function () {
+
+              av.innerHTML =
+                '';
+
+              av.textContent =
+                getInitial(name);
+
+            };
+
+
+          av.appendChild(
+            img
+          );
+
+        } else {
+
+          av.textContent =
+            getInitial(name);
+
+        }
+
+
+        left.appendChild(
+          av
+        );
+
+
+        var nameEl =
+          document.createElement(
+            'div'
+          );
+
+
+        nameEl.textContent =
+          name;
+
+
+        left.appendChild(
+          nameEl
+        );
+
+
+        div.appendChild(
+          left
+        );
 
 
         var btn =
@@ -7837,7 +4296,7 @@ input[type="file"] {
           function () {
 
             inviteMember(
-              p.id,
+              friendId,
               name
             );
 
@@ -8038,6 +4497,9 @@ input[type="file"] {
       );
 
 
+    closeAction();
+
+
     if (
       !m ||
       m.recalled ||
@@ -8047,6 +4509,10 @@ input[type="file"] {
       return;
 
     }
+
+
+    selectedId =
+      id;
 
 
     var box =
@@ -8164,12 +4630,16 @@ input[type="file"] {
 
   async function doRecall() {
 
+    var id =
+      selectedId;
+
+
     var m =
       messages.find(
         function (x) {
 
           return x.id ===
-            selectedId;
+            id;
 
         }
       );
@@ -8224,19 +4694,21 @@ input[type="file"] {
     一般聊天訊息刪除
     維持原本功能。
     
-    注意：
-    這裡只處理 messages。
     SOS 完全不會走到這裡。
   */
 
   async function doDeleteLocal() {
+
+    var id =
+      selectedId;
+
 
     var m =
       messages.find(
         function (x) {
 
           return x.id ===
-            selectedId;
+            id;
 
         }
       );
