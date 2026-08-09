@@ -2,8 +2,27 @@
 <html lang="zh-TW">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>安全團聚 - 衛星導航</title>
+<meta
+name=“viewport”
+content=“width=device\-width,
+initial\-scale=1\.0,
+maximum\-scale=1\.0,
+user\-scalable=no”
+  <title>安全團聚 - 衛星導航</title>
+🔄 更新測速照相資料
+  <!-- Leaflet 地圖 -->
+
+<link
+  rel="stylesheet"
+  href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+/>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<!-- Supabase -->
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
 <style>
 
 *{
@@ -13,645 +32,2248 @@
 }
 
 body{
-  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+  font-family:
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    Roboto,
+    sans-serif;
+
   background:#f5f5f5;
   color:#111;
+
   min-height:100vh;
-  padding-bottom:30px;
+  padding-bottom:80px;
 }
+
+/* =========================
+   Header
+========================= */
 
 .header{
   background:#06C755;
   color:white;
-  padding:14px 16px;
+
+  height:58px;
+
   display:flex;
   align-items:center;
   justify-content:space-between;
+
+  padding:0 15px;
+
   position:sticky;
   top:0;
-  z-index:100;
+
+  z-index:1000;
 }
 
 .header a{
   color:white;
   text-decoration:none;
-  font-size:16px;
+  font-size:15px;
 }
 
 .header h1{
   font-size:18px;
 }
 
-.content{
-  padding:16px;
-}
+/* =========================
+   GPS 狀態
+========================= */
 
-.card{
+.status-card{
   background:white;
+  margin:12px;
+  padding:14px;
+
   border-radius:16px;
-  padding:16px;
-  margin-bottom:14px;
-  box-shadow:0 2px 8px rgba(0,0,0,.05);
+
+  box-shadow:
+    0 2px 8px rgba(0,0,0,.06);
 }
 
-.status{
+.status-row{
   display:flex;
+  justify-content:space-between;
   align-items:center;
-  gap:10px;
-  margin-bottom:14px;
+
+  margin-bottom:10px;
 }
 
-.status-dot{
-  width:12px;
-  height:12px;
+.status-title{
+  font-size:14px;
+  color:#666;
+}
+
+.status-value{
+  font-size:18px;
+  font-weight:700;
+}
+
+.gps-status{
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+
+  font-size:13px;
+}
+
+.gps-dot{
+  width:9px;
+  height:9px;
+
   border-radius:50%;
+
   background:#aaa;
 }
 
-.status-dot.active{
+.gps-dot.active{
   background:#06C755;
 }
 
-.status-text{
-  font-size:14px;
-}
+/* =========================
+   地圖
+========================= */
 
-.map{
-  width:100%;
-  height:360px;
-  background:#e9e9e9;
-  border-radius:14px;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  text-align:center;
-  color:#666;
+#map{
+  height:52vh;
+  min-height:380px;
+
+  margin:0 12px;
+
+  border-radius:16px;
+
   overflow:hidden;
+
+  box-shadow:
+    0 2px 8px rgba(0,0,0,.08);
+
+  position:relative;
 }
 
-.location-info{
-  margin-top:14px;
-  font-size:14px;
-  line-height:1.8;
+/* =========================
+   控制區
+========================= */
+
+.controls{
+  margin:12px;
 }
 
-button{
+.btn{
+  width:100%;
+
   border:0;
+
   border-radius:12px;
-  padding:13px 16px;
+
+  padding:13px;
+
   font-size:15px;
+
   font-weight:600;
+
+  margin-bottom:9px;
+
   cursor:pointer;
 }
 
 .btn-primary{
   background:#06C755;
   color:white;
-  width:100%;
 }
 
-.btn-danger{
-  background:#ff3b30;
+.btn-dark{
+  background:#222;
   color:white;
 }
 
-.btn-secondary{
-  background:#eee;
+.btn-light{
+  background:white;
   color:#333;
+
+  border:1px solid #ddd;
 }
 
-.button-row{
+/* =========================
+   導航目的地
+========================= */
+
+.destination{
+  background:white;
+
+  padding:14px;
+
+  border-radius:16px;
+
+  margin-bottom:12px;
+
+  box-shadow:
+    0 2px 8px rgba(0,0,0,.05);
+}
+
+.destination-title{
+  font-size:14px;
+  color:#666;
+
+  margin-bottom:9px;
+}
+
+.input-row{
   display:flex;
-  gap:10px;
-  margin-top:12px;
+  gap:8px;
 }
 
-.button-row button{
+.input{
   flex:1;
+
+  border:1px solid #ddd;
+
+  border-radius:10px;
+
+  padding:11px;
+
+  font-size:14px;
+
+  min-width:0;
 }
 
-.section-title{
-  font-size:15px;
-  font-weight:700;
+/* =========================
+   測速照相
+========================= */
+
+.camera-panel{
+  background:white;
+
+  margin-top:12px;
+
+  padding:14px;
+
+  border-radius:16px;
+
+  box-shadow:
+    0 2px 8px rgba(0,0,0,.05);
+}
+
+.camera-header{
+  display:flex;
+
+  justify-content:space-between;
+  align-items:center;
+
   margin-bottom:10px;
 }
 
-.speed-camera{
-  border-left:5px solid #ff3b30;
+.camera-title{
+  font-size:16px;
+  font-weight:700;
 }
 
-.speed-icon{
-  font-size:36px;
-  margin-bottom:8px;
+.camera-count{
+  font-size:12px;
+  color:#777;
 }
 
-.speed-status{
-  font-size:14px;
-  color:#666;
-  line-height:1.7;
+.camera-item{
+  border-top:1px solid #eee;
+
+  padding:12px 0;
 }
+
+.camera-item:first-child{
+  border-top:0;
+}
+
+.camera-distance{
+  font-size:20px;
+  font-weight:800;
+
+  color:#d32f2f;
+}
+
+.camera-info{
+  margin-top:4px;
+
+  font-size:13px;
+  color:#555;
+}
+
+.camera-limit{
+  display:inline-block;
+
+  margin-top:6px;
+
+  padding:4px 8px;
+
+  background:#fff0f0;
+
+  color:#d32f2f;
+
+  border-radius:8px;
+
+  font-size:12px;
+
+  font-weight:700;
+}
+
+/* =========================
+   警告
+========================= */
 
 .warning{
-  background:#fff3cd;
-  color:#856404;
-  border-radius:12px;
-  padding:12px;
-  margin-top:12px;
-  font-size:13px;
-  line-height:1.6;
+  position:fixed;
+
+  left:12px;
+  right:12px;
+
+  bottom:78px;
+
+  background:#d32f2f;
+
+  color:white;
+
+  padding:15px;
+
+  border-radius:15px;
+
+  text-align:center;
+
+  font-weight:700;
+
+  font-size:17px;
+
+  box-shadow:
+    0 5px 20px rgba(0,0,0,.25);
+
+  z-index:3000;
+
+  display:none;
+}
+
+.warning.show{
+  display:block;
+}
+
+/* =========================
+   底部
+========================= */
+
+.bottom-nav{
+  position:fixed;
+
+  bottom:0;
+  left:0;
+  right:0;
+
+  height:68px;
+
+  background:white;
+
+  border-top:1px solid #ddd;
+
+  display:flex;
+
+  justify-content:space-around;
+
+  align-items:center;
+
+  z-index:2000;
+}
+
+.nav-item{
+  text-decoration:none;
+
+  color:#999;
+
+  text-align:center;
+
+  font-size:10px;
+}
+
+.nav-icon{
+  font-size:22px;
+  margin-bottom:2px;
+}
+
+.nav-item.active{
+  color:#06C755;
+}
+
+.small-note{
+  color:#888;
+  font-size:11px;
+  line-height:1.5;
+
+  margin-top:8px;
 }
 
 </style>
+
 </head>
+
 <body>
-  <div class="header">
-  <h1>衛星導航</h1>
-</div>
-<div class="content">
-  <!-- 衛星定位 -->
-  <div class="card">
-<div class="status">
 
-  <div
-    id="gps-dot"
-    class="status-dot">
+<!-- =========================
+     Header
+========================= -->
+
+<div class="header">
+
+  <a href="tools.html">
+    ‹ 返回
+  </a>
+
+  <h1>
+    🛰️ 衛星導航
+  </h1>
+
+  <a href="home.html">
+    🏠
+  </a>
+
+</div>
+
+<!-- =========================
+     GPS 狀態
+========================= -->
+
+<div class="status-card">
+
+  <div class="status-row">
+
+```
+<div>
+
+  <div class="status-title">
+    定位狀態
+  </div>
+
+  <div class="gps-status">
+
+    <span
+      id="gps-dot"
+      class="gps-dot"
+    ></span>
+
+    <span id="gps-status">
+      尚未定位
+    </span>
+
+  </div>
+
+</div>
+
+
+<div style="text-align:right">
+
+  <div class="status-title">
+    速度
   </div>
 
   <div
-    id="gps-status"
-    class="status-text">
-    尚未啟動衛星定位
+    id="speed-value"
+    class="status-value"
+  >
+    0 km/h
+  </div>
+
+</div>
+```
+
+  </div>
+
+  <div class="status-row">
+
+```
+<div>
+
+  <div class="status-title">
+    緯度
+  </div>
+
+  <div id="latitude">
+    --
   </div>
 
 </div>
 
 
-<div
-  id="map"
-  class="map">
+<div>
 
-  <div>
+  <div class="status-title">
+    經度
+  </div>
 
-    🛰️<br><br>
-
-    等待 GPS / GNSS 定位
-
+  <div id="longitude">
+    --
   </div>
 
 </div>
 
 
-<div
-  id="location-info"
-  class="location-info">
+<div>
 
-  緯度：尚未取得<br>
+  <div class="status-title">
+    方向
+  </div>
 
-  經度：尚未取得<br>
+  <div id="heading">
+    --
+  </div>
 
-  精度：尚未取得
+</div>
+```
+
+  </div>
 
 </div>
 
+<!-- =========================
+     地圖
+========================= -->
 
-<div class="button-row">
+<div id="map"></div>
 
-  <button
-    id="start-btn"
-    class="btn-primary"
-    onclick="startNavigation()">
+<!-- =========================
+     控制
+========================= -->
 
-    🛰️ 開始定位
+<div class="controls">
+
+<button
+class=“btn btn-primary”
+onclick=“startNavigation()”
+
+
+
+```
+🛰️ 開始衛星定位
+```
 
   </button>
 
-  <button
-    class="btn-secondary"
-    onclick="stopNavigation()">
+<button
+class=“btn btn-dark”
+onclick=“centerOnMyLocation()”
 
-    停止
+
+
+```
+📍 回到我的位置
+```
+
+  </button>
+
+<button
+class=“btn btn-light”
+onclick=“loadSpeedCameras()”
+
+
+
+```
+🔄 更新測速照相資料
+```
 
   </button>
 
 </div>
-      </div>
-  <!-- 測速照相 -->
+
+<!-- =========================
+     目的地
+========================= -->
+
+<div class="controls">
+
+  <div class="destination">
+
+```
+<div class="destination-title">
+  📍 目的地座標
+</div>
+
+<div class="input-row">
+
+  <input
+    id="dest-lat"
+    class="input"
+    type="number"
+    step="any"
+    placeholder="緯度"
+  >
+
+  <input
+    id="dest-lng"
+    class="input"
+    type="number"
+    step="any"
+    placeholder="經度"
+  >
+
+</div>
+
+<br>
+
+<button
+  class="btn btn-primary"
+  onclick="openExternalNavigation()"
+>
+  🚗 開始導航
+</button>
+```
+
+  </div>
+
+</div>
+
+<!-- =========================
+     測速照相
+========================= -->
+
+<div class="controls">
+
   <div
     id="speed-camera"
-    class="card speed-camera">
-<div class="speed-icon">
-  🚨
-</div>
+    class="camera-panel"
+  >
 
-<div class="section-title">
-  測速照相提醒
-</div>
+```
+<div class="camera-header">
 
-<div class="speed-status">
+  <div class="camera-title">
+    🚨 附近測速照相
+  </div>
 
-  開啟後會利用目前 GPS / GNSS
-  位置判斷是否接近測速照相點。
-
-</div>
-
-
-<div class="button-row">
-
-  <button
-    id="camera-btn"
-    class="btn-primary"
-    onclick="toggleSpeedCamera()">
-
-    🚨 開啟提醒
-
-  </button>
+  <div
+    id="camera-count"
+    class="camera-count"
+  >
+    讀取中
+  </div>
 
 </div>
 
-
-<div class="warning">
-
-  ⚠️ 測速照相提醒功能需要合法且可靠的測速照相資料來源。
-  本頁目前先建立導航與提醒架構，避免使用未確認的測速位置資料。
-
-</div>
-      </div>
-  <!-- 導航資訊 -->
-  <div class="card">
-<div class="section-title">
-  導航資訊
+<div
+  id="camera-list"
+>
+  正在取得測速照相資料……
 </div>
 
-<div id="navigation-info">
+<div class="small-note">
+  測速照相資料來源為政府公開資料；提醒功能僅供駕駛輔助，實際速限及交通管制請依現場標誌為準。
+</div>
+```
 
-  目前尚未開始導航。
+  </div>
 
 </div>
-      </div>
+
+<!-- =========================
+     警告
+========================= -->
+
+<div
+  id="warning"
+  class="warning"
+>
+  🚨 前方接近測速照相
 </div>
+
+<!-- =========================
+     Bottom navigation
+========================= -->
+
+<div class="bottom-nav">
+
+<a
+class=“nav-item”
+href=“home.html”
+
+
+
+```
+<div class="nav-icon">🏠</div>
+首頁
+```
+
+  </a>
+
+<a
+class=“nav-item”
+href=“chat.html”
+
+
+
+```
+<div class="nav-icon">💬</div>
+聊天
+```
+
+  </a>
+
+<a
+class=“nav-item”
+href=“contacts.html”
+
+
+
+```
+<div class="nav-icon">👥</div>
+通訊錄
+```
+
+  </a>
+
+<a
+class=“nav-item active”
+href=“tools.html”
+
+
+
+```
+<div class="nav-icon">🧰</div>
+工具
+```
+
+  </a>
+
+<a
+class=“nav-item”
+href=“me.html”
+
+
+
+```
+<div class="nav-icon">👤</div>
+我
+```
+
+  </a>
+
+</div>
+
 <script>
+
+/* =========================================================
+   Supabase 設定
+========================================================= */
+
+/*
+   ⚠️ 請把這兩個值換成你目前安全團聚使用的
+   Supabase URL 與 Publishable/Anon Key。
+*/
+
+const SUPABASE_URL =
+  "你的_SUPABASE_URL";
+
+const SUPABASE_KEY =
+  "你的_SUPABASE_ANON_KEY";
+
+
+const supabaseClient =
+  window.supabase.createClient(
+    SUPABASE_URL,
+    SUPABASE_KEY
+  );
+
+
+/* =========================================================
+   全域變數
+========================================================= */
+
+let map = null;
+
+let userMarker = null;
+
+let accuracyCircle = null;
 
 let watchId = null;
 
 let currentPosition = null;
 
-let speedCameraEnabled = false;
+let currentHeading = null;
+
+let speedCameras = [];
+
+let cameraMarkers = [];
+
+let alertedCameras = new Set();
+
+let lastAlertTime = 0;
 
 
-/* =========================================
-   開始 GPS / GNSS 定位
-========================================= */
+/* =========================================================
+   地圖初始化
+========================================================= */
+
+function initMap(){
+
+  map =
+    L.map("map", {
+      zoomControl:true
+    })
+    .setView(
+      [25.0330,121.5654],
+      13
+    );
+
+
+  L.tileLayer(
+    "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+    {
+      maxZoom:19,
+
+      attribution:
+        '&copy; OpenStreetMap contributors'
+    }
+  ).addTo(map);
+
+
+  loadSpeedCameras();
+
+}
+
+
+/* =========================================================
+   開始 GPS
+========================================================= */
 
 function startNavigation(){
 
-  if(!navigator.geolocation){
+  if(
+    !navigator.geolocation
+  ){
 
-    alert("此裝置不支援定位功能");
+    alert(
+      "此裝置不支援 GPS/GNSS 定位。"
+    );
 
     return;
 
   }
 
 
-  document.getElementById("gps-status")
-    .textContent =
-    "正在取得衛星定位…";
-
-
-  document.getElementById("gps-dot")
-    .classList.remove("active");
-
-
-  if(watchId !== null){
+  if(
+    watchId !== null
+  ){
 
     navigator.geolocation.clearWatch(
       watchId
     );
 
   }
+
+
+  setGpsStatus(
+    "正在取得衛星定位…",
+    false
+  );
 
 
   watchId =
     navigator.geolocation.watchPosition(
 
-      function(position){
+      handlePosition,
 
-        currentPosition =
-          position;
-
-
-        updateLocation(
-          position
-        );
-
-
-        document.getElementById("gps-dot")
-          .classList.add("active");
-
-
-        document.getElementById("gps-status")
-          .textContent =
-          "衛星定位正常";
-
-
-        checkSpeedCamera(
-          position
-        );
-
-      },
-
-
-      function(error){
-
-        document.getElementById("gps-dot")
-          .classList.remove("active");
-
-
-        document.getElementById("gps-status")
-          .textContent =
-          "無法取得定位";
-
-
-        let message =
-          "定位失敗";
-
-
-        if(error.code === 1){
-
-          message =
-            "你拒絕了定位權限";
-
-        }
-
-        if(error.code === 2){
-
-          message =
-            "目前無法取得位置";
-
-        }
-
-        if(error.code === 3){
-
-          message =
-            "定位逾時";
-
-        }
-
-
-        alert(message);
-
-      },
+      handlePositionError,
 
       {
 
         enableHighAccuracy:true,
 
-        timeout:15000,
+        maximumAge:3000,
 
-        maximumAge:3000
+        timeout:15000
 
       }
 
     );
 
+
+  requestDeviceOrientation();
+
 }
 
 
-/* =========================================
-   停止定位
-========================================= */
+/* =========================================================
+   GPS 成功
+========================================================= */
 
-function stopNavigation(){
+function handlePosition(position){
 
-  if(watchId !== null){
+  const coords =
+    position.coords;
 
-    navigator.geolocation.clearWatch(
-      watchId
+
+  const lat =
+    Number(
+      coords.latitude
     );
 
-    watchId = null;
+
+  const lng =
+    Number(
+      coords.longitude
+    );
+
+
+  const accuracy =
+    Number(
+      coords.accuracy || 0
+    );
+
+
+  let speed =
+    Number(
+      coords.speed || 0
+    );
+
+
+  /*
+     GPS speed 是 m/s
+     轉成 km/h
+  */
+
+  if(
+    !Number.isFinite(speed)
+  ){
+
+    speed = 0;
 
   }
 
 
-  document.getElementById("gps-dot")
-    .classList.remove("active");
-
-
-  document.getElementById("gps-status")
-    .textContent =
-    "衛星定位已停止";
-
-
-  document.getElementById("navigation-info")
-    .textContent =
-    "目前尚未開始導航。";
-
-}
-
-
-/* =========================================
-   更新位置
-========================================= */
-
-function updateLocation(position){
-
-  const lat =
-    position.coords.latitude;
-
-  const lng =
-    position.coords.longitude;
-
-  const accuracy =
-    position.coords.accuracy;
-
-
-  document.getElementById("location-info")
-    .innerHTML =
-
-      "緯度：" +
-      lat.toFixed(6) +
-
-      "<br>" +
-
-      "經度：" +
-      lng.toFixed(6) +
-
-      "<br>" +
-
-      "定位精度：約 " +
-      Math.round(accuracy) +
-      " 公尺";
-
-
-  document.getElementById("map")
-    .innerHTML =
-
-      "<div>" +
-
-      "📍<br><br>" +
-
-      "目前位置<br>" +
-
-      lat.toFixed(6) +
-      "<br>" +
-
-      lng.toFixed(6) +
-
-      "</div>";
-
-
-  document.getElementById("navigation-info")
-    .innerHTML =
-
-      "📍 GPS / GNSS 已取得目前位置。<br>" +
-
-      "精度：約 " +
-      Math.round(accuracy) +
-      " 公尺";
-
-}
-
-
-/* =========================================
-   測速照相開關
-========================================= */
-
-function toggleSpeedCamera(){
-
-  speedCameraEnabled =
-    !speedCameraEnabled;
-
-
-  const button =
-    document.getElementById(
-      "camera-btn"
+  const speedKmh =
+    Math.max(
+      0,
+      speed * 3.6
     );
 
 
-  if(speedCameraEnabled){
+  currentPosition = {
 
-    button.textContent =
-      "🚨 已開啟提醒";
+    lat:lat,
+
+    lng:lng,
+
+    accuracy:accuracy,
+
+    speed:speedKmh
+
+  };
 
 
-    button.className =
-      "btn-danger";
+  document.getElementById(
+    "latitude"
+  ).textContent =
+    lat.toFixed(6);
 
 
-    if(
-      currentPosition
-    ){
+  document.getElementById(
+    "longitude"
+  ).textContent =
+    lng.toFixed(6);
 
-      checkSpeedCamera(
-        currentPosition
-      );
 
-    }
+  document.getElementById(
+    "speed-value"
+  ).textContent =
+    Math.round(speedKmh) +
+    " km/h";
+
+
+  setGpsStatus(
+    "GPS 定位正常",
+    true
+  );
+
+
+  updateUserMarker(
+    lat,
+    lng,
+    accuracy
+  );
+
+
+  checkNearbySpeedCameras();
+
+}
+
+
+/* =========================================================
+   GPS 錯誤
+========================================================= */
+
+function handlePositionError(error){
+
+  let message =
+    "GPS 定位失敗";
+
+
+  if(
+    error.code === 1
+  ){
+
+    message =
+      "請允許瀏覽器使用定位功能";
+
+  }
+
+
+  if(
+    error.code === 2
+  ){
+
+    message =
+      "目前無法取得定位";
+
+  }
+
+
+  if(
+    error.code === 3
+  ){
+
+    message =
+      "定位逾時，請稍候再試";
+
+  }
+
+
+  setGpsStatus(
+    message,
+    false
+  );
+
+}
+
+
+/* =========================================================
+   GPS 狀態
+========================================================= */
+
+function setGpsStatus(
+  text,
+  active
+){
+
+  document.getElementById(
+    "gps-status"
+  ).textContent =
+    text;
+
+
+  const dot =
+    document.getElementById(
+      "gps-dot"
+    );
+
+
+  if(active){
+
+    dot.classList.add(
+      "active"
+    );
 
   }else{
 
-    button.textContent =
-      "🚨 開啟提醒";
-
-
-    button.className =
-      "btn-primary";
+    dot.classList.remove(
+      "active"
+    );
 
   }
 
 }
 
 
-/* =========================================
-   測速照相判斷
-========================================= */
+/* =========================================================
+   使用者位置 Marker
+========================================================= */
 
-function checkSpeedCamera(position){
+function updateUserMarker(
+  lat,
+  lng,
+  accuracy
+){
 
-  if(!speedCameraEnabled){
+  const position =
+    [lat,lng];
+
+
+  if(
+    !userMarker
+  ){
+
+    userMarker =
+      L.marker(
+        position,
+        {
+          title:
+            "我的位置"
+        }
+      ).addTo(map);
+
+
+    userMarker.bindPopup(
+      "📍 我的位置"
+    );
+
+  }else{
+
+    userMarker.setLatLng(
+      position
+    );
+
+  }
+
+
+  if(
+    !accuracyCircle
+  ){
+
+    accuracyCircle =
+      L.circle(
+        position,
+        {
+          radius:
+            accuracy,
+
+          color:
+            "#06C755",
+
+          fillOpacity:
+            0.12
+        }
+      ).addTo(map);
+
+  }else{
+
+    accuracyCircle.setLatLng(
+      position
+    );
+
+    accuracyCircle.setRadius(
+      accuracy
+    );
+
+  }
+
+
+  if(
+    !map._userCentered
+  ){
+
+    map.setView(
+      position,
+      16
+    );
+
+    map._userCentered =
+      true;
+
+  }
+
+}
+
+
+/* =========================================================
+   回到我的位置
+========================================================= */
+
+function centerOnMyLocation(){
+
+  if(
+    !currentPosition
+  ){
+
+    alert(
+      "尚未取得 GPS 定位。"
+    );
+
+    startNavigation();
 
     return;
 
   }
 
 
-  /*
-     測速照相資料庫之後放這裡。
+  map.setView(
 
-     格式：
+    [
+      currentPosition.lat,
+      currentPosition.lng
+    ],
 
-     {
-       lat: 25.033964,
-       lng: 121.564468,
-       name: "測速照相",
-       speed: 50
-     }
+    17
 
-  */
+  );
 
-  const speedCameras = [];
+}
 
 
-  /*
-     目前沒有載入測速照相資料，
-     因此不進行錯誤提醒。
-  */
+/* =========================================================
+   測速照相資料
+========================================================= */
+
+async function loadSpeedCameras(){
+
+  const list =
+    document.getElementById(
+      "camera-list"
+    );
+
+
+  list.innerHTML =
+    "正在從安全團聚資料庫讀取測速照相資料……";
+
+
+  try{
+
+    const {
+      data,
+      error
+    } =
+      await supabaseClient
+        .from("speed_cameras")
+        .select(
+          "*"
+        );
+
+
+    if(error){
+
+      throw error;
+
+    }
+
+
+    speedCameras =
+      Array.isArray(data)
+        ? data
+        : [];
+
+
+    renderSpeedCameras();
+
+    renderCameraMarkers();
+
+
+    document.getElementById(
+      "camera-count"
+    ).textContent =
+      speedCameras.length +
+      " 個資料";
+
+
+  }catch(error){
+
+    console.error(
+      "測速照相資料錯誤:",
+      error
+    );
+
+
+    list.innerHTML =
+      `
+      <div style="
+        color:#c00;
+        line-height:1.6;
+      ">
+        測速照相資料讀取失敗。<br>
+        請確認 Supabase 的
+        <b>speed_cameras</b>
+        資料表與 RLS 設定。
+      </div>
+      `;
+
+
+    document.getElementById(
+      "camera-count"
+    ).textContent =
+      "讀取失敗";
+
+  }
+
+}
+
+
+/* =========================================================
+   取得資料欄位
+========================================================= */
+
+function getCameraLatitude(camera){
+
+  return Number(
+    camera.latitude ??
+    camera.lat ??
+    camera["座標緯度"]
+  );
+
+}
+
+
+function getCameraLongitude(camera){
+
+  return Number(
+    camera.longitude ??
+    camera.lng ??
+    camera.lon ??
+    camera["座標經度"]
+  );
+
+}
+
+
+function getCameraLimit(camera){
+
+  return (
+    camera.speed_limit ??
+    camera.limit ??
+    camera["速限"] ??
+    ""
+  );
+
+}
+
+
+function getCameraAddress(camera){
+
+  return (
+    camera.address ??
+    camera.location ??
+    camera.Address ??
+    camera["設置地點"] ??
+    "測速執法地點"
+  );
+
+}
+
+
+function getCameraDirection(camera){
+
+  return (
+    camera.direction ??
+    camera.direct ??
+    camera["拍攝方向"] ??
+    ""
+  );
+
+}
+
+
+/* =========================================================
+   顯示附近測速照相
+========================================================= */
+
+function renderSpeedCameras(){
+
+  const list =
+    document.getElementById(
+      "camera-list"
+    );
+
 
   if(
-    speedCameras.length === 0
+    !speedCameras.length
+  ){
+
+    list.innerHTML =
+      "目前沒有測速照相資料。";
+
+    return;
+
+  }
+
+
+  let cameras =
+    speedCameras.slice();
+
+
+  if(
+    currentPosition
+  ){
+
+    cameras =
+      cameras
+        .map(function(camera){
+
+          const lat =
+            getCameraLatitude(
+              camera
+            );
+
+          const lng =
+            getCameraLongitude(
+              camera
+            );
+
+
+          if(
+            !Number.isFinite(lat) ||
+            !Number.isFinite(lng)
+          ){
+
+            return null;
+
+          }
+
+
+          return {
+
+            camera:camera,
+
+            distance:
+              distanceMeters(
+                currentPosition.lat,
+                currentPosition.lng,
+                lat,
+                lng
+              )
+
+          };
+
+        })
+        .filter(Boolean)
+        .sort(function(a,b){
+
+          return a.distance -
+            b.distance;
+
+        })
+        .slice(0,5);
+
+  }else{
+
+    cameras =
+      cameras
+        .slice(0,5)
+        .map(function(camera){
+
+          return {
+            camera:camera,
+            distance:null
+          };
+
+        });
+
+  }
+
+
+  list.innerHTML = "";
+
+
+  cameras.forEach(function(item){
+
+    const camera =
+      item.camera;
+
+
+    const distance =
+      item.distance;
+
+
+    const limit =
+      getCameraLimit(
+        camera
+      );
+
+
+    const address =
+      getCameraAddress(
+        camera
+      );
+
+
+    const direction =
+      getCameraDirection(
+        camera
+      );
+
+
+    const div =
+      document.createElement(
+        "div"
+      );
+
+
+    div.className =
+      "camera-item";
+
+
+    div.innerHTML =
+
+      (
+        distance !== null
+          ?
+            '<div class="camera-distance">' +
+            formatDistance(distance) +
+            '</div>'
+          :
+            '<div class="camera-distance">' +
+            '測速照相' +
+            '</div>'
+      ) +
+
+      '<div class="camera-info">' +
+      escapeHtml(address) +
+      '</div>' +
+
+      (
+        limit !== ""
+          ?
+            '<span class="camera-limit">' +
+            '速限 ' +
+            escapeHtml(String(limit)) +
+            ' km/h' +
+            '</span>'
+          :
+            ''
+      ) +
+
+      (
+        direction
+          ?
+            '<div class="camera-info">' +
+            '方向：' +
+            escapeHtml(String(direction)) +
+            '</div>'
+          :
+            ''
+      );
+
+
+    list.appendChild(
+      div
+    );
+
+  });
+
+}
+
+
+/* =========================================================
+   測速照相 Marker
+========================================================= */
+
+function renderCameraMarkers(){
+
+  cameraMarkers.forEach(
+    function(marker){
+
+      try{
+
+        map.removeLayer(
+          marker
+        );
+
+      }catch(e){}
+
+    }
+  );
+
+
+  cameraMarkers = [];
+
+
+  speedCameras.forEach(
+    function(camera){
+
+      const lat =
+        getCameraLatitude(
+          camera
+        );
+
+
+      const lng =
+        getCameraLongitude(
+          camera
+        );
+
+
+      if(
+        !Number.isFinite(lat) ||
+        !Number.isFinite(lng)
+      ){
+
+        return;
+
+      }
+
+
+      const limit =
+        getCameraLimit(
+          camera
+        );
+
+
+      const address =
+        getCameraAddress(
+          camera
+        );
+
+
+      const marker =
+        L.circleMarker(
+
+          [
+            lat,
+            lng
+          ],
+
+          {
+
+            radius:7,
+
+            color:"#d32f2f",
+
+            fillColor:"#ff5252",
+
+            fillOpacity:.85
+
+          }
+
+        ).addTo(map);
+
+
+      marker.bindPopup(
+
+        "<b>🚨 測速照相</b><br>" +
+
+        escapeHtml(
+          String(address)
+        ) +
+
+        (
+          limit !== ""
+            ?
+              "<br><b>速限：" +
+              escapeHtml(
+                String(limit)
+              ) +
+              " km/h</b>"
+            :
+              ""
+        )
+
+      );
+
+
+      cameraMarkers.push(
+        marker
+      );
+
+    }
+  );
+
+}
+
+
+/* =========================================================
+   接近測速照相
+========================================================= */
+
+function checkNearbySpeedCameras(){
+
+  if(
+    !currentPosition ||
+    !speedCameras.length
   ){
 
     return;
 
   }
 
-}
+
+  let nearest =
+    null;
 
 
-/* =========================================
-   頁面載入
-========================================= */
+  speedCameras.forEach(
+    function(camera){
 
-window.addEventListener(
-  "load",
-  function(){
+      const lat =
+        getCameraLatitude(
+          camera
+        );
 
-    const hash =
-      window.location.hash;
 
+      const lng =
+        getCameraLongitude(
+          camera
+        );
+
+
+      if(
+        !Number.isFinite(lat) ||
+        !Number.isFinite(lng)
+      ){
+
+        return;
+
+      }
+
+
+      const distance =
+        distanceMeters(
+          currentPosition.lat,
+          currentPosition.lng,
+          lat,
+          lng
+        );
+
+
+      if(
+        !nearest ||
+        distance <
+          nearest.distance
+      ){
+
+        nearest = {
+
+          camera:camera,
+
+          distance:distance
+
+        };
+
+      }
+
+    }
+  );
+
+
+  if(
+    !nearest
+  ){
+
+    return;
+
+  }
+
+
+  renderSpeedCameras();
+
+
+  /*
+     500 公尺內提醒
+  */
+
+  if(
+    nearest.distance <= 500 &&
+    nearest.distance >= 0
+  ){
+
+    const camera =
+      nearest.camera;
+
+
+    const cameraId =
+      String(
+        camera.id ??
+        (
+          getCameraLatitude(camera) +
+          "_" +
+          getCameraLongitude(camera)
+        )
+      );
+
+
+    const now =
+      Date.now();
+
+
+    /*
+       同一個測速點至少間隔 60 秒
+    */
 
     if(
-      hash === "#speed-camera"
+      !alertedCameras.has(
+        cameraId
+      ) ||
+      now - lastAlertTime >
+        60000
     ){
 
-      setTimeout(
-        function(){
+      alertedCameras.add(
+        cameraId
+      );
 
-          const target =
-            document.getElementById(
-              "speed-camera"
-            );
 
-          if(target){
+      lastAlertTime =
+        now;
 
-            target.scrollIntoView({
-              behavior:"smooth"
-            });
 
-          }
+      const limit =
+        getCameraLimit(
+          camera
+        );
 
-        },
-        300
+
+      const message =
+        "前方 " +
+        formatDistance(
+          nearest.distance
+        ) +
+        " 有測速照相" +
+        (
+          limit
+            ?
+              "，速限 " +
+              limit +
+              " 公里"
+            :
+              ""
+        );
+
+
+      showWarning(
+        message
+      );
+
+
+      speak(
+        message
       );
 
     }
 
   }
+
+}
+
+
+/* =========================================================
+   警告
+========================================================= */
+
+function showWarning(
+  message
+){
+
+  const warning =
+    document.getElementById(
+      "warning"
+    );
+
+
+  warning.textContent =
+    "🚨 " + message;
+
+
+  warning.classList.add(
+    "show"
+  );
+
+
+  setTimeout(
+    function(){
+
+      warning.classList.remove(
+        "show"
+      );
+
+    },
+
+    7000
+
+  );
+
+}
+
+
+/* =========================================================
+   語音
+========================================================= */
+
+function speak(
+  text
+){
+
+  if(
+    !("speechSynthesis" in window)
+  ){
+
+    return;
+
+  }
+
+
+  try{
+
+    window.speechSynthesis.cancel();
+
+
+    const utterance =
+      new SpeechSynthesisUtterance(
+        text
+      );
+
+
+    utterance.lang =
+      "zh-TW";
+
+
+    utterance.rate =
+      1;
+
+
+    window.speechSynthesis.speak(
+      utterance
+    );
+
+  }catch(e){
+
+    console.warn(
+      "語音提醒失敗",
+      e
+    );
+
+  }
+
+}
+
+
+/* =========================================================
+   距離計算
+========================================================= */
+
+function distanceMeters(
+  lat1,
+  lon1,
+  lat2,
+  lon2
+){
+
+  const R =
+    6371000;
+
+
+  const p1 =
+    lat1 *
+    Math.PI /
+    180;
+
+
+  const p2 =
+    lat2 *
+    Math.PI /
+    180;
+
+
+  const dp =
+    (
+      lat2 -
+      lat1
+    ) *
+    Math.PI /
+    180;
+
+
+  const dl =
+    (
+      lon2 -
+      lon1
+    ) *
+    Math.PI /
+    180;
+
+
+  const a =
+    Math.sin(dp / 2) *
+    Math.sin(dp / 2) +
+
+    Math.cos(p1) *
+    Math.cos(p2) *
+
+    Math.sin(dl / 2) *
+    Math.sin(dl / 2);
+
+
+  const c =
+    2 *
+    Math.atan2(
+      Math.sqrt(a),
+      Math.sqrt(1-a)
+    );
+
+
+  return R * c;
+
+}
+
+
+/* =========================================================
+   距離顯示
+========================================================= */
+
+function formatDistance(
+  meters
+){
+
+  if(
+    meters < 1000
+  ){
+
+    return (
+      Math.round(meters) +
+      " 公尺"
+    );
+
+  }
+
+
+  return (
+    (meters / 1000)
+      .toFixed(1) +
+    " 公里"
+  );
+
+}
+
+
+/* =========================================================
+   外部導航
+========================================================= */
+
+function openExternalNavigation(){
+
+  const lat =
+    Number(
+      document.getElementById(
+        "dest-lat"
+      ).value
+    );
+
+
+  const lng =
+    Number(
+      document.getElementById(
+        "dest-lng"
+      ).value
+    );
+
+
+  if(
+    !Number.isFinite(lat) ||
+    !Number.isFinite(lng)
+  ){
+
+    alert(
+      "請輸入正確的目的地緯度與經度。"
+    );
+
+    return;
+
+  }
+
+
+  /*
+     使用 Google Maps 導航 URL。
+     手機如果安裝 Google Maps，
+     通常會交由 App 開啟。
+  */
+
+  const url =
+    "https://www.google.com/maps/dir/?api=1" +
+    "&destination=" +
+    encodeURIComponent(
+      lat + "," + lng
+    );
+
+
+  window.open(
+    url,
+    "_blank"
+  );
+
+}
+
+
+/* =========================================================
+   裝置方向
+========================================================= */
+
+function requestDeviceOrientation(){
+
+  if(
+    typeof DeviceOrientationEvent !==
+    "undefined" &&
+
+    typeof DeviceOrientationEvent
+      .requestPermission ===
+      "function"
+  ){
+
+    DeviceOrientationEvent
+      .requestPermission()
+      .then(function(permission){
+
+        if(
+          permission === "granted"
+        ){
+
+          window.addEventListener(
+            "deviceorientation",
+            handleOrientation,
+            true
+          );
+
+        }
+
+      })
+      .catch(function(){
+
+        console.warn(
+          "無法取得裝置方向權限"
+        );
+
+      });
+
+  }else{
+
+    window.addEventListener(
+      "deviceorientation",
+      handleOrientation,
+      true
+    );
+
+  }
+
+}
+
+
+/* =========================================================
+   方向
+========================================================= */
+
+function handleOrientation(event){
+
+  let heading =
+    event.webkitCompassHeading;
+
+
+  if(
+    typeof heading !==
+    "number"
+  ){
+
+    heading =
+      event.alpha !== null
+        ?
+          360 -
+          event.alpha
+        :
+          null;
+
+  }
+
+
+  if(
+    heading === null ||
+    !Number.isFinite(heading)
+  ){
+
+    return;
+
+  }
+
+
+  currentHeading =
+    heading;
+
+
+  document.getElementById(
+    "heading"
+  ).textContent =
+    headingToText(
+      heading
+    ) +
+    " " +
+    Math.round(
+      heading
+    ) +
+    "°";
+
+}
+
+
+/* =========================================================
+   方位文字
+========================================================= */
+
+function headingToText(
+  heading
+){
+
+  const directions = [
+    "北",
+    "東北",
+    "東",
+    "東南",
+    "南",
+    "西南",
+    "西",
+    "西北"
+  ];
+
+
+  const index =
+    Math.round(
+      heading / 45
+    ) % 8;
+
+
+  return directions[index];
+
+}
+
+
+/* =========================================================
+   HTML Escape
+========================================================= */
+
+function escapeHtml(
+  value
+){
+
+  return String(value)
+    .replace(
+      /&/g,
+      "&amp;"
+    )
+    .replace(
+      /</g,
+      "&lt;"
+    )
+    .replace(
+      />/g,
+      "&gt;"
+    )
+    .replace(
+      /"/g,
+      "&quot;"
+    )
+    .replace(
+      /'/g,
+      "&#039;"
+    );
+
+}
+
+
+/* =========================================================
+   啟動
+========================================================= */
+
+document.addEventListener(
+  "DOMContentLoaded",
+  function(){
+
+    initMap();
+
+  }
 );
 
 </script>
+
 </body>
 </html>
-
-    
