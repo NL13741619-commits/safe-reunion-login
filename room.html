@@ -89,7 +89,46 @@ body {
   flex-direction: column;
   gap: 8px;
 }
+/* =========================
+   MESSAGE AVATAR
+========================= */
 
+.msg-row {
+  display: flex;
+  align-items: flex-end;
+  gap: 7px;
+  width: 100%;
+}
+
+.msg-row.me {
+  justify-content: flex-end;
+}
+
+.msg-row.them {
+  justify-content: flex-start;
+}
+
+.msg-avatar {
+  width: 34px;
+  height: 34px;
+  min-width: 34px;
+  border-radius: 50%;
+  object-fit: cover;
+  background: #ddd;
+  border: 1px solid #ddd;
+}
+
+.msg-avatar-default {
+  width: 34px;
+  height: 34px;
+  min-width: 34px;
+  border-radius: 50%;
+  background: #ccc;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+}
 .msg {
   max-width: 78%;
   padding: 10px 12px;
@@ -709,7 +748,7 @@ input[type="file"] {
   var isOwner = false;
 
   var groupMembers = [];
-
+  var profileCache = {};
 
   /* =====================================================
      URL
