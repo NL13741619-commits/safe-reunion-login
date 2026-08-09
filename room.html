@@ -727,73 +727,43 @@ var roomId =
   params.get('id') || roomName;
 
 
-/* =====================================================
-   從 Supabase 讀取最新聊天室名稱
-===================================================== */
+var isGroup =
+  String(roomId).indexOf('dm_') !== 0;
 
-async function loadRoomName() {
+
+document.getElementById('roomName').textContent =
+  roomName;
+
+
+  async function loadRoomName() {
 
   if (!supabase || !roomId || !isGroup) {
     return;
   }
 
-  try {
+  var result =
+    await supabase
+      .from('chat_groups')
+      .select('name')
+      .eq('id', roomId)
+      .maybeSingle();
 
-    var result =
-      await supabase
-        .from('chat_groups')
-        .select('name')
-        .eq('id', roomId)
-        .maybeSingle();
+  if (
+    result.data &&
+    result.data.name
+  ) {
 
-    if (
-      result.error ||
-      !result.data
-    ) {
-      console.log(
-        '聊天室名稱讀取失敗：',
-        result.error
-          ? result.error.message
-          : '找不到聊天室'
-      );
+    roomName =
+      result.data.name.trim();
 
-      return;
-    }
-
-    if (
-      result.data.name &&
-      result.data.name.trim()
-    ) {
-
-      roomName =
-        result.data.name.trim();
-
-      document.getElementById(
-        'roomName'
-      ).textContent =
-        roomName;
-
-    }
-
-  } catch (e) {
-
-    console.log(
-      '聊天室名稱讀取錯誤：',
-      e
-    );
+    document.getElementById(
+      'roomName'
+    ).textContent =
+      roomName;
 
   }
 
 }
-
-
-  var isGroup =
-    String(roomId).indexOf('dm_') !== 0;
-
-
-  document.getElementById('roomName').textContent =
-    roomName;
-
 
   /* =====================================================
      SOS 本機刪除
@@ -2774,8 +2744,10 @@ async function loadRoomName() {
 
 
       setStatus(
-        '已登入，載入訊息…'
-      );
+  '已登入，載入訊息…'
+);
+
+await loadRoomName();
 
 
       /* =========================
