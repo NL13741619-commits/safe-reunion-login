@@ -1,216 +1,4660 @@
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>安全團聚 - 我</title>
-  <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-      background: #f5f5f5;
-      min-height: 100vh;
-      padding-bottom: 70px;
-      color: #111;
-    }
-    .profile-header {
-      background: white;
-      padding: 24px 20px;
-      display: flex;
-      align-items: center;
-      gap: 16px;
-    }
-    .avatar {
-      width: 64px; height: 64px;
-      border-radius: 8px;
-      background: #e0e0e0;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 28px;
-      color: #999;
-      overflow: hidden;
-    }
-    .avatar img { width: 100%; height: 100%; object-fit: cover; }
-    .profile-info { flex: 1; }
-    .profile-name { font-size: 20px; font-weight: 600; margin-bottom: 4px; }
-    .profile-id { font-size: 13px; color: #888; }
-    .profile-arrow { color: #ccc; font-size: 18px; }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>安全團聚 - 我</title>
 
-    .menu-group {
-      background: white;
-      margin-top: 10px;
-    }
-    .menu-item {
-      display: flex;
-      align-items: center;
-      padding: 14px 16px;
-      border-bottom: 1px solid #f0f0f0;
-      gap: 12px;
-    }
-    .menu-item:last-child { border-bottom: none; }
-    .menu-icon {
-      width: 28px; height: 28px;
-      border-radius: 6px;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 16px;
-    }
-    .menu-text { flex: 1; font-size: 16px; }
-    .menu-arrow { color: #ccc; font-size: 16px; }
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css">
 
-    .bottom-nav {
-      position: fixed;
-      bottom: 0; left: 0; right: 0;
-      background: white;
-      border-top: 1px solid #eaeaea;
-      display: flex;
-      justify-content: space-around;
-      padding: 8px 0 18px;
-      z-index: 100;
-    }
-    .nav-item {
-      text-align: center;
-      color: #999;
-      font-size: 10px;
-      width: 60px;
-      text-decoration: none;
-    }
-    .nav-item.active { color: #06C755; }
-    .nav-icon { font-size: 22px; margin-bottom: 2px; }
-  </style>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+
+body{
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+  background:#f5f5f5;
+  color:#111;
+  min-height:100vh;
+  padding-bottom:70px;
+}
+
+button,input,select,textarea{font:inherit}
+
+button{cursor:pointer}
+
+.profile-header{
+  background:white;
+  padding:24px 20px;
+  display:flex;
+  align-items:center;
+  gap:16px;
+  cursor:pointer;
+}
+
+.avatar{
+  width:64px;
+  height:64px;
+  border-radius:8px;
+  background:#e0e0e0;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:28px;
+  color:#999;
+  overflow:hidden;
+}
+
+.avatar img{
+  width:100%;
+  height:100%;
+  object-fit:cover;
+}
+
+.profile-info{flex:1}
+
+.profile-name{
+  font-size:20px;
+  font-weight:600;
+  margin-bottom:4px;
+}
+
+.profile-id{
+  font-size:13px;
+  color:#888;
+}
+
+.profile-arrow{
+  color:#ccc;
+  font-size:22px;
+}
+
+.menu-group{
+  background:white;
+  margin-top:10px;
+}
+
+.menu-item{
+  display:flex;
+  align-items:center;
+  padding:14px 16px;
+  border-bottom:1px solid #f0f0f0;
+  gap:12px;
+  cursor:pointer;
+}
+
+.menu-item:last-child{border-bottom:none}
+
+.menu-icon{
+  width:34px;
+  height:34px;
+  border-radius:8px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:18px;
+}
+
+.menu-text{
+  flex:1;
+  font-size:16px;
+}
+
+.menu-arrow{
+  color:#ccc;
+  font-size:18px;
+}
+
+.section{
+  display:none;
+  padding-bottom:20px;
+}
+
+.section.active{
+  display:block;
+}
+
+.page-header{
+  background:white;
+  padding:16px;
+  display:flex;
+  align-items:center;
+  gap:12px;
+  position:sticky;
+  top:0;
+  z-index:20;
+  border-bottom:1px solid #eee;
+}
+
+.back-btn{
+  border:none;
+  background:none;
+  font-size:24px;
+  color:#333;
+}
+
+.page-title{
+  font-size:19px;
+  font-weight:700;
+}
+
+.card{
+  background:white;
+  margin:10px;
+  padding:16px;
+  border-radius:12px;
+}
+
+.card-title{
+  font-size:17px;
+  font-weight:700;
+  margin-bottom:12px;
+}
+
+.grid{
+  display:grid;
+  grid-template-columns:repeat(2,1fr);
+  gap:10px;
+}
+
+.stat{
+  background:#f8f8f8;
+  border-radius:10px;
+  padding:14px;
+  text-align:center;
+}
+
+.stat-value{
+  font-size:24px;
+  font-weight:700;
+  margin-bottom:4px;
+}
+
+.stat-label{
+  color:#777;
+  font-size:13px;
+}
+
+.btn{
+  border:none;
+  border-radius:9px;
+  padding:10px 14px;
+  font-weight:600;
+}
+
+.btn-primary{
+  background:#06C755;
+  color:white;
+}
+
+.btn-outline{
+  background:white;
+  border:1px solid #ddd;
+  color:#333;
+}
+
+.btn-danger{
+  background:#ffebee;
+  color:#d32f2f;
+}
+
+.btn-warning{
+  background:#fff3cd;
+  color:#8a6100;
+}
+
+.btn-block{
+  width:100%;
+}
+
+.btn-sm{
+  padding:7px 10px;
+  font-size:13px;
+}
+
+.flex{
+  display:flex;
+}
+
+.justify-between{
+  justify-content:space-between;
+}
+
+.align-center{
+  align-items:center;
+}
+
+.gap-2{
+  gap:8px;
+}
+
+.mt-2{
+  margin-top:8px;
+}
+
+.text-muted{
+  color:#777;
+}
+
+.empty-state{
+  text-align:center;
+  padding:25px;
+  color:#888;
+}
+
+.stock-item,
+.meeting-point-card,
+.radio-card,
+.check-item{
+  background:#fafafa;
+  border:1px solid #eee;
+  border-radius:10px;
+  padding:12px;
+  margin-bottom:8px;
+}
+
+.stock-item{
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
+
+.stock-info{
+  flex:1;
+}
+
+.stock-name{
+  font-weight:600;
+}
+
+.stock-meta{
+  color:#888;
+  font-size:12px;
+  margin-top:3px;
+}
+
+.stock-qty{
+  font-weight:700;
+}
+
+.check-item{
+  display:flex;
+  align-items:center;
+  gap:12px;
+}
+
+.check-item input{
+  width:20px;
+  height:20px;
+}
+
+.check-item.checked{
+  opacity:.65;
+}
+
+.check-item.checked .check-label{
+  text-decoration:line-through;
+}
+
+.check-label{
+  font-weight:600;
+}
+
+.check-category{
+  color:#888;
+  font-size:12px;
+}
+
+.form-group{
+  margin-bottom:12px;
+}
+
+.form-group label{
+  display:block;
+  margin-bottom:5px;
+  font-size:14px;
+  font-weight:600;
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea{
+  width:100%;
+  border:1px solid #ddd;
+  border-radius:8px;
+  padding:10px;
+  background:white;
+}
+
+.form-group textarea{
+  min-height:80px;
+  resize:vertical;
+}
+
+.form-row{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:10px;
+}
+
+.modal{
+  display:none;
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.45);
+  z-index:10000;
+  align-items:center;
+  justify-content:center;
+  padding:15px;
+}
+
+.modal.show{
+  display:flex;
+}
+
+.modal-box{
+  background:white;
+  width:100%;
+  max-width:500px;
+  max-height:90vh;
+  overflow:auto;
+  border-radius:14px;
+  padding:18px;
+}
+
+.modal-header{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  margin-bottom:15px;
+}
+
+.modal-title{
+  font-size:18px;
+  font-weight:700;
+}
+
+.close-btn{
+  border:none;
+  background:none;
+  font-size:25px;
+  color:#888;
+}
+
+.modal-actions{
+  display:flex;
+  gap:8px;
+  margin-top:15px;
+}
+
+.modal-actions button{
+  flex:1;
+}
+
+#map{
+  height:300px;
+  border-radius:12px;
+  overflow:hidden;
+}
+
+.weather-row{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+}
+
+.weather-date{
+  font-weight:600;
+}
+
+.weather-temp{
+  font-weight:700;
+}
+
+.status-safe{
+  color:#16a34a;
+}
+
+.status-moving{
+  color:#2563eb;
+}
+
+.status-help{
+  color:#dc2626;
+}
+
+.status-unknown{
+  color:#777;
+}
+
+.switch-row{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:12px 0;
+  border-bottom:1px solid #eee;
+}
+
+.switch{
+  width:48px;
+  height:26px;
+  position:relative;
+}
+
+.switch input{
+  display:none;
+}
+
+.slider{
+  position:absolute;
+  inset:0;
+  background:#ccc;
+  border-radius:30px;
+}
+
+.slider:before{
+  content:"";
+  position:absolute;
+  width:20px;
+  height:20px;
+  left:3px;
+  top:3px;
+  background:white;
+  border-radius:50%;
+  transition:.2s;
+}
+
+.switch input:checked + .slider{
+  background:#06C755;
+}
+
+.switch input:checked + .slider:before{
+  transform:translateX(22px);
+}
+
+#toast{
+  position:fixed;
+  left:50%;
+  bottom:80px;
+  transform:translateX(-50%) translateY(20px);
+  background:rgba(0,0,0,.82);
+  color:white;
+  padding:10px 16px;
+  border-radius:20px;
+  font-size:14px;
+  opacity:0;
+  pointer-events:none;
+  transition:.25s;
+  z-index:20000;
+}
+
+#toast.show{
+  opacity:1;
+  transform:translateX(-50%) translateY(0);
+}
+
+.bottom-nav{
+  position:fixed;
+  left:0;
+  right:0;
+  bottom:0;
+  height:58px;
+  background:#fff;
+  border-top:1px solid #e8e8e8;
+  display:flex;
+  z-index:9999;
+}
+
+.bottom-nav a{
+  flex:1;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  text-decoration:none;
+  font-size:11px;
+  color:#888;
+}
+
+.bottom-nav a.active{
+  color:#06C755;
+  font-weight:600;
+}
+
+.nav-icon{
+  font-size:20px;
+  line-height:22px;
+}
+
+#print-card{
+  display:none;
+}
+
+@media print{
+  body>*{
+    display:none!important;
+  }
+
+  #print-card{
+    display:block!important;
+    padding:25px;
+  }
+}
+
+.danger-box{
+  background:#fff1f2;
+  border:1px solid #fecdd3;
+  color:#9f1239;
+  border-radius:10px;
+  padding:12px;
+}
+
+.success-box{
+  background:#f0fdf4;
+  border:1px solid #bbf7d0;
+  color:#166534;
+  border-radius:10px;
+  padding:12px;
+}
+</style>
 </head>
+
 <body>
-  <div class="profile-header" onclick="alert('之後可編輯個人資料與上傳頭像')">
-    <div class="avatar">👤</div>
+
+<!-- ================= 主頁 ================= -->
+
+<div id="home-section" class="section active">
+
+  <div class="profile-header" onclick="openProfile()">
+    <div class="avatar" id="profile-avatar">👤</div>
+
     <div class="profile-info">
-      <div class="profile-name">使用者</div>
-      <div class="profile-id">點擊設定暱稱與頭像</div>
+      <div class="profile-name" id="profile-name">使用者</div>
+      <div class="profile-id" id="profile-id">點擊設定暱稱與頭像</div>
     </div>
+
     <div class="profile-arrow">›</div>
   </div>
 
   <div class="menu-group">
-  <div class="menu-item" onclick="location.href='tools.html'">
-    <div class="menu-icon" style="background:#e3f2fd">🛠️</div>
-    <div class="menu-text">生活工具</div>
-    <div class="menu-arrow">›</div>
+
+    <div class="menu-item" onclick="location.href='tools.html'">
+      <div class="menu-icon" style="background:#e3f2fd">🛠️</div>
+      <div class="menu-text">生活工具</div>
+      <div class="menu-arrow">›</div>
+    </div>
+
+    <div class="menu-item" onclick="openSafety()">
+      <div class="menu-icon" style="background:#e8f5e9">🛡️</div>
+      <div class="menu-text">安全狀態</div>
+      <div class="menu-arrow">›</div>
+    </div>
+
+    <div class="menu-item" onclick="openLocation()">
+      <div class="menu-icon" style="background:#e3f2fd">📍</div>
+      <div class="menu-text">我的位置</div>
+      <div class="menu-arrow">›</div>
+    </div>
+
+    <div class="menu-item" onclick="openInventory()">
+      <div class="menu-icon" style="background:#fff3e0">📦</div>
+      <div class="menu-text">我的物資</div>
+      <div class="menu-arrow">›</div>
+    </div>
+
   </div>
-  <div class="menu-item" onclick="alert('之後會接上')">
-    <div class="menu-icon" style="background:#e8f5e9">🛡️</div>
-    <div class="menu-text">安全狀態</div>
-    <div class="menu-arrow">›</div>
-  </div>
-  <div class="menu-item" onclick="alert('之後會接上')">
-    <div class="menu-icon" style="background:#e3f2fd">📍</div>
-    <div class="menu-text">我的位置</div>
-    <div class="menu-arrow">›</div>
-  </div>
-  <div class="menu-item" onclick="alert('之後會接上')">
-    <div class="menu-icon" style="background:#fff3e0">📦</div>
-    <div class="menu-text">我的物資</div>
-    <div class="menu-arrow">›</div>
-  </div>
-</div>
 
   <div class="menu-group">
-    <div class="menu-item" onclick="alert('之後會接上')">
+
+    <div class="menu-item" onclick="openNotificationSettings()">
       <div class="menu-icon" style="background:#f3e5f5">🔔</div>
       <div class="menu-text">通知設定</div>
       <div class="menu-arrow">›</div>
     </div>
-    <div class="menu-item" onclick="alert('之後會接上')">
+
+    <div class="menu-item" onclick="openPrivacySettings()">
       <div class="menu-icon" style="background:#e0f7fa">🔒</div>
       <div class="menu-text">隱私設定</div>
       <div class="menu-arrow">›</div>
     </div>
-    <div class="menu-item" onclick="alert('之後會接上')">
+
+    <div class="menu-item" onclick="openGeneralSettings()">
       <div class="menu-icon" style="background:#fce4ec">⚙️</div>
       <div class="menu-text">一般設定</div>
       <div class="menu-arrow">›</div>
     </div>
+
   </div>
 
   <div class="menu-group">
+
     <div class="menu-item" onclick="if(confirm('確定登出？')) location.href='index.html'">
       <div class="menu-icon" style="background:#ffebee">🚪</div>
       <div class="menu-text">登出</div>
       <div class="menu-arrow">›</div>
     </div>
+
   </div>
 
-<div id="bottomNav" style="position:fixed;left:0;right:0;bottom:0;height:58px;background:#fff;border-top:1px solid #e8e8e8;display:flex;z-index:9999;">
+</div>
 
-  <a data-page="chat.html" href="chat.html" style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-decoration:none;font-size:11px;color:#888;">
 
-    <span style="font-size:20px;line-height:22px;">💬</span>
+<!-- ================= 安全狀態 ================= -->
 
-    <span class="navText">聊天</span>
+<div id="safety-section" class="section">
 
+  <div class="page-header">
+    <button class="back-btn" onclick="showHome()">‹</button>
+    <div class="page-title">安全狀態</div>
+  </div>
+
+  <div class="card">
+
+    <div class="card-title">目前準備狀態</div>
+
+    <div class="grid">
+
+      <div class="stat">
+        <div class="stat-value" id="stat-days">—</div>
+        <div class="stat-label">飲水天數</div>
+      </div>
+
+      <div class="stat">
+        <div class="stat-value" id="stat-mp">0/3</div>
+        <div class="stat-label">會合地點</div>
+      </div>
+
+      <div class="stat">
+        <div class="stat-value" id="stat-bag">0%</div>
+        <div class="stat-label">避難包</div>
+      </div>
+
+      <div class="stat">
+        <div class="stat-value" id="stat-members">0</div>
+        <div class="stat-label">家人</div>
+      </div>
+
+    </div>
+
+    <div id="readiness-tip" style="margin-top:15px"></div>
+
+  </div>
+
+  <div class="card">
+
+    <div class="card-title">地震監測</div>
+
+    <div id="eq-status" class="text-muted">
+      尚未開始監測
+    </div>
+
+    <div class="flex gap-2 mt-2">
+      <button class="btn btn-primary" onclick="startEarthquakeMonitor()">開始監測</button>
+      <button class="btn btn-outline" onclick="stopEarthquakeMonitor()">停止</button>
+      <button class="btn btn-warning" onclick="testEarthquakeAlarm()">測試警報</button>
+    </div>
+
+    <div id="eq-list" style="margin-top:12px"></div>
+
+  </div>
+
+</div>
+
+
+<!-- ================= 位置 ================= -->
+
+<div id="location-section" class="section">
+
+  <div class="page-header">
+    <button class="back-btn" onclick="showHome()">‹</button>
+    <div class="page-title">我的位置</div>
+  </div>
+
+  <div class="card">
+
+    <div class="card-title">目前位置</div>
+
+    <div id="location-text" class="text-muted">
+      尚未取得位置
+    </div>
+
+    <button class="btn btn-primary btn-block mt-2" onclick="getCurrentLocation()">
+      📍 取得目前位置
+    </button>
+
+  </div>
+
+  <div class="card">
+
+    <div class="card-title">位置紀錄</div>
+
+    <button class="btn btn-outline btn-block" onclick="recordWaypoint()">
+      ➕ 記錄目前位置
+    </button>
+
+    <div id="waypoints-list" style="margin-top:12px"></div>
+
+  </div>
+
+</div>
+
+
+<!-- ================= 物資 ================= -->
+
+<div id="inventory-section" class="section">
+
+  <div class="page-header">
+    <button class="back-btn" onclick="showHome()">‹</button>
+    <div class="page-title">我的物資</div>
+  </div>
+
+  <div class="card">
+
+    <div class="card-title">家庭人數</div>
+
+    <div class="form-row">
+
+      <div class="form-group">
+        <label>成人</label>
+        <input id="adults" type="number" min="0">
+      </div>
+
+      <div class="form-group">
+        <label>兒童</label>
+        <input id="children" type="number" min="0">
+      </div>
+
+    </div>
+
+    <div class="form-row">
+
+      <div class="form-group">
+        <label>長者</label>
+        <input id="elderly" type="number" min="0">
+      </div>
+
+      <div class="form-group">
+        <label>寵物</label>
+        <input id="pets" type="number" min="0">
+      </div>
+
+    </div>
+
+    <div class="success-box">
+      建議飲用水：<strong id="recommend-water">0 公升</strong>
+    </div>
+
+    <button class="btn btn-primary btn-block mt-2" onclick="saveFamilySize()">
+      儲存家庭人數
+    </button>
+
+  </div>
+
+  <div class="card">
+
+    <div class="flex justify-between align-center">
+
+      <div class="card-title" style="margin:0">
+        物資庫存
+      </div>
+
+      <button class="btn btn-primary btn-sm" onclick="openAddInventory()">
+        ＋新增
+      </button>
+
+    </div>
+
+    <div id="inventory-list" style="margin-top:12px"></div>
+
+  </div>
+
+</div>
+
+
+<!-- ================= 家人 ================= -->
+
+<div id="family-section" class="section">
+
+  <div class="page-header">
+    <button class="back-btn" onclick="showHome()">‹</button>
+    <div class="page-title">我的家人</div>
+  </div>
+
+  <div class="card">
+
+    <div class="flex justify-between align-center">
+
+      <div class="card-title" style="margin:0">
+        家人名單
+      </div>
+
+      <button class="btn btn-primary btn-sm" onclick="openAddMember()">
+        ＋新增
+      </button>
+
+    </div>
+
+    <div id="members-list" style="margin-top:12px"></div>
+
+  </div>
+
+  <div class="card">
+
+    <div class="card-title">
+      緊急會合地點
+    </div>
+
+    <div id="meeting-points"></div>
+
+    <div class="flex gap-2 mt-2">
+
+      <button class="btn btn-outline" onclick="copyMeetingPointsText()">
+        📋 複製
+      </button>
+
+      <button class="btn btn-outline" onclick="exportMeetingPointsGPX()">
+        🗺️ GPX
+      </button>
+
+      <button class="btn btn-outline" onclick="generatePrintCard()">
+        🖨️ 會合卡
+      </button>
+
+    </div>
+
+  </div>
+
+  <div class="card">
+
+    <div class="card-title">會合地點地圖</div>
+
+    <div id="map"></div>
+
+  </div>
+
+</div>
+
+
+<!-- ================= 避難包 ================= -->
+
+<div id="gobag-section" class="section">
+
+  <div class="page-header">
+    <button class="back-btn" onclick="showHome()">‹</button>
+    <div class="page-title">避難包</div>
+  </div>
+
+  <div class="card">
+
+    <div class="flex justify-between align-center">
+      <div>
+        <div class="card-title" style="margin:0">緊急避難包</div>
+        <div class="text-muted">
+          上次檢查：<span id="gobag-last">尚未檢查</span>
+        </div>
+      </div>
+
+      <button class="btn btn-primary btn-sm" onclick="markGoBagChecked()">
+        完成檢查
+      </button>
+    </div>
+
+    <div id="gobag-list" style="margin-top:15px"></div>
+
+  </div>
+
+</div>
+
+
+<!-- ================= 天氣 ================= -->
+
+<div id="weather-section" class="section">
+
+  <div class="page-header">
+    <button class="back-btn" onclick="showHome()">‹</button>
+    <div class="page-title">天氣預報</div>
+  </div>
+
+  <div class="card">
+
+    <div class="form-group">
+
+      <label>地區</label>
+
+      <select id="weather-city" onchange="changeWeatherCity()">
+
+        <option value="25.0330,121.5654">台北</option>
+        <option value="24.9937,121.3010">桃園</option>
+        <option value="24.1477,120.6736">台中</option>
+        <option value="23.4801,120.4491">嘉義</option>
+        <option value="22.6273,120.3014">高雄</option>
+        <option value="22.7554,121.1500">台東</option>
+        <option value="23.9911,121.6112">花蓮</option>
+        <option value="24.7021,121.7378">宜蘭</option>
+
+      </select>
+
+    </div>
+
+    <div id="weather-loading" class="text-muted">
+      載入中…
+    </div>
+
+    <div id="weather-list"></div>
+
+  </div>
+
+</div>
+
+
+<!-- ================= 廣播 ================= -->
+
+<div id="radio-section" class="section">
+
+  <div class="page-header">
+    <button class="back-btn" onclick="showHome()">‹</button>
+    <div class="page-title">緊急廣播</div>
+  </div>
+
+  <div class="card">
+
+    <div style="text-align:center">
+
+      <div class="text-muted">目前頻率</div>
+
+      <div style="font-size:42px;font-weight:700;margin:5px 0">
+        <span id="freq-display">94.3</span>
+        <span style="font-size:20px">FM</span>
+      </div>
+
+      <div class="flex gap-2">
+
+        <button class="btn btn-outline" onclick="adjustFreq(-0.1)">
+          −
+        </button>
+
+        <input id="freq-input" type="number" step="0.1"
+          value="94.3"
+          style="flex:1;text-align:center;border:1px solid #ddd;border-radius:8px">
+
+        <button class="btn btn-outline" onclick="adjustFreq(0.1)">
+          ＋
+        </button>
+
+      </div>
+
+      <button class="btn btn-primary btn-block mt-2"
+        onclick="setFreqFromInput()">
+        設定頻率
+      </button>
+
+      <button class="btn btn-outline btn-block mt-2"
+        onclick="openOfficialRadio()">
+        📻 開啟官方線上廣播
+      </button>
+
+    </div>
+
+  </div>
+
+  <div class="card">
+
+    <div class="card-title">官方頻道</div>
+
+    <div id="radio-preset-list"></div>
+
+  </div>
+
+</div>
+
+
+<!-- ================= 設定 ================= -->
+
+<div id="settings-section" class="section">
+
+  <div class="page-header">
+    <button class="back-btn" onclick="showHome()">‹</button>
+    <div class="page-title" id="settings-title">設定</div>
+  </div>
+
+  <div class="card">
+
+    <div id="settings-content"></div>
+
+  </div>
+
+</div>
+
+
+<!-- ================= Modal：個人資料 ================= -->
+
+<div id="profile-modal" class="modal">
+
+  <div class="modal-box">
+
+    <div class="modal-header">
+      <div class="modal-title">個人資料</div>
+      <button class="close-btn" onclick="closeModal('profile-modal')">×</button>
+    </div>
+
+    <div class="form-group">
+      <label>暱稱</label>
+      <input id="profile-name-input" placeholder="請輸入暱稱">
+    </div>
+
+    <div class="form-group">
+      <label>個人識別</label>
+      <input id="profile-id-input" placeholder="例如：家人01">
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn btn-outline" onclick="closeModal('profile-modal')">
+        取消
+      </button>
+
+      <button class="btn btn-primary" onclick="saveProfile()">
+        儲存
+      </button>
+    </div>
+
+  </div>
+
+</div>
+
+
+<!-- ================= Modal：物資 ================= -->
+
+<div id="inventory-modal" class="modal">
+
+  <div class="modal-box">
+
+    <div class="modal-header">
+
+      <div class="modal-title" id="inv-modal-title">
+        新增庫存
+      </div>
+
+      <button class="close-btn"
+        onclick="closeModal('inventory-modal')">
+        ×
+      </button>
+
+    </div>
+
+    <input id="inv-idx" type="hidden">
+
+    <div class="form-group">
+      <label>品名</label>
+      <input id="inv-name">
+    </div>
+
+    <div class="form-row">
+
+      <div class="form-group">
+        <label>數量</label>
+        <input id="inv-qty" type="number">
+      </div>
+
+      <div class="form-group">
+        <label>單位</label>
+        <input id="inv-unit" placeholder="公升、包、罐">
+      </div>
+
+    </div>
+
+    <div class="form-group">
+      <label>分類</label>
+
+      <select id="inv-category">
+
+        <option value="water">飲用水</option>
+        <option value="food">食品</option>
+        <option value="medicine">藥品</option>
+        <option value="power">電力</option>
+        <option value="other">其他</option>
+
+      </select>
+
+    </div>
+
+    <div class="form-group">
+      <label>有效期限</label>
+      <input id="inv-expiry" type="date">
+    </div>
+
+    <div class="form-group">
+      <label>備註</label>
+      <textarea id="inv-notes"></textarea>
+    </div>
+
+    <div class="modal-actions">
+
+      <button class="btn btn-danger"
+        onclick="deleteInventoryItem()">
+        刪除
+      </button>
+
+      <button class="btn btn-primary"
+        onclick="saveInventoryItem()">
+        儲存
+      </button>
+
+    </div>
+
+  </div>
+
+</div>
+
+
+<!-- ================= Modal：家人 ================= -->
+
+<div id="member-modal" class="modal">
+
+  <div class="modal-box">
+
+    <div class="modal-header">
+
+      <div class="modal-title" id="member-modal-title">
+        新增家人
+      </div>
+
+      <button class="close-btn"
+        onclick="closeModal('member-modal')">
+        ×
+      </button>
+
+    </div>
+
+    <input id="member-idx" type="hidden">
+
+    <div class="form-group">
+      <label>姓名</label>
+      <input id="member-name">
+    </div>
+
+    <div class="form-group">
+      <label>電話</label>
+      <input id="member-phone" type="tel">
+    </div>
+
+    <div class="form-group">
+      <label>特殊需求</label>
+      <input id="member-needs" placeholder="例如：需要協助">
+    </div>
+
+    <div class="modal-actions">
+
+      <button class="btn btn-outline"
+        onclick="closeModal('member-modal')">
+        取消
+      </button>
+
+      <button class="btn btn-primary"
+        onclick="saveMember()">
+        儲存
+      </button>
+
+    </div>
+
+  </div>
+
+</div>
+
+
+<!-- ================= Modal：會合地點 ================= -->
+
+<div id="mp-modal" class="modal">
+
+  <div class="modal-box">
+
+    <div class="modal-header">
+
+      <div class="modal-title">
+        會合地點
+      </div>
+
+      <button class="close-btn"
+        onclick="closeModal('mp-modal')">
+        ×
+      </button>
+
+    </div>
+
+    <input id="mp-idx" type="hidden">
+
+    <div class="form-group">
+      <label>名稱</label>
+      <input id="mp-name" placeholder="例如：台北車站">
+    </div>
+
+    <div class="form-group">
+      <label>地址</label>
+      <input id="mp-address" placeholder="輸入會合地址">
+    </div>
+
+    <button class="btn btn-outline btn-block"
+      onclick="geocodeAddress()">
+      🗺️ 開啟地圖搜尋地址
+    </button>
+
+    <button class="btn btn-outline btn-block mt-2"
+      onclick="useCurrentLocationForMP()">
+      📍 使用目前位置
+    </button>
+
+    <div class="form-row mt-2">
+
+      <div class="form-group">
+        <label>緯度</label>
+        <input id="mp-lat" type="number" step="any">
+      </div>
+
+      <div class="form-group">
+        <label>經度</label>
+        <input id="mp-lng" type="number" step="any">
+      </div>
+
+    </div>
+
+    <div class="form-group">
+      <label>備註</label>
+      <textarea id="mp-notes"></textarea>
+    </div>
+
+    <div class="modal-actions">
+
+      <button class="btn btn-outline"
+        onclick="closeModal('mp-modal')">
+        取消
+      </button>
+
+      <button class="btn btn-primary"
+        onclick="saveMeetingPoint()">
+        儲存
+      </button>
+
+    </div>
+
+  </div>
+
+</div>
+
+
+<!-- ================= 列印卡 ================= -->
+
+<div id="print-card">
+  <div id="print-card-content"></div>
+</div>
+
+
+<!-- ================= Toast ================= -->
+
+<div id="toast"></div>
+
+
+<!-- ================= 底部導航 ================= -->
+
+<div id="bottomNav" class="bottom-nav">
+
+  <a data-page="chat.html" href="chat.html">
+    <span class="nav-icon">💬</span>
+    <span>聊天</span>
   </a>
 
-  <a data-page="contacts.html" href="contacts.html" style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-decoration:none;font-size:11px;color:#888;">
-
-    <span style="font-size:20px;line-height:22px;">👥</span>
-
-    <span class="navText">通訊錄</span>
-
+  <a data-page="contacts.html" href="contacts.html">
+    <span class="nav-icon">👥</span>
+    <span>通訊錄</span>
   </a>
 
-  <a data-page="home.html" href="home.html" style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-decoration:none;font-size:11px;color:#888;">
-
-    <span style="font-size:20px;line-height:22px;">🧭</span>
-
-    <span class="navText">發現</span>
-
+  <a data-page="home.html" href="home.html">
+    <span class="nav-icon">🧭</span>
+    <span>發現</span>
   </a>
 
-  <a data-page="me.html" href="me.html" style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-decoration:none;font-size:11px;color:#888;">
-
-    <span style="font-size:20px;line-height:22px;">👤</span>
-
-    <span class="navText">我</span>
-
+  <a data-page="me.html" href="me.html">
+    <span class="nav-icon">👤</span>
+    <span>我</span>
   </a>
 
 </div>
 
+
+<script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="call-notify.js"></script>
+
 <script>
 
-(function () {
+/* =========================================================
+   基礎資料儲存
+========================================================= */
 
-  var currentPage = location.pathname.split('/').pop();
+const Store = {
 
-  if (!currentPage) {
+  get(key){
 
-    currentPage = 'home.html';
+    try{
+      const value = localStorage.getItem("safe_reunion_" + key);
+      return value ? JSON.parse(value) : null;
+    }catch(e){
+      return null;
+    }
+
+  },
+
+  set(key,value){
+    localStorage.setItem(
+      "safe_reunion_" + key,
+      JSON.stringify(value)
+    );
+  },
+
+  getDefaultInventory(){
+
+    return {
+      familySize:{
+        adults:0,
+        children:0,
+        elderly:0,
+        pets:0
+      },
+      items:[]
+    };
+
+  },
+
+  getDefaultFamily(){
+
+    return {
+      members:[],
+      meetingPoints:[
+        {id:"mp1",name:"",address:"",lat:null,lng:null,notes:""},
+        {id:"mp2",name:"",address:"",lat:null,lng:null,notes:""},
+        {id:"mp3",name:"",address:"",lat:null,lng:null,notes:""}
+      ]
+    };
+
+  },
+
+  getDefaultGoBag(){
+
+    return {
+      checked:{},
+      lastChecked:null
+    };
+
+  },
+
+  getDefaultSettings(){
+
+    return {
+      targetDays:7,
+      earthquakeNotification:false,
+      locationSharing:false
+    };
 
   }
 
-  var links = document.querySelectorAll('#bottomNav a');
+};
 
-  links.forEach(function (link) {
 
-    if (link.getAttribute('data-page') === currentPage) {
+/* =========================================================
+   避難包
+========================================================= */
 
-      link.style.color = '#06C755';
+const GO_BAG_CHECKLIST = [
 
-      link.style.fontWeight = '600';
+  {
+    title:"基本物品",
+    items:[
+      {id:"water",name:"飲用水",category:"飲水"},
+      {id:"food",name:"即食食品",category:"食品"},
+      {id:"flashlight",name:"手電筒",category:"照明"},
+      {id:"battery",name:"備用電池",category:"電力"},
+      {id:"powerbank",name:"行動電源",category:"電力"},
+      {id:"radio",name:"收音機",category:"通訊"},
+      {id:"mask",name:"口罩",category:"防護"},
+      {id:"firstaid",name:"急救用品",category:"醫療"}
+    ]
+  },
 
-      var text = link.querySelector('.navText');
+  {
+    title:"兒童用品",
+    items:[
+      {id:"child-food",name:"兒童食品",category:"兒童"},
+      {id:"child-clothes",name:"兒童備用衣物",category:"兒童"}
+    ]
+  },
 
-      if (text) {
+  {
+    title:"長者用品",
+    items:[
+      {id:"elder-medicine",name:"必要藥品",category:"長者"},
+      {id:"elder-glasses",name:"眼鏡／助聽用品",category:"長者"}
+    ]
+  },
 
-        text.style.color = '#06C755';
+  {
+    title:"寵物用品",
+    items:[
+      {id:"pet-food",name:"寵物食品",category:"寵物"},
+      {id:"pet-water",name:"寵物飲水",category:"寵物"},
+      {id:"pet-leash",name:"牽繩／外出籠",category:"寵物"}
+    ]
+  }
 
-      }
+];
 
+
+/* =========================================================
+   廣播
+========================================================= */
+
+const RADIO_PRESETS = [
+
+  {
+    freq:94.3,
+    name:"警察廣播電台",
+    url:"https://www.pbs.gov.tw/live/pbs.html"
+  }
+
+];
+
+let currentFreq = 94.3;
+
+
+/* =========================================================
+   導航
+========================================================= */
+
+function showHome(){
+
+  document.querySelectorAll(".section")
+    .forEach(function(s){
+      s.classList.remove("active");
+    });
+
+  document.getElementById("home-section")
+    .classList.add("active");
+
+  window.scrollTo(0,0);
+
+}
+
+
+/* =========================================================
+   個人資料
+========================================================= */
+
+function loadProfile(){
+
+  const profile = Store.get("profile") || {
+    name:"使用者",
+    id:"點擊設定暱稱與頭像"
+  };
+
+  document.getElementById("profile-name").textContent =
+    profile.name || "使用者";
+
+  document.getElementById("profile-id").textContent =
+    profile.id || "點擊設定暱稱與頭像";
+
+}
+
+
+function openProfile(){
+
+  const profile = Store.get("profile") || {};
+
+  document.getElementById("profile-name-input").value =
+    profile.name || "";
+
+  document.getElementById("profile-id-input").value =
+    profile.id || "";
+
+  document.getElementById("profile-modal")
+    .classList.add("show");
+
+}
+
+
+function saveProfile(){
+
+  const profile = {
+
+    name:
+      document.getElementById("profile-name-input")
+      .value.trim() || "使用者",
+
+    id:
+      document.getElementById("profile-id-input")
+      .value.trim() || "安全團聚使用者"
+
+  };
+
+  Store.set("profile",profile);
+
+  loadProfile();
+
+  closeModal("profile-modal");
+
+  showToast("個人資料已更新");
+
+}
+
+
+/* =========================================================
+   安全狀態
+========================================================= */
+
+function openSafety(){
+
+  hideSections();
+
+  document.getElementById("safety-section")
+    .classList.add("active");
+
+  updateDashboardStats();
+
+}
+
+
+function hideSections(){
+
+  document.querySelectorAll(".section")
+    .forEach(function(s){
+      s.classList.remove("active");
+    });
+
+}
+
+
+/* =========================================================
+   儀表板
+========================================================= */
+
+function updateDashboardStats(){
+
+  const inv =
+    Store.get("inventory") ||
+    Store.getDefaultInventory();
+
+  const family =
+    Store.get("family") ||
+    Store.getDefaultFamily();
+
+  const gobag =
+    Store.get("goBag") ||
+    Store.getDefaultGoBag();
+
+  const totalPeople =
+    (inv.familySize.adults || 0) +
+    (inv.familySize.children || 0) +
+    (inv.familySize.elderly || 0);
+
+  const waterItem =
+    (inv.items || []).find(function(i){
+      return i.category === "water";
+    });
+
+  const daysWater =
+    totalPeople > 0
+      ? Math.floor(
+          ((waterItem ? Number(waterItem.qty) || 0 : 0)) /
+          (totalPeople * 3)
+        )
+      : 0;
+
+  const mpDone =
+    (family.meetingPoints || [])
+      .filter(function(p){
+        return p.name && p.name.trim();
+      }).length;
+
+  const totalChecks =
+    Object.keys(gobag.checked || {}).length;
+
+  const checkedCount =
+    Object.values(gobag.checked || {})
+      .filter(Boolean).length;
+
+  document.getElementById("stat-days").textContent =
+    daysWater > 0 ? daysWater : "—";
+
+  document.getElementById("stat-mp").textContent =
+    mpDone + "/3";
+
+  document.getElementById("stat-bag").textContent =
+    totalChecks > 0
+      ? Math.round(checkedCount / totalChecks * 100) + "%"
+      : "0%";
+
+  document.getElementById("stat-members").textContent =
+    (family.members || []).length;
+
+  const tip =
+    document.getElementById("readiness-tip");
+
+  if(daysWater < 3 || mpDone < 2){
+
+    tip.innerHTML =
+      "⚠️ 建議優先完成：飲用水儲備與緊急會合地點設定。";
+
+    tip.style.color = "#d32f2f";
+
+  }else{
+
+    tip.innerHTML =
+      "✅ 基本準備已完成。";
+
+    tip.style.color = "#16a34a";
+
+  }
+
+}
+
+
+/* =========================================================
+   位置
+========================================================= */
+
+function openLocation(){
+
+  hideSections();
+
+  document.getElementById("location-section")
+    .classList.add("active");
+
+  renderWaypoints();
+
+}
+
+
+function getCurrentLocation(){
+
+  if(!navigator.geolocation){
+
+    alert("此裝置不支援定位");
+    return;
+
+  }
+
+  showToast("正在取得目前位置…");
+
+  navigator.geolocation.getCurrentPosition(
+
+    function(pos){
+
+      const lat =
+        pos.coords.latitude.toFixed(6);
+
+      const lng =
+        pos.coords.longitude.toFixed(6);
+
+      document.getElementById("location-text")
+        .innerHTML =
+        "緯度：" + lat +
+        "<br>經度：" + lng;
+
+      showToast("已取得目前位置");
+
+    },
+
+    function(err){
+
+      alert(
+        "無法取得位置。\n\n" +
+        "請確認已允許瀏覽器使用定位功能。\n\n" +
+        err.message
+      );
+
+    },
+
+    {
+      enableHighAccuracy:true,
+      timeout:12000,
+      maximumAge:0
     }
+
+  );
+
+}
+
+
+/* =========================================================
+   物資
+========================================================= */
+
+function openInventory(){
+
+  hideSections();
+
+  document.getElementById("inventory-section")
+    .classList.add("active");
+
+  renderInventory();
+
+}
+
+
+function renderInventory(){
+
+  const inv =
+    Store.get("inventory") ||
+    Store.getDefaultInventory();
+
+  const settings =
+    Store.get("settings") ||
+    Store.getDefaultSettings();
+
+  document.getElementById("adults").value =
+    inv.familySize.adults || 0;
+
+  document.getElementById("children").value =
+    inv.familySize.children || 0;
+
+  document.getElementById("elderly").value =
+    inv.familySize.elderly || 0;
+
+  document.getElementById("pets").value =
+    inv.familySize.pets || 0;
+
+  const totalPeople =
+    (inv.familySize.adults || 0) +
+    (inv.familySize.children || 0) +
+    (inv.familySize.elderly || 0);
+
+  const days =
+    settings.targetDays || 7;
+
+  document.getElementById("recommend-water")
+    .textContent =
+    (totalPeople * 3 * days) +
+    " 公升（" + days + "天）";
+
+  const list =
+    document.getElementById("inventory-list");
+
+  list.innerHTML = "";
+
+  if(!inv.items || !inv.items.length){
+
+    list.innerHTML =
+      '<div class="empty-state">尚未新增任何庫存</div>';
+
+    return;
+
+  }
+
+  inv.items.forEach(function(item,idx){
+
+    const div =
+      document.createElement("div");
+
+    div.className = "stock-item";
+
+    div.innerHTML =
+
+      '<div class="stock-info">' +
+
+      '<div class="stock-name">' +
+      escapeHtml(item.name) +
+      '</div>' +
+
+      '<div class="stock-meta">' +
+      escapeHtml(item.category || "") +
+      (item.expiry
+        ? "｜效期 " + escapeHtml(item.expiry)
+        : "") +
+      '</div>' +
+
+      '</div>' +
+
+      '<div class="stock-qty">' +
+      escapeHtml(item.qty) +
+      " " +
+      escapeHtml(item.unit || "") +
+      '</div>' +
+
+      '<button class="btn btn-sm btn-outline" ' +
+      'onclick="editInventoryItem(' + idx + ')">' +
+      '編輯' +
+      '</button>';
+
+    list.appendChild(div);
 
   });
 
-})();
+}
+
+
+function saveFamilySize(){
+
+  const inv =
+    Store.get("inventory") ||
+    Store.getDefaultInventory();
+
+  inv.familySize = {
+
+    adults:
+      +document.getElementById("adults").value || 0,
+
+    children:
+      +document.getElementById("children").value || 0,
+
+    elderly:
+      +document.getElementById("elderly").value || 0,
+
+    pets:
+      +document.getElementById("pets").value || 0
+
+  };
+
+  Store.set("inventory",inv);
+
+  renderInventory();
+
+  updateDashboardStats();
+
+  showToast("已更新");
+
+}
+
+
+function openAddInventory(){
+
+  document.getElementById("inv-modal-title")
+    .textContent = "新增庫存";
+
+  document.getElementById("inv-idx").value = "";
+
+  [
+    "inv-name",
+    "inv-qty",
+    "inv-unit",
+    "inv-expiry",
+    "inv-notes"
+  ].forEach(function(id){
+
+    document.getElementById(id).value = "";
+
+  });
+
+  document.getElementById("inv-category")
+    .value = "water";
+
+  document.getElementById("inventory-modal")
+    .classList.add("show");
+
+}
+
+
+function editInventoryItem(idx){
+
+  const inv =
+    Store.get("inventory") ||
+    Store.getDefaultInventory();
+
+  const item = inv.items[idx];
+
+  if(!item)return;
+
+  document.getElementById("inv-modal-title")
+    .textContent = "編輯庫存";
+
+  document.getElementById("inv-idx").value = idx;
+
+  document.getElementById("inv-name").value =
+    item.name || "";
+
+  document.getElementById("inv-qty").value =
+    item.qty || "";
+
+  document.getElementById("inv-unit").value =
+    item.unit || "";
+
+  document.getElementById("inv-category").value =
+    item.category || "water";
+
+  document.getElementById("inv-expiry").value =
+    item.expiry || "";
+
+  document.getElementById("inv-notes").value =
+    item.notes || "";
+
+  document.getElementById("inventory-modal")
+    .classList.add("show");
+
+}
+
+
+function saveInventoryItem(){
+
+  const inv =
+    Store.get("inventory") ||
+    Store.getDefaultInventory();
+
+  const idx =
+    document.getElementById("inv-idx").value;
+
+  const item = {
+
+    name:
+      document.getElementById("inv-name")
+      .value.trim(),
+
+    qty:
+      document.getElementById("inv-qty")
+      .value,
+
+    unit:
+      document.getElementById("inv-unit")
+      .value.trim(),
+
+    category:
+      document.getElementById("inv-category")
+      .value,
+
+    expiry:
+      document.getElementById("inv-expiry")
+      .value,
+
+    notes:
+      document.getElementById("inv-notes")
+      .value.trim()
+
+  };
+
+  if(!item.name){
+
+    alert("請輸入品名");
+    return;
+
+  }
+
+  if(idx === ""){
+
+    inv.items.push(item);
+
+  }else{
+
+    inv.items[+idx] = item;
+
+  }
+
+  Store.set("inventory",inv);
+
+  closeModal("inventory-modal");
+
+  renderInventory();
+
+  updateDashboardStats();
+
+  showToast("已儲存");
+
+}
+
+
+function deleteInventoryItem(){
+
+  const idx =
+    document.getElementById("inv-idx").value;
+
+  if(
+    idx === "" ||
+    !confirm("確定刪除？")
+  )return;
+
+  const inv =
+    Store.get("inventory") ||
+    Store.getDefaultInventory();
+
+  inv.items.splice(+idx,1);
+
+  Store.set("inventory",inv);
+
+  closeModal("inventory-modal");
+
+  renderInventory();
+
+  updateDashboardStats();
+
+  showToast("已刪除");
+
+}
+
+
+/* =========================================================
+   家人
+========================================================= */
+
+function openFamily(){
+
+  hideSections();
+
+  document.getElementById("family-section")
+    .classList.add("active");
+
+  renderFamily();
+
+  setTimeout(function(){
+    initMap();
+  },300);
+
+}
+
+
+function renderFamily(){
+
+  const family =
+    Store.get("family") ||
+    Store.getDefaultFamily();
+
+  const membersList =
+    document.getElementById("members-list");
+
+  membersList.innerHTML = "";
+
+  if(!family.members || !family.members.length){
+
+    membersList.innerHTML =
+      '<div class="empty-state">尚未新增家人</div>';
+
+  }else{
+
+    family.members.forEach(function(m,idx){
+
+      const div =
+        document.createElement("div");
+
+      div.className = "card";
+
+      div.style.margin = "0 0 8px 0";
+      div.style.padding = "12px";
+
+      let statusClass =
+        m.status === "safe"
+          ? "status-safe"
+          : m.status === "moving"
+          ? "status-moving"
+          : m.status === "help"
+          ? "status-help"
+          : "status-unknown";
+
+      let statusText =
+        m.status === "safe"
+          ? "安全"
+          : m.status === "moving"
+          ? "移動中"
+          : m.status === "help"
+          ? "需要協助"
+          : "未知";
+
+      div.innerHTML =
+
+        '<div class="flex justify-between align-center">' +
+
+        '<div>' +
+
+        '<strong>' +
+        escapeHtml(m.name) +
+        '</strong>' +
+
+        '<div class="text-muted" style="font-size:.85rem">' +
+        escapeHtml(m.phone || "") +
+        (m.needs
+          ? "｜" + escapeHtml(m.needs)
+          : "") +
+        '</div>' +
+
+        '</div>' +
+
+        '<strong class="' +
+        statusClass +
+        '">' +
+        statusText +
+        '</strong>' +
+
+        '</div>' +
+
+        '<div class="flex gap-2 mt-2" style="flex-wrap:wrap">' +
+
+        '<button class="btn btn-sm btn-outline" onclick="setMemberStatus(' +
+        idx +
+        ',\'safe\')">安全</button>' +
+
+        '<button class="btn btn-sm btn-outline" onclick="setMemberStatus(' +
+        idx +
+        ',\'moving\')">移動中</button>' +
+
+        '<button class="btn btn-sm btn-outline" onclick="setMemberStatus(' +
+        idx +
+        ',\'help\')">需協助</button>' +
+
+        '<button class="btn btn-sm btn-danger" onclick="deleteMember(' +
+        idx +
+        ')">刪除</button>' +
+
+        '</div>';
+
+      membersList.appendChild(div);
+
+    });
+
+  }
+
+
+  const mpContainer =
+    document.getElementById("meeting-points");
+
+  mpContainer.innerHTML = "";
+
+  (family.meetingPoints || [])
+    .forEach(function(p,idx){
+
+      const div =
+        document.createElement("div");
+
+      div.className =
+        "meeting-point-card";
+
+      div.innerHTML =
+
+        '<h4>會合地點 ' +
+        (idx + 1) +
+        (p.name
+          ? "：" + escapeHtml(p.name)
+          : "（未設定）") +
+        '</h4>' +
+
+        '<div class="text-muted" style="font-size:.9rem">' +
+        (p.address
+          ? escapeHtml(p.address)
+          : "尚未填寫地址") +
+        '</div>' +
+
+        (p.notes
+          ? '<div style="font-size:.85rem;margin-top:4px">' +
+            '備註：' +
+            escapeHtml(p.notes) +
+            '</div>'
+          : "") +
+
+        '<div class="flex gap-2 mt-2">' +
+
+        '<button class="btn btn-sm btn-primary" onclick="editMeetingPoint(' +
+        idx +
+        ')">編輯</button>' +
+
+        (p.lat && p.lng
+          ? '<button class="btn btn-sm btn-outline" onclick="navigateTo(' +
+            p.lat + ',' +
+            p.lng +
+            ',\'' +
+            escapeJs(p.name || "會合地點") +
+            '\')">導航</button>'
+          : "") +
+
+        '</div>';
+
+      mpContainer.appendChild(div);
+
+    });
+
+}
+
+
+function openAddMember(){
+
+  document.getElementById("member-modal-title")
+    .textContent = "新增家人";
+
+  document.getElementById("member-idx").value = "";
+
+  document.getElementById("member-name").value = "";
+
+  document.getElementById("member-phone").value = "";
+
+  document.getElementById("member-needs").value = "";
+
+  document.getElementById("member-modal")
+    .classList.add("show");
+
+}
+
+
+function saveMember(){
+
+  const family =
+    Store.get("family") ||
+    Store.getDefaultFamily();
+
+  const idx =
+    document.getElementById("member-idx").value;
+
+  const member = {
+
+    name:
+      document.getElementById("member-name")
+      .value.trim(),
+
+    phone:
+      document.getElementById("member-phone")
+      .value.trim(),
+
+    needs:
+      document.getElementById("member-needs")
+      .value.trim(),
+
+    status:"unknown"
+
+  };
+
+  if(!member.name){
+
+    alert("請輸入姓名");
+    return;
+
+  }
+
+  if(idx === ""){
+
+    family.members.push(member);
+
+  }else{
+
+    member.status =
+      family.members[+idx].status ||
+      "unknown";
+
+    family.members[+idx] = member;
+
+  }
+
+  Store.set("family",family);
+
+  closeModal("member-modal");
+
+  renderFamily();
+
+  updateDashboardStats();
+
+  showToast("已儲存");
+
+}
+
+
+function setMemberStatus(idx,status){
+
+  const family =
+    Store.get("family") ||
+    Store.getDefaultFamily();
+
+  if(family.members[idx]){
+
+    family.members[idx].status = status;
+
+    Store.set("family",family);
+
+    renderFamily();
+
+  }
+
+}
+
+
+function deleteMember(idx){
+
+  if(!confirm("確定刪除？"))return;
+
+  const family =
+    Store.get("family") ||
+    Store.getDefaultFamily();
+
+  family.members.splice(idx,1);
+
+  Store.set("family",family);
+
+  renderFamily();
+
+  updateDashboardStats();
+
+}
+
+
+/* =========================================================
+   會合地點
+========================================================= */
+
+function editMeetingPoint(idx){
+
+  const family =
+    Store.get("family") ||
+    Store.getDefaultFamily();
+
+  if(
+    !family.meetingPoints ||
+    !family.meetingPoints[idx]
+  ){
+
+    alert("找不到此會合地點");
+    return;
+
+  }
+
+  const p =
+    family.meetingPoints[idx];
+
+  document.getElementById("mp-idx").value =
+    idx;
+
+  document.getElementById("mp-name").value =
+    p.name || "";
+
+  document.getElementById("mp-address").value =
+    p.address || "";
+
+  document.getElementById("mp-lat").value =
+    p.lat || "";
+
+  document.getElementById("mp-lng").value =
+    p.lng || "";
+
+  document.getElementById("mp-notes").value =
+    p.notes || "";
+
+  document.getElementById("mp-modal")
+    .classList.add("show");
+
+}
+
+
+function saveMeetingPoint(){
+
+  const family =
+    Store.get("family") ||
+    Store.getDefaultFamily();
+
+  const idx =
+    +document.getElementById("mp-idx").value;
+
+  family.meetingPoints[idx] = {
+
+    id:"mp" + (idx + 1),
+
+    name:
+      document.getElementById("mp-name")
+      .value.trim(),
+
+    address:
+      document.getElementById("mp-address")
+      .value.trim(),
+
+    lat:
+      document.getElementById("mp-lat").value
+        ? +document.getElementById("mp-lat").value
+        : null,
+
+    lng:
+      document.getElementById("mp-lng").value
+        ? +document.getElementById("mp-lng").value
+        : null,
+
+    notes:
+      document.getElementById("mp-notes")
+      .value.trim()
+
+  };
+
+  Store.set("family",family);
+
+  closeModal("mp-modal");
+
+  renderFamily();
+
+  updateDashboardStats();
+
+  if(window.mapInstance){
+    updateMapMarkers();
+  }
+
+  showToast("會合地點已儲存");
+
+}
+
+
+function useCurrentLocationForMP(){
+
+  if(!navigator.geolocation){
+
+    alert("不支援定位");
+    return;
+
+  }
+
+  showToast("正在取得位置…");
+
+  navigator.geolocation.getCurrentPosition(
+
+    function(pos){
+
+      document.getElementById("mp-lat").value =
+        pos.coords.latitude.toFixed(6);
+
+      document.getElementById("mp-lng").value =
+        pos.coords.longitude.toFixed(6);
+
+      showToast("已取得目前位置");
+
+    },
+
+    function(err){
+
+      alert(
+        "無法取得位置。\n\n" +
+        "請允許位置權限，或手動輸入經緯度。\n\n" +
+        err.message
+      );
+
+    },
+
+    {
+      enableHighAccuracy:true,
+      timeout:12000
+    }
+
+  );
+
+}
+
+
+function geocodeAddress(){
+
+  const address =
+    document.getElementById("mp-address")
+    .value.trim();
+
+  if(!address){
+
+    alert("請先輸入地址");
+    return;
+
+  }
+
+  const isIOS =
+    /iPad|iPhone|iPod/.test(
+      navigator.userAgent
+    );
+
+  if(isIOS){
+
+    window.location.href =
+      "maps://maps.apple.com/?q=" +
+      encodeURIComponent(address);
+
+  }else{
+
+    window.open(
+      "https://www.google.com/maps/search/?api=1&query=" +
+      encodeURIComponent(address),
+      "_blank"
+    );
+
+  }
+
+  showToast("已開啟地圖搜尋");
+
+}
+
+
+/* =========================================================
+   Leaflet 地圖
+========================================================= */
+
+let markers = [];
+
+function initMap(){
+
+  const mapEl =
+    document.getElementById("map");
+
+  if(!mapEl)return;
+
+  if(typeof L === "undefined"){
+
+    mapEl.innerHTML =
+      '<div style="padding:30px;text-align:center;color:#666">' +
+      '地圖套件尚未載入。<br><br>' +
+      '<button class="btn btn-primary" onclick="location.reload()">' +
+      '重新載入' +
+      '</button>' +
+      '</div>';
+
+    return;
+
+  }
+
+  if(window.mapInstance){
+
+    setTimeout(function(){
+
+      try{
+
+        window.mapInstance.invalidateSize();
+
+        updateMapMarkers();
+
+      }catch(e){}
+
+    },150);
+
+    return;
+
+  }
+
+  try{
+
+    window.mapInstance =
+      L.map("map")
+      .setView([25.0330,121.5654],13);
+
+    L.tileLayer(
+      "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+      {
+        attribution:"© OpenStreetMap",
+        maxZoom:19
+      }
+    ).addTo(window.mapInstance);
+
+    setTimeout(function(){
+
+      window.mapInstance.invalidateSize();
+
+      updateMapMarkers();
+
+    },300);
+
+  }catch(e){
+
+    mapEl.innerHTML =
+      "地圖載入失敗：" +
+      escapeHtml(e.message);
+
+  }
+
+}
+
+
+function updateMapMarkers(){
+
+  if(
+    !window.mapInstance ||
+    typeof L === "undefined"
+  )return;
+
+  markers.forEach(function(m){
+
+    try{
+      window.mapInstance.removeLayer(m);
+    }catch(e){}
+
+  });
+
+  markers = [];
+
+  const family =
+    Store.get("family") ||
+    Store.getDefaultFamily();
+
+  const points = [];
+
+  (family.meetingPoints || [])
+    .forEach(function(p,idx){
+
+      if(
+        p.lat !== null &&
+        p.lng !== null &&
+        !isNaN(p.lat) &&
+        !isNaN(p.lng)
+      ){
+
+        const marker =
+          L.marker([
+            Number(p.lat),
+            Number(p.lng)
+          ])
+          .addTo(window.mapInstance)
+          .bindPopup(
+            "<b>會合地點 " +
+            (idx + 1) +
+            "</b><br>" +
+            escapeHtml(p.name || "") +
+            "<br>" +
+            escapeHtml(p.address || "")
+          );
+
+        markers.push(marker);
+
+        points.push([
+          Number(p.lat),
+          Number(p.lng)
+        ]);
+
+      }
+
+    });
+
+  if(points.length){
+
+    window.mapInstance.fitBounds(
+      points,
+      {
+        padding:[40,40]
+      }
+    );
+
+  }
+
+}
+
+
+function navigateTo(lat,lng,name){
+
+  if(!lat || !lng){
+
+    alert("尚未設定經緯度");
+    return;
+
+  }
+
+  const isIOS =
+    /iPad|iPhone|iPod/.test(
+      navigator.userAgent
+    );
+
+  if(isIOS){
+
+    window.location.href =
+      "maps://maps.apple.com/?daddr=" +
+      lat + "," + lng +
+      "&q=" +
+      encodeURIComponent(name || "會合地點");
+
+  }else{
+
+    window.open(
+      "https://www.google.com/maps/dir/?api=1&destination=" +
+      lat + "," + lng +
+      "&travelmode=walking",
+      "_blank"
+    );
+
+  }
+
+}
+
+
+/* =========================================================
+   位置紀錄
+========================================================= */
+
+function recordWaypoint(){
+
+  if(!navigator.geolocation){
+
+    alert("不支援定位");
+    return;
+
+  }
+
+  navigator.geolocation.getCurrentPosition(
+
+    function(pos){
+
+      const waypoints =
+        Store.get("waypoints") || [];
+
+      const note =
+        prompt("備註（可留空）") || "";
+
+      waypoints.unshift({
+
+        lat:pos.coords.latitude,
+
+        lng:pos.coords.longitude,
+
+        time:new Date().toISOString(),
+
+        note:note
+
+      });
+
+      if(waypoints.length > 50){
+
+        waypoints.length = 50;
+
+      }
+
+      Store.set("waypoints",waypoints);
+
+      showToast("已記錄");
+
+      renderWaypoints();
+
+    },
+
+    function(err){
+
+      alert("定位失敗：" + err.message);
+
+    },
+
+    {
+      enableHighAccuracy:true,
+      timeout:12000
+    }
+
+  );
+
+}
+
+
+function renderWaypoints(){
+
+  const list =
+    document.getElementById("waypoints-list");
+
+  if(!list)return;
+
+  const waypoints =
+    Store.get("waypoints") || [];
+
+  list.innerHTML = "";
+
+  if(!waypoints.length){
+
+    list.innerHTML =
+      '<p class="text-muted">尚未記錄任何位置</p>';
+
+    return;
+
+  }
+
+  waypoints
+    .slice(0,10)
+    .forEach(function(w,idx){
+
+      const div =
+        document.createElement("div");
+
+      div.className = "radio-card";
+
+      div.innerHTML =
+
+        '<div>' +
+
+        '<div style="font-size:.9rem">' +
+        new Date(w.time)
+          .toLocaleString("zh-TW") +
+        '</div>' +
+
+        '<div class="text-muted" style="font-size:.8rem">' +
+        escapeHtml(w.note || "無備註") +
+        '</div>' +
+
+        '</div>' +
+
+        '<div class="flex gap-2">' +
+
+        '<button class="btn btn-sm btn-outline" ' +
+        'onclick="navigateTo(' +
+        w.lat + ',' +
+        w.lng +
+        ',\'記錄點\')">' +
+        '導航' +
+        '</button>' +
+
+        '<button class="btn btn-sm btn-danger" ' +
+        'onclick="deleteWaypoint(' +
+        idx +
+        ')">' +
+        '刪除' +
+        '</button>' +
+
+        '</div>';
+
+      list.appendChild(div);
+
+    });
+
+}
+
+
+function deleteWaypoint(idx){
+
+  if(!confirm("確定要刪除這筆位置紀錄嗎？"))
+    return;
+
+  const waypoints =
+    Store.get("waypoints") || [];
+
+  waypoints.splice(idx,1);
+
+  Store.set("waypoints",waypoints);
+
+  renderWaypoints();
+
+  showToast("已刪除");
+
+}
+
+
+/* =========================================================
+   避難包
+========================================================= */
+
+function openGoBag(){
+
+  hideSections();
+
+  document.getElementById("gobag-section")
+    .classList.add("active");
+
+  renderGoBag();
+
+}
+
+
+function renderGoBag(){
+
+  const gobag =
+    Store.get("goBag") ||
+    Store.getDefaultGoBag();
+
+  const container =
+    document.getElementById("gobag-list");
+
+  container.innerHTML = "";
+
+  document.getElementById("gobag-last")
+    .textContent =
+    gobag.lastChecked
+      ? new Date(gobag.lastChecked)
+          .toLocaleDateString("zh-TW")
+      : "尚未檢查";
+
+  GO_BAG_CHECKLIST.forEach(function(section){
+
+    const title =
+      document.createElement("h3");
+
+    title.className = "card-title";
+
+    title.style.marginTop = "16px";
+
+    title.textContent =
+      section.title;
+
+    container.appendChild(title);
+
+    section.items.forEach(function(item){
+
+      const checked =
+        gobag.checked[item.id] || false;
+
+      const div =
+        document.createElement("div");
+
+      div.className =
+        "check-item" +
+        (checked ? " checked" : "");
+
+      div.innerHTML =
+
+        '<input type="checkbox" ' +
+        (checked ? "checked" : "") +
+        ' onchange="toggleGoBagItem(\'' +
+        item.id +
+        '\',this.checked)">' +
+
+        '<div>' +
+
+        '<div class="check-label">' +
+        escapeHtml(item.name) +
+        '</div>' +
+
+        '<div class="check-category">' +
+        escapeHtml(item.category) +
+        '</div>' +
+
+        '</div>';
+
+      container.appendChild(div);
+
+    });
+
+  });
+
+}
+
+
+function toggleGoBagItem(id,checked){
+
+  const gobag =
+    Store.get("goBag") ||
+    Store.getDefaultGoBag();
+
+  gobag.checked[id] = checked;
+
+  Store.set("goBag",gobag);
+
+  renderGoBag();
+
+  updateDashboardStats();
+
+}
+
+
+function markGoBagChecked(){
+
+  const gobag =
+    Store.get("goBag") ||
+    Store.getDefaultGoBag();
+
+  gobag.lastChecked =
+    new Date().toISOString();
+
+  Store.set("goBag",gobag);
+
+  renderGoBag();
+
+  updateDashboardStats();
+
+  showToast("已記錄避難包檢查");
+
+}
+
+
+/* =========================================================
+   天氣
+========================================================= */
+
+const WEATHER_CODES = {
+
+  0:"☀️ 晴",
+  1:"🌤 多雲時晴",
+  2:"⛅ 多雲",
+  3:"☁️ 陰",
+  45:"🌫 有霧",
+  48:"🌫 霧",
+  51:"🌦 毛毛雨",
+  53:"🌦 毛毛雨",
+  55:"🌧 雨",
+  61:"🌧 小雨",
+  63:"🌧 中雨",
+  65:"🌧 大雨",
+  80:"🌦 陣雨",
+  81:"🌧 陣雨",
+  82:"⛈ 強陣雨",
+  95:"⛈ 雷雨",
+  96:"⛈ 雷雨伴冰雹",
+  99:"⛈ 強雷雨"
+
+};
+
+
+function openWeather(){
+
+  hideSections();
+
+  document.getElementById("weather-section")
+    .classList.add("active");
+
+  loadWeather();
+
+}
+
+
+function getWeatherCity(){
+
+  return localStorage.getItem("weather_city") ||
+    "25.0330,121.5654";
+
+}
+
+
+function changeWeatherCity(){
+
+  const val =
+    document.getElementById("weather-city").value;
+
+  localStorage.setItem(
+    "weather_city",
+    val
+  );
+
+  loadWeather();
+
+}
+
+
+function loadWeather(){
+
+  const list =
+    document.getElementById("weather-list");
+
+  const loading =
+    document.getElementById("weather-loading");
+
+  const citySelect =
+    document.getElementById("weather-city");
+
+  if(!list || !loading)return;
+
+  const cityVal =
+    getWeatherCity();
+
+  if(citySelect)
+    citySelect.value = cityVal;
+
+  const parts =
+    cityVal.split(",");
+
+  const lat = parts[0];
+  const lon = parts[1];
+
+  loading.style.display = "block";
+
+  list.innerHTML = "";
+
+  const url =
+    "https://api.open-meteo.com/v1/forecast" +
+    "?latitude=" + lat +
+    "&longitude=" + lon +
+    "&daily=weathercode,temperature_2m_max,temperature_2m_min,precipitation_probability_max" +
+    "&timezone=Asia%2FTaipei" +
+    "&forecast_days=7";
+
+  fetch(url)
+
+    .then(function(r){
+      return r.json();
+    })
+
+    .then(function(data){
+
+      loading.style.display = "none";
+
+      if(!data.daily){
+
+        list.innerHTML =
+          '<p class="text-muted">無法取得天氣資料</p>';
+
+        return;
+
+      }
+
+      const days =
+        ["日","一","二","三","四","五","六"];
+
+      let html = "";
+
+      for(
+        let i=0;
+        i<data.daily.time.length;
+        i++
+      ){
+
+        const date =
+          new Date(data.daily.time[i]);
+
+        const weekDay =
+          days[date.getDay()];
+
+        const dateStr =
+          (date.getMonth()+1) +
+          "/" +
+          date.getDate() +
+          "（" +
+          weekDay +
+          "）";
+
+        const code =
+          data.daily.weathercode[i];
+
+        const weatherText =
+          WEATHER_CODES[code] || "未知";
+
+        const maxT =
+          Math.round(
+            data.daily.temperature_2m_max[i]
+          );
+
+        const minT =
+          Math.round(
+            data.daily.temperature_2m_min[i]
+          );
+
+        const rain =
+          data.daily.precipitation_probability_max[i];
+
+        html +=
+
+          '<div class="radio-card weather-row">' +
+
+          '<div>' +
+
+          '<div class="weather-date">' +
+          dateStr +
+          '</div>' +
+
+          '<div style="font-size:.9rem">' +
+          weatherText +
+          '</div>' +
+
+          '</div>' +
+
+          '<div style="text-align:right">' +
+
+          '<div class="weather-temp">' +
+          minT +
+          "° ~ " +
+          maxT +
+          "°" +
+          '</div>' +
+
+          '<div class="text-muted" style="font-size:.8rem">' +
+          "降雨 " +
+          rain +
+          "%" +
+          '</div>' +
+
+          '</div>' +
+
+          '</div>';
+
+      }
+
+      list.innerHTML = html;
+
+    })
+
+    .catch(function(){
+
+      loading.style.display = "none";
+
+      list.innerHTML =
+        '<p class="text-muted">天氣載入失敗，請確認有網路</p>';
+
+    });
+
+}
+
+
+/* =========================================================
+   廣播
+========================================================= */
+
+function openRadio(){
+
+  hideSections();
+
+  document.getElementById("radio-section")
+    .classList.add("active");
+
+  renderRadio();
+
+}
+
+
+function renderRadio(){
+
+  const list =
+    document.getElementById(
+      "radio-preset-list"
+    );
+
+  list.innerHTML = "";
+
+  RADIO_PRESETS.forEach(function(ch){
+
+    const div =
+      document.createElement("div");
+
+    div.className = "radio-card";
+
+    div.innerHTML =
+
+      '<div>' +
+
+      '<div style="font-weight:700">' +
+      ch.freq +
+      " FM" +
+      '</div>' +
+
+      '<div class="text-muted">' +
+      escapeHtml(ch.name) +
+      '</div>' +
+
+      '</div>' +
+
+      '<button class="btn btn-sm btn-primary" ' +
+      'onclick="playPreset(' +
+      ch.freq +
+      ',\'' +
+      escapeJs(ch.url) +
+      '\')">' +
+      '收聽' +
+      '</button>';
+
+    list.appendChild(div);
+
+  });
+
+  document.getElementById("freq-display")
+    .textContent =
+    currentFreq.toFixed(1);
+
+  document.getElementById("freq-input")
+    .value =
+    currentFreq.toFixed(1);
+
+}
+
+
+function adjustFreq(delta){
+
+  currentFreq =
+    Math.round(
+      (currentFreq + delta) * 10
+    ) / 10;
+
+  if(currentFreq < 87.5)
+    currentFreq = 87.5;
+
+  if(currentFreq > 108)
+    currentFreq = 108;
+
+  document.getElementById("freq-display")
+    .textContent =
+    currentFreq.toFixed(1);
+
+  document.getElementById("freq-input")
+    .value =
+    currentFreq.toFixed(1);
+
+}
+
+
+function setFreqFromInput(){
+
+  let val =
+    parseFloat(
+      document.getElementById("freq-input")
+      .value
+    );
+
+  if(isNaN(val))
+    val = 94.3;
+
+  if(val < 87.5)
+    val = 87.5;
+
+  if(val > 108)
+    val = 108;
+
+  currentFreq =
+    Math.round(val * 10) / 10;
+
+  document.getElementById("freq-display")
+    .textContent =
+    currentFreq.toFixed(1);
+
+  document.getElementById("freq-input")
+    .value =
+    currentFreq.toFixed(1);
+
+}
+
+
+function playPreset(freq,url){
+
+  currentFreq = freq;
+
+  document.getElementById("freq-display")
+    .textContent =
+    freq.toFixed(1);
+
+  document.getElementById("freq-input")
+    .value =
+    freq.toFixed(1);
+
+  window.open(url,"_blank");
+
+  showToast("已開啟官方線上收聽");
+
+}
+
+
+function openOfficialRadio(){
+
+  window.open(
+    "https://www.pbs.gov.tw/live/pbs.html",
+    "_blank"
+  );
+
+  showToast("已開啟警廣官方線上廣播");
+
+}
+
+
+/* =========================================================
+   地震
+========================================================= */
+
+let eqTimer = null;
+
+let lastEqId =
+  localStorage.getItem("last_eq_id") || "";
+
+
+function startEarthquakeMonitor(){
+
+  const status =
+    document.getElementById("eq-status");
+
+  if(status)
+    status.textContent =
+      "監測中…（每 60 秒檢查一次）";
+
+  checkEarthquake();
+
+  if(eqTimer)
+    clearInterval(eqTimer);
+
+  eqTimer =
+    setInterval(
+      checkEarthquake,
+      60000
+    );
+
+  showToast("已開啟地震監測");
+
+}
+
+
+function stopEarthquakeMonitor(){
+
+  if(eqTimer)
+    clearInterval(eqTimer);
+
+  eqTimer = null;
+
+  const status =
+    document.getElementById("eq-status");
+
+  if(status)
+    status.textContent =
+      "已停止監測";
+
+  showToast("已停止監測");
+
+}
+
+
+function testEarthquakeAlarm(){
+
+  playEarthquakeAlarm();
+
+  showToast("測試警報聲");
+
+}
+
+
+function playEarthquakeAlarm(){
+
+  try{
+
+    const AudioCtx =
+      window.AudioContext ||
+      window.webkitAudioContext;
+
+    if(AudioCtx){
+
+      const ctx =
+        new AudioCtx();
+
+      if(ctx.state === "suspended")
+        ctx.resume();
+
+      function beep(
+        start,
+        freq,
+        duration
+      ){
+
+        const osc =
+          ctx.createOscillator();
+
+        const gain =
+          ctx.createGain();
+
+        osc.type = "square";
+
+        osc.frequency.value =
+          freq;
+
+        gain.gain.setValueAtTime(
+          0.0001,
+          start
+        );
+
+        gain.gain.exponentialRampToValueAtTime(
+          0.3,
+          start + 0.02
+        );
+
+        gain.gain.exponentialRampToValueAtTime(
+          0.0001,
+          start + duration
+        );
+
+        osc.connect(gain);
+
+        gain.connect(ctx.destination);
+
+        osc.start(start);
+
+        osc.stop(
+          start + duration + 0.05
+        );
+
+      }
+
+      const now =
+        ctx.currentTime;
+
+      beep(now,880,0.25);
+      beep(now+0.3,880,0.25);
+      beep(now+0.6,880,0.4);
+      beep(now+1.1,988,0.5);
+
+    }
+
+  }catch(e){}
+
+  if(navigator.vibrate){
+
+    navigator.vibrate([
+      500,
+      200,
+      500,
+      200,
+      800
+    ]);
+
+  }
+
+}
+
+
+function toChinesePlace(place){
+
+  if(!place)
+    return "台灣附近";
+
+  let p = place;
+
+  const map = [
+
+    ["Hualien City","花蓮市"],
+    ["Hualien","花蓮"],
+    ["Yilan","宜蘭"],
+    ["Taitung","台東"],
+    ["Taipei","台北"],
+    ["New Taipei","新北"],
+    ["Taoyuan","桃園"],
+    ["Taichung","台中"],
+    ["Tainan","台南"],
+    ["Kaohsiung","高雄"],
+    ["Pingtung","屏東"],
+    ["Nantou","南投"],
+    ["Chiayi","嘉義"],
+    ["Miaoli","苗栗"],
+    ["Changhua","彰化"],
+    ["Yunlin","雲林"],
+    ["Keelung","基隆"],
+    ["Penghu","澎湖"],
+    ["Taiwan","台灣"],
+    ["km ESE of","公里東南方，"],
+    ["km E of","公里東方，"],
+    ["km ES of","公里東南方，"],
+    ["km SE of","公里東南方，"],
+    ["km S of","公里南方，"],
+    ["km SW of","公里西南方，"],
+    ["km W of","公里西方，"],
+    ["km NW of","公里西北方，"],
+    ["km N of","公里北方，"],
+    ["km NE of","公里東北方，"]
+
+  ];
+
+  map.forEach(function(pair){
+
+    p =
+      p.replace(
+        pair[0],
+        pair[1]
+      );
+
+  });
+
+  return p;
+
+}
+
+
+function checkEarthquake(){
+
+  const url =
+    "https://earthquake.usgs.gov/fdsnws/event/1/query" +
+    "?format=geojson" +
+    "&minlatitude=21" +
+    "&maxlatitude=26" +
+    "&minlongitude=119" +
+    "&maxlongitude=123" +
+    "&orderby=time" +
+    "&limit=5";
+
+  fetch(url)
+
+    .then(function(r){
+      return r.json();
+    })
+
+    .then(function(data){
+
+      const list =
+        document.getElementById("eq-list");
+
+      const status =
+        document.getElementById("eq-status");
+
+      if(
+        !data ||
+        !data.features ||
+        !data.features.length
+      ){
+
+        if(status)
+          status.textContent =
+            "目前無新資料";
+
+        return;
+
+      }
+
+      const newest =
+        data.features[0];
+
+      const id =
+        newest.id;
+
+      const mag =
+        newest.properties.mag;
+
+      const place =
+        toChinesePlace(
+          newest.properties.place
+        );
+
+      const time =
+        new Date(
+          newest.properties.time
+        ).toLocaleString("zh-TW");
+
+      if(list){
+
+        list.innerHTML =
+          data.features
+          .map(function(f){
+
+            const m =
+              f.properties.mag;
+
+            const p =
+              toChinesePlace(
+                f.properties.place
+              );
+
+            const t =
+              new Date(
+                f.properties.time
+              ).toLocaleString("zh-TW");
+
+            return (
+
+              '<div class="radio-card">' +
+
+              '<div>' +
+
+              '<div style="font-weight:700">' +
+              "規模 " +
+              m +
+              '</div>' +
+
+              '<div class="text-muted" style="font-size:.85rem">' +
+              "位置：" +
+              escapeHtml(p) +
+              '</div>' +
+
+              '</div>' +
+
+              '<div class="text-muted" style="font-size:.8rem">' +
+              t +
+              '</div>' +
+
+              '</div>'
+
+            );
+
+          })
+          .join("");
+
+      }
+
+      if(status){
+
+        status.textContent =
+          "最後檢查：" +
+          new Date()
+            .toLocaleTimeString("zh-TW");
+
+      }
+
+      if(
+        id !== lastEqId &&
+        mag >= 4.5
+      ){
+
+        lastEqId = id;
+
+        localStorage.setItem(
+          "last_eq_id",
+          id
+        );
+
+        playEarthquakeAlarm();
+
+        alert(
+          "地震警報\n" +
+          "規模：" +
+          mag +
+          "\n" +
+          "位置：" +
+          place +
+          "\n" +
+          "時間：" +
+          time +
+          "\n\n" +
+          "請立即：趴下、掩護、穩住"
+        );
+
+      }
+
+    })
+
+    .catch(function(){
+
+      const status =
+        document.getElementById("eq-status");
+
+      if(status)
+        status.textContent =
+          "地震資料讀取失敗（需網路）";
+
+    });
+
+}
+
+
+/* =========================================================
+   GPX
+========================================================= */
+
+function exportMeetingPointsGPX(){
+
+  const family =
+    Store.get("family") ||
+    Store.getDefaultFamily();
+
+  const points =
+    (family.meetingPoints || [])
+    .filter(function(p){
+
+      return (
+        p.lat !== null &&
+        p.lng !== null &&
+        !isNaN(p.lat) &&
+        !isNaN(p.lng)
+      );
+
+    });
+
+  if(!points.length){
+
+    alert(
+      "目前沒有已設定經緯度的會合點。\n" +
+      "請先編輯會合點並填入座標。"
+    );
+
+    return;
+
+  }
+
+  let gpx =
+    '<?xml version="1.0" encoding="UTF-8"?>\n';
+
+  gpx +=
+    '<gpx version="1.1" creator="安全團聚" xmlns="http://www.topografix.com/GPX/1/1">\n';
+
+  points.forEach(function(p,i){
+
+    const name =
+      (p.name || "會合點" + (i+1))
+      .replace(/[<>&]/g,"");
+
+    const desc =
+      (
+        (p.address || "") +
+        (p.notes ? " " + p.notes : "")
+      )
+      .replace(/[<>&]/g,"");
+
+    gpx +=
+      '  <wpt lat="' +
+      p.lat +
+      '" lon="' +
+      p.lng +
+      '">\n';
+
+    gpx +=
+      "    <name>" +
+      name +
+      "</name>\n";
+
+    if(desc){
+
+      gpx +=
+        "    <desc>" +
+        desc +
+        "</desc>\n";
+
+    }
+
+    gpx +=
+      "  </wpt>\n";
+
+  });
+
+  gpx += "</gpx>";
+
+  const blob =
+    new Blob(
+      [gpx],
+      {
+        type:"application/gpx+xml"
+      }
+    );
+
+  const url =
+    URL.createObjectURL(blob);
+
+  const a =
+    document.createElement("a");
+
+  a.href = url;
+
+  a.download =
+    "安全團聚_會合點_" +
+    new Date()
+      .toISOString()
+      .slice(0,10) +
+    ".gpx";
+
+  a.click();
+
+  URL.revokeObjectURL(url);
+
+  showToast("已匯出 GPX");
+
+}
+
+
+/* =========================================================
+   複製會合資訊
+========================================================= */
+
+function copyMeetingPointsText(){
+
+  const family =
+    Store.get("family") ||
+    Store.getDefaultFamily();
+
+  const points =
+    family.meetingPoints || [];
+
+  const members =
+    family.members || [];
+
+  let text =
+    "【安全團聚・緊急會合資訊】\n\n";
+
+  text +=
+    "■ 會合地點\n";
+
+  let hasPoint = false;
+
+  points.forEach(function(p,i){
+
+    if(
+      !p.name &&
+      !p.address &&
+      !p.lat
+    )return;
+
+    hasPoint = true;
+
+    text +=
+      (i+1) +
+      ". " +
+      (p.name || "（未命名）") +
+      "\n";
+
+    if(p.address){
+
+      text +=
+        "   地址：" +
+        p.address +
+        "\n";
+
+    }
+
+    if(p.lat && p.lng){
+
+      text +=
+        "   座標：" +
+        p.lat +
+        ", " +
+        p.lng +
+        "\n";
+
+    }
+
+    if(p.notes){
+
+      text +=
+        "   備註：" +
+        p.notes +
+        "\n";
+
+    }
+
+    text += "\n";
+
+  });
+
+  if(!hasPoint){
+
+    text +=
+      "（尚未設定）\n\n";
+
+  }
+
+  text +=
+    "■ 重要聯絡人\n";
+
+  if(members.length){
+
+    members.forEach(function(m){
+
+      text +=
+        (m.name || "") +
+        " " +
+        (m.phone || "") +
+        (
+          m.needs
+            ? "（" + m.needs + "）"
+            : ""
+        ) +
+        "\n";
+
+    });
+
+  }else{
+
+    text +=
+      "（尚未新增）\n";
+
+  }
+
+  text +=
+    "\n請家人各自保存此資訊。";
+
+  if(
+    navigator.clipboard &&
+    navigator.clipboard.writeText
+  ){
+
+    navigator.clipboard
+      .writeText(text)
+      .then(function(){
+
+        showToast("已複製會合點文字");
+
+      })
+      .catch(function(){
+
+        fallbackCopy(text);
+
+      });
+
+  }else{
+
+    fallbackCopy(text);
+
+  }
+
+}
+
+
+function fallbackCopy(text){
+
+  const ta =
+    document.createElement("textarea");
+
+  ta.value = text;
+
+  ta.style.position = "fixed";
+  ta.style.left = "-9999px";
+
+  document.body.appendChild(ta);
+
+  ta.select();
+
+  try{
+
+    document.execCommand("copy");
+
+    showToast("已複製會合點文字");
+
+  }catch(e){
+
+    alert(
+      "複製失敗，請手動選取文字"
+    );
+
+  }
+
+  document.body.removeChild(ta);
+
+}
+
+
+/* =========================================================
+   列印
+========================================================= */
+
+function generatePrintCard(){
+
+  const family =
+    Store.get("family") ||
+    Store.getDefaultFamily();
+
+  let html =
+    '<h2 style="text-align:center;margin-bottom:20px">' +
+    '安全團聚・緊急會合卡' +
+    '</h2>';
+
+  (family.meetingPoints || [])
+    .forEach(function(p,i){
+
+      if(!p.name && !p.address)return;
+
+      html +=
+
+        '<div style="margin-bottom:12px;padding:12px;border:1px solid #ccc;border-radius:8px">' +
+
+        '<strong>會合點 ' +
+        (i+1) +
+        "：" +
+        escapeHtml(p.name || "") +
+        '</strong><br>' +
+
+        escapeHtml(p.address || "") +
+        '<br>' +
+
+        (
+          p.lat && p.lng
+            ? "座標：" +
+              p.lat +
+              ", " +
+              p.lng +
+              "<br>"
+            : ""
+        ) +
+
+        (
+          p.notes
+            ? "備註：" +
+              escapeHtml(p.notes)
+            : ""
+        ) +
+
+        '</div>';
+
+    });
+
+  html +=
+    '<h3 style="margin-top:20px">重要聯絡人</h3>';
+
+  (family.members || [])
+    .forEach(function(m){
+
+      html +=
+        '<div style="padding:4px 0">' +
+        escapeHtml(m.name || "") +
+        "　" +
+        escapeHtml(m.phone || "") +
+        '</div>';
+
+    });
+
+  document.getElementById(
+    "print-card-content"
+  ).innerHTML = html;
+
+  window.print();
+
+}
+
+
+/* =========================================================
+   通知設定
+========================================================= */
+
+function openNotificationSettings(){
+
+  openSettings(
+    "通知設定",
+    function(){
+
+      const settings =
+        Store.get("settings") ||
+        Store.getDefaultSettings();
+
+      return (
+
+        '<div class="switch-row">' +
+
+        '<div>' +
+
+        '<strong>地震監測</strong>' +
+
+        '<div class="text-muted" style="font-size:12px">' +
+        '允許網站進行地震資料監測' +
+        '</div>' +
+
+        '</div>' +
+
+        '<label class="switch">' +
+
+        '<input type="checkbox" ' +
+        (settings.earthquakeNotification
+          ? "checked"
+          : "") +
+        ' onchange="saveSetting(\'earthquakeNotification\',this.checked)">' +
+
+        '<span class="slider"></span>' +
+
+        '</label>' +
+
+        '</div>' +
+
+        '<div style="margin-top:15px">' +
+
+        '<button class="btn btn-primary btn-block" onclick="requestNotificationPermission()">' +
+        '🔔 開啟系統通知權限' +
+        '</button>' +
+
+        '</div>'
+
+      );
+
+    }
+  );
+
+}
+
+
+function requestNotificationPermission(){
+
+  if(
+    window.Notification &&
+    Notification.requestPermission
+  ){
+
+    Notification.requestPermission()
+      .then(function(result){
+
+        showToast(
+          result === "granted"
+            ? "通知權限已開啟"
+            : "通知權限未開啟"
+        );
+
+      });
+
+  }else{
+
+    alert("此瀏覽器不支援通知功能");
+
+  }
+
+}
+
+
+/* =========================================================
+   隱私設定
+========================================================= */
+
+function openPrivacySettings(){
+
+  openSettings(
+    "隱私設定",
+    function(){
+
+      const settings =
+        Store.get("settings") ||
+        Store.getDefaultSettings();
+
+      return (
+
+        '<div class="switch-row">' +
+
+        '<div>' +
+
+        '<strong>位置分享</strong>' +
+
+        '<div class="text-muted" style="font-size:12px">' +
+        '控制是否允許安全團聚分享目前位置' +
+        '</div>' +
+
+        '</div>' +
+
+        '<label class="switch">' +
+
+        '<input type="checkbox" ' +
+        (settings.locationSharing
+          ? "checked"
+          : "") +
+        ' onchange="saveSetting(\'locationSharing\',this.checked)">' +
+
+        '<span class="slider"></span>' +
+
+        '</label>' +
+
+        '</div>' +
+
+        '<div class="danger-box" style="margin-top:15px">' +
+        '⚠️ 目前這些安全資料先儲存在此裝置的瀏覽器中。' +
+        '</div>'
+
+      );
+
+    }
+  );
+
+}
+
+
+/* =========================================================
+   一般設定
+========================================================= */
+
+function openGeneralSettings(){
+
+  openSettings(
+    "一般設定",
+    function(){
+
+      const settings =
+        Store.get("settings") ||
+        Store.getDefaultSettings();
+
+      return (
+
+        '<div class="form-group">' +
+
+        '<label>飲水準備天數</label>' +
+
+        '<input id="target-days" type="number" min="1" max="30" value="' +
+        (settings.targetDays || 7) +
+        '">' +
+
+        '</div>' +
+
+        '<button class="btn btn-primary btn-block" onclick="saveTargetDays()">' +
+        '儲存設定' +
+        '</button>' +
+
+        '<hr style="margin:20px 0;border:0;border-top:1px solid #eee">' +
+
+        '<button class="btn btn-outline btn-block" onclick="exportData()">' +
+        '📤 匯出安全團聚資料' +
+        '</button>' +
+
+        '<div style="height:8px"></div>' +
+
+        '<button class="btn btn-outline btn-block" onclick="document.getElementById(\'import-file\').click()">' +
+        '📥 匯入安全團聚資料' +
+        '</button>' +
+
+        '<input id="import-file" type="file" accept=".json" style="display:none" onchange="importData(event)">' +
+
+        '<div style="height:8px"></div>' +
+
+        '<button class="btn btn-danger btn-block" onclick="clearAllLocalData()">' +
+        '⚠️ 清除本機資料' +
+        '</button>'
+
+      );
+
+    }
+  );
+
+}
+
+
+function openSettings(title,contentFunction){
+
+  hideSections();
+
+  document.getElementById("settings-section")
+    .classList.add("active");
+
+  document.getElementById("settings-title")
+    .textContent = title;
+
+  document.getElementById("settings-content")
+    .innerHTML = contentFunction();
+
+}
+
+
+function saveSetting(key,value){
+
+  const settings =
+    Store.get("settings") ||
+    Store.getDefaultSettings();
+
+  settings[key] = value;
+
+  Store.set("settings",settings);
+
+  showToast("設定已更新");
+
+}
+
+
+function saveTargetDays(){
+
+  const value =
+    +document.getElementById("target-days")
+    .value || 7;
+
+  const settings =
+    Store.get("settings") ||
+    Store.getDefaultSettings();
+
+  settings.targetDays =
+    Math.max(
+      1,
+      Math.min(30,value)
+    );
+
+  Store.set("settings",settings);
+
+  showToast("已儲存");
+
+}
+
+
+/* =========================================================
+   匯出／匯入
+========================================================= */
+
+function exportData(){
+
+  const data = {
+
+    profile:Store.get("profile"),
+
+    family:Store.get("family"),
+
+    inventory:Store.get("inventory"),
+
+    goBag:Store.get("goBag"),
+
+    settings:Store.get("settings"),
+
+    waypoints:Store.get("waypoints"),
+
+    exportedAt:
+      new Date().toISOString(),
+
+    version:2
+
+  };
+
+  const blob =
+    new Blob(
+      [
+        JSON.stringify(
+          data,
+          null,
+          2
+        )
+      ],
+      {
+        type:"application/json"
+      }
+    );
+
+  const url =
+    URL.createObjectURL(blob);
+
+  const a =
+    document.createElement("a");
+
+  a.href = url;
+
+  a.download =
+    "安全團聚備份_" +
+    new Date()
+      .toISOString()
+      .slice(0,10) +
+    ".json";
+
+  a.click();
+
+  URL.revokeObjectURL(url);
+
+  showToast("已匯出");
+
+}
+
+
+function importData(event){
+
+  const file =
+    event.target.files[0];
+
+  if(!file)return;
+
+  const reader =
+    new FileReader();
+
+  reader.onload =
+    function(e){
+
+      try{
+
+        const data =
+          JSON.parse(e.target.result);
+
+        if(data.profile)
+          Store.set(
+            "profile",
+            data.profile
+          );
+
+        if(data.family)
+          Store.set(
+            "family",
+            data.family
+          );
+
+        if(data.inventory)
+          Store.set(
+            "inventory",
+            data.inventory
+          );
+
+        if(data.goBag)
+          Store.set(
+            "goBag",
+            data.goBag
+          );
+
+        if(data.settings)
+          Store.set(
+            "settings",
+            data.settings
+          );
+
+        if(data.waypoints)
+          Store.set(
+            "waypoints",
+            data.waypoints
+          );
+
+        showToast("匯入成功");
+
+        setTimeout(
+          function(){
+            location.reload();
+          },
+          800
+        );
+
+      }catch(err){
+
+        alert(
+          "檔案格式錯誤，無法匯入"
+        );
+
+      }
+
+    };
+
+  reader.readAsText(file);
+
+}
+
+
+function clearAllLocalData(){
+
+  if(
+    !confirm(
+      "確定要清除本機所有安全團聚資料嗎？\n\n此操作無法復原。"
+    )
+  )return;
+
+  const prefix =
+    "safe_reunion_";
+
+  Object.keys(localStorage)
+    .forEach(function(key){
+
+      if(key.indexOf(prefix) === 0){
+
+        localStorage.removeItem(key);
+
+      }
+
+    });
+
+  localStorage.removeItem("weather_city");
+  localStorage.removeItem("last_eq_id");
+
+  alert(
+    "本機資料已清除，頁面將重新載入。"
+  );
+
+  location.reload();
+
+}
+
+
+/* =========================================================
+   Modal
+========================================================= */
+
+function closeModal(id){
+
+  const el =
+    document.getElementById(id);
+
+  if(el)
+    el.classList.remove("show");
+
+}
+
+
+function showToast(msg){
+
+  const toast =
+    document.getElementById("toast");
+
+  toast.textContent = msg;
+
+  toast.classList.add("show");
+
+  setTimeout(function(){
+
+    toast.classList.remove("show");
+
+  },2200);
+
+}
+
+
+/* =========================================================
+   HTML 安全處理
+========================================================= */
+
+function escapeHtml(str){
+
+  if(str === null || str === undefined)
+    return "";
+
+  return String(str)
+    .replace(/&/g,"&amp;")
+    .replace(/</g,"&lt;")
+    .replace(/>/g,"&gt;")
+    .replace(/"/g,"&quot;")
+    .replace(/'/g,"&#039;");
+
+}
+
+
+function escapeJs(str){
+
+  return String(str || "")
+    .replace(/\\/g,"\\\\")
+    .replace(/'/g,"\\'")
+    .replace(/"/g,"&quot;")
+    .replace(/\n/g,"\\n")
+    .replace(/\r/g,"\\r");
+
+}
+
+
+/* =========================================================
+   初始化
+========================================================= */
+
+document.addEventListener(
+  "DOMContentLoaded",
+  function(){
+
+    loadProfile();
+
+    updateDashboardStats();
+
+    const currentPage =
+      location.pathname
+        .split("/")
+        .pop() ||
+      "home.html";
+
+    document
+      .querySelectorAll("#bottomNav a")
+      .forEach(function(link){
+
+        if(
+          link.getAttribute("data-page") ===
+          currentPage
+        ){
+
+          link.classList.add("active");
+
+        }
+
+      });
+
+  }
+);
+
+
+/* =========================================================
+   點擊功能區
+========================================================= */
+
+document.addEventListener(
+  "click",
+  function(e){
+
+    const item =
+      e.target.closest(".menu-item");
+
+    if(!item)return;
+
+    const text =
+      item.querySelector(".menu-text");
+
+    if(!text)return;
+
+    const name =
+      text.textContent.trim();
+
+    if(name === "我的家人"){
+
+      openFamily();
+
+    }
+
+  }
+);
+
+
+/* =========================================================
+   通知權限
+========================================================= */
+
+if(
+  window.Notification &&
+  Notification.permission === "default"
+){
+
+  /*
+   不在頁面一載入時強迫要求通知權限。
+   改由「通知設定」按鈕讓使用者主動開啟。
+  */
+
+}
 
 </script>
 
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="call-notify.js"></script>
 </body>
 </html>
