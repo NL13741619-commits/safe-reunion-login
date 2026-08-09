@@ -719,12 +719,72 @@ input[type="file"] {
     new URLSearchParams(location.search);
 
   var roomName =
-    params.get('name')
-      ? decodeURIComponent(params.get('name'))
-      : '對話';
+  params.get('name')
+    ? decodeURIComponent(params.get('name'))
+    : '對話';
 
-  var roomId =
-    params.get('id') || roomName;
+var roomId =
+  params.get('id') || roomName;
+
+
+/* =====================================================
+   從 Supabase 讀取最新聊天室名稱
+===================================================== */
+
+async function loadRoomName() {
+
+  if (!supabase || !roomId || !isGroup) {
+    return;
+  }
+
+  try {
+
+    var result =
+      await supabase
+        .from('chat_groups')
+        .select('name')
+        .eq('id', roomId)
+        .maybeSingle();
+
+    if (
+      result.error ||
+      !result.data
+    ) {
+      console.log(
+        '聊天室名稱讀取失敗：',
+        result.error
+          ? result.error.message
+          : '找不到聊天室'
+      );
+
+      return;
+    }
+
+    if (
+      result.data.name &&
+      result.data.name.trim()
+    ) {
+
+      roomName =
+        result.data.name.trim();
+
+      document.getElementById(
+        'roomName'
+      ).textContent =
+        roomName;
+
+    }
+
+  } catch (e) {
+
+    console.log(
+      '聊天室名稱讀取錯誤：',
+      e
+    );
+
+  }
+
+}
 
 
   var isGroup =
