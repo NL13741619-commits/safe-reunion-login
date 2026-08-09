@@ -90,69 +90,8 @@ body {
   gap: 8px;
 }
 
-/* =========================
-   MESSAGE ROW + AVATAR
-========================= */
-
-.message-row {
-  width: 100%;
-  display: flex;
-  align-items: flex-start;
-  gap: 8px;
-}
-
-.message-row.me {
-  justify-content: flex-end;
-}
-
-.message-row.them {
-  justify-content: flex-start;
-}
-
-.message-avatar {
-  width: 38px;
-  height: 38px;
-  min-width: 38px;
-  border-radius: 50%;
-  overflow: hidden;
-  background: #cfcfcf;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 15px;
-  font-weight: 700;
-  color: #555;
-  margin-top: 2px;
-  box-shadow: 0 1px 3px rgba(0,0,0,.15);
-}
-
-.message-avatar img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  display: block;
-}
-
-.message-content {
-  max-width: 78%;
-  min-width: 0;
-}
-
-.message-name {
-  font-size: 11px;
-  color: #666;
-  margin-bottom: 3px;
-  padding-left: 3px;
-  font-weight: 600;
-}
-
-.message-row.me .message-name {
-  text-align: right;
-  padding-right: 3px;
-}
-
 .msg {
-  max-width: 100%;
+  max-width: 78%;
   padding: 10px 12px;
   border-radius: 14px;
   font-size: 15px;
@@ -206,7 +145,6 @@ body {
 
 /* =========================
    SOS
-   注意：SOS 樣式保持原本
 ========================= */
 
 .sos-card {
@@ -476,26 +414,6 @@ input[type="file"] {
 #inviteList {
   font-size: 14px;
 }
-
-.member-avatar {
-  width: 40px;
-  height: 40px;
-  min-width: 40px;
-  border-radius: 50%;
-  overflow: hidden;
-  background: #ddd;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: 700;
-  color: #666;
-}
-
-.member-avatar img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
 </style>
 </head>
 
@@ -572,6 +490,7 @@ input[type="file"] {
     </label>
 
   </div>
+
 
   <div class="composer-row">
 
@@ -772,14 +691,6 @@ input[type="file"] {
 
   var groupMembers = [];
 
-  /*
-    ============================================
-    新增：使用者 profile 快取
-    ============================================
-  */
-
-  var profileCache = {};
-
 
   /* =====================================================
      URL
@@ -806,347 +717,8 @@ input[type="file"] {
 
 
   /* =====================================================
-     PROFILE
-  ===================================================== */
-
-  function profileName(profile, fallback) {
-
-    if (profile) {
-
-      return (
-        profile.nickname ||
-        profile.username ||
-        fallback ||
-        '成員'
-      );
-
-    }
-
-    return fallback || '成員';
-
-  }
-
-
-  function getInitial(name) {
-
-    var s =
-      String(
-        name ||
-        '成員'
-      ).trim();
-
-    if (!s) {
-      return '成';
-    }
-
-    return s.charAt(0);
-
-  }
-
-
-  function getMyFallbackName() {
-
-    if (!myUser) {
-      return '你';
-    }
-
-    var metadata =
-      myUser.user_metadata ||
-      {};
-
-    return (
-      metadata.nickname ||
-      metadata.username ||
-      (
-        myUser.email
-          ? myUser.email.split('@')[0]
-          : '你'
-      )
-    );
-
-  }
-
-
-  function getProfileForUser(uid) {
-
-    if (!uid) {
-      return null;
-    }
-
-    return profileCache[uid] || null;
-
-  }
-
-
-  async function loadProfilesForUsers(userIds) {
-
-    if (
-      !supabase ||
-      !userIds ||
-      !userIds.length
-    ) {
-      return;
-    }
-
-
-    var ids = [];
-
-    userIds.forEach(
-      function (id) {
-
-        if (
-          id &&
-          ids.indexOf(id) < 0
-        ) {
-
-          ids.push(id);
-
-        }
-
-      }
-    );
-
-
-    if (!ids.length) {
-      return;
-    }
-
-
-    var missing = ids.filter(
-      function (id) {
-
-        return !profileCache[id];
-
-      }
-    );
-
-
-    if (!missing.length) {
-      return;
-    }
-
-
-    try {
-
-      var result =
-        await supabase
-          .from('profiles')
-          .select(
-            'id,username,nickname,avatar_url'
-          )
-          .in(
-            'id',
-            missing
-          );
-
-
-      if (result.error) {
-
-        console.log(
-          'profiles 載入失敗：',
-          result.error.message
-        );
-
-        return;
-
-      }
-
-
-      (
-        result.data ||
-        []
-      ).forEach(
-        function (profile) {
-
-          profileCache[
-            profile.id
-          ] = profile;
-
-        }
-      );
-
-
-    } catch (e) {
-
-      console.log(
-        'profiles 錯誤：',
-        e
-      );
-
-    }
-
-  }
-
-
-  async function loadMyProfile() {
-
-    if (
-      !supabase ||
-      !myUser
-    ) {
-      return;
-    }
-
-
-    /*
-      先使用 auth metadata 當備用資料
-    */
-
-    var metadata =
-      myUser.user_metadata ||
-      {};
-
-
-    profileCache[
-      myUser.id
-    ] = {
-
-      id:
-        myUser.id,
-
-      username:
-        metadata.username ||
-        '',
-
-      nickname:
-        metadata.nickname ||
-        '',
-
-      avatar_url:
-        metadata.avatar_url ||
-        ''
-
-    };
-
-
-    /*
-      再以 profiles 資料庫為準
-    */
-
-    try {
-
-      var result =
-        await supabase
-          .from('profiles')
-          .select(
-            'id,username,nickname,avatar_url'
-          )
-          .eq(
-            'id',
-            myUser.id
-          )
-          .maybeSingle();
-
-
-      if (
-        result.data
-      ) {
-
-        profileCache[
-          myUser.id
-        ] =
-          result.data;
-
-      }
-
-    } catch (e) {
-
-      console.log(
-        '自己的 profile 載入失敗：',
-        e
-      );
-
-    }
-
-  }
-
-
-  function createAvatar(
-    uid,
-    name,
-    size
-  ) {
-
-    var profile =
-      getProfileForUser(uid);
-
-    var avatarUrl =
-      profile &&
-      profile.avatar_url
-        ? profile.avatar_url
-        : '';
-
-
-    var avatar =
-      document.createElement(
-        'div'
-      );
-
-
-    avatar.className =
-      'message-avatar';
-
-
-    if (size) {
-
-      avatar.style.width =
-        size + 'px';
-
-      avatar.style.height =
-        size + 'px';
-
-      avatar.style.minWidth =
-        size + 'px';
-
-    }
-
-
-    if (avatarUrl) {
-
-      var img =
-        document.createElement(
-          'img'
-        );
-
-      img.src =
-        avatarUrl;
-
-      img.alt =
-        name || '頭像';
-
-
-      img.onerror =
-        function () {
-
-          avatar.innerHTML =
-            '';
-
-          avatar.textContent =
-            getInitial(name);
-
-        };
-
-
-      avatar.appendChild(
-        img
-      );
-
-    } else {
-
-      avatar.textContent =
-        getInitial(name);
-
-    }
-
-
-    return avatar;
-
-  }
-
-
-  /* =====================================================
      SOS 本機刪除
-
+     
      注意：
      這裡只使用 localStorage。
      絕對不 DELETE Supabase 資料。
@@ -1217,6 +789,9 @@ input[type="file"] {
 
   /* =====================================================
      SOS 解除狀態
+     
+     優先更新 sos_alerts。
+     如果找不到 alert，就不刪事件。
   ===================================================== */
 
   async function resolveSOS(sos) {
@@ -1388,8 +963,6 @@ input[type="file"] {
 
   /* =====================================================
      SOS 顯示
-     
-     這一區保持原本 SOS 邏輯
   ===================================================== */
 
   async function renderSOS(
@@ -1405,6 +978,11 @@ input[type="file"] {
       return;
     }
 
+
+    /*
+      如果使用者之前在自己的手機
+      刪除過這個 SOS，就不要重新顯示。
+    */
 
     if (
       isSOSDeletedLocally(
@@ -1464,40 +1042,6 @@ input[type="file"] {
     var name =
       sos.display_name ||
       '群組成員';
-
-
-    /*
-      如果 SOS 沒有 display_name，
-      嘗試從 profiles 取得暱稱。
-    */
-
-    if (
-      !sos.display_name &&
-      sos.user_id
-    ) {
-
-      await loadProfilesForUsers([
-        sos.user_id
-      ]);
-
-
-      var sosProfile =
-        getProfileForUser(
-          sos.user_id
-        );
-
-
-      if (sosProfile) {
-
-        name =
-          profileName(
-            sosProfile,
-            name
-          );
-
-      }
-
-    }
 
 
     var message =
@@ -1632,6 +1176,10 @@ input[type="file"] {
       '</div>';
 
 
+    /* =========================
+       刪除：只刪自己手機
+    ========================= */
+
     var deleteBtn =
       div.querySelector(
         '.sos-delete-btn'
@@ -1651,6 +1199,10 @@ input[type="file"] {
 
     }
 
+
+    /* =========================
+       解除 SOS
+    ========================= */
 
     var resolveBtn =
       div.querySelector(
@@ -1674,6 +1226,10 @@ input[type="file"] {
 
     }
 
+
+    /* =========================
+       查看位置
+    ========================= */
 
     var mapBtn =
       div.querySelector(
@@ -1705,15 +1261,14 @@ input[type="file"] {
     }
 
 
-    /*
-      SOS 仍然直接加入 messages 容器。
-      不經過一般聊天 renderMessages。
-    */
-
     box.appendChild(
       div
     );
 
+
+    /*
+      新 SOS 才自動捲到底
+    */
 
     if (
       options.scroll !== false
@@ -1876,10 +1431,20 @@ input[type="file"] {
           }
 
 
+          /*
+            新 SOS：
+            立即顯示
+          */
+
           await renderSOS(
             sos
           );
 
+
+          /*
+            SOS 與一般聊天
+            使用同一個提示音函式。
+          */
 
           playNotify();
 
@@ -2152,24 +1717,6 @@ input[type="file"] {
 
   function rowToLocal(row) {
 
-    var profile =
-      getProfileForUser(
-        row.user_id
-      );
-
-
-    var fallbackName =
-      row.sender_name ||
-      '成員';
-
-
-    var displayName =
-      profileName(
-        profile,
-        fallbackName
-      );
-
-
     return {
 
       id:
@@ -2208,7 +1755,8 @@ input[type="file"] {
         false,
 
       senderName:
-        displayName,
+        row.sender_name ||
+        '成員',
 
       userId:
         row.user_id
@@ -2308,29 +1856,6 @@ input[type="file"] {
       );
 
 
-    /*
-      注意：
-      這裡會重新畫一般聊天訊息。
-      SOS 不放在 messages 陣列裡，
-      所以不會被一般聊天刪除。
-    */
-
-    var existingSOS = [];
-
-
-    box.querySelectorAll(
-      '.sos-card'
-    ).forEach(
-      function (el) {
-
-        existingSOS.push(
-          el
-        );
-
-      }
-    );
-
-
     box.innerHTML =
       '';
 
@@ -2346,91 +1871,6 @@ input[type="file"] {
 
         }
 
-
-        var profile =
-          getProfileForUser(
-            m.userId
-          );
-
-
-        var displayName =
-          profileName(
-            profile,
-            m.senderName
-          );
-
-
-        /*
-          外層訊息 row
-        */
-
-        var row =
-          document.createElement(
-            'div'
-          );
-
-
-        row.className =
-          'message-row ' +
-          (
-            m.mine
-              ? 'me'
-              : 'them'
-          );
-
-
-        /*
-          頭像
-        */
-
-        var avatar =
-          createAvatar(
-            m.userId,
-            displayName,
-            38
-          );
-
-
-        /*
-          內容區
-        */
-
-        var content =
-          document.createElement(
-            'div'
-          );
-
-
-        content.className =
-          'message-content';
-
-
-        /*
-          暱稱
-        */
-
-        var nameEl =
-          document.createElement(
-            'div'
-          );
-
-
-        nameEl.className =
-          'message-name';
-
-
-        nameEl.textContent =
-          displayName;
-
-
-        content.appendChild(
-          nameEl
-        );
-
-
-        /*
-          訊息泡泡
-        */
 
         var div =
           document.createElement(
@@ -2472,15 +1912,29 @@ input[type="file"] {
                 : '對方已回收一則訊息'
             ) +
             '<div class="msg-time">' +
-            escapeHtml(
-              m.time
-            ) +
+            m.time +
             '</div>';
 
         } else {
 
           var html =
             '';
+
+
+          if (
+            !m.mine &&
+            isGroup
+          ) {
+
+            html +=
+              '<div class="msg-tag" ' +
+              'style="color:#555;font-weight:600;margin-bottom:2px">' +
+              escapeHtml(
+                m.senderName
+              ) +
+              '</div>';
+
+          }
 
 
           if (
@@ -2536,9 +1990,7 @@ input[type="file"] {
 
             html +=
               '<span style="font-size:36px">' +
-              escapeHtml(
-                m.text
-              ) +
+              m.text +
               '</span>';
 
           } else if (
@@ -2584,9 +2036,7 @@ input[type="file"] {
 
           html +=
             '<div class="msg-time">' +
-            escapeHtml(
-              m.time
-            ) +
+            m.time +
             '</div>';
 
 
@@ -2595,10 +2045,6 @@ input[type="file"] {
 
         }
 
-
-        /*
-          長按／右鍵功能
-        */
 
         var timer =
           null;
@@ -2665,58 +2111,8 @@ input[type="file"] {
         );
 
 
-        content.appendChild(
+        box.appendChild(
           div
-        );
-
-
-        /*
-          最後組合：
-          他人：頭像 + 內容
-          自己：內容 + 頭像
-        */
-
-        if (m.mine) {
-
-          row.appendChild(
-            content
-          );
-
-          row.appendChild(
-            avatar
-          );
-
-        } else {
-
-          row.appendChild(
-            avatar
-          );
-
-          row.appendChild(
-            content
-          );
-
-        }
-
-
-        box.appendChild(
-          row
-        );
-
-      }
-    );
-
-
-    /*
-      SOS 必須重新放回去。
-      SOS 本身不會被 messages 管理。
-    */
-
-    existingSOS.forEach(
-      function (sosEl) {
-
-        box.appendChild(
-          sosEl
         );
 
       }
@@ -2773,15 +2169,7 @@ input[type="file"] {
         false,
 
       hiddenLocal:
-        false,
-
-      senderName:
-        getMyFallbackName(),
-
-      userId:
-        myUser
-          ? myUser.id
-          : null
+        false
 
     });
 
@@ -2964,19 +2352,6 @@ input[type="file"] {
     }
 
 
-    var myProfile =
-      getProfileForUser(
-        myUser.id
-      );
-
-
-    var senderName =
-      profileName(
-        myProfile,
-        getMyFallbackName()
-      );
-
-
     var ins =
       await supabase
         .from(
@@ -2991,7 +2366,18 @@ input[type="file"] {
             myUser.id,
 
           sender_name:
-            senderName,
+            (
+              myUser.user_metadata &&
+              (
+                myUser.user_metadata.nickname ||
+                myUser.user_metadata.username
+              )
+            ) ||
+            (
+              myUser.email
+                ? myUser.email.split('@')[0]
+                : '成員'
+            ),
 
           kind:
             kind,
@@ -3103,19 +2489,6 @@ input[type="file"] {
     }
 
 
-    var myProfile =
-      getProfileForUser(
-        myUser.id
-      );
-
-
-    var senderName =
-      profileName(
-        myProfile,
-        getMyFallbackName()
-      );
-
-
     setStatus(
       '送出中…'
     );
@@ -3135,7 +2508,8 @@ input[type="file"] {
             myUser.id,
 
           sender_name:
-            senderName,
+            myUser.email ||
+            'user',
 
           kind:
             'text',
@@ -3177,7 +2551,7 @@ input[type="file"] {
 
 
   /* =====================================================
-     Send Payload
+     Payload
   ===================================================== */
 
   async function sendPayload(
@@ -3207,19 +2581,6 @@ input[type="file"] {
     }
 
 
-    var myProfile =
-      getProfileForUser(
-        myUser.id
-      );
-
-
-    var senderName =
-      profileName(
-        myProfile,
-        getMyFallbackName()
-      );
-
-
     var res =
       await supabase
         .from(
@@ -3234,7 +2595,8 @@ input[type="file"] {
             myUser.id,
 
           sender_name:
-            senderName,
+            myUser.email ||
+            'user',
 
           kind:
             kind,
@@ -3332,13 +2694,6 @@ input[type="file"] {
         session.user;
 
 
-      /*
-        先載入自己的暱稱與頭像
-      */
-
-      await loadMyProfile();
-
-
       setStatus(
         '已登入，載入訊息…'
       );
@@ -3381,28 +2736,6 @@ input[type="file"] {
         return;
 
       }
-
-
-      /*
-        先抓所有發言者的 profile
-      */
-
-      var senderIds =
-        (
-          q.data ||
-          []
-        ).map(
-          function (row) {
-
-            return row.user_id;
-
-          }
-        );
-
-
-      await loadProfilesForUsers(
-        senderIds
-      );
 
 
       messages =
@@ -3474,7 +2807,7 @@ input[type="file"] {
               roomId
           },
 
-          async function (
+          function (
             payload
           ) {
 
@@ -3482,20 +2815,6 @@ input[type="file"] {
               payload.eventType ===
               'INSERT'
             ) {
-
-              var newUserId =
-                payload.new &&
-                payload.new.user_id;
-
-
-              /*
-                先取得這個人的 profile
-              */
-
-              await loadProfilesForUsers([
-                newUserId
-              ]);
-
 
               var m =
                 rowToLocal(
@@ -3541,12 +2860,6 @@ input[type="file"] {
               payload.eventType ===
               'UPDATE'
             ) {
-
-              await loadProfilesForUsers([
-                payload.new &&
-                payload.new.user_id
-              ]);
-
 
               var m2 =
                 rowToLocal(
@@ -3872,22 +3185,38 @@ input[type="file"] {
       memberIds;
 
 
-    await loadProfilesForUsers(
-      memberIds
-    );
-
-
     var profiles = {};
 
 
-    memberIds.forEach(
-      function (id) {
+    if (
+      memberIds.length
+    ) {
 
-        profiles[id] =
-          getProfileForUser(id);
+      var pr =
+        await supabase
+          .from(
+            'profiles'
+          )
+          .select('*')
+          .in(
+            'id',
+            memberIds
+          );
 
-      }
-    );
+
+      (
+        pr.data ||
+        []
+      ).forEach(
+        function (p) {
+
+          profiles[p.id] =
+            p;
+
+        }
+      );
+
+    }
 
 
     memBox.innerHTML =
@@ -3908,12 +3237,11 @@ input[type="file"] {
 
 
         var name =
-          profileName(
-            p,
-            m.user_id.slice(
-              0,
-              8
-            )
+          p.nickname ||
+          p.username ||
+          m.user_id.slice(
+            0,
+            8
           );
 
 
@@ -3931,100 +3259,18 @@ input[type="file"] {
           'border-bottom:1px solid #f0f0f0;';
 
 
-        var left =
-          document.createElement(
-            'div'
-          );
-
-
-        left.style.cssText =
-          'display:flex;' +
-          'align-items:center;' +
-          'gap:10px;' +
-          'min-width:0;';
-
-
-        var av =
-          document.createElement(
-            'div'
-          );
-
-
-        av.className =
-          'member-avatar';
-
-
-        if (
-          p.avatar_url
-        ) {
-
-          var img =
-            document.createElement(
-              'img'
-            );
-
-
-          img.src =
-            p.avatar_url;
-
-
-          img.alt =
-            name;
-
-
-          img.onerror =
-            function () {
-
-              av.innerHTML =
-                '';
-
-              av.textContent =
-                getInitial(name);
-
-            };
-
-
-          av.appendChild(
-            img
-          );
-
-        } else {
-
-          av.textContent =
-            getInitial(name);
-
-        }
-
-
-        left.appendChild(
-          av
-        );
-
-
-        var nameDiv =
-          document.createElement(
-            'div'
-          );
-
-
-        nameDiv.textContent =
-          name +
+        div.innerHTML =
+          '<div>' +
+          escapeHtml(
+            name
+          ) +
           (
             m.role ===
             'owner'
               ? '（群主）'
               : ''
-          );
-
-
-        left.appendChild(
-          nameDiv
-        );
-
-
-        div.appendChild(
-          left
-        );
+          ) +
+          '</div>';
 
 
         if (
@@ -4146,28 +3392,28 @@ input[type="file"] {
     }
 
 
-    await loadProfilesForUsers(
-      friendIds
-    );
+    var fpr =
+      await supabase
+        .from(
+          'profiles'
+        )
+        .select('*')
+        .in(
+          'id',
+          friendIds
+        );
 
 
     (
-      friendIds
+      fpr.data ||
+      []
     ).forEach(
-      function (friendId) {
-
-        var p =
-          getProfileForUser(
-            friendId
-          ) ||
-          {};
-
+      function (p) {
 
         var name =
-          profileName(
-            p,
-            '好友'
-          );
+          p.nickname ||
+          p.username ||
+          '好友';
 
 
         var div =
@@ -4184,93 +3430,12 @@ input[type="file"] {
           'border-bottom:1px solid #f0f0f0;';
 
 
-        var left =
-          document.createElement(
-            'div'
-          );
-
-
-        left.style.cssText =
-          'display:flex;' +
-          'align-items:center;' +
-          'gap:10px;';
-
-
-        var av =
-          document.createElement(
-            'div'
-          );
-
-
-        av.className =
-          'member-avatar';
-
-
-        if (
-          p.avatar_url
-        ) {
-
-          var img =
-            document.createElement(
-              'img'
-            );
-
-
-          img.src =
-            p.avatar_url;
-
-
-          img.alt =
-            name;
-
-
-          img.onerror =
-            function () {
-
-              av.innerHTML =
-                '';
-
-              av.textContent =
-                getInitial(name);
-
-            };
-
-
-          av.appendChild(
-            img
-          );
-
-        } else {
-
-          av.textContent =
-            getInitial(name);
-
-        }
-
-
-        left.appendChild(
-          av
-        );
-
-
-        var nameEl =
-          document.createElement(
-            'div'
-          );
-
-
-        nameEl.textContent =
-          name;
-
-
-        left.appendChild(
-          nameEl
-        );
-
-
-        div.appendChild(
-          left
-        );
+        div.innerHTML =
+          '<div>' +
+          escapeHtml(
+            name
+          ) +
+          '</div>';
 
 
         var btn =
@@ -4296,7 +3461,7 @@ input[type="file"] {
           function () {
 
             inviteMember(
-              friendId,
+              p.id,
               name
             );
 
@@ -4497,9 +3662,6 @@ input[type="file"] {
       );
 
 
-    closeAction();
-
-
     if (
       !m ||
       m.recalled ||
@@ -4509,10 +3671,6 @@ input[type="file"] {
       return;
 
     }
-
-
-    selectedId =
-      id;
 
 
     var box =
@@ -4630,16 +3788,12 @@ input[type="file"] {
 
   async function doRecall() {
 
-    var id =
-      selectedId;
-
-
     var m =
       messages.find(
         function (x) {
 
           return x.id ===
-            id;
+            selectedId;
 
         }
       );
@@ -4694,21 +3848,19 @@ input[type="file"] {
     一般聊天訊息刪除
     維持原本功能。
     
+    注意：
+    這裡只處理 messages。
     SOS 完全不會走到這裡。
   */
 
   async function doDeleteLocal() {
-
-    var id =
-      selectedId;
-
 
     var m =
       messages.find(
         function (x) {
 
           return x.id ===
-            id;
+            selectedId;
 
         }
       );
