@@ -164,17 +164,18 @@
         showStatus('註冊中，請稍候…');
 
         try {
-          const { data, error } = await supabase.auth.signUp({
-            email: email,
-            password: password,
-            options: {
-              data: {
-                nickname: nickname,
-                username: username,
-                phone: phone
-              }
-            }
-          });
+  const { data, error } = await supabase.auth.signUp({
+    email: email,
+    password: password,
+    options: {
+      emailRedirectTo: 'https://nl13741619-commits.github.io/safe-reunion-login/index.html',
+      data: {
+        nickname: nickname,
+        username: username,
+        phone: phone
+      }
+    }
+  });
 
           if (error) {
             showStatus('註冊失敗：' + error.message, true);
