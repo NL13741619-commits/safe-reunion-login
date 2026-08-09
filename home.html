@@ -382,7 +382,20 @@
 
     <!-- 快速功能 -->
     <div class="quick-row">
+      <a
+  class="quick-item"
+  id="adminQuickItem"
+  href="speed-camera-admin.html"
+  style="display:none;"
+>
+  <div class="quick-icon">
+    ⚙️
+  </div>
 
+  <div class="quick-label">
+    後台管理員
+  </div>
+</a>
       <a
         class="quick-item"
         href="map.html"
@@ -546,6 +559,53 @@
 
   initSupabase();
 
+  var MY_ADMIN_UID =
+  '11dd26d5-42fb-4947-9676-119279b63dd8';
+
+async function checkAdminButton() {
+
+  if (!supabase) {
+    return;
+  }
+
+  try {
+
+    var result =
+      await supabase.auth.getUser();
+
+    var user =
+      result.data &&
+      result.data.user;
+
+    if (
+      user &&
+      user.id === MY_ADMIN_UID
+    ) {
+
+      var adminButton =
+        document.getElementById(
+          'adminQuickItem'
+        );
+
+      if (adminButton) {
+        adminButton.style.display =
+          'block';
+      }
+    }
+
+  } catch (e) {
+
+    console.error(
+      '管理員判斷失敗：',
+      e
+    );
+
+  }
+}
+
+checkAdminButton();
+
+  
 
   /* =========================================================
      警訊
