@@ -5,8 +5,14 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>安全團聚</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
   <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
     body {
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
       background: #f5f5f5;
@@ -14,6 +20,7 @@
       padding-bottom: 70px;
       color: #111;
     }
+
     .header {
       background: #06C755;
       color: white;
@@ -25,8 +32,20 @@
       top: 0;
       z-index: 100;
     }
-    .header h1 { font-size: 18px; font-weight: 700; }
-    .header-right { display: flex; align-items: center; gap: 14px; font-size: 20px; }
+
+    .header h1 {
+      font-size: 18px;
+      font-weight: 700;
+    }
+
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      font-size: 20px;
+    }
+
+    /* ===== 警訊 ===== */
 
     .alert-banner {
       background: #fdecea;
@@ -40,10 +59,30 @@
       box-shadow: 0 2px 8px rgba(0,0,0,0.06);
       position: relative;
     }
-    .alert-icon { font-size: 22px; flex-shrink: 0; }
-    .alert-content { flex: 1; padding-right: 24px; }
-    .alert-title { font-size: 14px; font-weight: 700; color: #333; margin-bottom: 4px; }
-    .alert-text { font-size: 13px; color: #555; line-height: 1.4; }
+
+    .alert-icon {
+      font-size: 22px;
+      flex-shrink: 0;
+    }
+
+    .alert-content {
+      flex: 1;
+      padding-right: 24px;
+    }
+
+    .alert-title {
+      font-size: 14px;
+      font-weight: 700;
+      color: #333;
+      margin-bottom: 4px;
+    }
+
+    .alert-text {
+      font-size: 13px;
+      color: #555;
+      line-height: 1.4;
+    }
+
     .alert-actions {
       display: flex;
       gap: 10px;
@@ -51,12 +90,14 @@
       align-items: center;
       flex-wrap: wrap;
     }
+
     .alert-link {
       font-size: 13px;
       color: #06C755;
       font-weight: 600;
       text-decoration: none;
     }
+
     .siren-btn {
       background: #e74c3c;
       color: white;
@@ -66,6 +107,7 @@
       font-size: 12px;
       font-weight: 600;
     }
+
     .alert-close {
       position: absolute;
       top: 10px;
@@ -80,7 +122,137 @@
       justify-content: center;
     }
 
-    .content { padding: 16px 12px; }
+    /* ===== 主內容 ===== */
+
+    .content {
+      padding: 16px 12px;
+    }
+
+    /* ===== SOS ===== */
+
+    .sos-bar {
+      background: #e74c3c;
+      color: white;
+      border-radius: 12px;
+      padding: 16px;
+      text-align: center;
+      font-size: 16px;
+      font-weight: 700;
+      margin-bottom: 12px;
+      cursor: pointer;
+      box-shadow: 0 3px 8px rgba(231,76,60,0.2);
+    }
+
+    .sos-bar:active {
+      transform: scale(0.98);
+    }
+
+    .sos-active {
+      background: #fff;
+      border: 2px solid #e74c3c;
+      border-radius: 12px;
+      padding: 14px;
+      margin-bottom: 16px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    }
+
+    .sos-active-title {
+      color: #e74c3c;
+      font-size: 15px;
+      font-weight: 700;
+      margin-bottom: 6px;
+    }
+
+    .sos-active-info {
+      color: #555;
+      font-size: 13px;
+      line-height: 1.5;
+      margin-bottom: 10px;
+    }
+
+    .safe-btn {
+      width: 100%;
+      border: none;
+      background: #06C755;
+      color: white;
+      border-radius: 9px;
+      padding: 11px;
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .safe-btn:active {
+      transform: scale(0.98);
+    }
+
+    /* ===== 群組選擇 ===== */
+
+    .group-mask {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.45);
+      z-index: 500;
+    }
+
+    .group-mask.show {
+      display: block;
+    }
+
+    .group-sheet {
+      position: fixed;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: white;
+      border-radius: 18px 18px 0 0;
+      padding: 18px 16px 28px;
+      z-index: 501;
+      transform: translateY(100%);
+      transition: transform 0.2s;
+      max-height: 75vh;
+      overflow-y: auto;
+    }
+
+    .group-sheet.show {
+      transform: translateY(0);
+    }
+
+    .group-sheet-title {
+      text-align: center;
+      font-size: 17px;
+      font-weight: 700;
+      margin-bottom: 14px;
+    }
+
+    .group-option {
+      width: 100%;
+      border: none;
+      background: #f5f5f5;
+      border-radius: 12px;
+      padding: 14px;
+      margin-bottom: 9px;
+      text-align: left;
+      font-size: 15px;
+      font-weight: 600;
+    }
+
+    .group-option:active {
+      background: #e8f5e9;
+    }
+
+    .group-cancel {
+      width: 100%;
+      border: none;
+      background: white;
+      color: #06C755;
+      padding: 13px;
+      font-size: 15px;
+      font-weight: 600;
+    }
+
+    /* ===== 一般首頁 ===== */
 
     .empty-state {
       background: white;
@@ -89,16 +261,31 @@
       text-align: center;
       margin-bottom: 16px;
     }
+
     .empty-icon {
-      width: 64px; height: 64px;
+      width: 64px;
+      height: 64px;
       border-radius: 50%;
       background: #e8f5e9;
-      display: flex; align-items: center; justify-content: center;
+      display: flex;
+      align-items: center;
+      justify-content: center;
       margin: 0 auto 12px;
       font-size: 28px;
     }
-    .empty-title { font-size: 16px; font-weight: 700; margin-bottom: 6px; }
-    .empty-desc { font-size: 13px; color: #888; margin-bottom: 16px; line-height: 1.4; }
+
+    .empty-title {
+      font-size: 16px;
+      font-weight: 700;
+      margin-bottom: 6px;
+    }
+
+    .empty-desc {
+      font-size: 13px;
+      color: #888;
+      margin-bottom: 16px;
+      line-height: 1.4;
+    }
 
     .btn {
       display: inline-block;
@@ -109,23 +296,17 @@
       border: none;
       cursor: pointer;
     }
-    .btn-primary { background: #06C755; color: white; }
+
+    .btn-primary {
+      background: #06C755;
+      color: white;
+    }
+
     .btn-outline {
       background: white;
       color: #06C755;
       border: 1px solid #06C755;
       margin-left: 8px;
-    }
-
-    .sos-bar {
-      background: #e74c3c;
-      color: white;
-      border-radius: 12px;
-      padding: 16px;
-      text-align: center;
-      font-size: 16px;
-      font-weight: 700;
-      margin-bottom: 16px;
     }
 
     .quick-row {
@@ -134,6 +315,7 @@
       gap: 10px;
       margin-bottom: 16px;
     }
+
     .quick-item {
       background: white;
       border-radius: 12px;
@@ -142,38 +324,63 @@
       text-decoration: none;
       color: inherit;
     }
+
     .quick-icon {
-      width: 44px; height: 44px;
+      width: 44px;
+      height: 44px;
       border-radius: 12px;
       background: #f0f0f0;
-      display: flex; align-items: center; justify-content: center;
+      display: flex;
+      align-items: center;
+      justify-content: center;
       margin: 0 auto 6px;
       font-size: 20px;
     }
-    .quick-label { font-size: 12px; color: #555; }
 
-   .bottom-nav {
-  position: fixed;
-  bottom: 0; left: 0; right: 0;
-  background: white;
-  border-top: 1px solid #eaeaea;
-  display: flex;
-  justify-content: space-around;
-  padding: 8px 0 18px;
-  z-index: 100;
-}
-.nav-item {
-  text-align: center;
-  color: #999;
-  font-size: 10px;
-  width: 60px;
-  text-decoration: none;
-}
-.nav-item.active { color: #06C755; }
-.nav-icon { font-size: 22px; margin-bottom: 2px; }
+    .quick-label {
+      font-size: 12px;
+      color: #555;
+    }
+
+    /* ===== 底部導航 ===== */
+
+    .bottom-nav {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 58px;
+      background: white;
+      border-top: 1px solid #e8e8e8;
+      display: flex;
+      z-index: 100;
+    }
+
+    .tab {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      color: #888;
+      text-decoration: none;
+    }
+
+    .tab.on {
+      color: #06C755;
+      font-weight: 600;
+    }
+
+    .tab-icon {
+      font-size: 20px;
+      line-height: 1.2;
+    }
   </style>
 </head>
+
 <body>
+
   <div class="header">
     <h1>安全團聚</h1>
     <div class="header-right">
@@ -182,74 +389,888 @@
     </div>
   </div>
 
+  <!-- ===== 警訊 ===== -->
+
   <div class="alert-banner" id="alertBanner">
     <div class="alert-icon">⚠️</div>
+
     <div class="alert-content">
       <div class="alert-title">警訊通知</div>
+
       <div class="alert-text">
         [演習預告] 8/10 中部地區及 8/13 北部地區將實施城鎮韌性（防空）演習，行動網路可能受影響。
       </div>
+
       <div class="alert-actions">
-        <a class="alert-link" href="https://gov.tw/KxS" target="_blank" rel="noopener">查看詳細資訊 →</a>
-        <button type="button" class="siren-btn" id="btnSiren">▶ 播放警笛</button>
+        <a class="alert-link"
+           href="https://gov.tw/KxS"
+           target="_blank"
+           rel="noopener">
+          查看詳細資訊 →
+        </a>
+
+        <button type="button"
+                class="siren-btn"
+                id="btnSiren">
+          ▶ 播放警笛
+        </button>
       </div>
     </div>
+
     <div class="alert-close" id="btnCloseAlert">✕</div>
   </div>
 
   <div class="content">
+
+    <!-- ===== SOS 按鈕 ===== -->
+
     <div class="sos-bar" id="btnSos">
       🚨 緊急求助 SOS
     </div>
 
+    <!-- ===== 目前有效 SOS ===== -->
+
+    <div id="sosActiveBox"></div>
+
+    <!-- ===== 尚未加入成員 ===== -->
+
     <div class="empty-state">
+
       <div class="empty-icon">👥</div>
-      <div class="empty-title">尚未加入任何成員</div>
-      <div class="empty-desc">邀請家人或同學加入，即可即時掌握彼此安全狀態</div>
-      <button type="button" class="btn btn-primary" onclick="location.href='contacts.html'">去通訊錄</button>
-      <button type="button" class="btn btn-outline" onclick="location.href='contacts.html'">建立群組</button>
+
+      <div class="empty-title">
+        尚未加入任何成員
+      </div>
+
+      <div class="empty-desc">
+        邀請家人或同學加入，即可即時掌握彼此安全狀態
+      </div>
+
+      <button type="button"
+              class="btn btn-primary"
+              onclick="location.href='contacts.html'">
+        去通訊錄
+      </button>
+
+      <button type="button"
+              class="btn btn-outline"
+              onclick="location.href='contacts.html'">
+        建立群組
+      </button>
+
     </div>
 
+    <!-- ===== 快速功能 ===== -->
+
     <div class="quick-row">
+
       <a class="quick-item" href="map.html">
         <div class="quick-icon">🗺️</div>
         <div class="quick-label">地圖</div>
       </a>
+
       <a class="quick-item" href="chat.html">
         <div class="quick-icon">💬</div>
         <div class="quick-label">聊天</div>
       </a>
+
       <a class="quick-item" href="me.html">
         <div class="quick-icon">📦</div>
         <div class="quick-label">物資</div>
       </a>
+
       <a class="quick-item" href="chat.html">
-  <div class="quick-icon">📍</div>
-  <div class="quick-label">去聊天設集合</div>
-</a>
+        <div class="quick-icon">📍</div>
+        <div class="quick-label">去聊天設集合</div>
+      </a>
+
     </div>
+
   </div>
 
-  <div class="tabbar" style="position:fixed;left:0;right:0;bottom:0;height:58px;background:#fff;border-top:1px solid #e8e8e8;display:flex;z-index:30;">
-  <a class="tab" href="chat.html" style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:11px;color:#888;text-decoration:none;">
-    <div style="font-size:20px;line-height:1.2;">💬</div>聊天
-  </a>
+  <!-- ===== 底部導航 ===== -->
 
-  <a class="tab" href="contacts.html" style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:11px;color:#888;text-decoration:none;">
-    <div style="font-size:20px;line-height:1.2;">👥</div>通訊錄
-  </a>
+  <div class="bottom-nav">
 
-  <a class="tab" href="home.html" style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:11px;color:#06C755;font-weight:600;text-decoration:none;">
-    <div style="font-size:20px;line-height:1.2;">🧭</div>發現
-  </a>
+    <a class="tab" href="chat.html">
+      <div class="tab-icon">💬</div>
+      聊天
+    </a>
 
-  <a class="tab" href="me.html" style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:11px;color:#888;text-decoration:none;">
-    <div style="font-size:20px;line-height:1.2;">👤</div>我
-  </a>
-</div>
+    <a class="tab" href="contacts.html">
+      <div class="tab-icon">👥</div>
+      通訊錄
+    </a>
+
+    <a class="tab on" href="home.html">
+      <div class="tab-icon">🧭</div>
+      發現
+    </a>
+
+    <a class="tab" href="me.html">
+      <div class="tab-icon">👤</div>
+      我
+    </a>
+
+  </div>
+
+  <!-- ===== 群組選擇視窗 ===== -->
+
+  <div class="group-mask" id="groupMask"></div>
+
+  <div class="group-sheet" id="groupSheet">
+
+    <div class="group-sheet-title">
+      選擇 SOS 發布群組
+    </div>
+
+    <div id="groupList"></div>
+
+    <button class="group-cancel" id="groupCancel">
+      取消
+    </button>
+
+  </div>
 
   <script>
   (function () {
+
+    /* =====================================================
+       Supabase
+    ===================================================== */
+
+    var SUPABASE_URL =
+      'https://perfsipperncvjocznhl.supabase.co';
+
+    var SUPABASE_KEY =
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBlcmZzaXBwZXJuY3Zqb2N6bmhsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODYwMTUyMzAsImV4cCI6MjEwMTU5MTIzMH0.I7vXkV247kAzRJ0RigDZt3Hzn8KJDyMc6o9E3oHJZoY';
+
+    var supabase = null;
+    var sessionUser = null;
+
+    var activeAlerts = [];
+    var currentGroups = [];
+
+    /* =====================================================
+       一般工具
+    ===================================================== */
+
+    function escapeHtml(value) {
+      return String(value || '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+    }
+
+    function formatTime(value) {
+      if (!value) return '';
+
+      var d = new Date(value);
+
+      return (
+        (d.getMonth() + 1) +
+        '/' +
+        d.getDate() +
+        ' ' +
+        String(d.getHours()).padStart(2, '0') +
+        ':' +
+        String(d.getMinutes()).padStart(2, '0')
+      );
+    }
+
+    /* =====================================================
+       GPS
+    ===================================================== */
+
+    function getLocation() {
+
+      return new Promise(function (resolve) {
+
+        if (!navigator.geolocation) {
+          resolve({
+            lat: null,
+            lng: null
+          });
+          return;
+        }
+
+        navigator.geolocation.getCurrentPosition(
+          function (position) {
+
+            resolve({
+              lat: position.coords.latitude,
+              lng: position.coords.longitude
+            });
+
+          },
+          function () {
+
+            resolve({
+              lat: null,
+              lng: null
+            });
+
+          },
+          {
+            enableHighAccuracy: true,
+            timeout: 10000,
+            maximumAge: 30000
+          }
+        );
+
+      });
+
+    }
+
+    /* =====================================================
+       取得目前使用者
+    ===================================================== */
+
+    async function getCurrentUser() {
+
+      if (!supabase) return null;
+
+      var result =
+        await supabase.auth.getSession();
+
+      if (
+        result &&
+        result.data &&
+        result.data.session
+      ) {
+        return result.data.session.user;
+      }
+
+      return null;
+    }
+
+    /* =====================================================
+       取得使用者群組
+    ===================================================== */
+
+    async function loadGroups() {
+
+      if (!sessionUser) {
+        return [];
+      }
+
+      var memberships =
+        await supabase
+          .from('group_members')
+          .select('group_id')
+          .eq('user_id', sessionUser.id);
+
+      if (memberships.error) {
+        console.error(
+          'group_members:',
+          memberships.error
+        );
+
+        return [];
+      }
+
+      var ids =
+        (memberships.data || [])
+          .map(function (item) {
+            return item.group_id;
+          });
+
+      if (!ids.length) {
+        return [];
+      }
+
+      var groups =
+        await supabase
+          .from('chat_groups')
+          .select('id,name')
+          .in('id', ids);
+
+      if (groups.error) {
+        console.error(
+          'chat_groups:',
+          groups.error
+        );
+
+        return [];
+      }
+
+      return groups.data || [];
+    }
+
+    /* =====================================================
+       群組選擇視窗
+    ===================================================== */
+
+    function openGroupSheet(groups) {
+
+      var mask =
+        document.getElementById('groupMask');
+
+      var sheet =
+        document.getElementById('groupSheet');
+
+      var list =
+        document.getElementById('groupList');
+
+      list.innerHTML = '';
+
+      groups.forEach(function (group) {
+
+        var button =
+          document.createElement('button');
+
+        button.className = 'group-option';
+
+        button.textContent =
+          '👥 ' + (group.name || '未命名群組');
+
+        button.onclick = function () {
+
+          closeGroupSheet();
+
+          createSOS(group.id, group.name || '群組');
+
+        };
+
+        list.appendChild(button);
+
+      });
+
+      mask.classList.add('show');
+      sheet.classList.add('show');
+    }
+
+    function closeGroupSheet() {
+
+      document
+        .getElementById('groupMask')
+        .classList.remove('show');
+
+      document
+        .getElementById('groupSheet')
+        .classList.remove('show');
+
+    }
+
+    /* =====================================================
+       建立 SOS
+    ===================================================== */
+
+    async function createSOS(groupId, groupName) {
+
+      if (!sessionUser) {
+        alert('請先登入後再使用 SOS');
+        location.href = 'login.html';
+        return;
+      }
+
+      var button =
+        document.getElementById('btnSos');
+
+      button.textContent =
+        '📡 正在取得位置…';
+
+      button.style.pointerEvents = 'none';
+
+      try {
+
+        var locationData =
+          await getLocation();
+
+        var displayName =
+          (
+            sessionUser.user_metadata &&
+            (
+              sessionUser.user_metadata.nickname ||
+              sessionUser.user_metadata.username ||
+              sessionUser.user_metadata.full_name
+            )
+          ) ||
+          (
+            sessionUser.email
+              ? sessionUser.email.split('@')[0]
+              : '成員'
+          );
+
+        var message =
+          '🚨 緊急求助 SOS';
+
+        /* ==============================================
+           第一筆：sos_events
+        ============================================== */
+
+        var eventInsert =
+          await supabase
+            .from('sos_events')
+            .insert({
+
+              room_id: String(groupId),
+
+              user_id: sessionUser.id,
+
+              display_name: displayName,
+
+              lat: locationData.lat,
+
+              lng: locationData.lng,
+
+              message: message
+
+            })
+            .select('id')
+            .single();
+
+        if (eventInsert.error) {
+
+          console.error(
+            'sos_events insert:',
+            eventInsert.error
+          );
+
+          throw new Error(
+            'SOS 事件建立失敗：' +
+            eventInsert.error.message
+          );
+
+        }
+
+        var eventId =
+          eventInsert.data.id;
+
+        /* ==============================================
+           第二筆：sos_alerts
+        ============================================== */
+
+        var alertInsert =
+          await supabase
+            .from('sos_alerts')
+            .insert({
+
+              event_id: eventId,
+
+              group_id: groupId,
+
+              user_id: sessionUser.id,
+
+              latitude: locationData.lat,
+
+              longitude: locationData.lng,
+
+              address: '',
+
+              message: message,
+
+              status: 'active'
+
+            })
+            .select('*')
+            .single();
+
+        if (alertInsert.error) {
+
+          console.error(
+            'sos_alerts insert:',
+            alertInsert.error
+          );
+
+          throw new Error(
+            'SOS 警報建立失敗：' +
+            alertInsert.error.message
+          );
+
+        }
+
+        alert(
+          '🚨 SOS 已發出！\n\n' +
+          '群組：' + groupName
+        );
+
+        await loadActiveSOS();
+
+      } catch (error) {
+
+        console.error(error);
+
+        alert(
+          error && error.message
+            ? error.message
+            : 'SOS 發送失敗'
+        );
+
+      } finally {
+
+        button.textContent =
+          '🚨 緊急求助 SOS';
+
+        button.style.pointerEvents =
+          'auto';
+
+      }
+
+    }
+
+    /* =====================================================
+       顯示目前有效 SOS
+    ===================================================== */
+
+    async function loadActiveSOS() {
+
+      if (!sessionUser || !supabase) {
+        return;
+      }
+
+      var memberships =
+        await supabase
+          .from('group_members')
+          .select('group_id')
+          .eq('user_id', sessionUser.id);
+
+      if (memberships.error) {
+        console.error(memberships.error);
+        return;
+      }
+
+      var groupIds =
+        (memberships.data || [])
+          .map(function (item) {
+            return item.group_id;
+          });
+
+      if (!groupIds.length) {
+
+        activeAlerts = [];
+
+        renderActiveSOS();
+
+        return;
+      }
+
+      var result =
+        await supabase
+          .from('sos_alerts')
+          .select('*')
+          .in('group_id', groupIds)
+          .eq('status', 'active')
+          .order('created_at', {
+            ascending: false
+          });
+
+      if (result.error) {
+
+        console.error(
+          'sos_alerts select:',
+          result.error
+        );
+
+        return;
+      }
+
+      activeAlerts =
+        result.data || [];
+
+      renderActiveSOS();
+    }
+
+    /* =====================================================
+       顯示 SOS 卡片
+    ===================================================== */
+
+    function renderActiveSOS() {
+
+      var box =
+        document.getElementById('sosActiveBox');
+
+      box.innerHTML = '';
+
+      if (!activeAlerts.length) {
+        return;
+      }
+
+      activeAlerts.forEach(function (alertRow) {
+
+        var card =
+          document.createElement('div');
+
+        card.className =
+          'sos-active';
+
+        var title =
+          document.createElement('div');
+
+        title.className =
+          'sos-active-title';
+
+        title.textContent =
+          '🚨 SOS 緊急求助';
+
+        var info =
+          document.createElement('div');
+
+        info.className =
+          'sos-active-info';
+
+        var text =
+          'SOS 已發布';
+
+        if (alertRow.message) {
+          text +=
+            '\n' + alertRow.message;
+        }
+
+        if (alertRow.created_at) {
+          text +=
+            '\n發布時間：' +
+            formatTime(alertRow.created_at);
+        }
+
+        if (
+          alertRow.latitude !== null &&
+          alertRow.longitude !== null
+        ) {
+          text +=
+            '\n📍 已取得 GPS 位置';
+        }
+
+        info.textContent = text;
+
+        card.appendChild(title);
+        card.appendChild(info);
+
+        /*
+         * 只有 SOS 發出者可以看到
+         * 「設為安全」
+         */
+
+        if (
+          sessionUser &&
+          alertRow.user_id === sessionUser.id
+        ) {
+
+          var safeButton =
+            document.createElement('button');
+
+          safeButton.className =
+            'safe-btn';
+
+          safeButton.textContent =
+            '🟢 我已安全／取消 SOS';
+
+          safeButton.onclick =
+            function () {
+
+              resolveSOS(alertRow.id);
+
+            };
+
+          card.appendChild(safeButton);
+        }
+
+        box.appendChild(card);
+
+      });
+
+    }
+
+    /* =====================================================
+       設為安全
+    ===================================================== */
+
+    async function resolveSOS(alertId) {
+
+      if (!sessionUser || !supabase) {
+        return;
+      }
+
+      var confirmResult =
+        confirm(
+          '確定要取消這次 SOS，並將狀態設為安全嗎？'
+        );
+
+      if (!confirmResult) {
+        return;
+      }
+
+      var button =
+        document.querySelector(
+          '.safe-btn'
+        );
+
+      if (button) {
+        button.disabled = true;
+        button.textContent =
+          '處理中…';
+      }
+
+      try {
+
+        var result =
+          await supabase
+            .from('sos_alerts')
+            .update({
+
+              status: 'resolved',
+
+              resolved_by:
+                sessionUser.id,
+
+              resolved_at:
+                new Date().toISOString()
+
+            })
+            .eq('id', alertId)
+            .eq('user_id', sessionUser.id);
+
+        if (result.error) {
+
+          console.error(
+            'resolve SOS:',
+            result.error
+          );
+
+          throw new Error(
+            '取消 SOS 失敗：' +
+            result.error.message
+          );
+
+        }
+
+        alert(
+          '🟢 SOS 已取消\n\n已設定為安全。'
+        );
+
+        await loadActiveSOS();
+
+      } catch (error) {
+
+        console.error(error);
+
+        alert(
+          error && error.message
+            ? error.message
+            : '取消 SOS 失敗'
+        );
+
+        if (button) {
+          button.disabled = false;
+          button.textContent =
+            '🟢 我已安全／取消 SOS';
+        }
+
+      }
+
+    }
+
+    /* =====================================================
+       SOS 主按鈕
+    ===================================================== */
+
+    async function startSOS() {
+
+      if (!sessionUser) {
+
+        alert(
+          '使用 SOS 前請先登入。'
+        );
+
+        location.href =
+          'login.html';
+
+        return;
+      }
+
+      var groups =
+        await loadGroups();
+
+      currentGroups = groups;
+
+      if (!groups.length) {
+
+        alert(
+          '你目前沒有加入任何群組。\n\n' +
+          '請先到通訊錄建立或加入群組。'
+        );
+
+        location.href =
+          'contacts.html';
+
+        return;
+      }
+
+      /*
+       * 如果只有一個群組
+       * 直接發送
+       */
+
+      if (groups.length === 1) {
+
+        createSOS(
+          groups[0].id,
+          groups[0].name || '群組'
+        );
+
+        return;
+      }
+
+      /*
+       * 多個群組 → 讓使用者選擇
+       */
+
+      openGroupSheet(groups);
+    }
+
+    document
+      .getElementById('btnSos')
+      .onclick = startSOS;
+
+    document
+      .getElementById('groupCancel')
+      .onclick = closeGroupSheet;
+
+    document
+      .getElementById('groupMask')
+      .onclick = closeGroupSheet;
+
+    /* =====================================================
+       Realtime
+    ===================================================== */
+
+    function startSOSRealtime() {
+
+      if (!supabase) {
+        return;
+      }
+
+      supabase
+        .channel('home-sos-alerts')
+
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'sos_alerts'
+          },
+          function () {
+
+            /*
+             * SOS 新增、修改、刪除
+             * 都重新取得目前狀態
+             */
+
+            loadActiveSOS();
+
+          }
+        )
+
+        .subscribe();
+
+    }
+
+    /* =====================================================
+       警笛
+    ===================================================== */
+
     var audioCtx = null;
     var oscillator = null;
     var gainNode = null;
@@ -257,106 +1278,318 @@
     var stopTimer = null;
     var sweepTimer = null;
 
-    var ALERT_ID = 'alert-20260807';
+    var ALERT_ID =
+      'alert-20260807';
 
     function closeAlert() {
-      var banner = document.getElementById('alertBanner');
-      if (banner) banner.style.display = 'none';
-      try { localStorage.setItem(ALERT_ID, 'seen'); } catch (e) {}
+
+      var banner =
+        document.getElementById(
+          'alertBanner'
+        );
+
+      if (banner) {
+        banner.style.display =
+          'none';
+      }
+
+      try {
+        localStorage.setItem(
+          ALERT_ID,
+          'seen'
+        );
+      } catch (e) {}
+
       stopSiren();
     }
 
     function stopSiren() {
-      if (stopTimer) { clearTimeout(stopTimer); stopTimer = null; }
-      if (sweepTimer) { clearInterval(sweepTimer); sweepTimer = null; }
+
+      if (stopTimer) {
+        clearTimeout(stopTimer);
+        stopTimer = null;
+      }
+
+      if (sweepTimer) {
+        clearInterval(sweepTimer);
+        sweepTimer = null;
+      }
+
       if (oscillator) {
-        try { oscillator.stop(); } catch (e) {}
+        try {
+          oscillator.stop();
+        } catch (e) {}
+
         oscillator = null;
       }
+
       isPlaying = false;
-      var btn = document.getElementById('btnSiren');
-      if (btn) btn.textContent = '▶ 播放警笛';
+
+      var btn =
+        document.getElementById(
+          'btnSiren'
+        );
+
+      if (btn) {
+        btn.textContent =
+          '▶ 播放警笛';
+      }
     }
 
     function playSiren() {
+
       if (isPlaying) {
         stopSiren();
         return;
       }
 
       try {
-        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+        audioCtx =
+          new (
+            window.AudioContext ||
+            window.webkitAudioContext
+          )();
+
       } catch (e) {
-        alert('此裝置不支援網頁音效');
+
+        alert(
+          '此裝置不支援網頁音效'
+        );
+
         return;
       }
 
       function startTone() {
-        isPlaying = true;
-        var btn = document.getElementById('btnSiren');
-        if (btn) btn.textContent = '■ 停止警笛';
 
-        oscillator = audioCtx.createOscillator();
-        gainNode = audioCtx.createGain();
-        oscillator.type = 'sawtooth';
-        gainNode.gain.setValueAtTime(0.12, audioCtx.currentTime);
+        isPlaying = true;
+
+        var btn =
+          document.getElementById(
+            'btnSiren'
+          );
+
+        if (btn) {
+          btn.textContent =
+            '■ 停止警笛';
+        }
+
+        oscillator =
+          audioCtx.createOscillator();
+
+        gainNode =
+          audioCtx.createGain();
+
+        oscillator.type =
+          'sawtooth';
+
+        gainNode.gain.setValueAtTime(
+          0.12,
+          audioCtx.currentTime
+        );
 
         oscillator.connect(gainNode);
-        gainNode.connect(audioCtx.destination);
+        gainNode.connect(
+          audioCtx.destination
+        );
 
-        var t0 = audioCtx.currentTime;
-        oscillator.frequency.setValueAtTime(800, t0);
-        oscillator.frequency.linearRampToValueAtTime(1200, t0 + 0.5);
-        oscillator.frequency.linearRampToValueAtTime(800, t0 + 1);
+        var t0 =
+          audioCtx.currentTime;
+
+        oscillator.frequency
+          .setValueAtTime(
+            800,
+            t0
+          );
+
+        oscillator.frequency
+          .linearRampToValueAtTime(
+            1200,
+            t0 + 0.5
+          );
+
+        oscillator.frequency
+          .linearRampToValueAtTime(
+            800,
+            t0 + 1
+          );
+
         oscillator.start();
 
-        // 重複高低掃頻，比較像警笛
         var phase = 0;
-        sweepTimer = setInterval(function () {
-          if (!oscillator || !audioCtx) return;
-          phase += 1;
-          var now = audioCtx.currentTime;
-          try {
-            if (phase % 2 === 1) {
-              oscillator.frequency.cancelScheduledValues(now);
-              oscillator.frequency.setValueAtTime(800, now);
-              oscillator.frequency.linearRampToValueAtTime(1200, now + 0.5);
-            } else {
-              oscillator.frequency.cancelScheduledValues(now);
-              oscillator.frequency.setValueAtTime(1200, now);
-              oscillator.frequency.linearRampToValueAtTime(800, now + 0.5);
+
+        sweepTimer =
+          setInterval(function () {
+
+            if (!oscillator || !audioCtx) {
+              return;
             }
-          } catch (e) {}
-        }, 500);
 
-        stopTimer = setTimeout(function () {
-          stopSiren();
-        }, 8000);
+            phase += 1;
+
+            var now =
+              audioCtx.currentTime;
+
+            try {
+
+              oscillator.frequency
+                .cancelScheduledValues(
+                  now
+                );
+
+              if (phase % 2 === 1) {
+
+                oscillator.frequency
+                  .setValueAtTime(
+                    800,
+                    now
+                  );
+
+                oscillator.frequency
+                  .linearRampToValueAtTime(
+                    1200,
+                    now + 0.5
+                  );
+
+              } else {
+
+                oscillator.frequency
+                  .setValueAtTime(
+                    1200,
+                    now
+                  );
+
+                oscillator.frequency
+                  .linearRampToValueAtTime(
+                    800,
+                    now + 0.5
+                  );
+
+              }
+
+            } catch (e) {}
+
+          }, 500);
+
+        stopTimer =
+          setTimeout(
+            stopSiren,
+            8000
+          );
       }
 
-      if (audioCtx.state === 'suspended') {
-        audioCtx.resume().then(startTone).catch(function () {
-          alert('請再點一次播放警笛（需解除靜音）');
-        });
+      if (
+        audioCtx.state ===
+        'suspended'
+      ) {
+
+        audioCtx
+          .resume()
+          .then(startTone)
+          .catch(function () {
+
+            alert(
+              '請再點一次播放警笛（需解除靜音）'
+            );
+
+          });
+
       } else {
+
         startTone();
+
       }
+
     }
 
-    document.getElementById('btnSiren').onclick = playSiren;
-    document.getElementById('btnCloseAlert').onclick = closeAlert;
-    document.getElementById('btnSos').onclick = function () {
-      alert('SOS 功能之後會接上真實後端');
-    };
+    document
+      .getElementById('btnSiren')
+      .onclick = playSiren;
+
+    document
+      .getElementById('btnCloseAlert')
+      .onclick = closeAlert;
+
+    /* =====================================================
+       初始化
+    ===================================================== */
+
+    async function boot() {
+
+      try {
+
+        if (
+          !window.supabase ||
+          !window.supabase.createClient
+        ) {
+
+          console.error(
+            'Supabase SDK 未載入'
+          );
+
+          return;
+        }
+
+        supabase =
+          window.supabase.createClient(
+            SUPABASE_URL,
+            SUPABASE_KEY
+          );
+
+        sessionUser =
+          await getCurrentUser();
+
+        if (sessionUser) {
+
+          await loadActiveSOS();
+
+          startSOSRealtime();
+
+        }
+
+      } catch (error) {
+
+        console.error(
+          '首頁初始化失敗:',
+          error
+        );
+
+      }
+
+    }
+
+    /* =====================================================
+       警訊記憶
+    ===================================================== */
 
     try {
-      if (localStorage.getItem(ALERT_ID) === 'seen') {
-        var banner = document.getElementById('alertBanner');
-        if (banner) banner.style.display = 'none';
+
+      if (
+        localStorage.getItem(
+          ALERT_ID
+        ) === 'seen'
+      ) {
+
+        var banner =
+          document.getElementById(
+            'alertBanner'
+          );
+
+        if (banner) {
+          banner.style.display =
+            'none';
+        }
+
       }
+
     } catch (e) {}
+
+    boot();
+
   })();
   </script>
+
   <script src="call-notify.js"></script>
+
 </body>
 </html>
