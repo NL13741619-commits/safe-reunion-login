@@ -428,7 +428,7 @@ input[type="file"] {
   <a class="back" href="chat.html">‹</a>
 
   <div class="header-info">
-    <div class="header-name" id="roomName">對話</div>
+   <div class="header-name" id="roomName">載入中…</div>
     <div class="header-status" id="roomStatus">啟動中…</div>
   </div>
 
@@ -730,36 +730,54 @@ var roomId =
 var isGroup =
   String(roomId).indexOf('dm_') !== 0;
 
-
-document.getElementById('roomName').textContent =
-  roomName;
-
-
   async function loadRoomName() {
 
   if (!supabase || !roomId || !isGroup) {
     return;
   }
 
-  var result =
-    await supabase
-      .from('chat_groups')
-      .select('name')
-      .eq('id', roomId)
-      .maybeSingle();
+  try {
 
-  if (
-    result.data &&
-    result.data.name
-  ) {
+    var result =
+      await supabase
+        .from('chat_groups')
+        .select('name')
+        .eq('id', roomId)
+        .maybeSingle();
 
-    roomName =
-      result.data.name.trim();
+    if (
+      result.data &&
+      result.data.name &&
+      result.data.name.trim()
+    ) {
+
+      roomName =
+        result.data.name.trim();
+
+      document.getElementById(
+        'roomName'
+      ).textContent =
+        roomName;
+
+      return;
+    }
 
     document.getElementById(
       'roomName'
     ).textContent =
-      roomName;
+      '對話';
+
+  } catch (e) {
+
+    console.log(
+      '聊天室名稱讀取錯誤：',
+      e
+    );
+
+    document.getElementById(
+      'roomName'
+    ).textContent =
+      '對話';
 
   }
 
