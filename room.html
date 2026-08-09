@@ -211,19 +211,21 @@ input[type="file"] { display: none; }
     return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
   }
 
-  function rowToLocal(row) {
-    return {
-      id: row.id,
-      mine: myUser && row.user_id === myUser.id,
-      kind: row.kind || 'text',
-      text: row.body || '',
-      all: !!row.is_all,
-      time: nowTimeFrom(row.created_at),
-      createdAt: new Date(row.created_at).getTime(),
-      recalled: !!row.recalled,
-      hiddenLocal: false
-    };
-  }
+ function rowToLocal(row) {
+  return {
+    id: row.id,
+    mine: myUser && row.user_id === myUser.id,
+    kind: row.kind || 'text',
+    text: row.body || '',
+    all: !!row.is_all,
+    time: nowTimeFrom(row.created_at),
+    createdAt: new Date(row.created_at).getTime(),
+    recalled: !!row.recalled,
+    hiddenLocal: false,
+    senderName: row.sender_name || '成員',
+    userId: row.user_id
+  };
+}
 
   function playNotify() {
     try {
@@ -256,7 +258,11 @@ input[type="file"] { display: none; }
         div.innerHTML = (m.mine ? '你已回收一則訊息' : '對方已回收一則訊息') +
           '<div class="msg-time">' + m.time + '</div>';
       } else {
+
         var html = '';
+        if (!m.mine && isGroup) {
+         html += '<div class="msg-tag" style="color:#555;font-weight:600;margin-bottom:2px">' + escapeHtml(m.senderName) + '</div>';
+        }
         if (m.all) html += '<div class="msg-tag">@all 全體</div>';
         if (m.kind === 'image') {
           html += '<img src="' + escapeHtml(m.text) + '" alt="圖片">';
@@ -344,7 +350,7 @@ input[type="file"] { display: none; }
     var ins = await supabase.from('messages').insert({
       room_id: roomId,
       user_id: myUser.id,
-      sender_name: myUser.email || 'user',
+      sender_name: (myUser.user_metadata && (myUser.user_metadata.nickname || myUser.user_metadata.username)) || (myUser.email ? myUser.email.split('@')[0] : '成員'),
       kind: kind,
       body: url,
       is_all: false
