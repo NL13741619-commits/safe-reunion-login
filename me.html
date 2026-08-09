@@ -2467,11 +2467,627 @@ function useCurrentLocationForMP(){
 }
 
 
+/* =========================================================
+   雙地圖系統
+   🇹🇼 台灣：Google Maps
+   🇨🇳 中國大陸：高德地圖
+========================================================= */
+
+/*
+   目前地圖模式：
+
+   "taiwan"  = Google Maps
+   "china"   = 高德地圖
+
+   預設使用台灣地圖。
+*/
+
+let currentMapProvider =
+  localStorage.getItem("map_provider") ||
+  "taiwan";
+
+
+/* ---------------------------------------------------------
+   Google Maps / 高德地圖 API Key
+--------------------------------------------------------- */
+
+/*
+   請之後自行填入。
+
+   不要把真正的 Key 貼到聊天室。
+*/
+
+const GOOGLE_MAPS_KEY =
+  "你的_GOOGLE_MAPS_API_KEY";
+
+const AMAP_KEY =
+  "你的_AMAP_API_KEY";
+
+
+/* ---------------------------------------------------------
+   地圖切換
+--------------------------------------------------------- */
+
+function switchMapProvider(provider){
+
+  if(
+    provider !== "taiwan" &&
+    provider !== "china"
+  ){
+
+    provider = "taiwan";
+
+  }
+
+  currentMapProvider =
+    provider;
+
+  localStorage.setItem(
+    "map_provider",
+    provider
+  );
+
+  /*
+     清除目前地圖
+  */
+
+  destroyCurrentMap();
+
+  /*
+     重新建立地圖
+  */
+
+  setTimeout(function(){
+
+    initMap();
+
+  },100);
+
+  /*
+     更新切換按鈕
+  */
+
+  updateMapProviderButtons();
+
+}
+
+
+/* ---------------------------------------------------------
+   更新地圖切換按鈕
+--------------------------------------------------------- */
+
+function updateMapProviderButtons(){
+
+  const taiwanBtn =
+    document.getElementById(
+      "map-provider-taiwan"
+    );
+
+  const chinaBtn =
+    document.getElementById(
+      "map-provider-china"
+    );
+
+  if(taiwanBtn){
+
+    taiwanBtn.classList.toggle(
+      "active",
+      currentMapProvider === "taiwan"
+    );
+
+  }
+
+  if(chinaBtn){
+
+    chinaBtn.classList.toggle(
+      "active",
+      currentMapProvider === "china"
+    );
+
+  }
+
+}
+
+
+/* ---------------------------------------------------------
+   清除目前地圖
+--------------------------------------------------------- */
+
+function destroyCurrentMap(){
+
+  /*
+     Google Maps
+  */
+
+  if(window.googleMapInstance){
+
+    window.googleMapInstance = null;
+
+  }
+
+
+  /*
+     高德地圖
+  */
+
+  if(window.amapInstance){
+
+    try{
+
+      window.amapInstance.destroy();
+
+    }catch(e){}
+
+    window.amapInstance = null;
+
+  }
+
+
+  /*
+     清除 Leaflet 舊變數
+     防止舊版程式殘留
+  */
+
+  if(window.mapInstance){
+
+    try{
+
+      window.mapInstance.remove();
+
+    }catch(e){}
+
+    window.mapInstance = null;
+
+  }
+
+
+  markers = [];
+
+}
+
+
+/* ---------------------------------------------------------
+   初始化地圖
+--------------------------------------------------------- */
+
+function initMap(){
+
+  const mapEl =
+    document.getElementById("map");
+
+  if(!mapEl)
+    return;
+
+
+  /*
+     顯示載入中
+  */
+
+  mapEl.innerHTML =
+    '<div style="' +
+    'padding:30px;' +
+    'text-align:center;' +
+    'color:#666;' +
+    '">' +
+    '正在載入地圖…' +
+    '</div>';
+
+
+  /*
+     台灣
+  */
+
+  if(
+    currentMapProvider === "taiwan"
+  ){
+
+    initGoogleMap();
+
+    return;
+
+  }
+
+
+  /*
+     中國大陸
+  */
+
+  if(
+    currentMapProvider === "china"
+  ){
+
+    initAmap();
+
+    return;
+
+  }
+
+}
+
+
+/* =========================================================
+   🇹🇼 Google Maps
+========================================================= */
+
+function initGoogleMap(){
+
+  const mapEl =
+    document.getElementById("map");
+
+  if(!mapEl)
+    return;
+
+
+  /*
+     Google Maps 已載入
+  */
+
+  if(
+    window.google &&
+    window.google.maps
+  ){
+
+    createGoogleMap();
+
+    return;
+
+  }
+
+
+  /*
+     API Key 尚未設定
+  */
+
+  if(
+    !GOOGLE_MAPS_KEY ||
+    GOOGLE_MAPS_KEY ===
+      "你的_GOOGLE_MAPS_API_KEY"
+  ){
+
+    mapEl.innerHTML =
+      '<div style="' +
+      'padding:30px;' +
+      'text-align:center;' +
+      'color:#666;' +
+      '">' +
+
+      '<strong>🇹🇼 台灣地圖</strong>' +
+
+      '<br><br>' +
+
+      '尚未設定 Google Maps API Key。' +
+
+      '<br><br>' +
+
+      '請在程式中的 ' +
+
+      '<code>GOOGLE_MAPS_KEY</code>' +
+
+      ' 填入你的 API Key。' +
+
+      '</div>';
+
+    return;
+
+  }
+
+
+  /*
+     動態載入 Google Maps
+  */
+
+  const oldScript =
+    document.getElementById(
+      "google-maps-script"
+    );
+
+  if(oldScript){
+
+    oldScript.remove();
+
+  }
+
+
+  const script =
+    document.createElement("script");
+
+  script.id =
+    "google-maps-script";
+
+  script.src =
+    "https://maps.googleapis.com/maps/api/js" +
+    "?key=" +
+    encodeURIComponent(
+      GOOGLE_MAPS_KEY
+    ) +
+    "&libraries=places";
+
+  script.async = true;
+
+  script.defer = true;
+
+
+  script.onload =
+    function(){
+
+      createGoogleMap();
+
+    };
+
+
+  script.onerror =
+    function(){
+
+      mapEl.innerHTML =
+        '<div style="' +
+        'padding:30px;' +
+        'text-align:center;' +
+        'color:#c00;' +
+        '">' +
+
+        'Google Maps 載入失敗。' +
+
+        '<br><br>' +
+
+        '請確認 API Key 與網路連線。' +
+
+        '</div>';
+
+    };
+
+
+  document.head.appendChild(
+    script
+  );
+
+}
+
+
+/* ---------------------------------------------------------
+   建立 Google Maps
+--------------------------------------------------------- */
+
+function createGoogleMap(){
+
+  const mapEl =
+    document.getElementById("map");
+
+  if(!mapEl)
+    return;
+
+
+  if(
+    !window.google ||
+    !window.google.maps
+  ){
+
+    return;
+
+  }
+
+
+  window.googleMapInstance =
+    new google.maps.Map(
+      mapEl,
+      {
+
+        center:{
+          lat:25.0330,
+          lng:121.5654
+        },
+
+        zoom:13,
+
+        mapTypeControl:true,
+
+        streetViewControl:false,
+
+        fullscreenControl:true
+
+      }
+    );
+
+
+  updateMapMarkers();
+
+
+}
+
+
+/* =========================================================
+   🇨🇳 高德地圖
+========================================================= */
+
+function initAmap(){
+
+  const mapEl =
+    document.getElementById("map");
+
+  if(!mapEl)
+    return;
+
+
+  /*
+     高德 API 已載入
+  */
+
+  if(
+    window.AMap
+  ){
+
+    createAmap();
+
+    return;
+
+  }
+
+
+  /*
+     API Key 尚未設定
+  */
+
+  if(
+    !AMAP_KEY ||
+    AMAP_KEY ===
+      "你的_AMAP_API_KEY"
+  ){
+
+    mapEl.innerHTML =
+      '<div style="' +
+      'padding:30px;' +
+      'text-align:center;' +
+      'color:#666;' +
+      '">' +
+
+      '<strong>🇨🇳 中國大陸地圖</strong>' +
+
+      '<br><br>' +
+
+      '尚未設定高德地圖 API Key。' +
+
+      '<br><br>' +
+
+      '請在程式中的 ' +
+
+      '<code>AMAP_KEY</code>' +
+
+      ' 填入你的 API Key。' +
+
+      '</div>';
+
+    return;
+
+  }
+
+
+  /*
+     動態載入高德 JS API 2.0
+  */
+
+  const oldScript =
+    document.getElementById(
+      "amap-script"
+    );
+
+  if(oldScript){
+
+    oldScript.remove();
+
+  }
+
+
+  const script =
+    document.createElement("script");
+
+  script.id =
+    "amap-script";
+
+  script.src =
+    "https://webapi.amap.com/maps?v=2.0" +
+    "&key=" +
+    encodeURIComponent(
+      AMAP_KEY
+    );
+
+
+  script.onload =
+    function(){
+
+      createAmap();
+
+    };
+
+
+  script.onerror =
+    function(){
+
+      mapEl.innerHTML =
+        '<div style="' +
+        'padding:30px;' +
+        'text-align:center;' +
+        'color:#c00;' +
+        '">' +
+
+        '高德地圖載入失敗。' +
+
+        '<br><br>' +
+
+        '請確認 API Key 與網路連線。' +
+
+        '</div>';
+
+    };
+
+
+  document.head.appendChild(
+    script
+  );
+
+}
+
+
+/* ---------------------------------------------------------
+   建立高德地圖
+--------------------------------------------------------- */
+
+function createAmap(){
+
+  const mapEl =
+    document.getElementById("map");
+
+  if(!mapEl)
+    return;
+
+
+  if(!window.AMap)
+    return;
+
+
+  window.amapInstance =
+    new AMap.Map(
+      mapEl,
+      {
+
+        zoom:13,
+
+        center:[
+          121.5654,
+          25.0330
+        ],
+
+        resizeEnable:true
+
+      }
+    );
+
+
+  updateMapMarkers();
+
+}
+
+
+/* =========================================================
+   地址搜尋
+========================================================= */
+
 function geocodeAddress(){
 
+  const input =
+    document.getElementById(
+      "mp-address"
+    );
+
+  if(!input){
+
+    alert("找不到地址輸入欄位");
+    return;
+
+  }
+
+
   const address =
-    document.getElementById("mp-address")
-    .value.trim();
+    input.value.trim();
+
 
   if(!address){
 
@@ -2480,217 +3096,1383 @@ function geocodeAddress(){
 
   }
 
-  const isIOS =
-    /iPad|iPhone|iPod/.test(
-      navigator.userAgent
+
+  /*
+     🇹🇼 Google Maps
+  */
+
+  if(
+    currentMapProvider ===
+    "taiwan"
+  ){
+
+    geocodeGoogle(
+      address
     );
 
-  if(isIOS){
-
-    window.location.href =
-      "maps://maps.apple.com/?q=" +
-      encodeURIComponent(address);
-
-  }else{
-
-    window.open(
-      "https://www.google.com/maps/search/?api=1&query=" +
-      encodeURIComponent(address),
-      "_blank"
-    );
+    return;
 
   }
 
-  showToast("已開啟地圖搜尋");
+
+  /*
+     🇨🇳 高德
+  */
+
+  geocodeAmap(
+    address
+  );
+
+}
+
+
+/* ---------------------------------------------------------
+   Google 地址搜尋
+--------------------------------------------------------- */
+
+function geocodeGoogle(
+  address
+){
+
+  if(
+    !window.google ||
+    !window.google.maps
+  ){
+
+    alert(
+      "Google Maps 尚未載入"
+    );
+
+    return;
+
+  }
+
+
+  showToast(
+    "正在搜尋地址…"
+  );
+
+
+  const geocoder =
+    new google.maps.Geocoder();
+
+
+  geocoder.geocode(
+    {
+      address:address
+    },
+
+    function(
+      results,
+      status
+    ){
+
+      if(
+        status !== "OK" ||
+        !results ||
+        !results.length
+      ){
+
+        alert(
+          "找不到這個地址"
+        );
+
+        return;
+
+      }
+
+
+      const location =
+        results[0]
+          .geometry
+          .location;
+
+
+      const lat =
+        location.lat();
+
+
+      const lng =
+        location.lng();
+
+
+      saveMapSearchResult(
+        lat,
+        lng,
+        results[0]
+          .formatted_address ||
+          address
+      );
+
+
+      if(
+        window.googleMapInstance
+      ){
+
+        window.googleMapInstance
+          .setCenter(
+            {
+              lat:lat,
+              lng:lng
+            }
+          );
+
+        window.googleMapInstance
+          .setZoom(17);
+
+
+        if(
+          window.googleSearchMarker
+        ){
+
+          window.googleSearchMarker
+            .setMap(null);
+
+        }
+
+
+        window.googleSearchMarker =
+          new google.maps.Marker({
+
+            position:{
+              lat:lat,
+              lng:lng
+            },
+
+            map:
+              window.googleMapInstance,
+
+            title:
+              "搜尋位置"
+
+          });
+
+      }
+
+
+      showToast(
+        "已找到地址"
+      );
+
+    }
+
+  );
+
+}
+
+
+/* ---------------------------------------------------------
+   高德地址搜尋
+--------------------------------------------------------- */
+
+function geocodeAmap(
+  address
+){
+
+  if(
+    !window.AMap ||
+    !window.amapInstance
+  ){
+
+    alert(
+      "高德地圖尚未載入"
+    );
+
+    return;
+
+  }
+
+
+  showToast(
+    "正在搜尋地址…"
+  );
+
+
+  AMap.plugin(
+    [
+      "AMap.Geocoder"
+    ],
+
+    function(){
+
+      const geocoder =
+        new AMap.Geocoder({
+
+          city:"全国"
+
+        });
+
+
+      geocoder.getLocation(
+        address,
+
+        function(
+          status,
+          result
+        ){
+
+          if(
+            status !== "complete" ||
+            !result ||
+            !result.geocodes ||
+            !result.geocodes.length
+          ){
+
+            alert(
+              "找不到這個地址"
+            );
+
+            return;
+
+          }
+
+
+          const location =
+            result
+              .geocodes[0]
+              .location;
+
+
+          const lng =
+            Number(
+              location.lng
+            );
+
+
+          const lat =
+            Number(
+              location.lat
+            );
+
+
+          const formatted =
+            result
+              .geocodes[0]
+              .formattedAddress ||
+              address;
+
+
+          saveMapSearchResult(
+            lat,
+            lng,
+            formatted
+          );
+
+
+          if(
+            window.amapInstance
+          ){
+
+            window.amapInstance
+              .setCenter([
+                lng,
+                lat
+              ]);
+
+            window.amapInstance
+              .setZoom(17);
+
+
+            if(
+              window.amapSearchMarker
+            ){
+
+              window.amapInstance
+                .remove(
+                  window.amapSearchMarker
+                );
+
+            }
+
+
+            window.amapSearchMarker =
+              new AMap.Marker({
+
+                position:[
+                  lng,
+                  lat
+                ],
+
+                title:
+                  "搜尋位置"
+
+              });
+
+
+            window.amapInstance.add(
+              window.amapSearchMarker
+            );
+
+          }
+
+
+          showToast(
+            "已找到地址"
+          );
+
+        }
+
+      );
+
+    }
+
+  );
+
+}
+
+
+/* ---------------------------------------------------------
+   儲存搜尋結果座標
+--------------------------------------------------------- */
+
+function saveMapSearchResult(
+  lat,
+  lng,
+  address
+){
+
+  const latInput =
+    document.getElementById(
+      "mp-lat"
+    );
+
+  const lngInput =
+    document.getElementById(
+      "mp-lng"
+    );
+
+  if(latInput){
+
+    latInput.value =
+      Number(lat)
+        .toFixed(6);
+
+  }
+
+
+  if(lngInput){
+
+    lngInput.value =
+      Number(lng)
+        .toFixed(6);
+
+  }
+
+
+  /*
+     如果地址欄位原本空白，
+     自動填入搜尋結果。
+  */
+
+  const addressInput =
+    document.getElementById(
+      "mp-address"
+    );
+
+  if(
+    addressInput &&
+    !addressInput.value.trim()
+  ){
+
+    addressInput.value =
+      address || "";
+
+  }
 
 }
 
 
 /* =========================================================
-   Leaflet 地圖
+   會合地點標記
 ========================================================= */
 
 let markers = [];
 
-function initMap(){
-
-  const mapEl =
-    document.getElementById("map");
-
-  if(!mapEl)return;
-
-  if(typeof L === "undefined"){
-
-    mapEl.innerHTML =
-      '<div style="padding:30px;text-align:center;color:#666">' +
-      '地圖套件尚未載入。<br><br>' +
-      '<button class="btn btn-primary" onclick="location.reload()">' +
-      '重新載入' +
-      '</button>' +
-      '</div>';
-
-    return;
-
-  }
-
-  if(window.mapInstance){
-
-    setTimeout(function(){
-
-      try{
-
-        window.mapInstance.invalidateSize();
-
-        updateMapMarkers();
-
-      }catch(e){}
-
-    },150);
-
-    return;
-
-  }
-
-  try{
-
-    window.mapInstance =
-      L.map("map")
-      .setView([25.0330,121.5654],13);
-
-    L.tileLayer(
-      "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
-      {
-        attribution:"© OpenStreetMap",
-        maxZoom:19
-      }
-    ).addTo(window.mapInstance);
-
-    setTimeout(function(){
-
-      window.mapInstance.invalidateSize();
-
-      updateMapMarkers();
-
-    },300);
-
-  }catch(e){
-
-    mapEl.innerHTML =
-      "地圖載入失敗：" +
-      escapeHtml(e.message);
-
-  }
-
-}
-
 
 function updateMapMarkers(){
 
-  if(
-    !window.mapInstance ||
-    typeof L === "undefined"
-  )return;
+  /*
+     清除舊標記
+  */
 
-  markers.forEach(function(m){
+  markers.forEach(
+    function(marker){
 
-    try{
-      window.mapInstance.removeLayer(m);
-    }catch(e){}
+      try{
 
-  });
+        if(
+          currentMapProvider ===
+          "taiwan"
+        ){
+
+          marker.setMap(null);
+
+        }else{
+
+          window.amapInstance
+            .remove(marker);
+
+        }
+
+      }catch(e){}
+
+    }
+  );
+
 
   markers = [];
+
 
   const family =
     Store.get("family") ||
     Store.getDefaultFamily();
 
-  const points = [];
 
-  (family.meetingPoints || [])
-    .forEach(function(p,idx){
-
-      if(
-        p.lat !== null &&
-        p.lng !== null &&
-        !isNaN(p.lat) &&
-        !isNaN(p.lng)
-      ){
-
-        const marker =
-          L.marker([
-            Number(p.lat),
-            Number(p.lng)
-          ])
-          .addTo(window.mapInstance)
-          .bindPopup(
-            "<b>會合地點 " +
-            (idx + 1) +
-            "</b><br>" +
-            escapeHtml(p.name || "") +
-            "<br>" +
-            escapeHtml(p.address || "")
-          );
-
-        markers.push(marker);
-
-        points.push([
-          Number(p.lat),
-          Number(p.lng)
-        ]);
-
-      }
-
-    });
-
-  if(points.length){
-
-    window.mapInstance.fitBounds(
-      points,
-      {
-        padding:[40,40]
-      }
-    );
-
-  }
-
-}
+  const points =
+    [];
 
 
-function navigateTo(lat,lng,name){
+  /*
+     沒有會合點
+  */
 
-  if(!lat || !lng){
+  if(
+    !family.meetingPoints
+  ){
 
-    alert("尚未設定經緯度");
     return;
 
   }
 
-  const isIOS =
-    /iPad|iPhone|iPod/.test(
-      navigator.userAgent
+
+  family.meetingPoints
+    .forEach(
+      function(p,idx){
+
+        if(
+          p.lat === null ||
+          p.lng === null ||
+          p.lat === undefined ||
+          p.lng === undefined ||
+          isNaN(Number(p.lat)) ||
+          isNaN(Number(p.lng))
+        ){
+
+          return;
+
+        }
+
+
+        const lat =
+          Number(p.lat);
+
+        const lng =
+          Number(p.lng);
+
+
+        points.push([
+          lat,
+          lng
+        ]);
+
+
+        /*
+           🇹🇼 Google
+        */
+
+        if(
+          currentMapProvider ===
+          "taiwan"
+        ){
+
+          if(
+            !window.googleMapInstance
+          ){
+
+            return;
+
+          }
+
+
+          const marker =
+            new google.maps.Marker({
+
+              position:{
+                lat:lat,
+                lng:lng
+              },
+
+              map:
+                window.googleMapInstance,
+
+              title:
+                p.name ||
+                "會合地點 " +
+                (idx + 1)
+
+            });
+
+
+          const info =
+            new google.maps.InfoWindow({
+
+              content:
+                "<b>會合地點 " +
+                (idx + 1) +
+                "</b><br>" +
+                escapeHtml(
+                  p.name || ""
+                ) +
+                "<br>" +
+                escapeHtml(
+                  p.address || ""
+                )
+
+            });
+
+
+          marker.addListener(
+            "click",
+            function(){
+
+              info.open({
+                map:
+                  window.googleMapInstance,
+
+                anchor:
+                  marker
+
+              });
+
+            }
+          );
+
+
+          markers.push(
+            marker
+          );
+
+
+          return;
+
+        }
+
+
+        /*
+           🇨🇳 高德
+        */
+
+        if(
+          currentMapProvider ===
+          "china"
+        ){
+
+          if(
+            !window.amapInstance
+          ){
+
+            return;
+
+          }
+
+
+          const marker =
+            new AMap.Marker({
+
+              position:[
+                lng,
+                lat
+              ],
+
+              title:
+                p.name ||
+                "會合地點 " +
+                (idx + 1)
+
+            });
+
+
+          marker.setMap(
+            window.amapInstance
+          );
+
+
+          marker.on(
+            "click",
+            function(){
+
+              const info =
+                new AMap.InfoWindow({
+
+                  content:
+                    "<b>會合地點 " +
+                    (idx + 1) +
+                    "</b><br>" +
+                    escapeHtml(
+                      p.name || ""
+                    ) +
+                    "<br>" +
+                    escapeHtml(
+                      p.address || ""
+                    ),
+
+                  offset:
+                    new AMap.Pixel(
+                      0,
+                      -30
+                    )
+
+                });
+
+
+              info.open(
+                window.amapInstance,
+                [
+                  lng,
+                  lat
+                ]
+              );
+
+            }
+          );
+
+
+          markers.push(
+            marker
+          );
+
+        }
+
+      }
     );
 
-  if(isIOS){
 
-    window.location.href =
-      "maps://maps.apple.com/?daddr=" +
-      lat + "," + lng +
-      "&q=" +
-      encodeURIComponent(name || "會合地點");
+  /*
+     自動調整地圖範圍
+  */
+
+  if(
+    points.length === 0
+  ){
+
+    return;
+
+  }
+
+
+  if(
+    currentMapProvider ===
+    "taiwan"
+  ){
+
+    if(
+      !window.googleMapInstance
+    )
+      return;
+
+
+    const bounds =
+      new google.maps.LatLngBounds();
+
+
+    points.forEach(
+      function(point){
+
+        bounds.extend({
+
+          lat:
+            point[0],
+
+          lng:
+            point[1]
+
+        });
+
+      }
+    );
+
+
+    window.googleMapInstance
+      .fitBounds(
+        bounds
+      );
+
+
+    return;
+
+  }
+
+
+  if(
+    currentMapProvider ===
+    "china"
+  ){
+
+    if(
+      !window.amapInstance
+    )
+      return;
+
+
+    const amapPoints =
+      points.map(
+        function(point){
+
+          return [
+            point[1],
+            point[0]
+          ];
+
+        }
+      );
+
+
+    window.amapInstance
+      .setFitView(
+        null,
+        false,
+        [50,50,50,50]
+      );
+
+  }
+
+}
+
+
+/* =========================================================
+   導航
+========================================================= */
+
+function navigateTo(
+  lat,
+  lng,
+  name
+){
+
+  if(
+    lat === null ||
+    lng === null ||
+    lat === undefined ||
+    lng === undefined ||
+    isNaN(Number(lat)) ||
+    isNaN(Number(lng))
+  ){
+
+    alert(
+      "尚未設定經緯度"
+    );
+
+    return;
+
+  }
+
+
+  lat =
+    Number(lat);
+
+  lng =
+    Number(lng);
+
+
+  /*
+     🇹🇼 Google Maps
+  */
+
+  if(
+    currentMapProvider ===
+    "taiwan"
+  ){
+
+    navigateGoogle(
+      lat,
+      lng,
+      name
+    );
+
+    return;
+
+  }
+
+
+  /*
+     🇨🇳 高德
+  */
+
+  navigateAmap(
+    lat,
+    lng,
+    name
+  );
+
+}
+
+
+/* =========================================================
+   Google Maps 導航
+========================================================= */
+
+function navigateGoogle(
+  destLat,
+  destLng,
+  name
+){
+
+  if(
+    !window.google ||
+    !window.google.maps ||
+    !window.googleMapInstance
+  ){
+
+    alert(
+      "Google Maps 尚未載入"
+    );
+
+    return;
+
+  }
+
+
+  showToast(
+    "正在取得目前位置…"
+  );
+
+
+  if(
+    !navigator.geolocation
+  ){
+
+    showGoogleDestination(
+      destLat,
+      destLng,
+      name
+    );
+
+    return;
+
+  }
+
+
+  navigator.geolocation
+    .getCurrentPosition(
+
+      function(position){
+
+        const startLat =
+          position.coords.latitude;
+
+        const startLng =
+          position.coords.longitude;
+
+
+        drawGoogleRoute(
+          startLat,
+          startLng,
+          destLat,
+          destLng,
+          name
+        );
+
+      },
+
+      function(){
+
+        showGoogleDestination(
+          destLat,
+          destLng,
+          name
+        );
+
+      },
+
+      {
+
+        enableHighAccuracy:true,
+
+        timeout:12000,
+
+        maximumAge:30000
+
+      }
+
+    );
+
+}
+
+
+/* ---------------------------------------------------------
+   Google 路線
+--------------------------------------------------------- */
+
+function drawGoogleRoute(
+  startLat,
+  startLng,
+  destLat,
+  destLng,
+  name
+){
+
+  if(
+    window.googleDirectionsRenderer
+  ){
+
+    window.googleDirectionsRenderer
+      .setMap(null);
+
+  }
+
+
+  const service =
+    new google.maps.DirectionsService();
+
+
+  const renderer =
+    new google.maps.DirectionsRenderer({
+
+      map:
+        window.googleMapInstance,
+
+      suppressMarkers:false,
+
+      preserveViewport:false
+
+    });
+
+
+  service.route(
+
+    {
+
+      origin:{
+        lat:startLat,
+        lng:startLng
+      },
+
+      destination:{
+        lat:destLat,
+        lng:destLng
+      },
+
+      travelMode:
+        google.maps.TravelMode.WALKING
+
+    },
+
+    function(
+      result,
+      status
+    ){
+
+      if(
+        status !== "OK"
+      ){
+
+        showGoogleDestination(
+          destLat,
+          destLng,
+          name
+        );
+
+        return;
+
+      }
+
+
+      renderer.setDirections(
+        result
+      );
+
+
+      window.googleDirectionsRenderer =
+        renderer;
+
+
+      showToast(
+        "已在地圖顯示步行路線"
+      );
+
+    }
+
+  );
+
+}
+
+
+/* ---------------------------------------------------------
+   Google 只顯示目的地
+--------------------------------------------------------- */
+
+function showGoogleDestination(
+  lat,
+  lng,
+  name
+){
+
+  window.googleMapInstance
+    .setCenter({
+
+      lat:lat,
+
+      lng:lng
+
+    });
+
+
+  window.googleMapInstance
+    .setZoom(17);
+
+
+  if(
+    window.googleNavigationMarker
+  ){
+
+    window.googleNavigationMarker
+      .setMap(null);
+
+  }
+
+
+  window.googleNavigationMarker =
+    new google.maps.Marker({
+
+      position:{
+        lat:lat,
+        lng:lng
+      },
+
+      map:
+        window.googleMapInstance,
+
+      title:
+        name ||
+        "會合地點"
+
+    });
+
+
+  showToast(
+    "已顯示會合地點"
+  );
+
+}
+
+
+/* =========================================================
+   高德導航
+========================================================= */
+
+function navigateAmap(
+  destLat,
+  destLng,
+  name
+){
+
+  if(
+    !window.AMap ||
+    !window.amapInstance
+  ){
+
+    alert(
+      "高德地圖尚未載入"
+    );
+
+    return;
+
+  }
+
+
+  showToast(
+    "正在取得目前位置…"
+  );
+
+
+  if(
+    !navigator.geolocation
+  ){
+
+    showAmapDestination(
+      destLat,
+      destLng,
+      name
+    );
+
+    return;
+
+  }
+
+
+  navigator.geolocation
+    .getCurrentPosition(
+
+      function(position){
+
+        const startLat =
+          position.coords.latitude;
+
+        const startLng =
+          position.coords.longitude;
+
+
+        drawAmapRoute(
+          startLng,
+          startLat,
+          destLng,
+          destLat,
+          name
+        );
+
+      },
+
+      function(){
+
+        showAmapDestination(
+          destLat,
+          destLng,
+          name
+        );
+
+      },
+
+      {
+
+        enableHighAccuracy:true,
+
+        timeout:12000,
+
+        maximumAge:30000
+
+      }
+
+    );
+
+}
+
+
+/* ---------------------------------------------------------
+   高德步行路線
+--------------------------------------------------------- */
+
+function drawAmapRoute(
+  startLng,
+  startLat,
+  destLng,
+  destLat,
+  name
+){
+
+  AMap.plugin(
+    [
+      "AMap.Walking"
+    ],
+
+    function(){
+
+      if(
+        window.amapWalking
+      ){
+
+        try{
+
+          window.amapWalking
+            .clear();
+
+        }catch(e){}
+
+      }
+
+
+      window.amapWalking =
+        new AMap.Walking({
+
+          map:
+            window.amapInstance
+
+        });
+
+
+      window.amapWalking.search(
+
+        [
+          startLng,
+          startLat
+        ],
+
+        [
+          destLng,
+          destLat
+        ],
+
+        function(
+          status,
+          result
+        ){
+
+          if(
+            status !== "complete"
+          ){
+
+            showAmapDestination(
+              destLat,
+              destLng,
+              name
+            );
+
+            return;
+
+          }
+
+
+          showToast(
+            "已在地圖顯示步行路線"
+          );
+
+        }
+
+      );
+
+    }
+
+  );
+
+}
+
+
+/* ---------------------------------------------------------
+   高德只顯示目的地
+--------------------------------------------------------- */
+
+function showAmapDestination(
+  lat,
+  lng,
+  name
+){
+
+  window.amapInstance
+    .setCenter([
+      lng,
+      lat
+    ]);
+
+
+  window.amapInstance
+    .setZoom(17);
+
+
+  if(
+    window.amapNavigationMarker
+  ){
+
+    try{
+
+      window.amapInstance
+        .remove(
+          window.amapNavigationMarker
+        );
+
+    }catch(e){}
+
+  }
+
+
+  window.amapNavigationMarker =
+    new AMap.Marker({
+
+      position:[
+        lng,
+        lat
+      ],
+
+      title:
+        name ||
+        "會合地點"
+
+    });
+
+
+  window.amapInstance.add(
+    window.amapNavigationMarker
+  );
+
+
+  showToast(
+    "已顯示會合地點"
+  );
+
+}
+
+
+/* =========================================================
+   保留舊函式名稱
+========================================================= */
+
+function showNavigationOnMap(
+  startLat,
+  startLng,
+  destLat,
+  destLng,
+  name
+){
+
+  if(
+    startLat !== null &&
+    startLng !== null &&
+    startLat !== undefined &&
+    startLng !== undefined
+  ){
+
+    if(
+      currentMapProvider ===
+      "taiwan"
+    ){
+
+      drawGoogleRoute(
+        Number(startLat),
+        Number(startLng),
+        Number(destLat),
+        Number(destLng),
+        name
+      );
+
+    }else{
+
+      drawAmapRoute(
+        Number(startLng),
+        Number(startLat),
+        Number(destLng),
+        Number(destLat),
+        name
+      );
+
+    }
+
+    return;
+
+  }
+
+
+  if(
+    currentMapProvider ===
+    "taiwan"
+  ){
+
+    showGoogleDestination(
+      Number(destLat),
+      Number(destLng),
+      name
+    );
 
   }else{
 
-    window.open(
-      "https://www.google.com/maps/dir/?api=1&destination=" +
-      lat + "," + lng +
-      "&travelmode=walking",
-      "_blank"
+    showAmapDestination(
+      Number(destLat),
+      Number(destLng),
+      name
     );
 
   }
 
 }
+
+
 
 
 /* =========================================================
