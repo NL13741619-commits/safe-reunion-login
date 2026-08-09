@@ -4,10 +4,15 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>對話 - 安全團聚</title>
+
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <style>
-* { box-sizing: border-box; margin: 0; padding: 0; }
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
 
 body {
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
@@ -18,15 +23,17 @@ body {
   color: #111;
 }
 
-/* ===== Header ===== */
+/* =========================
+   Header
+========================= */
 
 .header {
   background: #06C755;
   color: #fff;
-  padding: 10px 12px;
+  padding: 10px 8px;
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
   position: sticky;
   top: 0;
   z-index: 100;
@@ -36,7 +43,7 @@ body {
   color: #fff;
   text-decoration: none;
   font-size: 24px;
-  padding: 4px;
+  padding: 4px 7px;
 }
 
 .header-info {
@@ -59,18 +66,27 @@ body {
 
 .header-actions {
   display: flex;
-  gap: 2px;
+  gap: 1px;
 }
 
 .header-actions button {
   background: transparent;
   border: none;
   color: #fff;
-  font-size: 13px;
-  padding: 6px 8px;
+  font-size: 12px;
+  padding: 6px 5px;
 }
 
-/* ===== Messages ===== */
+.header-actions .sos-header-btn {
+  background: #d50000;
+  border-radius: 8px;
+  font-weight: 800;
+  padding: 7px 9px;
+}
+
+/* =========================
+   Messages
+========================= */
 
 .messages {
   flex: 1;
@@ -134,75 +150,61 @@ body {
   width: 100%;
 }
 
-/* ===== SOS ===== */
+/* =========================
+   SOS Message
+========================= */
 
 .sos-message {
-  width: 92%;
-  align-self: center;
-  background: #fff4f4;
+  max-width: 88%;
+  align-self: flex-start;
+  background: #fff0f0;
   border: 2px solid #e53935;
   border-radius: 14px;
-  padding: 13px;
-  box-shadow: 0 2px 8px rgba(229,57,53,0.18);
+  padding: 12px;
+  box-shadow: 0 2px 8px rgba(229,57,53,0.15);
 }
 
-.sos-title {
-  color: #d32f2f;
-  font-size: 17px;
+.sos-message-title {
+  color: #d50000;
+  font-size: 16px;
   font-weight: 800;
-  margin-bottom: 6px;
+  margin-bottom: 7px;
 }
 
-.sos-sender {
-  font-size: 14px;
+.sos-message-name {
   font-weight: 700;
-  color: #333;
-  margin-bottom: 5px;
+  margin-bottom: 4px;
 }
 
-.sos-message-text {
-  font-size: 14px;
-  color: #333;
-  margin: 7px 0;
-  white-space: pre-wrap;
-}
-
-.sos-location {
-  background: #fff;
-  border-radius: 8px;
-  padding: 8px;
-  margin-top: 8px;
-  font-size: 12px;
+.sos-message-location {
+  font-size: 13px;
   color: #555;
-}
-
-.sos-location strong {
-  color: #d32f2f;
+  margin-top: 7px;
+  line-height: 1.4;
 }
 
 .sos-map-btn {
-  display: block;
-  width: 100%;
-  margin-top: 10px;
-  border: none;
-  border-radius: 9px;
-  background: #e53935;
+  display: inline-block;
+  margin-top: 9px;
+  background: #d50000;
   color: #fff;
-  padding: 10px;
-  font-size: 14px;
-  font-weight: 700;
-  text-align: center;
   text-decoration: none;
+  padding: 7px 11px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 700;
 }
 
-.sos-time {
+.sos-message-time {
   font-size: 11px;
   color: #999;
+  margin-top: 7px;
   text-align: right;
-  margin-top: 6px;
 }
 
-/* ===== Composer ===== */
+/* =========================
+   Composer
+========================= */
 
 .composer {
   background: #f7f7f7;
@@ -264,7 +266,141 @@ body {
   border-radius: 16px;
 }
 
-/* ===== Sheets ===== */
+/* =========================
+   SOS Button
+========================= */
+
+.room-sos-bar {
+  background: #d50000;
+  color: #fff;
+  border: none;
+  width: 100%;
+  padding: 11px;
+  font-size: 15px;
+  font-weight: 800;
+}
+
+/* =========================
+   SOS Emergency Overlay
+========================= */
+
+.sos-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(120,0,0,0.78);
+  z-index: 1000;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.sos-overlay.show {
+  display: flex;
+}
+
+.sos-card {
+  width: 100%;
+  max-width: 420px;
+  background: #fff;
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: 0 15px 50px rgba(0,0,0,0.4);
+  animation: sosPulse 0.9s infinite alternate;
+}
+
+@keyframes sosPulse {
+  from {
+    transform: scale(1);
+  }
+  to {
+    transform: scale(1.015);
+  }
+}
+
+.sos-card-head {
+  background: #d50000;
+  color: #fff;
+  text-align: center;
+  padding: 20px 15px;
+}
+
+.sos-big {
+  font-size: 42px;
+  margin-bottom: 5px;
+}
+
+.sos-card-title {
+  font-size: 24px;
+  font-weight: 900;
+}
+
+.sos-card-body {
+  padding: 18px;
+}
+
+.sos-person {
+  font-size: 20px;
+  font-weight: 800;
+  margin-bottom: 8px;
+}
+
+.sos-info {
+  font-size: 14px;
+  color: #444;
+  line-height: 1.6;
+}
+
+.sos-location-box {
+  background: #f5f5f5;
+  border-radius: 10px;
+  padding: 10px;
+  margin-top: 12px;
+  font-size: 13px;
+  word-break: break-all;
+}
+
+.sos-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-top: 15px;
+}
+
+.sos-actions button,
+.sos-actions a {
+  border: none;
+  text-align: center;
+  text-decoration: none;
+  padding: 13px 8px;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.sos-map-action {
+  background: #1976d2;
+  color: #fff;
+}
+
+.sos-call-action {
+  background: #06C755;
+  color: #fff;
+}
+
+.sos-close-action {
+  width: 100%;
+  margin-top: 10px;
+  padding: 12px;
+  border: none;
+  background: #eee;
+  border-radius: 10px;
+  font-weight: 700;
+}
+
+/* =========================
+   Sheets
+========================= */
 
 .sheet-mask,
 .action-mask {
@@ -337,6 +473,10 @@ body {
   color: #c62828;
 }
 
+/* =========================
+   Sticker
+========================= */
+
 .sticker-panel {
   display: none;
   background: #fff;
@@ -370,7 +510,12 @@ input[type="file"] {
 
 <body>
 
+<!-- =========================
+     Header
+========================= -->
+
 <div class="header">
+
   <a class="back" href="chat.html">‹</a>
 
   <div class="header-info">
@@ -382,17 +527,52 @@ input[type="file"] {
     <button type="button" id="btnAudio">語音</button>
     <button type="button" id="btnVideo">視訊</button>
     <button type="button" id="btnMap">地圖</button>
-    <button type="button" id="btnMembers" style="display:none">成員</button>
+
+    <button
+      type="button"
+      id="btnHeaderSOS"
+      class="sos-header-btn"
+    >SOS</button>
+
+    <button
+      type="button"
+      id="btnMembers"
+      style="display:none"
+    >成員</button>
   </div>
+
 </div>
 
+
+<!-- =========================
+     Messages
+========================= -->
+
 <div class="messages" id="messages"></div>
+
+
+<!-- =========================
+     Sticker
+========================= -->
 
 <div class="sticker-panel" id="stickerPanel">
   <div class="sticker-grid" id="stickerGrid"></div>
 </div>
 
+
+<!-- =========================
+     Composer
+========================= -->
+
 <div class="composer">
+
+  <button
+    type="button"
+    class="room-sos-bar"
+    id="btnRoomSOS"
+  >
+    🚨 緊急 SOS 求救
+  </button>
 
   <div class="settings-bar">
     <label>
@@ -408,11 +588,17 @@ input[type="file"] {
 
   <div class="composer-row">
 
-    <button type="button" class="icon-btn" id="btnPlus">＋</button>
+    <button
+      type="button"
+      class="icon-btn"
+      id="btnPlus"
+    >＋</button>
 
-    <button type="button" class="text-btn" id="btnCam">
-      相機
-    </button>
+    <button
+      type="button"
+      class="text-btn"
+      id="btnCam"
+    >相機</button>
 
     <input
       type="text"
@@ -421,40 +607,144 @@ input[type="file"] {
       autocomplete="off"
     >
 
-    <button type="button" class="text-btn" id="btnSticker">
-      表情
-    </button>
+    <button
+      type="button"
+      class="text-btn"
+      id="btnSticker"
+    >表情</button>
 
-    <button type="button" class="text-btn" id="btnVoice">
-      語音
-    </button>
+    <button
+      type="button"
+      class="text-btn"
+      id="btnVoice"
+    >語音</button>
 
-    <button type="button" class="send-btn" id="btnSend">
-      送出
-    </button>
+    <button
+      type="button"
+      class="send-btn"
+      id="btnSend"
+    >送出</button>
 
   </div>
+
 </div>
+
+
+<!-- =========================
+     SOS Emergency Overlay
+========================= -->
+
+<div class="sos-overlay" id="sosOverlay">
+
+  <div class="sos-card">
+
+    <div class="sos-card-head">
+
+      <div class="sos-big">🚨</div>
+
+      <div class="sos-card-title">
+        緊急 SOS 求救
+      </div>
+
+    </div>
+
+    <div class="sos-card-body">
+
+      <div
+        class="sos-person"
+        id="sosPerson"
+      >
+        求救者
+      </div>
+
+      <div
+        class="sos-info"
+        id="sosMessage"
+      >
+        有成員發出緊急求救！
+      </div>
+
+      <div
+        class="sos-location-box"
+        id="sosLocation"
+      >
+        正在取得位置…
+      </div>
+
+      <div class="sos-actions">
+
+        <a
+          href="#"
+          target="_blank"
+          rel="noopener"
+          class="sos-map-action"
+          id="sosMapAction"
+        >
+          📍 查看位置
+        </a>
+
+        <a
+          href="#"
+          class="sos-call-action"
+          id="sosCallAction"
+        >
+          📞 聯絡求救者
+        </a>
+
+      </div>
+
+      <button
+        type="button"
+        class="sos-close-action"
+        id="sosCloseAction"
+      >
+        我已看到 SOS
+      </button>
+
+    </div>
+
+  </div>
+
+</div>
+
+
+<!-- =========================
+     Plus Sheet
+========================= -->
 
 <div class="sheet-mask" id="plusMask"></div>
 
 <div class="sheet" id="plusSheet">
 
-  <div class="sheet-item" id="pickAlbum">
+  <div
+    class="sheet-item"
+    id="pickAlbum"
+  >
     相簿（照片／影片）
   </div>
 
-  <div class="sheet-item" id="pickFile">
+  <div
+    class="sheet-item"
+    id="pickFile"
+  >
     檔案
   </div>
 
-  <div class="sheet-cancel" id="plusCancel">
+  <div
+    class="sheet-cancel"
+    id="plusCancel"
+  >
     取消
   </div>
 
 </div>
 
-<input type="file" id="fileAlbum" accept="image/*,video/*,audio/*">
+
+<input
+  type="file"
+  id="fileAlbum"
+  accept="image/*,video/*,audio/*"
+>
 
 <input
   type="file"
@@ -469,15 +759,35 @@ input[type="file"] {
   capture="environment"
 >
 
-<div class="action-mask" id="actionMask"></div>
 
-<div class="action-box" id="actionBox"></div>
+<!-- =========================
+     Action
+========================= -->
 
-<!-- 群組成員管理 -->
+<div
+  class="action-mask"
+  id="actionMask"
+></div>
 
-<div class="sheet-mask" id="membersMask"></div>
+<div
+  class="action-box"
+  id="actionBox"
+></div>
 
-<div class="sheet" id="membersSheet">
+
+<!-- =========================
+     Members
+========================= -->
+
+<div
+  class="sheet-mask"
+  id="membersMask"
+></div>
+
+<div
+  class="sheet"
+  id="membersSheet"
+>
 
   <div style="text-align:center;font-weight:700;padding:12px 0 8px;font-size:16px">
     群組成員管理
@@ -488,7 +798,9 @@ input[type="file"] {
     style="max-height:35vh;overflow:auto;padding:0 12px"
   ></div>
 
-  <div style="font-size:13px;color:#888;padding:12px 16px 6px">
+  <div
+    style="font-size:13px;color:#888;padding:12px 16px 6px"
+  >
     邀請好友加入
   </div>
 
@@ -497,22 +809,23 @@ input[type="file"] {
     style="max-height:30vh;overflow:auto;padding:0 12px 16px"
   ></div>
 
-  <div class="sheet-cancel" id="membersClose">
+  <div
+    class="sheet-cancel"
+    id="membersClose"
+  >
     關閉
   </div>
 
 </div>
 
+
 <script>
+
 (function () {
 
-  var statusEl = document.getElementById('roomStatus');
-
-  function setStatus(t) {
-    if (statusEl) {
-      statusEl.textContent = t;
-    }
-  }
+  /* =====================================================
+     基本設定
+  ===================================================== */
 
   var SUPABASE_URL =
     'https://perfsipperncvjocznhl.supabase.co';
@@ -520,7 +833,8 @@ input[type="file"] {
   var SUPABASE_KEY =
     'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBlcmZzaXBwZXJuY3Zqb2N6bmhsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODYwMTUyMzAsImV4cCI6MjEwMTU5MTIzMH0.I7vXkV247kAzRJ0RigDZt3Hzn8KJDyMc6o9E3oHJZoY';
 
-  var RECALL_MS = 2 * 60 * 1000;
+  var RECALL_MS =
+    2 * 60 * 1000;
 
   var stickers = [
     '😀','😅','😂','😊','😍','🤔',
@@ -536,7 +850,12 @@ input[type="file"] {
   var recognizing = false;
   var recognition = null;
 
-  var params = new URLSearchParams(location.search);
+  var isGroup = false;
+  var isOwner = false;
+  var groupMembers = [];
+
+  var params =
+    new URLSearchParams(location.search);
 
   var roomName =
     params.get('name')
@@ -546,330 +865,76 @@ input[type="file"] {
   var roomId =
     params.get('id') || roomName;
 
-  var isGroup =
+  isGroup =
     String(roomId).indexOf('dm_') !== 0;
 
-  var isOwner = false;
-  var groupMembers = [];
+  document.getElementById('roomName').textContent =
+    roomName;
 
-  document.getElementById('roomName').textContent = roomName;
 
   /* =====================================================
-     SOS
-     ===================================================== */
+     狀態
+  ===================================================== */
 
-  var sosEvents = [];
+  var statusEl =
+    document.getElementById('roomStatus');
 
-  function sosTime(iso) {
+  function setStatus(t) {
 
-    if (!iso) return '';
+    if (statusEl) {
+      statusEl.textContent = t;
+    }
+
+  }
+
+
+  setStatus('腳本開始執行');
+
+
+  /* =====================================================
+     時間
+  ===================================================== */
+
+  function nowTime() {
+
+    var n = new Date();
+
+    return n.getHours() +
+      ':' +
+      String(n.getMinutes()).padStart(2, '0');
+
+  }
+
+
+  function nowTimeFrom(iso) {
 
     var d = new Date(iso);
 
-    return (
-      (d.getMonth() + 1) + '/' +
-      d.getDate() + ' ' +
-      d.getHours() + ':' +
-      String(d.getMinutes()).padStart(2, '0') +
+    return d.getHours() +
       ':' +
-      String(d.getSeconds()).padStart(2, '0')
-    );
+      String(d.getMinutes()).padStart(2, '0');
+
   }
 
-  function renderSOS(event) {
-
-    var box = document.getElementById('messages');
-
-    var div = document.createElement('div');
-
-    div.className = 'sos-message';
-
-    var lat = event.lat;
-    var lng = event.lng;
-
-    var locationHtml = '';
-
-    if (
-      lat !== null &&
-      lat !== undefined &&
-      lng !== null &&
-      lng !== undefined
-    ) {
-
-      locationHtml =
-        '<div class="sos-location">' +
-          '<strong>📍 求救位置</strong><br>' +
-          '緯度：' + escapeHtml(String(lat)) + '<br>' +
-          '經度：' + escapeHtml(String(lng)) +
-        '</div>' +
-
-        '<a class="sos-map-btn" href="map.html?id=' +
-        encodeURIComponent(roomId) +
-        '&name=' +
-        encodeURIComponent(roomName) +
-        '&lat=' +
-        encodeURIComponent(lat) +
-        '&lng=' +
-        encodeURIComponent(lng) +
-        '">' +
-        '📍 立即查看位置' +
-        '</a>';
-
-    }
-
-    div.innerHTML =
-      '<div class="sos-title">🚨 緊急 SOS 求救</div>' +
-
-      '<div class="sos-sender">' +
-        escapeHtml(
-          event.display_name ||
-          event.sender_name ||
-          '群組成員'
-        ) +
-        ' 正在求救' +
-      '</div>' +
-
-      (
-        event.message
-          ? '<div class="sos-message-text">' +
-              escapeHtml(event.message) +
-            '</div>'
-          : ''
-      ) +
-
-      locationHtml +
-
-      '<div class="sos-time">' +
-        sosTime(event.created_at) +
-      '</div>';
-
-    box.appendChild(div);
-
-    box.scrollTop = box.scrollHeight;
-
-    playSOSNotify();
-  }
-
-  function playSOSNotify() {
-
-    try {
-
-      if (
-        document.getElementById('optSound') &&
-        document.getElementById('optSound').checked
-      ) {
-
-        var ctx =
-          new (window.AudioContext ||
-               window.webkitAudioContext)();
-
-        var o1 = ctx.createOscillator();
-        var o2 = ctx.createOscillator();
-
-        var g = ctx.createGain();
-
-        o1.frequency.value = 880;
-        o2.frequency.value = 660;
-
-        g.gain.value = 0.12;
-
-        o1.connect(g);
-        o2.connect(g);
-
-        g.connect(ctx.destination);
-
-        o1.start();
-        o2.start();
-
-        o1.stop(ctx.currentTime + 0.25);
-        o2.stop(ctx.currentTime + 0.25);
-      }
-
-      if (
-        document.getElementById('optVibrate') &&
-        document.getElementById('optVibrate').checked &&
-        navigator.vibrate
-      ) {
-
-        navigator.vibrate([
-          300, 150, 300, 150, 600
-        ]);
-      }
-
-    } catch (e) {}
-  }
-
-  async function loadSOSEvents() {
-
-    if (!supabase || !myUser || !isGroup) {
-      return;
-    }
-
-    try {
-
-      var res = await supabase
-        .from('sos_events')
-        .select('*')
-        .eq('room_id', roomId)
-        .order('created_at', {
-          ascending: true
-        })
-        .limit(50);
-
-      if (res.error) {
-
-        console.log(
-          'SOS 載入失敗：',
-          res.error.message
-        );
-
-        return;
-      }
-
-      sosEvents = res.data || [];
-
-      sosEvents.forEach(function (event) {
-
-        renderSOSWithoutNotify(event);
-
-      });
-
-    } catch (e) {
-
-      console.log(
-        'SOS 載入錯誤：',
-        e
-      );
-
-    }
-  }
-
-  function renderSOSWithoutNotify(event) {
-
-    var box = document.getElementById('messages');
-
-    var div = document.createElement('div');
-
-    div.className = 'sos-message';
-
-    var lat = event.lat;
-    var lng = event.lng;
-
-    var locationHtml = '';
-
-    if (
-      lat !== null &&
-      lat !== undefined &&
-      lng !== null &&
-      lng !== undefined
-    ) {
-
-      locationHtml =
-        '<div class="sos-location">' +
-          '<strong>📍 求救位置</strong><br>' +
-          '緯度：' + escapeHtml(String(lat)) + '<br>' +
-          '經度：' + escapeHtml(String(lng)) +
-        '</div>' +
-
-        '<a class="sos-map-btn" href="map.html?id=' +
-        encodeURIComponent(roomId) +
-        '&name=' +
-        encodeURIComponent(roomName) +
-        '&lat=' +
-        encodeURIComponent(lat) +
-        '&lng=' +
-        encodeURIComponent(lng) +
-        '">' +
-        '📍 立即查看位置' +
-        '</a>';
-    }
-
-    div.innerHTML =
-      '<div class="sos-title">🚨 緊急 SOS 求救</div>' +
-
-      '<div class="sos-sender">' +
-        escapeHtml(
-          event.display_name ||
-          event.sender_name ||
-          '群組成員'
-        ) +
-        ' 正在求救' +
-      '</div>' +
-
-      (
-        event.message
-          ? '<div class="sos-message-text">' +
-              escapeHtml(event.message) +
-            '</div>'
-          : ''
-      ) +
-
-      locationHtml +
-
-      '<div class="sos-time">' +
-        sosTime(event.created_at) +
-      '</div>';
-
-    box.appendChild(div);
-  }
-
-  function subscribeSOSEvents() {
-
-    if (!supabase || !isGroup) {
-      return;
-    }
-
-    supabase
-      .channel('sos-room:' + roomId)
-
-      .on(
-        'postgres_changes',
-        {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'sos_events',
-          filter: 'room_id=eq.' + roomId
-        },
-        function (payload) {
-
-          var event = payload.new;
-
-          if (!event) return;
-
-          /*
-           * 防止自己重新看到重複 SOS
-           */
-          if (
-            sosEvents.some(function (x) {
-              return x.id === event.id;
-            })
-          ) {
-            return;
-          }
-
-          sosEvents.push(event);
-
-          renderSOS(event);
-
-        }
-      )
-
-      .subscribe(function (status) {
-
-        if (status === 'SUBSCRIBED') {
-
-          console.log(
-            'SOS 即時通知已開啟'
-          );
-
-        }
-
-      });
-  }
 
   /* =====================================================
-     DM
-     ===================================================== */
+     HTML escape
+  ===================================================== */
+
+  function escapeHtml(s) {
+
+    return String(s)
+      .replace(/&/g,'&amp;')
+      .replace(/</g,'&lt;')
+      .replace(/>/g,'&gt;')
+      .replace(/"/g,'&quot;');
+
+  }
+
+
+  /* =====================================================
+     私訊對象
+  ===================================================== */
 
   function peerIdFromRoom() {
 
@@ -881,13 +946,17 @@ input[type="file"] {
       return '';
     }
 
-    var rest = String(roomId).slice(3);
+    var rest =
+      String(roomId).slice(3);
 
-    var mid = rest.indexOf(myUser.id);
+    var pos =
+      rest.indexOf(myUser.id);
 
-    if (mid < 0) return '';
+    if (pos < 0) {
+      return '';
+    }
 
-    if (rest.indexOf(myUser.id) === 0) {
+    if (pos === 0) {
 
       return rest.slice(
         myUser.id.length + 1
@@ -897,13 +966,22 @@ input[type="file"] {
 
     return rest.slice(
       0,
-      rest.length - myUser.id.length - 1
+      rest.length -
+      myUser.id.length -
+      1
     );
+
   }
+
+
+  /* =====================================================
+     通話
+  ===================================================== */
 
   function goCall(mode) {
 
-    var to = peerIdFromRoom();
+    var to =
+      peerIdFromRoom();
 
     var url =
       'call.html?mode=' +
@@ -920,17 +998,25 @@ input[type="file"] {
     }
 
     location.href = url;
+
   }
+
 
   document.getElementById('btnAudio').onclick =
     function () {
+
       goCall('audio');
+
     };
+
 
   document.getElementById('btnVideo').onclick =
     function () {
+
       goCall('video');
+
     };
+
 
   document.getElementById('btnMap').onclick =
     function () {
@@ -943,40 +1029,10 @@ input[type="file"] {
 
     };
 
+
   /* =====================================================
-     Message helpers
-     ===================================================== */
-
-  function nowTime() {
-
-    var n = new Date();
-
-    return (
-      n.getHours() +
-      ':' +
-      String(n.getMinutes()).padStart(2, '0')
-    );
-  }
-
-  function nowTimeFrom(iso) {
-
-    var d = new Date(iso);
-
-    return (
-      d.getHours() +
-      ':' +
-      String(d.getMinutes()).padStart(2, '0')
-    );
-  }
-
-  function escapeHtml(s) {
-
-    return String(s)
-      .replace(/&/g,'&amp;')
-      .replace(/</g,'&lt;')
-      .replace(/>/g,'&gt;')
-      .replace(/"/g,'&quot;');
-  }
+     訊息資料
+  ===================================================== */
 
   function rowToLocal(row) {
 
@@ -988,11 +1044,14 @@ input[type="file"] {
         myUser &&
         row.user_id === myUser.id,
 
-      kind: row.kind || 'text',
+      kind:
+        row.kind || 'text',
 
-      text: row.body || '',
+      text:
+        row.body || '',
 
-      all: !!row.is_all,
+      all:
+        !!row.is_all,
 
       time:
         nowTimeFrom(row.created_at),
@@ -1003,28 +1062,41 @@ input[type="file"] {
       recalled:
         !!row.recalled,
 
-      hiddenLocal: false,
+      hiddenLocal:
+        false,
 
       senderName:
         row.sender_name || '成員',
 
       userId:
         row.user_id
+
     };
+
   }
 
-  function playNotify() {
+
+  /* =====================================================
+     通知音 + 震動
+  ===================================================== */
+
+  function playNotify(force) {
 
     try {
 
       if (
-        document.getElementById('optSound') &&
-        document.getElementById('optSound').checked
+        force ||
+        (
+          document.getElementById('optSound') &&
+          document.getElementById('optSound').checked
+        )
       ) {
 
         var ctx =
-          new (window.AudioContext ||
-               window.webkitAudioContext)();
+          new (
+            window.AudioContext ||
+            window.webkitAudioContext
+          )();
 
         var o =
           ctx.createOscillator();
@@ -1032,29 +1104,40 @@ input[type="file"] {
         var g =
           ctx.createGain();
 
-        o.frequency.value = 880;
+        o.frequency.value =
+          force ? 1000 : 880;
 
-        g.gain.value = 0.06;
+        g.gain.value =
+          force ? 0.15 : 0.06;
 
         o.connect(g);
-
         g.connect(ctx.destination);
 
         o.start();
 
         o.stop(
-          ctx.currentTime + 0.12
+          ctx.currentTime +
+          (force ? 0.4 : 0.12)
         );
 
       }
 
       if (
-        document.getElementById('optVibrate') &&
-        document.getElementById('optVibrate').checked &&
+        (
+          force ||
+          (
+            document.getElementById('optVibrate') &&
+            document.getElementById('optVibrate').checked
+          )
+        ) &&
         navigator.vibrate
       ) {
 
-        navigator.vibrate(120);
+        navigator.vibrate(
+          force
+            ? [300,150,300,150,500]
+            : 120
+        );
 
       }
 
@@ -1062,9 +1145,10 @@ input[type="file"] {
 
   }
 
+
   /* =====================================================
-     Render normal messages
-     ===================================================== */
+     Render一般訊息
+  ===================================================== */
 
   function renderMessages() {
 
@@ -1075,7 +1159,9 @@ input[type="file"] {
 
     messages.forEach(function (m) {
 
-      if (m.hiddenLocal) return;
+      if (m.hiddenLocal) {
+        return;
+      }
 
       var div =
         document.createElement('div');
@@ -1119,9 +1205,7 @@ input[type="file"] {
         if (m.all) {
 
           html +=
-            '<div class="msg-tag">' +
-            '@all 全體' +
-            '</div>';
+            '<div class="msg-tag">@all 全體</div>';
 
         }
 
@@ -1150,7 +1234,7 @@ input[type="file"] {
 
           html +=
             '<span style="font-size:36px">' +
-            m.text +
+            escapeHtml(m.text) +
             '</span>';
 
         } else if (
@@ -1167,8 +1251,7 @@ input[type="file"] {
               '<a href="' +
               escapeHtml(m.text) +
               '" target="_blank" rel="noopener">' +
-              '開啟檔案' +
-              '</a>';
+              '開啟檔案</a>';
 
           } else {
 
@@ -1190,8 +1273,11 @@ input[type="file"] {
           m.time +
           '</div>';
 
-        div.innerHTML = html;
+        div.innerHTML =
+          html;
+
       }
+
 
       var timer = null;
 
@@ -1208,7 +1294,7 @@ input[type="file"] {
             );
 
         },
-        { passive: true }
+        { passive:true }
       );
 
       div.addEventListener(
@@ -1240,18 +1326,21 @@ input[type="file"] {
 
     });
 
-    /*
-     * SOS 要在普通訊息之後重新放回來。
-     */
-    sosEvents.forEach(function (event) {
-      renderSOSWithoutNotify(event);
-    });
-
     box.scrollTop =
       box.scrollHeight;
+
   }
 
-  function pushLocal(kind, text, all) {
+
+  /* =====================================================
+     本機訊息
+  ===================================================== */
+
+  function pushLocal(
+    kind,
+    text,
+    all
+  ) {
 
     messages.push({
 
@@ -1259,32 +1348,37 @@ input[type="file"] {
         'local_' +
         Date.now() +
         '_' +
-        Math.floor(Math.random() * 1000),
+        Math.floor(
+          Math.random() * 1000
+        ),
 
-      mine: true,
+      mine:true,
 
       kind:
         kind || 'text',
 
-      text: text,
+      text:text,
 
-      all:
-        !!all,
+      all:!!all,
 
-      time:
-        nowTime(),
+      time:nowTime(),
 
-      createdAt:
-        Date.now(),
+      createdAt:Date.now(),
 
-      recalled: false,
+      recalled:false,
 
-      hiddenLocal: false
+      hiddenLocal:false
 
     });
 
     renderMessages();
+
   }
+
+
+  /* =====================================================
+     上傳檔案
+  ===================================================== */
 
   function guessKind(file) {
 
@@ -1293,32 +1387,41 @@ input[type="file"] {
 
     if (
       t.indexOf('image/') === 0
-    ) return 'image';
+    ) {
+      return 'image';
+    }
 
     if (
       t.indexOf('video/') === 0
-    ) return 'video';
+    ) {
+      return 'video';
+    }
 
     if (
       t.indexOf('audio/') === 0
-    ) return 'audio';
+    ) {
+      return 'audio';
+    }
 
     return 'file';
+
   }
 
-  /* =====================================================
-     Upload
-     ===================================================== */
 
   async function uploadAndSend(file) {
 
-    if (!file) return;
+    if (!file) {
+      return;
+    }
 
     if (!myUser || !supabase) {
 
-      setStatus('請先登入才能傳檔');
+      setStatus(
+        '請先登入才能傳檔'
+      );
 
       return;
+
     }
 
     setStatus('上傳中…');
@@ -1328,9 +1431,7 @@ input[type="file"] {
 
     var ext =
       (
-        file.name
-          .split('.')
-          .pop() ||
+        file.name.split('.').pop() ||
         'bin'
       ).toLowerCase();
 
@@ -1353,8 +1454,8 @@ input[type="file"] {
           path,
           file,
           {
-            cacheControl: '3600',
-            upsert: false,
+            cacheControl:'3600',
+            upsert:false,
             contentType:
               file.type || undefined
           }
@@ -1368,6 +1469,7 @@ input[type="file"] {
       );
 
       return;
+
     }
 
     var pub =
@@ -1387,6 +1489,7 @@ input[type="file"] {
       );
 
       return;
+
     }
 
     var ins =
@@ -1394,7 +1497,7 @@ input[type="file"] {
         .from('messages')
         .insert({
 
-          room_id: roomId,
+          room_id:roomId,
 
           user_id:
             myUser.id,
@@ -1413,11 +1516,11 @@ input[type="file"] {
                 : '成員'
             ),
 
-          kind: kind,
+          kind:kind,
 
-          body: url,
+          body:url,
 
-          is_all: false
+          is_all:false
 
         });
 
@@ -1429,16 +1532,19 @@ input[type="file"] {
       );
 
       return;
+
     }
 
     setStatus(
       '即時通訊已開啟'
     );
+
   }
 
+
   /* =====================================================
-     Send message
-     ===================================================== */
+     一般文字訊息
+  ===================================================== */
 
   async function sendMsg() {
 
@@ -1450,7 +1556,9 @@ input[type="file"] {
     var text =
       input.value.trim();
 
-    if (!text) return;
+    if (!text) {
+      return;
+    }
 
     var all = false;
 
@@ -1463,8 +1571,8 @@ input[type="file"] {
 
       text =
         text
-          .replace(/^@all\b/i, '')
-          .replace(/^@全體/, '')
+          .replace(/^@all\b/i,'')
+          .replace(/^@全體/,'')
           .trim() ||
         '（全體通知）';
 
@@ -1485,6 +1593,7 @@ input[type="file"] {
       );
 
       return;
+
     }
 
     setStatus('送出中…');
@@ -1494,7 +1603,7 @@ input[type="file"] {
         .from('messages')
         .insert({
 
-          room_id: roomId,
+          room_id:roomId,
 
           user_id:
             myUser.id,
@@ -1503,11 +1612,11 @@ input[type="file"] {
             myUser.email ||
             'user',
 
-          kind: 'text',
+          kind:'text',
 
-          body: text,
+          body:text,
 
-          is_all: all
+          is_all:all
 
         });
 
@@ -1525,14 +1634,20 @@ input[type="file"] {
       );
 
       return;
+
     }
 
     setStatus(
       '即時通訊已開啟'
     );
+
   }
 
-  async function sendPayload(kind, text) {
+
+  async function sendPayload(
+    kind,
+    text
+  ) {
 
     if (!myUser || !supabase) {
 
@@ -1547,6 +1662,7 @@ input[type="file"] {
       );
 
       return;
+
     }
 
     var res =
@@ -1554,7 +1670,7 @@ input[type="file"] {
         .from('messages')
         .insert({
 
-          room_id: roomId,
+          room_id:roomId,
 
           user_id:
             myUser.id,
@@ -1563,11 +1679,11 @@ input[type="file"] {
             myUser.email ||
             'user',
 
-          kind: kind,
+          kind:kind,
 
-          body: text,
+          body:text,
 
-          is_all: false
+          is_all:false
 
         });
 
@@ -1583,18 +1699,536 @@ input[type="file"] {
         text,
         false
       );
+
     }
+
   }
+
+
+  /* =====================================================
+     SOS
+  ===================================================== */
+
+  var activeSOS = null;
+
+
+  function getDisplayName() {
+
+    if (!myUser) {
+      return '成員';
+    }
+
+    return (
+      (
+        myUser.user_metadata &&
+        (
+          myUser.user_metadata.nickname ||
+          myUser.user_metadata.username ||
+          myUser.user_metadata.full_name
+        )
+      ) ||
+      (
+        myUser.email
+          ? myUser.email.split('@')[0]
+          : '成員'
+      )
+    );
+
+  }
+
+
+  function getCurrentLocation() {
+
+    return new Promise(function(resolve) {
+
+      if (!navigator.geolocation) {
+
+        resolve({
+          latitude:null,
+          longitude:null
+        });
+
+        return;
+
+      }
+
+      navigator.geolocation.getCurrentPosition(
+
+        function(position) {
+
+          resolve({
+
+            latitude:
+              position.coords.latitude,
+
+            longitude:
+              position.coords.longitude
+
+          });
+
+        },
+
+        function() {
+
+          resolve({
+
+            latitude:null,
+            longitude:null
+
+          });
+
+        },
+
+        {
+
+          enableHighAccuracy:true,
+
+          timeout:8000,
+
+          maximumAge:5000
+
+        }
+
+      );
+
+    });
+
+  }
+
+
+  function openSOSOverlay(sos) {
+
+    activeSOS = sos;
+
+    document.getElementById(
+      'sosPerson'
+    ).textContent =
+      '🚨 ' +
+      (sos.display_name || '成員') +
+      ' 正在求救';
+
+    document.getElementById(
+      'sosMessage'
+    ).textContent =
+      sos.message ||
+      '有成員發出緊急求救！';
+
+    var locationText =
+      '位置：未取得';
+
+    if (
+      sos.latitude != null &&
+      sos.longitude != null
+    ) {
+
+      locationText =
+        '緯度：' +
+        sos.latitude +
+        '<br>經度：' +
+        sos.longitude;
+
+    }
+
+    if (sos.address) {
+
+      locationText +=
+        '<br>地址：' +
+        escapeHtml(
+          sos.address
+        );
+
+    }
+
+    document.getElementById(
+      'sosLocation'
+    ).innerHTML =
+      locationText;
+
+    var mapBtn =
+      document.getElementById(
+        'sosMapAction'
+      );
+
+    if (
+      sos.latitude != null &&
+      sos.longitude != null
+    ) {
+
+      mapBtn.href =
+        'https://www.google.com/maps/search/?api=1&query=' +
+        encodeURIComponent(
+          sos.latitude +
+          ',' +
+          sos.longitude
+        );
+
+    } else {
+
+      mapBtn.href =
+        'map.html?id=' +
+        encodeURIComponent(roomId);
+
+    }
+
+
+    var callBtn =
+      document.getElementById(
+        'sosCallAction'
+      );
+
+    if (sos.user_id) {
+
+      callBtn.href =
+        'call.html?mode=audio' +
+        '&to=' +
+        encodeURIComponent(
+          sos.user_id
+        ) +
+        '&name=' +
+        encodeURIComponent(
+          sos.display_name ||
+          'SOS 求救者'
+        );
+
+    } else {
+
+      callBtn.href =
+        'tel:';
+
+    }
+
+
+    document.getElementById(
+      'sosOverlay'
+    ).classList.add('show');
+
+    playNotify(true);
+
+  }
+
+
+  function closeSOSOverlay() {
+
+    document.getElementById(
+      'sosOverlay'
+    ).classList.remove('show');
+
+    if (navigator.vibrate) {
+
+      try {
+        navigator.vibrate(0);
+      } catch(e) {}
+
+    }
+
+  }
+
+
+  function renderSOSMessage(sos) {
+
+    var box =
+      document.getElementById(
+        'messages'
+      );
+
+    var div =
+      document.createElement('div');
+
+    div.className =
+      'sos-message';
+
+    var name =
+      escapeHtml(
+        sos.display_name ||
+        '成員'
+      );
+
+    var msg =
+      escapeHtml(
+        sos.message ||
+        '緊急求救'
+      );
+
+    var location =
+      '';
+
+    if (
+      sos.latitude != null &&
+      sos.longitude != null
+    ) {
+
+      var url =
+        'https://www.google.com/maps/search/?api=1&query=' +
+        encodeURIComponent(
+          sos.latitude +
+          ',' +
+          sos.longitude
+        );
+
+      location =
+        '<div class="sos-message-location">' +
+        '📍 ' +
+        sos.latitude +
+        ', ' +
+        sos.longitude +
+        '<br>' +
+        '<a class="sos-map-btn" ' +
+        'href="' +
+        url +
+        '" target="_blank" rel="noopener">' +
+        '查看求救位置' +
+        '</a>' +
+        '</div>';
+
+    }
+
+    div.innerHTML =
+      '<div class="sos-message-title">' +
+      '🚨 SOS 緊急求救' +
+      '</div>' +
+
+      '<div class="sos-message-name">' +
+      name +
+      '</div>' +
+
+      '<div>' +
+      msg +
+      '</div>' +
+
+      location +
+
+      '<div class="sos-message-time">' +
+      (
+        sos.created_at
+          ? nowTimeFrom(sos.created_at)
+          : nowTime()
+      ) +
+      '</div>';
+
+    box.appendChild(div);
+
+    box.scrollTop =
+      box.scrollHeight;
+
+  }
+
+
+  async function sendSOS() {
+
+    if (!myUser || !supabase) {
+
+      alert(
+        '目前尚未登入，無法發送 SOS。'
+      );
+
+      return;
+
+    }
+
+    if (!isGroup) {
+
+      alert(
+        'SOS 主要用於群組救援。請在群組聊天室發送。'
+      );
+
+      return;
+
+    }
+
+
+    var ok =
+      confirm(
+        '🚨 確定要發送緊急 SOS 嗎？\n\n' +
+        '群組成員將立即收到求救通知。'
+      );
+
+    if (!ok) {
+      return;
+    }
+
+
+    setStatus(
+      '正在取得目前位置…'
+    );
+
+
+    var pos =
+      await getCurrentLocation();
+
+
+    var displayName =
+      getDisplayName();
+
+
+    var message =
+      '我需要協助，請立即聯絡我。';
+
+
+    var payload = {
+
+      room_id:
+        roomId,
+
+      user_id:
+        myUser.id,
+
+      display_name:
+        displayName,
+
+      lat:
+        pos.latitude,
+
+      lng:
+        pos.longitude,
+
+      message:
+        message
+
+    };
+
+
+    setStatus(
+      '正在發送 SOS…'
+    );
+
+
+    var res =
+      await supabase
+        .from('sos_events')
+        .insert(payload)
+        .select()
+        .single();
+
+
+    if (res.error) {
+
+      console.error(
+        'SOS error:',
+        res.error
+      );
+
+      setStatus(
+        'SOS 發送失敗：' +
+        res.error.message
+      );
+
+      alert(
+        'SOS 發送失敗：\n' +
+        res.error.message
+      );
+
+      return;
+
+    }
+
+
+    setStatus(
+      '🚨 SOS 已發送，等待群組救援'
+    );
+
+
+    /*
+      自己也立即看到 SOS，
+      不必等待 Realtime 回傳。
+    */
+
+    if (res.data) {
+
+      renderSOSMessage(
+        res.data
+      );
+
+    }
+
+
+    /*
+      自己也跳出確認畫面
+    */
+
+    if (res.data) {
+
+      openSOSOverlay(
+        res.data
+      );
+
+    }
+
+  }
+
+
+  /* =====================================================
+     接收 SOS Realtime
+  ===================================================== */
+
+  function handleIncomingSOS(row) {
+
+    if (!row) {
+      return;
+    }
+
+
+    /*
+      只處理目前聊天室
+    */
+
+    if (
+      String(row.room_id) !==
+      String(roomId)
+    ) {
+
+      return;
+
+    }
+
+
+    /*
+      自己發出的 SOS 不要再次跳通知
+    */
+
+    var isMine =
+      myUser &&
+      row.user_id === myUser.id;
+
+
+    /*
+      每個 SOS 都顯示在聊天室
+    */
+
+    renderSOSMessage(
+      row
+    );
+
+
+    /*
+      別人發出的才跳強制救援通知
+    */
+
+    if (!isMine) {
+
+      openSOSOverlay(
+        row
+      );
+
+      setStatus(
+        '🚨 收到 SOS 緊急求救！'
+      );
+
+    }
+
+  }
+
 
   /* =====================================================
      Realtime
-     ===================================================== */
+  ===================================================== */
 
   async function initRealtime() {
 
     try {
 
-      setStatus('檢查套件…');
+      setStatus(
+        '檢查套件…'
+      );
 
       if (
         !window.supabase ||
@@ -1602,11 +2236,13 @@ input[type="file"] {
       ) {
 
         setStatus(
-          '套件未載入，可先本機聊天'
+          '套件未載入'
         );
 
         return;
+
       }
+
 
       supabase =
         window.supabase.createClient(
@@ -1614,7 +2250,11 @@ input[type="file"] {
           SUPABASE_KEY
         );
 
-      setStatus('檢查登入…');
+
+      setStatus(
+        '檢查登入…'
+      );
+
 
       var sessRes =
         await supabase.auth.getSession();
@@ -1623,64 +2263,105 @@ input[type="file"] {
         sessRes.data &&
         sessRes.data.session;
 
+
       if (!session) {
 
         setStatus(
-          '未登入：可本機聊天，或先去登入'
+          '未登入'
         );
 
         return;
+
       }
+
 
       myUser =
         session.user;
+
 
       setStatus(
         '已登入，載入訊息…'
       );
 
-      /* ===== 普通訊息 ===== */
+
+      /*
+        載入一般訊息
+      */
 
       var q =
         await supabase
           .from('messages')
           .select('*')
           .eq('room_id', roomId)
-          .order('created_at', {
-            ascending: true
-          })
+          .order(
+            'created_at',
+            {
+              ascending:true
+            }
+          )
           .limit(100);
+
 
       if (q.error) {
 
         setStatus(
-          '載入失敗：' +
+          '載入訊息失敗：' +
           q.error.message
         );
 
-        return;
+      } else {
+
+        messages =
+          (q.data || [])
+            .map(rowToLocal);
+
+        renderMessages();
+
       }
 
-      messages =
-        (q.data || [])
-          .map(rowToLocal);
 
-      renderMessages();
-
-      /* ===== SOS 歷史紀錄 ===== */
+      /*
+        載入最近 SOS
+      */
 
       if (isGroup) {
 
-        await loadSOSEvents();
+        var sosHistory =
+          await supabase
+            .from('sos_events')
+            .select('*')
+            .eq('room_id', roomId)
+            .order(
+              'created_at',
+              {
+                ascending:true
+              }
+            )
+            .limit(20);
 
-        /*
-         * SOS 即時通知
-         */
-        subscribeSOSEvents();
+
+        if (
+          !sosHistory.error
+        ) {
+
+          (sosHistory.data || [])
+            .forEach(function(row) {
+
+              renderSOSMessage(
+                row
+              );
+
+            });
+
+        }
 
       }
 
-      setStatus('已連線');
+
+      setStatus(
+        '已連線'
+      );
+
 
       if (isGroup) {
 
@@ -1688,25 +2369,30 @@ input[type="file"] {
 
       }
 
-      /* ===== 普通訊息 Realtime ===== */
+
+      /*
+        ==========================
+        messages Realtime
+        ==========================
+      */
 
       supabase
         .channel(
-          'room:' + roomId
+          'room-messages:' +
+          roomId
         )
 
         .on(
           'postgres_changes',
           {
-            event: '*',
-            schema: 'public',
-            table: 'messages',
+            event:'*',
+            schema:'public',
+            table:'messages',
             filter:
               'room_id=eq.' +
               roomId
           },
-
-          function (payload) {
+          function(payload) {
 
             if (
               payload.eventType ===
@@ -1720,7 +2406,7 @@ input[type="file"] {
 
               if (
                 !messages.find(
-                  function (x) {
+                  function(x) {
                     return x.id === m.id;
                   }
                 )
@@ -1732,13 +2418,14 @@ input[type="file"] {
 
                 if (!m.mine) {
 
-                  playNotify();
+                  playNotify(false);
 
                 }
 
               }
 
             }
+
 
             if (
               payload.eventType ===
@@ -1752,7 +2439,7 @@ input[type="file"] {
 
               var i =
                 messages.findIndex(
-                  function (x) {
+                  function(x) {
                     return x.id === m2.id;
                   }
                 );
@@ -1776,6 +2463,7 @@ input[type="file"] {
 
             }
 
+
             if (
               payload.eventType ===
               'DELETE'
@@ -1789,7 +2477,7 @@ input[type="file"] {
 
                 messages =
                   messages.filter(
-                    function (x) {
+                    function(x) {
                       return x.id !== delId;
                     }
                   );
@@ -1803,24 +2491,76 @@ input[type="file"] {
           }
         )
 
-        .subscribe(
-          function (status) {
+        .subscribe();
 
-            if (
-              status ===
-              'SUBSCRIBED'
-            ) {
 
-              setStatus(
-                '即時通訊已開啟'
+      /*
+        ==========================
+        SOS Realtime
+        ==========================
+      */
+
+      if (isGroup) {
+
+        supabase
+
+          .channel(
+            'room-sos:' +
+            roomId
+          )
+
+          .on(
+            'postgres_changes',
+            {
+              event:'INSERT',
+              schema:'public',
+              table:'sos_events',
+              filter:
+                'room_id=eq.' +
+                roomId
+            },
+            function(payload) {
+
+              console.log(
+                '🚨 收到 SOS:',
+                payload.new
+              );
+
+              handleIncomingSOS(
+                payload.new
               );
 
             }
+          )
 
-          }
-        );
+          .subscribe(
+            function(status) {
+
+              console.log(
+                'SOS Realtime:',
+                status
+              );
+
+              if (
+                status ===
+                'SUBSCRIBED'
+              ) {
+
+                setStatus(
+                  '🟢 即時聊天 + SOS 救援已開啟'
+                );
+
+              }
+
+            }
+          );
+
+      }
+
 
     } catch (e) {
+
+      console.error(e);
 
       setStatus(
         '錯誤：' +
@@ -1833,16 +2573,19 @@ input[type="file"] {
       );
 
     }
+
   }
 
+
   /* =====================================================
-     Group management
-     ===================================================== */
+     群組管理
+  ===================================================== */
 
   async function checkOwnerAndShowMembersBtn() {
 
-    if (!supabase || !myUser)
+    if (!supabase || !myUser) {
       return;
+    }
 
     var g =
       await supabase
@@ -1850,6 +2593,7 @@ input[type="file"] {
         .select('owner_id')
         .eq('id', roomId)
         .maybeSingle();
+
 
     if (
       g.data &&
@@ -1864,7 +2608,9 @@ input[type="file"] {
         'inline-block';
 
       return;
+
     }
+
 
     var m =
       await supabase
@@ -1873,6 +2619,7 @@ input[type="file"] {
         .eq('group_id', roomId)
         .eq('user_id', myUser.id)
         .maybeSingle();
+
 
     if (
       m.data &&
@@ -1887,22 +2634,27 @@ input[type="file"] {
         'inline-block';
 
     }
+
   }
+
 
   document.getElementById(
     'btnMembers'
   ).onclick =
     openMembersSheet;
 
+
   document.getElementById(
     'membersClose'
   ).onclick =
     closeMembersSheet;
 
+
   document.getElementById(
     'membersMask'
   ).onclick =
     closeMembersSheet;
+
 
   function openMembersSheet() {
 
@@ -1915,7 +2667,9 @@ input[type="file"] {
     ).classList.add('show');
 
     loadMembersAndFriends();
+
   }
+
 
   function closeMembersSheet() {
 
@@ -1926,12 +2680,15 @@ input[type="file"] {
     document.getElementById(
       'membersSheet'
     ).classList.remove('show');
+
   }
+
 
   async function loadMembersAndFriends() {
 
-    if (!supabase || !myUser)
+    if (!supabase || !myUser) {
       return;
+    }
 
     var memBox =
       document.getElementById(
@@ -1946,27 +2703,37 @@ input[type="file"] {
     memBox.innerHTML =
       '載入中…';
 
-    invBox.innerHTML = '';
+    invBox.innerHTML =
+      '';
+
 
     var mems =
       await supabase
         .from('group_members')
-        .select('user_id, role')
+        .select(
+          'user_id, role'
+        )
         .eq(
           'group_id',
           roomId
         );
 
+
     var memberIds =
       (mems.data || [])
-        .map(function (m) {
-          return m.user_id;
-        });
+        .map(
+          function(m) {
+            return m.user_id;
+          }
+        );
+
 
     groupMembers =
       memberIds;
 
+
     var profiles = {};
+
 
     if (memberIds.length) {
 
@@ -1979,93 +2746,105 @@ input[type="file"] {
             memberIds
           );
 
+
       (pr.data || [])
-        .forEach(function (p) {
-
-          profiles[p.id] = p;
-
-        });
+        .forEach(
+          function(p) {
+            profiles[p.id] = p;
+          }
+        );
 
     }
 
-    memBox.innerHTML = '';
+
+    memBox.innerHTML =
+      '';
+
 
     (mems.data || [])
-      .forEach(function (m) {
+      .forEach(
+        function(m) {
 
-        var p =
-          profiles[m.user_id] ||
-          {};
+          var p =
+            profiles[m.user_id] ||
+            {};
 
-        var name =
-          p.nickname ||
-          p.username ||
-          m.user_id.slice(0, 8);
+          var name =
+            p.nickname ||
+            p.username ||
+            m.user_id.slice(0,8);
 
-        var div =
-          document.createElement('div');
 
-        div.style.cssText =
-          'display:flex;' +
-          'align-items:center;' +
-          'justify-content:space-between;' +
-          'padding:10px 0;' +
-          'border-bottom:1px solid #f0f0f0;';
-
-        div.innerHTML =
-          '<div>' +
-          name +
-          (
-            m.role === 'owner'
-              ? '（群主）'
-              : ''
-          ) +
-          '</div>';
-
-        if (
-          isOwner &&
-          m.user_id !== myUser.id
-        ) {
-
-          var btn =
+          var div =
             document.createElement(
-              'button'
+              'div'
             );
 
-          btn.textContent =
-            '移除';
+          div.style.cssText =
+            'display:flex;' +
+            'align-items:center;' +
+            'justify-content:space-between;' +
+            'padding:10px 0;' +
+            'border-bottom:1px solid #f0f0f0;';
 
-          btn.style.cssText =
-            'border:none;' +
-            'background:#e53935;' +
-            'color:#fff;' +
-            'border-radius:8px;' +
-            'padding:6px 12px;' +
-            'font-size:13px;';
 
-          btn.onclick =
-            function () {
+          div.innerHTML =
+            '<div>' +
+            escapeHtml(name) +
+            (
+              m.role === 'owner'
+                ? '（群主）'
+                : ''
+            ) +
+            '</div>';
 
-              removeMember(
-                m.user_id,
-                name
+
+          if (
+            isOwner &&
+            m.user_id !== myUser.id
+          ) {
+
+            var btn =
+              document.createElement(
+                'button'
               );
 
-            };
+            btn.textContent =
+              '移除';
 
-          div.appendChild(btn);
+            btn.style.cssText =
+              'border:none;' +
+              'background:#e53935;' +
+              'color:#fff;' +
+              'border-radius:8px;' +
+              'padding:6px 12px;' +
+              'font-size:13px;';
+
+            btn.onclick =
+              function() {
+
+                removeMember(
+                  m.user_id,
+                  name
+                );
+
+              };
+
+            div.appendChild(btn);
+
+          }
+
+          memBox.appendChild(div);
 
         }
+      );
 
-        memBox.appendChild(div);
-
-      });
 
     var fr =
       await supabase
         .from('friendships')
         .select('*')
-        .eq('status', 'accepted')
+        .eq('status','accepted')
         .or(
           'user_id.eq.' +
           myUser.id +
@@ -2073,26 +2852,32 @@ input[type="file"] {
           myUser.id
         );
 
+
     var friendIds = [];
 
+
     (fr.data || [])
-      .forEach(function (r) {
+      .forEach(
+        function(r) {
 
-        var oid =
-          r.user_id === myUser.id
-            ? r.friend_id
-            : r.user_id;
+          var oid =
+            r.user_id === myUser.id
+              ? r.friend_id
+              : r.user_id;
 
-        if (
-          friendIds.indexOf(oid) < 0 &&
-          memberIds.indexOf(oid) < 0
-        ) {
 
-          friendIds.push(oid);
+          if (
+            friendIds.indexOf(oid) < 0 &&
+            memberIds.indexOf(oid) < 0
+          ) {
+
+            friendIds.push(oid);
+
+          }
 
         }
+      );
 
-      });
 
     if (!friendIds.length) {
 
@@ -2102,7 +2887,9 @@ input[type="file"] {
         '</div>';
 
       return;
+
     }
+
 
     var fpr =
       await supabase
@@ -2113,63 +2900,78 @@ input[type="file"] {
           friendIds
         );
 
+
     (fpr.data || [])
-      .forEach(function (p) {
+      .forEach(
+        function(p) {
 
-        var name =
-          p.nickname ||
-          p.username ||
-          '好友';
+          var name =
+            p.nickname ||
+            p.username ||
+            '好友';
 
-        var div =
-          document.createElement('div');
 
-        div.style.cssText =
-          'display:flex;' +
-          'align-items:center;' +
-          'justify-content:space-between;' +
-          'padding:10px 0;' +
-          'border-bottom:1px solid #f0f0f0;';
-
-        div.innerHTML =
-          '<div>' +
-          name +
-          '</div>';
-
-        var btn =
-          document.createElement(
-            'button'
-          );
-
-        btn.textContent =
-          '邀請';
-
-        btn.style.cssText =
-          'border:none;' +
-          'background:#06C755;' +
-          'color:#fff;' +
-          'border-radius:8px;' +
-          'padding:6px 12px;' +
-          'font-size:13px;';
-
-        btn.onclick =
-          function () {
-
-            inviteMember(
-              p.id,
-              name
+          var div =
+            document.createElement(
+              'div'
             );
 
-          };
+          div.style.cssText =
+            'display:flex;' +
+            'align-items:center;' +
+            'justify-content:space-between;' +
+            'padding:10px 0;' +
+            'border-bottom:1px solid #f0f0f0;';
 
-        div.appendChild(btn);
 
-        invBox.appendChild(div);
+          div.innerHTML =
+            '<div>' +
+            escapeHtml(name) +
+            '</div>';
 
-      });
+
+          var btn =
+            document.createElement(
+              'button'
+            );
+
+          btn.textContent =
+            '邀請';
+
+          btn.style.cssText =
+            'border:none;' +
+            'background:#06C755;' +
+            'color:#fff;' +
+            'border-radius:8px;' +
+            'padding:6px 12px;' +
+            'font-size:13px;';
+
+
+          btn.onclick =
+            function() {
+
+              inviteMember(
+                p.id,
+                name
+              );
+
+            };
+
+
+          div.appendChild(btn);
+
+          invBox.appendChild(div);
+
+        }
+      );
+
   }
 
-  async function inviteMember(uid, name) {
+
+  async function inviteMember(
+    uid,
+    name
+  ) {
 
     if (
       !confirm(
@@ -2177,20 +2979,24 @@ input[type="file"] {
         name +
         '」加入這個群組？'
       )
-    ) return;
+    ) {
+      return;
+    }
+
 
     var res =
       await supabase
         .from('group_members')
         .insert({
 
-          group_id: roomId,
+          group_id:roomId,
 
-          user_id: uid,
+          user_id:uid,
 
-          role: 'member'
+          role:'member'
 
         });
+
 
     if (res.error) {
 
@@ -2200,17 +3006,25 @@ input[type="file"] {
       );
 
       return;
+
     }
+
 
     alert(
       '已邀請 ' +
       name
     );
 
+
     loadMembersAndFriends();
+
   }
 
-  async function removeMember(uid, name) {
+
+  async function removeMember(
+    uid,
+    name
+  ) {
 
     if (
       !confirm(
@@ -2218,7 +3032,10 @@ input[type="file"] {
         name +
         '」移出群組？'
       )
-    ) return;
+    ) {
+      return;
+    }
+
 
     var res =
       await supabase
@@ -2233,6 +3050,7 @@ input[type="file"] {
           uid
         );
 
+
     if (res.error) {
 
       alert(
@@ -2241,19 +3059,24 @@ input[type="file"] {
       );
 
       return;
+
     }
+
 
     alert(
       '已移除 ' +
       name
     );
 
+
     loadMembersAndFriends();
+
   }
 
+
   /* =====================================================
-     Plus / files
-     ===================================================== */
+     Plus
+  ===================================================== */
 
   function openPlus() {
 
@@ -2264,7 +3087,9 @@ input[type="file"] {
     document.getElementById(
       'plusSheet'
     ).classList.add('show');
+
   }
+
 
   function closePlus() {
 
@@ -2275,33 +3100,45 @@ input[type="file"] {
     document.getElementById(
       'plusSheet'
     ).classList.remove('show');
+
   }
 
+
   /* =====================================================
-     Message actions
-     ===================================================== */
+     長按訊息
+  ===================================================== */
 
   function openAction(id) {
 
-    selectedId = id;
+    selectedId =
+      id;
 
     var m =
-      messages.find(function (x) {
-        return x.id === id;
-      });
+      messages.find(
+        function(x) {
+          return x.id === id;
+        }
+      );
+
 
     if (
       !m ||
       m.recalled ||
       m.hiddenLocal
-    ) return;
+    ) {
+      return;
+    }
+
 
     var box =
       document.getElementById(
         'actionBox'
       );
 
-    var html = '';
+
+    var html =
+      '';
+
 
     var canRecall =
       m.mine &&
@@ -2315,6 +3152,7 @@ input[type="file"] {
         'local_'
       ) !== 0;
 
+
     if (canRecall) {
 
       html +=
@@ -2323,6 +3161,7 @@ input[type="file"] {
         '</div>';
 
     }
+
 
     html +=
       '<div class="action-item danger" id="actDel">' +
@@ -2333,7 +3172,10 @@ input[type="file"] {
       '取消' +
       '</div>';
 
-    box.innerHTML = html;
+
+    box.innerHTML =
+      html;
+
 
     document.getElementById(
       'actionMask'
@@ -2341,29 +3183,37 @@ input[type="file"] {
 
     box.classList.add('show');
 
+
     var r =
       document.getElementById(
         'actRecall'
       );
 
+
     if (r) {
-      r.onclick = doRecall;
+      r.onclick =
+        doRecall;
     }
+
 
     document.getElementById(
       'actDel'
     ).onclick =
       doDeleteLocal;
 
+
     document.getElementById(
       'actCancel'
     ).onclick =
       closeAction;
+
   }
+
 
   function closeAction() {
 
-    selectedId = null;
+    selectedId =
+      null;
 
     document.getElementById(
       'actionMask'
@@ -2372,28 +3222,37 @@ input[type="file"] {
     document.getElementById(
       'actionBox'
     ).classList.remove('show');
+
   }
+
 
   async function doRecall() {
 
     var m =
-      messages.find(function (x) {
-        return x.id === selectedId;
-      });
+      messages.find(
+        function(x) {
+          return x.id === selectedId;
+        }
+      );
+
 
     closeAction();
+
 
     if (
       !m ||
       !supabase ||
       !myUser
-    ) return;
+    ) {
+      return;
+    }
+
 
     var res =
       await supabase
         .from('messages')
         .update({
-          recalled: true
+          recalled:true
         })
         .eq(
           'id',
@@ -2404,6 +3263,7 @@ input[type="file"] {
           myUser.id
         );
 
+
     if (res.error) {
 
       setStatus(
@@ -2412,18 +3272,27 @@ input[type="file"] {
       );
 
     }
+
   }
+
 
   async function doDeleteLocal() {
 
     var m =
-      messages.find(function (x) {
-        return x.id === selectedId;
-      });
+      messages.find(
+        function(x) {
+          return x.id === selectedId;
+        }
+      );
+
 
     closeAction();
 
-    if (!m) return;
+
+    if (!m) {
+      return;
+    }
+
 
     if (
       String(m.id).indexOf(
@@ -2431,12 +3300,15 @@ input[type="file"] {
       ) === 0
     ) {
 
-      m.hiddenLocal = true;
+      m.hiddenLocal =
+        true;
 
       renderMessages();
 
       return;
+
     }
+
 
     if (
       !m.mine ||
@@ -2444,14 +3316,20 @@ input[type="file"] {
       !myUser
     ) {
 
-      m.hiddenLocal = true;
+      m.hiddenLocal =
+        true;
 
       renderMessages();
 
       return;
+
     }
 
-    setStatus('刪除中…');
+
+    setStatus(
+      '刪除中…'
+    );
+
 
     var res =
       await supabase
@@ -2466,6 +3344,7 @@ input[type="file"] {
           myUser.id
         );
 
+
     if (res.error) {
 
       setStatus(
@@ -2474,36 +3353,43 @@ input[type="file"] {
       );
 
       return;
+
     }
+
 
     messages =
       messages.filter(
-        function (x) {
+        function(x) {
           return x.id !== m.id;
         }
       );
 
+
     renderMessages();
+
 
     setStatus(
       '即時通訊已開啟'
     );
+
   }
 
+
   /* =====================================================
-     Buttons
-     ===================================================== */
+     按鈕
+  ===================================================== */
 
   document.getElementById(
     'btnSend'
   ).onclick =
     sendMsg;
 
+
   document.getElementById(
     'msgInput'
   ).addEventListener(
     'keydown',
-    function (e) {
+    function(e) {
 
       if (e.key === 'Enter') {
         sendMsg();
@@ -2512,25 +3398,47 @@ input[type="file"] {
     }
   );
 
+
+  document.getElementById(
+    'btnRoomSOS'
+  ).onclick =
+    sendSOS;
+
+
+  document.getElementById(
+    'btnHeaderSOS'
+  ).onclick =
+    sendSOS;
+
+
+  document.getElementById(
+    'sosCloseAction'
+  ).onclick =
+    closeSOSOverlay;
+
+
   document.getElementById(
     'btnPlus'
   ).onclick =
     openPlus;
+
 
   document.getElementById(
     'plusMask'
   ).onclick =
     closePlus;
 
+
   document.getElementById(
     'plusCancel'
   ).onclick =
     closePlus;
 
+
   document.getElementById(
     'pickAlbum'
   ).onclick =
-    function () {
+    function() {
 
       document
         .getElementById('fileAlbum')
@@ -2538,10 +3446,11 @@ input[type="file"] {
 
     };
 
+
   document.getElementById(
     'pickFile'
   ).onclick =
-    function () {
+    function() {
 
       document
         .getElementById('fileAny')
@@ -2549,10 +3458,11 @@ input[type="file"] {
 
     };
 
+
   document.getElementById(
     'btnCam'
   ).onclick =
-    function () {
+    function() {
 
       document
         .getElementById('fileCamera')
@@ -2560,15 +3470,17 @@ input[type="file"] {
 
     };
 
+
   document.getElementById(
     'actionMask'
   ).onclick =
     closeAction;
 
+
   document.getElementById(
     'fileAlbum'
   ).onchange =
-    function () {
+    function() {
 
       var f =
         this.files &&
@@ -2581,11 +3493,12 @@ input[type="file"] {
       uploadAndSend(f);
 
     };
+
 
   document.getElementById(
     'fileAny'
   ).onchange =
-    function () {
+    function() {
 
       var f =
         this.files &&
@@ -2599,10 +3512,11 @@ input[type="file"] {
 
     };
 
+
   document.getElementById(
     'fileCamera'
   ).onchange =
-    function () {
+    function() {
 
       var f =
         this.files &&
@@ -2614,26 +3528,31 @@ input[type="file"] {
 
     };
 
+
   /* =====================================================
-     Sticker
-     ===================================================== */
+     貼圖
+  ===================================================== */
 
   document.getElementById(
     'btnSticker'
   ).onclick =
-    function () {
+    function() {
 
       var p =
         document.getElementById(
           'stickerPanel'
         );
 
-      p.classList.toggle('show');
+      p.classList.toggle(
+        'show'
+      );
+
 
       var grid =
         document.getElementById(
           'stickerGrid'
         );
+
 
       if (
         p.classList.contains('show') &&
@@ -2641,17 +3560,19 @@ input[type="file"] {
       ) {
 
         stickers.forEach(
-          function (s) {
+          function(s) {
 
             var span =
               document.createElement(
                 'span'
               );
 
-            span.textContent = s;
+            span.textContent =
+              s;
+
 
             span.onclick =
-              function () {
+              function() {
 
                 p.classList.remove(
                   'show'
@@ -2664,7 +3585,10 @@ input[type="file"] {
 
               };
 
-            grid.appendChild(span);
+
+            grid.appendChild(
+              span
+            );
 
           }
         );
@@ -2673,18 +3597,20 @@ input[type="file"] {
 
     };
 
+
   /* =====================================================
-     Speech
-     ===================================================== */
+     語音轉文字
+  ===================================================== */
 
   document.getElementById(
     'btnVoice'
   ).onclick =
-    function () {
+    function() {
 
       var SR =
         window.SpeechRecognition ||
         window.webkitSpeechRecognition;
+
 
       if (!SR) {
 
@@ -2693,7 +3619,9 @@ input[type="file"] {
         );
 
         return;
+
       }
+
 
       if (
         recognizing &&
@@ -2702,7 +3630,8 @@ input[type="file"] {
 
         recognition.stop();
 
-        recognizing = false;
+        recognizing =
+          false;
 
         document.getElementById(
           'btnVoice'
@@ -2710,40 +3639,49 @@ input[type="file"] {
           '語音';
 
         return;
+
       }
+
 
       recognition =
         new SR();
 
+
       recognition.lang =
         'zh-TW';
 
+
       recognition.onresult =
-        function (e) {
+        function(e) {
 
           var t =
             e.results[0][0]
               .transcript;
+
 
           var input =
             document.getElementById(
               'msgInput'
             );
 
+
           input.value =
             (
               input.value
                 ? input.value + ' '
                 : ''
-            ) + t;
+            ) +
+            t;
 
         };
 
-      recognition.onend =
-      recognition.onerror =
-        function () {
 
-          recognizing = false;
+      recognition.onend =
+        recognition.onerror =
+        function() {
+
+          recognizing =
+            false;
 
           document.getElementById(
             'btnVoice'
@@ -2752,29 +3690,38 @@ input[type="file"] {
 
         };
 
-      recognizing = true;
+
+      recognizing =
+        true;
+
 
       document.getElementById(
         'btnVoice'
       ).textContent =
         '聆聽中';
 
+
       recognition.start();
+
     };
 
+
   /* =====================================================
-     Boot
-     ===================================================== */
+     啟動
+  ===================================================== */
 
   setStatus(
     '等待套件…'
   );
 
+
   var tries = 0;
+
 
   function boot() {
 
     tries += 1;
+
 
     if (window.supabase) {
 
@@ -2796,15 +3743,18 @@ input[type="file"] {
     } else {
 
       setStatus(
-        '套件載入失敗，可本機聊天'
+        '套件載入失敗'
       );
 
     }
+
   }
+
 
   boot();
 
 })();
+
 </script>
 
 <script src="call-notify.js"></script>
