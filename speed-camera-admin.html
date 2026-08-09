@@ -137,7 +137,24 @@ button {
   </div>
 
   <div class="card hidden" id="adminPanel">
+  <div class="card">
+  <h2>📊 資料庫狀態</h2>
 
+  <div class="info-row">
+    <span>📷 固定測速照相</span>
+    <strong id="speedCameraCount">讀取中...</strong>
+  </div>
+
+  <div class="info-row">
+    <span>🚨 科技執法</span>
+    <strong>尚未建立</strong>
+  </div>
+
+  <div class="info-row">
+    <span>📡 移動式／雷達測速</span>
+    <strong>尚未建立</strong>
+  </div>
+</div>
     <h2>官方 CSV 更新</h2>
 
     <p>
@@ -601,7 +618,41 @@ updateBtn.addEventListener(
 );
 
 
-checkAdmin();
+async function loadDatabaseStatus() {
+
+  var result =
+    await supabaseClient
+      .from("speed_cameras")
+      .select("*", { count: "exact", head: true });
+
+  var countElement =
+    document.getElementById("speedCameraCount");
+
+  if (result.error) {
+
+    countElement.textContent =
+      "讀取失敗";
+
+    console.error(
+      "測速資料筆數讀取失敗：",
+      result.error
+    );
+
+    return;
+  }
+
+  countElement.textContent =
+    result.count + " 筆";
+}
+
+
+checkAdmin().then(function(isAdmin) {
+
+  if (isAdmin) {
+    loadDatabaseStatus();
+  }
+
+});
 
 </script>
 
