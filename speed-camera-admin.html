@@ -1,1 +1,588 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>測速照相資料管理 - 安全團聚</title>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<style>
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, "Noto Sans TC", sans-serif;
+  background: #f5f7fa;
+  color: #222;
+}
+
+.container {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 24px 16px 50px;
+}
+
+h1 {
+  margin-top: 0;
+}
+
+.card {
+  background: white;
+  border-radius: 14px;
+  padding: 20px;
+  margin-top: 16px;
+  box-shadow: 0 2px 10px rgba(0,0,0,.08);
+}
+
+input[type="file"] {
+  width: 100%;
+  padding: 12px;
+  margin-top: 10px;
+}
+
+button {
+  width: 100%;
+  border: 0;
+  border-radius: 10px;
+  padding: 14px;
+  margin-top: 12px;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+#previewBtn {
+  background: #2563eb;
+  color: white;
+}
+
+#updateBtn {
+  background: #dc2626;
+  color: white;
+}
+
+#updateBtn:disabled,
+#previewBtn:disabled {
+  opacity: .5;
+  cursor: not-allowed;
+}
+
+.status {
+  margin-top: 15px;
+  padding: 12px;
+  border-radius: 10px;
+  background: #f1f5f9;
+  white-space: pre-wrap;
+}
+
+.warning {
+  color: #b91c1c;
+  font-weight: bold;
+}
+
+.success {
+  color: #166534;
+  font-weight: bold;
+}
+
+.hidden {
+  display: none;
+}
+
+.info-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 15px;
+  padding: 8px 0;
+  border-bottom: 1px solid #eee;
+}
+
+.info-row:last-child {
+  border-bottom: 0;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+  <h1>測速照相資料管理</h1>
+
+  <div class="card">
+    <div id="loginStatus">正在確認登入狀態...</div>
+  </div>
+
+  <div class="card hidden" id="adminPanel">
+
+    <h2>官方 CSV 更新</h2>
+
+    <p>
+      選擇官方測速照相 CSV。
+      系統會自動跳過第二行中文欄位說明。
+    </p>
+
+    <input
+      type="file"
+      id="csvFile"
+      accept=".csv,text/csv"
+    >
+
+    <button id="previewBtn">
+      預覽 CSV
+    </button>
+
+    <div id="preview" class="status hidden"></div>
+
+    <button id="updateBtn" disabled>
+      確認更新測速照相資料
+    </button>
+
+  </div>
+
+</div>
+
+<script>
+
+var SUPABASE_URL =
+  'https://perfsipperncvjocznhl.supabase.co';
+
+var SUPABASE_KEY =
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBlcmZzaXBwZXJuY3Zqb2N6bmhsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODYwMTUyMzAsImV4cCI6MjEwMTU5MTIzMH0.I7vXkV247kAzRJ0RigDZt3Hzn8KJDyMc6o9E3oHJZoY';
+
+var supabaseClient =
+  supabase.createClient(
+    SUPABASE_URL,
+    SUPABASE_KEY
+  );
+
+var loginStatus =
+  document.getElementById("loginStatus");
+
+var adminPanel =
+  document.getElementById("adminPanel");
+
+var csvFile =
+  document.getElementById("csvFile");
+
+var previewBtn =
+  document.getElementById("previewBtn");
+
+var updateBtn =
+  document.getElementById("updateBtn");
+
+var preview =
+  document.getElementById("preview");
+
+var parsedRows = [];
+
+
+async function checkAdmin() {
+
+  var result =
+    await supabaseClient.auth.getUser();
+
+  var user = result.data.user;
+  var error = result.error;
+
+  if (error || !user) {
+
+    loginStatus.innerHTML =
+      '<span class="warning">目前沒有登入，請先登入安全團聚。</span>';
+
+    return false;
+  }
+
+  var adminResult =
+    await supabaseClient
+      .from("admin_users")
+      .select("user_id")
+      .eq("user_id", user.id)
+      .maybeSingle();
+
+  if (adminResult.error) {
+
+    loginStatus.innerHTML =
+      "管理員檢查失敗：\n" +
+      adminResult.error.message;
+
+    return false;
+  }
+
+  if (!adminResult.data) {
+
+    loginStatus.innerHTML =
+      '<span class="warning">你不是後台管理員。</span>';
+
+    return false;
+  }
+
+  loginStatus.innerHTML =
+    '<span class="success">管理員登入成功。</span>';
+
+  adminPanel.classList.remove("hidden");
+
+  return true;
+}
+
+
+function parseCSVLine(line) {
+
+  var result = [];
+  var current = "";
+  var insideQuotes = false;
+
+  for (var i = 0; i < line.length; i++) {
+
+    var char = line[i];
+
+    if (char === '"') {
+
+      if (
+        insideQuotes &&
+        line[i + 1] === '"'
+      ) {
+        current += '"';
+        i++;
+      } else {
+        insideQuotes = !insideQuotes;
+      }
+
+    } else if (
+      char === "," &&
+      !insideQuotes
+    ) {
+
+      result.push(current.trim());
+      current = "";
+
+    } else {
+
+      current += char;
+    }
+  }
+
+  result.push(current.trim());
+
+  return result;
+}
+
+
+function detectSeparator(line) {
+
+  if (line.includes("\t")) {
+    return "\t";
+  }
+
+  return ",";
+}
+
+
+function parseOfficialCSV(text) {
+
+  text = text.replace(/^\uFEFF/, "");
+
+  var lines =
+    text
+      .split(/\r?\n/)
+      .filter(function(line) {
+        return line.trim() !== "";
+      });
+
+  if (lines.length < 3) {
+    throw new Error("CSV 資料不足。");
+  }
+
+  var separator =
+    detectSeparator(lines[0]);
+
+  var headers =
+    lines[0]
+      .split(separator)
+      .map(function(x) {
+        return x.trim();
+      });
+
+  var requiredHeaders = [
+    "CityName",
+    "RegionName",
+    "Address",
+    "DeptNm",
+    "BranchNm",
+    "Longitude",
+    "Latitude",
+    "direct",
+    "limit"
+  ];
+
+  for (var h = 0; h < requiredHeaders.length; h++) {
+
+    if (
+      !headers.includes(requiredHeaders[h])
+    ) {
+
+      throw new Error(
+        "缺少官方欄位：" +
+        requiredHeaders[h]
+      );
+    }
+  }
+
+  var index = {};
+
+  headers.forEach(function(header, i) {
+    index[header] = i;
+  });
+
+  var rows = [];
+
+  // 第 2 行是中文說明，從第 3 行開始
+  for (var i = 2; i < lines.length; i++) {
+
+    var values =
+      separator === "\t"
+        ? lines[i].split(separator)
+        : parseCSVLine(lines[i]);
+
+    if (!values.length) {
+      continue;
+    }
+
+    var longitude =
+      Number(values[index.Longitude]);
+
+    var latitude =
+      Number(values[index.Latitude]);
+
+    var speedLimit =
+      values[index.limit] === ""
+        ? null
+        : Number(values[index.limit]);
+
+    if (
+      !Number.isFinite(longitude) ||
+      !Number.isFinite(latitude)
+    ) {
+
+      throw new Error(
+        "第 " + (i + 1) +
+        " 行經緯度不是有效數字。"
+      );
+    }
+
+    if (
+      speedLimit !== null &&
+      !Number.isInteger(speedLimit)
+    ) {
+
+      throw new Error(
+        "第 " + (i + 1) +
+        " 行速限不是整數。"
+      );
+    }
+
+    rows.push({
+
+      CityName:
+        values[index.CityName] || null,
+
+      RegionName:
+        values[index.RegionName] || null,
+
+      Address:
+        values[index.Address] || null,
+
+      DeptNm:
+        values[index.DeptNm] || null,
+
+      BranchNm:
+        values[index.BranchNm] || null,
+
+      Longitude:
+        longitude,
+
+      Latitude:
+        latitude,
+
+      direct:
+        values[index.direct] || null,
+
+      limit:
+        speedLimit
+
+    });
+  }
+
+  if (rows.length === 0) {
+    throw new Error("沒有讀取到任何資料。");
+  }
+
+  return rows;
+}
+
+
+previewBtn.addEventListener(
+  "click",
+  async function() {
+
+    updateBtn.disabled = true;
+    preview.classList.remove("hidden");
+
+    var file =
+      csvFile.files[0];
+
+    if (!file) {
+
+      preview.textContent =
+        "請先選擇 CSV 檔案。";
+
+      return;
+    }
+
+    try {
+
+      var text =
+        await file.text();
+
+      parsedRows =
+        parseOfficialCSV(text);
+
+      preview.innerHTML =
+
+        '<div class="info-row">' +
+          '<span>檔案</span>' +
+          '<strong>' +
+          file.name +
+          '</strong>' +
+        '</div>' +
+
+        '<div class="info-row">' +
+          '<span>資料筆數</span>' +
+          '<strong>' +
+          parsedRows.length +
+          '</strong>' +
+        '</div>' +
+
+        '<div class="info-row">' +
+          '<span>第一筆縣市</span>' +
+          '<strong>' +
+          (parsedRows[0].CityName || "") +
+          '</strong>' +
+        '</div>' +
+
+        '<div class="info-row">' +
+          '<span>第一筆地址</span>' +
+          '<strong>' +
+          (parsedRows[0].Address || "") +
+          '</strong>' +
+        '</div>' +
+
+        '<div class="info-row">' +
+          '<span>第一筆經度</span>' +
+          '<strong>' +
+          parsedRows[0].Longitude +
+          '</strong>' +
+        '</div>' +
+
+        '<div class="info-row">' +
+          '<span>第一筆緯度</span>' +
+          '<strong>' +
+          parsedRows[0].Latitude +
+          '</strong>' +
+        '</div>' +
+
+        '<p class="success">' +
+          'CSV 格式檢查成功。' +
+        '</p>' +
+
+        '<p>' +
+          '請確認資料筆數與內容正確後，再按下「確認更新」。' +
+        '</p>';
+
+      updateBtn.disabled = false;
+
+    } catch (error) {
+
+      parsedRows = [];
+
+      preview.innerHTML =
+        '<span class="warning">' +
+        '匯入檢查失敗：\n' +
+        error.message +
+        '</span>';
+    }
+  }
+);
+
+
+updateBtn.addEventListener(
+  "click",
+  async function() {
+
+    if (!parsedRows.length) {
+      return;
+    }
+
+    var confirmed =
+      confirm(
+        "確定要用 " +
+        parsedRows.length +
+        " 筆官方資料更新 speed_cameras 嗎？\n\n" +
+        "目前資料會被新的官方資料取代。"
+      );
+
+    if (!confirmed) {
+      return;
+    }
+
+    updateBtn.disabled = true;
+
+    preview.textContent =
+      "正在更新資料，請稍候...";
+
+    try {
+
+      var result =
+        await supabaseClient.rpc(
+          "replace_speed_cameras",
+          {
+            camera_data: parsedRows
+          }
+        );
+
+      if (result.error) {
+        throw result.error;
+      }
+
+      preview.innerHTML =
+        '<span class="success">' +
+        '更新成功！\n' +
+        '共更新 ' +
+        result.data +
+        ' 筆資料。' +
+        '</span>';
+
+      parsedRows = [];
+
+    } catch (error) {
+
+      preview.innerHTML =
+        '<span class="warning">' +
+        '更新失敗：\n' +
+        error.message +
+        '</span>';
+
+      updateBtn.disabled = false;
+    }
+  }
+);
+
+
+checkAdmin();
+
+</script>
+
+</body>
+</html>
