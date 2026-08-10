@@ -53,6 +53,11 @@ button {
   cursor: pointer;
 }
 
+button:disabled {
+  opacity: .5;
+  cursor: not-allowed;
+}
+
 #previewBtn {
   background: #2563eb;
   color: white;
@@ -63,10 +68,14 @@ button {
   color: white;
 }
 
-#updateBtn:disabled,
-#previewBtn:disabled {
-  opacity: .5;
-  cursor: not-allowed;
+#techPreviewBtn {
+  background: #7c3aed;
+  color: white;
+}
+
+#techUpdateBtn {
+  background: #ea580c;
+  color: white;
 }
 
 .status {
@@ -75,6 +84,7 @@ button {
   border-radius: 10px;
   background: #f1f5f9;
   white-space: pre-wrap;
+  overflow-wrap: anywhere;
 }
 
 .warning {
@@ -102,6 +112,43 @@ button {
 .info-row:last-child {
   border-bottom: 0;
 }
+
+.small {
+  font-size: 14px;
+  color: #64748b;
+}
+
+.section-title {
+  margin-top: 0;
+}
+
+.badge {
+  display: inline-block;
+  padding: 4px 8px;
+  border-radius: 999px;
+  background: #e0e7ff;
+  color: #3730a3;
+  font-size: 13px;
+  font-weight: bold;
+}
+
+.danger-box {
+  margin-top: 12px;
+  padding: 12px;
+  background: #fee2e2;
+  border-radius: 10px;
+  color: #991b1b;
+  white-space: pre-wrap;
+}
+
+.success-box {
+  margin-top: 12px;
+  padding: 12px;
+  background: #dcfce7;
+  border-radius: 10px;
+  color: #166534;
+  white-space: pre-wrap;
+}
 </style>
 </head>
 
@@ -109,8 +156,7 @@ button {
 
 <div class="container">
 
- <h1>測速照相資料管理</h1>
-
+  <h1>測速照相資料管理</h1>
 <a
   href="https://data.gov.tw/dataset/7320"
   target="_blank"
@@ -132,97 +178,131 @@ button {
   ⬇️ 前往官方網站下載最新測速照相 CSV
 </a>
 
+  <!-- 登入狀態 -->
+
   <div class="card">
-    <div id="loginStatus">正在確認登入狀態...</div>
+    <div id="loginStatus">
+      正在確認登入狀態...
+    </div>
   </div>
+
+  <!-- 管理後台 -->
 
   <div class="card hidden" id="adminPanel">
-  <div class="card">
-  <h2>📊 資料庫狀態</h2>
 
-  <div class="info-row">
-    <span>📷 固定測速照相</span>
-    <strong id="speedCameraCount">讀取中...</strong>
-  </div>
+    <!-- 資料庫狀態 -->
 
-  <div class="info-row">
-    <span>🚨 科技執法</span>
-    <strong>尚未建立</strong>
-  </div>
+    <div class="card">
 
-  <div class="info-row">
-    <span>📡 移動式／雷達測速</span>
-    <strong>尚未建立</strong>
-  </div>
-</div>
-    <h2>官方 CSV 更新</h2>
+      <h2 class="section-title">
+        📊 資料庫狀態
+      </h2>
 
-    <p>
-      選擇官方測速照相 CSV。
-      系統會自動跳過第二行中文欄位說明。
-    </p>
+      <div class="info-row">
+        <span>📷 固定測速照相</span>
+        <strong id="speedCameraCount">
+          讀取中...
+        </strong>
+      </div>
 
-    <input
-      type="file"
-      id="csvFile"
-      accept=".csv,text/csv"
-    >
+      <div class="info-row">
+        <span>🚨 科技執法</span>
+        <strong id="techEnforcementCount">
+          讀取中...
+        </strong>
+      </div>
 
-    <button id="previewBtn">
-      預覽 CSV
-    </button>
+      <div class="info-row">
+        <span>📡 移動式／雷達測速</span>
+        <strong id="mobileRadarCount">
+          尚未建立
+        </strong>
+      </div>
 
-    <div id="preview" class="status hidden"></div>
+    </div>
 
-        <button id="updateBtn" disabled>
-      確認更新測速照相資料
-    </button>
+    <!-- 固定測速 -->
 
-  </div>
+    <div class="card">
 
+      <h2 class="section-title">
+        📷 固定測速照相資料
+      </h2>
 
-  <!-- 🚨 科技執法資料 -->
-  <div class="card">
+      <p>
+        上傳官方固定測速照相 CSV。
+      </p>
 
-    <h2>🚨 科技執法資料</h2>
+      <p class="small">
+        系統會檢查 CityName、RegionName、Address、
+        DeptNm、BranchNm、Longitude、Latitude、
+        direct、limit 等官方欄位。
+      </p>
 
-    <p>
-      上傳官方科技執法資料。
-      系統會自動辨識台北、台中等不同官方格式。
-    </p>
+      <input
+        type="file"
+        id="csvFile"
+        accept=".csv,text/csv"
+      >
 
-    <input
-      type="file"
-      id="techCsvFile"
-      accept=".csv,text/csv"
-    >
+      <button id="previewBtn">
+        預覽固定測速 CSV
+      </button>
 
-    <button
-      id="techPreviewBtn"
-      style="background:#7c3aed;color:white;"
-    >
-      預覽科技執法 CSV
-    </button>
+      <div
+        id="preview"
+        class="status hidden"
+      ></div>
 
-    <div
-      id="techPreview"
-      class="status hidden"
-    ></div>
+      <button
+        id="updateBtn"
+        disabled
+      >
+        確認更新固定測速資料
+      </button>
 
-    <button
-      id="techUpdateBtn"
-      disabled
-      style="background:#ea580c;color:white;"
-    >
-      確認更新科技執法資料
-    </button>
+    </div>
 
-  </div>
+    <!-- 科技執法 -->
 
+    <div class="card">
 
-</div>
+      <h2 class="section-title">
+        🚨 科技執法資料
+      </h2>
 
-<script>
+      <p>
+        上傳官方科技執法資料。
+      </p>
+
+      <p class="small">
+        系統會自動辨識台北、台中等不同官方格式，
+        不需要你自己修改 CSV。
+      </p>
+
+      <input
+        type="file"
+        id="techCsvFile"
+        accept=".csv,text/csv"
+      >
+
+      <button id="techPreviewBtn">
+        預覽科技執法 CSV
+      </button>
+
+      <div
+        id="techPreview"
+        class="status hidden"
+      ></div>
+
+      <button
+        id="techUpdateBtn"
+        disabled
+      >
+        確認更新科技執法資料
+      </button>
+
+    </div>
 
   </div>
 
@@ -231,16 +311,21 @@ button {
 <script>
 
 var SUPABASE_URL =
-  'https://perfsipperncvjocznhl.supabase.co';
+  "https://perfsipperncvjocznhl.supabase.co";
 
 var SUPABASE_KEY =
-  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBlcmZzaXBwZXJuY3Zqb2N6bmhsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODYwMTUyMzAsImV4cCI6MjEwMTU5MTIzMH0.I7vXkV247kAzRJ0RigDZt3Hzn8KJDyMc6o9E3oHJZoY';
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBlcmZzaXBwZXJuY3Zqb2N6bmhsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODYwMTUyMzAsImV4cCI6MjEwMTU5MTIzMH0.I7vXkV247kAzRJ0RigDZt3Hzn8KJDyMc6o9E3oHJZoY";
 
 var supabaseClient =
   supabase.createClient(
     SUPABASE_URL,
     SUPABASE_KEY
   );
+
+
+/* =========================
+   DOM
+========================= */
 
 var loginStatus =
   document.getElementById("loginStatus");
@@ -260,21 +345,46 @@ var updateBtn =
 var preview =
   document.getElementById("preview");
 
+var techCsvFile =
+  document.getElementById("techCsvFile");
+
+var techPreviewBtn =
+  document.getElementById("techPreviewBtn");
+
+var techPreview =
+  document.getElementById("techPreview");
+
+var techUpdateBtn =
+  document.getElementById("techUpdateBtn");
+
 var parsedRows = [];
 
+var parsedTechRows = [];
+
+var detectedTechFormat = "";
+
+
+/* =========================
+   管理員檢查
+========================= */
 
 async function checkAdmin() {
 
   var result =
     await supabaseClient.auth.getUser();
 
-  var user = result.data.user;
-  var error = result.error;
+  var user =
+    result.data.user;
+
+  var error =
+    result.error;
 
   if (error || !user) {
 
     loginStatus.innerHTML =
-      '<span class="warning">目前沒有登入，請先登入安全團聚。</span>';
+      '<span class="warning">' +
+      '目前沒有登入，請先登入安全團聚。' +
+      '</span>';
 
     return false;
   }
@@ -298,13 +408,17 @@ async function checkAdmin() {
   if (!adminResult.data) {
 
     loginStatus.innerHTML =
-      '<span class="warning">你不是後台管理員。</span>';
+      '<span class="warning">' +
+      '你不是後台管理員。' +
+      '</span>';
 
     return false;
   }
 
   loginStatus.innerHTML =
-    '<span class="success">管理員登入成功。</span>';
+    '<span class="success">' +
+    '管理員登入成功。' +
+    '</span>';
 
   adminPanel.classList.remove("hidden");
 
@@ -312,13 +426,36 @@ async function checkAdmin() {
 }
 
 
-function parseCSVLine(line) {
+/* =========================
+   CSV 基本工具
+========================= */
+
+function cleanHeader(value) {
+
+  return String(value || "")
+    .replace(/^\uFEFF/, "")
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, "");
+}
+
+
+function parseCSVLine(
+  line,
+  separator
+) {
 
   var result = [];
+
   var current = "";
+
   var insideQuotes = false;
 
-  for (var i = 0; i < line.length; i++) {
+  for (
+    var i = 0;
+    i < line.length;
+    i++
+  ) {
 
     var char = line[i];
 
@@ -328,18 +465,26 @@ function parseCSVLine(line) {
         insideQuotes &&
         line[i + 1] === '"'
       ) {
+
         current += '"';
+
         i++;
+
       } else {
-        insideQuotes = !insideQuotes;
+
+        insideQuotes =
+          !insideQuotes;
       }
 
     } else if (
-      char === "," &&
+      char === separator &&
       !insideQuotes
     ) {
 
-      result.push(current.trim());
+      result.push(
+        current.trim()
+      );
+
       current = "";
 
     } else {
@@ -348,7 +493,9 @@ function parseCSVLine(line) {
     }
   }
 
-  result.push(current.trim());
+  result.push(
+    current.trim()
+  );
 
   return result;
 }
@@ -360,36 +507,160 @@ function detectSeparator(line) {
     return "\t";
   }
 
+  if (line.includes(",")) {
+    return ",";
+  }
+
+  if (line.includes(";")) {
+    return ";";
+  }
+
   return ",";
 }
 
 
-function parseOfficialCSV(text) {
+function getCSVLines(text) {
 
-  text = text.replace(/^\uFEFF/, "");
+  text =
+    text.replace(/^\uFEFF/, "");
 
-  var lines =
-    text
-      .split(/\r?\n/)
-      .filter(function(line) {
-        return line.trim() !== "";
-      });
+  return text
+    .split(/\r?\n/)
+    .filter(function(line) {
 
-  if (lines.length < 3) {
-    throw new Error("CSV 資料不足。");
+      return line.trim() !== "";
+
+    });
+}
+
+
+function getHeaders(lines) {
+
+  if (!lines.length) {
+
+    throw new Error(
+      "CSV 沒有資料。"
+    );
   }
 
   var separator =
     detectSeparator(lines[0]);
 
   var headers =
-    lines[0]
-      .split(separator)
-      .map(function(x) {
-        return x.trim();
-      });
+    parseCSVLine(
+      lines[0],
+      separator
+    );
+
+  return {
+    separator: separator,
+    headers: headers
+  };
+}
+
+
+function makeHeaderIndex(headers) {
+
+  var index = {};
+
+  headers.forEach(
+    function(header, i) {
+
+      index[
+        cleanHeader(header)
+      ] = i;
+
+    }
+  );
+
+  return index;
+}
+
+
+function getValue(
+  values,
+  index,
+  names
+) {
+
+  for (
+    var i = 0;
+    i < names.length;
+    i++
+  ) {
+
+    var key =
+      cleanHeader(names[i]);
+
+    if (
+      index[key] !== undefined
+    ) {
+
+      return (
+        values[index[key]] ||
+        ""
+      ).trim();
+    }
+  }
+
+  return "";
+}
+
+
+function numberValue(value) {
+
+  if (
+    value === null ||
+    value === undefined ||
+    String(value).trim() === ""
+  ) {
+
+    return null;
+  }
+
+  var n =
+    Number(
+      String(value)
+        .trim()
+        .replace(/,/g, "")
+    );
+
+  return Number.isFinite(n)
+    ? n
+    : null;
+}
+
+
+/* =========================
+   固定測速 CSV
+========================= */
+
+function parseOfficialCSV(text) {
+
+  var lines =
+    getCSVLines(text);
+
+  if (lines.length < 3) {
+
+    throw new Error(
+      "CSV 資料不足。"
+    );
+  }
+
+  var headerInfo =
+    getHeaders(lines);
+
+  var separator =
+    headerInfo.separator;
+
+  var headers =
+    headerInfo.headers;
+
+  var index =
+    makeHeaderIndex(headers);
 
   var requiredHeaders = [
+
     "CityName",
     "RegionName",
     "Address",
@@ -399,12 +670,21 @@ function parseOfficialCSV(text) {
     "Latitude",
     "direct",
     "limit"
+
   ];
 
-  for (var h = 0; h < requiredHeaders.length; h++) {
+  for (
+    var h = 0;
+    h < requiredHeaders.length;
+    h++
+  ) {
 
     if (
-      !headers.includes(requiredHeaders[h])
+      index[
+        cleanHeader(
+          requiredHeaders[h]
+        )
+      ] === undefined
     ) {
 
       throw new Error(
@@ -414,55 +694,78 @@ function parseOfficialCSV(text) {
     }
   }
 
-  var index = {};
-
-  headers.forEach(function(header, i) {
-    index[header] = i;
-  });
-
   var rows = [];
 
-  // 第 2 行是中文說明，從第 3 行開始
-  for (var i = 2; i < lines.length; i++) {
+  /*
+    第一行：英文欄位
+    第二行：中文說明
+    第三行開始：資料
+  */
+
+  for (
+    var i = 2;
+    i < lines.length;
+    i++
+  ) {
 
     var values =
-      separator === "\t"
-        ? lines[i].split(separator)
-        : parseCSVLine(lines[i]);
-
-    if (!values.length) {
-      continue;
-    }
+      parseCSVLine(
+        lines[i],
+        separator
+      );
 
     var longitude =
-      Number(values[index.Longitude]);
+      numberValue(
+        getValue(
+          values,
+          index,
+          ["Longitude"]
+        )
+      );
 
     var latitude =
-      Number(values[index.Latitude]);
+      numberValue(
+        getValue(
+          values,
+          index,
+          ["Latitude"]
+        )
+      );
+
+    var limitText =
+      getValue(
+        values,
+        index,
+        ["limit"]
+      );
 
     var speedLimit =
-      values[index.limit] === ""
-        ? null
-        : Number(values[index.limit]);
+      numberValue(
+        limitText
+      );
 
     if (
-      !Number.isFinite(longitude) ||
-      !Number.isFinite(latitude)
+      longitude === null ||
+      latitude === null
     ) {
 
       throw new Error(
-        "第 " + (i + 1) +
+        "第 " +
+        (i + 1) +
         " 行經緯度不是有效數字。"
       );
     }
 
     if (
       speedLimit !== null &&
-      !Number.isInteger(speedLimit)
+      !Number.isInteger(
+        speedLimit
+      )
     ) {
 
       throw new Error(
-        "第 " + (i + 1) +
+        "第 " +
+        (i + 1) +
         " 行速限不是整數。"
       );
     }
@@ -470,19 +773,39 @@ function parseOfficialCSV(text) {
     rows.push({
 
       CityName:
-        values[index.CityName] || null,
+        getValue(
+          values,
+          index,
+          ["CityName"]
+        ) || null,
 
       RegionName:
-        values[index.RegionName] || null,
+        getValue(
+          values,
+          index,
+          ["RegionName"]
+        ) || null,
 
       Address:
-        values[index.Address] || null,
+        getValue(
+          values,
+          index,
+          ["Address"]
+        ) || null,
 
       DeptNm:
-        values[index.DeptNm] || null,
+        getValue(
+          values,
+          index,
+          ["DeptNm"]
+        ) || null,
 
       BranchNm:
-        values[index.BranchNm] || null,
+        getValue(
+          values,
+          index,
+          ["BranchNm"]
+        ) || null,
 
       Longitude:
         longitude,
@@ -491,7 +814,11 @@ function parseOfficialCSV(text) {
         latitude,
 
       direct:
-        values[index.direct] || null,
+        getValue(
+          values,
+          index,
+          ["direct"]
+        ) || null,
 
       limit:
         speedLimit
@@ -499,20 +826,30 @@ function parseOfficialCSV(text) {
     });
   }
 
-  if (rows.length === 0) {
-    throw new Error("沒有讀取到任何資料。");
+  if (!rows.length) {
+
+    throw new Error(
+      "沒有讀取到任何資料。"
+    );
   }
 
   return rows;
 }
 
 
+/* =========================
+   固定測速預覽
+========================= */
+
 previewBtn.addEventListener(
   "click",
   async function() {
 
     updateBtn.disabled = true;
-    preview.classList.remove("hidden");
+
+    preview.classList.remove(
+      "hidden"
+    );
 
     var file =
       csvFile.files[0];
@@ -538,7 +875,7 @@ previewBtn.addEventListener(
         '<div class="info-row">' +
           '<span>檔案</span>' +
           '<strong>' +
-          file.name +
+          escapeHTML(file.name) +
           '</strong>' +
         '</div>' +
 
@@ -552,14 +889,20 @@ previewBtn.addEventListener(
         '<div class="info-row">' +
           '<span>第一筆縣市</span>' +
           '<strong>' +
-          (parsedRows[0].CityName || "") +
+          escapeHTML(
+            parsedRows[0].CityName ||
+            ""
+          ) +
           '</strong>' +
         '</div>' +
 
         '<div class="info-row">' +
           '<span>第一筆地址</span>' +
           '<strong>' +
-          (parsedRows[0].Address || "") +
+          escapeHTML(
+            parsedRows[0].Address ||
+            ""
+          ) +
           '</strong>' +
         '</div>' +
 
@@ -577,29 +920,36 @@ previewBtn.addEventListener(
           '</strong>' +
         '</div>' +
 
-        '<p class="success">' +
-          'CSV 格式檢查成功。' +
-        '</p>' +
+        '<div class="success-box">' +
+          '✓ CSV 格式檢查成功。' +
+        '</div>' +
 
         '<p>' +
-          '請確認資料筆數與內容正確後，再按下「確認更新」。' +
+          '請確認資料正確後，再按下「確認更新固定測速資料」。' +
         '</p>';
 
-      updateBtn.disabled = false;
+      updateBtn.disabled =
+        false;
 
     } catch (error) {
 
       parsedRows = [];
 
       preview.innerHTML =
-        '<span class="warning">' +
+        '<div class="danger-box">' +
         '匯入檢查失敗：\n' +
-        error.message +
-        '</span>';
+        escapeHTML(
+          error.message
+        ) +
+        '</div>';
     }
   }
 );
 
+
+/* =========================
+   固定測速更新
+========================= */
 
 updateBtn.addEventListener(
   "click",
@@ -614,7 +964,7 @@ updateBtn.addEventListener(
         "確定要用 " +
         parsedRows.length +
         " 筆官方資料更新 speed_cameras 嗎？\n\n" +
-        "目前資料會被新的官方資料取代。"
+        "目前固定測速資料會被新的官方資料取代。"
       );
 
     if (!confirmed) {
@@ -624,7 +974,7 @@ updateBtn.addEventListener(
     updateBtn.disabled = true;
 
     preview.textContent =
-      "正在更新資料，請稍候...";
+      "正在更新固定測速資料，請稍候...";
 
     try {
 
@@ -632,7 +982,8 @@ updateBtn.addEventListener(
         await supabaseClient.rpc(
           "replace_speed_cameras",
           {
-            camera_data: parsedRows
+            camera_data:
+              parsedRows
           }
         );
 
@@ -641,64 +992,741 @@ updateBtn.addEventListener(
       }
 
       preview.innerHTML =
-        '<span class="success">' +
-        '更新成功！\n' +
+        '<div class="success-box">' +
+        '✓ 更新成功！\n' +
         '共更新 ' +
         result.data +
-        ' 筆資料。' +
-        '</span>';
+        ' 筆固定測速資料。' +
+        '</div>';
 
       parsedRows = [];
+
+      await loadDatabaseStatus();
 
     } catch (error) {
 
       preview.innerHTML =
-        '<span class="warning">' +
+        '<div class="danger-box">' +
         '更新失敗：\n' +
-        error.message +
-        '</span>';
+        escapeHTML(
+          error.message
+        ) +
+        '</div>';
 
-      updateBtn.disabled = false;
+      updateBtn.disabled =
+        false;
     }
   }
 );
 
 
+/* =========================
+   科技執法格式辨識
+========================= */
+
+function detectTechFormat(headers) {
+
+  var h =
+    headers.map(
+      cleanHeader
+    );
+
+  /*
+    台中科技執法
+  */
+
+  if (
+    h.includes("科技執法種類") &&
+    h.includes("設置地點") &&
+    h.includes("取締項目") &&
+    h.includes("經度") &&
+    h.includes("緯度")
+  ) {
+
+    return "taichung_tech";
+  }
+
+  /*
+    台北科技執法
+  */
+
+  if (
+    h.includes("名稱") &&
+    h.includes("取締路段") &&
+    h.includes("座標-x") &&
+    h.includes("座標-y") &&
+    h.includes("啟用日期") &&
+    h.includes("取締項目")
+  ) {
+
+    return "taipei_tech";
+  }
+
+  return null;
+}
+
+
+/* =========================
+   台中科技執法
+========================= */
+
+function parseTaichungTech(
+  lines,
+  separator,
+  headers
+) {
+
+  var index =
+    makeHeaderIndex(headers);
+
+  var rows = [];
+
+  for (
+    var i = 1;
+    i < lines.length;
+    i++
+  ) {
+
+    var values =
+      parseCSVLine(
+        lines[i],
+        separator
+      );
+
+    var longitude =
+      numberValue(
+        getValue(
+          values,
+          index,
+          ["經度"]
+        )
+      );
+
+    var latitude =
+      numberValue(
+        getValue(
+          values,
+          index,
+          ["緯度"]
+        )
+      );
+
+    if (
+      longitude === null ||
+      latitude === null
+    ) {
+
+      throw new Error(
+        "台中科技執法第 " +
+        (i + 1) +
+        " 行經緯度無效。"
+      );
+    }
+
+    rows.push({
+
+      city_name:
+        "台中市",
+
+      enforcement_type:
+        getValue(
+          values,
+          index,
+          ["科技執法種類"]
+        ) || null,
+
+      location:
+        getValue(
+          values,
+          index,
+          ["設置地點"]
+        ) || null,
+
+      violation_types:
+        getValue(
+          values,
+          index,
+          ["取締項目"]
+        ) || null,
+
+      longitude:
+        longitude,
+
+      latitude:
+        latitude,
+
+      activation_date:
+        null,
+
+      source_name:
+        "台中市政府",
+
+      source_format:
+        "taichung_tech"
+
+    });
+  }
+
+  return rows;
+}
+
+
+/* =========================
+   台北科技執法
+========================= */
+
+function parseTaipeiTech(
+  lines,
+  separator,
+  headers
+) {
+
+  var index =
+    makeHeaderIndex(headers);
+
+  var rows = [];
+
+  for (
+    var i = 1;
+    i < lines.length;
+    i++
+  ) {
+
+    var values =
+      parseCSVLine(
+        lines[i],
+        separator
+      );
+
+    /*
+      台北資料：
+      座標-X = 經度
+      座標-Y = 緯度
+    */
+
+    var longitude =
+      numberValue(
+        getValue(
+          values,
+          index,
+          ["座標-X"]
+        )
+      );
+
+    var latitude =
+      numberValue(
+        getValue(
+          values,
+          index,
+          ["座標-Y"]
+        )
+      );
+
+    if (
+      longitude === null ||
+      latitude === null
+    ) {
+
+      throw new Error(
+        "台北科技執法第 " +
+        (i + 1) +
+        " 行座標無效。"
+      );
+    }
+
+    rows.push({
+
+      city_name:
+        "台北市",
+
+      enforcement_type:
+        getValue(
+          values,
+          index,
+          ["名稱"]
+        ) || null,
+
+      location:
+        getValue(
+          values,
+          index,
+          ["取締路段"]
+        ) || null,
+
+      violation_types:
+        getValue(
+          values,
+          index,
+          ["取締項目"]
+        ) || null,
+
+      longitude:
+        longitude,
+
+      latitude:
+        latitude,
+
+      activation_date:
+        getValue(
+          values,
+          index,
+          ["啟用日期"]
+        ) || null,
+
+      source_name:
+        "台北市政府",
+
+      source_format:
+        "taipei_tech"
+
+    });
+  }
+
+  return rows;
+}
+
+
+/* =========================
+   科技執法 CSV
+========================= */
+
+function parseTechCSV(text) {
+
+  var lines =
+    getCSVLines(text);
+
+  if (lines.length < 2) {
+
+    throw new Error(
+      "科技執法 CSV 資料不足。"
+    );
+  }
+
+  var headerInfo =
+    getHeaders(lines);
+
+  var separator =
+    headerInfo.separator;
+
+  var headers =
+    headerInfo.headers;
+
+  var format =
+    detectTechFormat(
+      headers
+    );
+
+  if (!format) {
+
+    throw new Error(
+      "無法辨識科技執法 CSV 格式。\n\n" +
+      "目前支援：\n" +
+      "1. 台中科技執法\n" +
+      "2. 台北科技執法"
+    );
+  }
+
+  detectedTechFormat =
+    format;
+
+  if (
+    format === "taichung_tech"
+  ) {
+
+    return parseTaichungTech(
+      lines,
+      separator,
+      headers
+    );
+  }
+
+  if (
+    format === "taipei_tech"
+  ) {
+
+    return parseTaipeiTech(
+      lines,
+      separator,
+      headers
+    );
+  }
+
+  throw new Error(
+    "未知科技執法格式。"
+  );
+}
+
+
+/* =========================
+   科技執法預覽
+========================= */
+
+techPreviewBtn.addEventListener(
+  "click",
+  async function() {
+
+    techUpdateBtn.disabled =
+      true;
+
+    techPreview.classList.remove(
+      "hidden"
+    );
+
+    var file =
+      techCsvFile.files[0];
+
+    if (!file) {
+
+      techPreview.textContent =
+        "請先選擇科技執法 CSV 檔案。";
+
+      return;
+    }
+
+    try {
+
+      var text =
+        await file.text();
+
+      parsedTechRows =
+        parseTechCSV(text);
+
+      var formatName =
+        detectedTechFormat ===
+        "taichung_tech"
+          ? "台中科技執法"
+          : "台北科技執法";
+
+      var html =
+
+        '<div class="info-row">' +
+          '<span>檔案</span>' +
+          '<strong>' +
+          escapeHTML(
+            file.name
+          ) +
+          '</strong>' +
+        '</div>' +
+
+        '<div class="info-row">' +
+          '<span>辨識格式</span>' +
+          '<strong>' +
+            '<span class="badge">' +
+              formatName +
+            '</span>' +
+          '</strong>' +
+        '</div>' +
+
+        '<div class="info-row">' +
+          '<span>資料筆數</span>' +
+          '<strong>' +
+          parsedTechRows.length +
+          '</strong>' +
+        '</div>';
+
+      if (
+        parsedTechRows.length
+      ) {
+
+        var first =
+          parsedTechRows[0];
+
+        html +=
+
+          '<div class="info-row">' +
+            '<span>第一筆地點</span>' +
+            '<strong>' +
+            escapeHTML(
+              first.location ||
+              ""
+            ) +
+            '</strong>' +
+          '</div>' +
+
+          '<div class="info-row">' +
+            '<span>第一筆經度</span>' +
+            '<strong>' +
+            first.longitude +
+            '</strong>' +
+          '</div>' +
+
+          '<div class="info-row">' +
+            '<span>第一筆緯度</span>' +
+            '<strong>' +
+            first.latitude +
+            '</strong>' +
+          '</div>' +
+
+          '<div class="info-row">' +
+            '<span>取締項目</span>' +
+            '<strong>' +
+            escapeHTML(
+              first.violation_types ||
+              ""
+            ) +
+            '</strong>' +
+          '</div>';
+      }
+
+      html +=
+
+        '<div class="success-box">' +
+        '✓ 科技執法格式辨識成功。' +
+        '</div>' +
+
+        '<p>' +
+        '系統已經把官方欄位轉換成統一格式。' +
+        '</p>' +
+
+        '<p>' +
+        '請確認資料筆數與內容正確後，再按下「確認更新科技執法資料」。' +
+        '</p>';
+
+      techPreview.innerHTML =
+        html;
+
+      techUpdateBtn.disabled =
+        parsedTechRows.length === 0;
+
+    } catch (error) {
+
+      parsedTechRows = [];
+
+      detectedTechFormat = "";
+
+      techPreview.innerHTML =
+        '<div class="danger-box">' +
+        '匯入檢查失敗：\n' +
+        escapeHTML(
+          error.message
+        ) +
+        '</div>';
+    }
+  }
+);
+
+
+/* =========================
+   科技執法更新
+========================= */
+
+techUpdateBtn.addEventListener(
+  "click",
+  async function() {
+
+    if (
+      !parsedTechRows.length
+    ) {
+
+      return;
+    }
+
+    var formatName =
+      detectedTechFormat ===
+      "taichung_tech"
+        ? "台中科技執法"
+        : "台北科技執法";
+
+    var confirmed =
+      confirm(
+        "確定要更新科技執法資料嗎？\n\n" +
+        "格式：" +
+        formatName +
+        "\n" +
+        "資料筆數：" +
+        parsedTechRows.length +
+        " 筆\n\n" +
+        "系統將用這批資料更新 tech_enforcement。"
+      );
+
+    if (!confirmed) {
+      return;
+    }
+
+    techUpdateBtn.disabled =
+      true;
+
+    techPreview.textContent =
+      "正在更新科技執法資料，請稍候...";
+
+    try {
+
+      var result =
+        await supabaseClient.rpc(
+          "replace_tech_enforcement",
+          {
+            enforcement_data:
+              parsedTechRows
+          }
+        );
+
+      if (result.error) {
+        throw result.error;
+      }
+
+      techPreview.innerHTML =
+        '<div class="success-box">' +
+        '✓ 科技執法更新成功！\n' +
+        '格式：' +
+        formatName +
+        '\n' +
+        '共更新 ' +
+        result.data +
+        ' 筆資料。' +
+        '</div>';
+
+      parsedTechRows = [];
+
+      detectedTechFormat = "";
+
+      await loadDatabaseStatus();
+
+    } catch (error) {
+
+      techPreview.innerHTML =
+        '<div class="danger-box">' +
+        '更新失敗：\n' +
+        escapeHTML(
+          error.message
+        ) +
+        '</div>';
+
+      techUpdateBtn.disabled =
+        false;
+    }
+  }
+);
+
+
+/* =========================
+   資料庫狀態
+========================= */
+
 async function loadDatabaseStatus() {
 
-  var result =
+  /*
+    固定測速
+  */
+
+  var speedResult =
     await supabaseClient
       .from("speed_cameras")
-      .select("*", { count: "exact", head: true });
+      .select("*", {
+        count: "exact",
+        head: true
+      });
 
-  var countElement =
-    document.getElementById("speedCameraCount");
+  var speedElement =
+    document.getElementById(
+      "speedCameraCount"
+    );
 
-  if (result.error) {
+  if (
+    speedResult.error
+  ) {
 
-    countElement.textContent =
+    speedElement.textContent =
       "讀取失敗";
 
     console.error(
       "測速資料筆數讀取失敗：",
-      result.error
+      speedResult.error
     );
 
-    return;
+  } else {
+
+    speedElement.textContent =
+      (
+        speedResult.count || 0
+      ) +
+      " 筆";
   }
 
-  countElement.textContent =
-    result.count + " 筆";
+
+  /*
+    科技執法
+  */
+
+  var techResult =
+    await supabaseClient
+      .from("tech_enforcement")
+      .select("*", {
+        count: "exact",
+        head: true
+      });
+
+  var techElement =
+    document.getElementById(
+      "techEnforcementCount"
+    );
+
+  if (
+    techResult.error
+  ) {
+
+    techElement.textContent =
+      "讀取失敗";
+
+    console.error(
+      "科技執法資料筆數讀取失敗：",
+      techResult.error
+    );
+
+  } else {
+
+    techElement.textContent =
+      (
+        techResult.count || 0
+      ) +
+      " 筆";
+  }
 }
 
 
-checkAdmin().then(function(isAdmin) {
+/* =========================
+   HTML 安全處理
+========================= */
 
-  if (isAdmin) {
-    loadDatabaseStatus();
+function escapeHTML(value) {
+
+  return String(value || "")
+    .replace(
+      /&/g,
+      "&amp;"
+    )
+    .replace(
+      /</g,
+      "&lt;"
+    )
+    .replace(
+      />/g,
+      "&gt;"
+    )
+    .replace(
+      /"/g,
+      "&quot;"
+    )
+    .replace(
+      /'/g,
+      "&#039;"
+    );
+}
+
+
+/* =========================
+   啟動
+========================= */
+
+checkAdmin().then(
+  function(isAdmin) {
+
+    if (isAdmin) {
+
+      loadDatabaseStatus();
+    }
+
   }
-
-});
+);
 
 </script>
 
