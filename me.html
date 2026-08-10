@@ -6866,7 +6866,7 @@ function openNavigationVoiceDB(){
 
 
 /* =========================================================
-   【第 8 節】儲存導航錄音
+   【第 8 節】儲存導航錄音到 Supabase Voice_profiles
 ========================================================= */
 
 async function saveNavigationVoice(
@@ -6874,170 +6874,307 @@ async function saveNavigationVoice(
   blob
 ){
 
-  const db =
-    await openNavigationVoiceDB();
+  try{
+
+    /* 取得目前登入使用者 */
+
+    const {
+      data: {
+        user
+      },
+      error: userError
+    } =
+      await supabase.auth.getUser();
 
 
-  return new Promise(
-    function(resolve,reject){
+    if(
+      userError ||
+      !user
+    ){
 
-      const tx =
-        db.transaction(
-          NAVIGATION_VOICE_STORE,
-          "readwrite"
+      throw new Error(
+        "尚未登入，無法儲存導航語音"
+      );
+
+    }
+
+
+    /*
+      每個使用者使用自己的資料夾
+      例如：
+
+      Voice_profiles/
+        使用者ID/
+          navigation/
+            left.webm
+    */
+
+    const filePath =
+      user.id +
+      "/navigation/" +
+      id +
+      ".webm";
+
+
+    /*
+      上傳到既有的 Voice_profiles
+      upsert = true
+      代表重新錄製時直接覆蓋舊檔
+    */
+
+    const {
+      error: uploadError
+    } =
+      await supabase.storage
+        .from("Voice_profiles")
+        .upload(
+          filePath,
+          blob,
+          {
+            contentType:
+              blob.type ||
+              "audio/webm",
+
+            upsert:
+              true
+          }
         );
 
 
-      tx.objectStore(
-        NAVIGATION_VOICE_STORE
-      ).put({
+    if(uploadError){
 
-        id:id,
-
-        blob:blob,
-
-        updatedAt:
-          new Date().toISOString()
-
-      });
-
-
-      tx.oncomplete =
-        function(){
-
-          db.close();
-
-          resolve();
-
-        };
-
-
-      tx.onerror =
-        function(){
-
-          db.close();
-
-          reject(
-            tx.error
-          );
-
-        };
+      throw uploadError;
 
     }
-  );
+
+
+    console.log(
+      "✅ 導航語音已上傳後台：",
+      filePath
+    );
+
+
+    /*
+      儲存成功後，把路徑一起回傳
+      讓前台知道這次真的已經存到後台
+    */
+
+    return {
+      success:
+        true,
+
+      id:
+        id,
+
+      filePath:
+        filePath
+    };
+
+
+  }catch(error){
+
+    console.error(
+      "❌ 導航語音上傳失敗：",
+      error
+    );
+
+
+    return {
+      success:
+        false,
+
+      id:
+        id,
+
+      error:
+        error.message ||
+        "語音上傳失敗"
+    };
+
+  }
 
 }
-
-
 /* =========================================================
-   【第 9 節】取得導航錄音
+   【第 8-1 節】建立 Voice_profiles 資料表紀錄
+========================================================= */
+
+const {
+  error: profileError
+} = await supabase
+  .from("Voice_profiles")
+  .upsert({
+    user_id:
+      user.id,
+
+    voice_name:
+      id,
+
+    storage_path:
+      filePath,
+
+    mime_type:
+      blob.type || "audio/webm",
+
+    duration_seconds:
+      0
+  });
+
+if(profileError){
+
+  throw profileError;
+
+}
+/* =========================================================
+   【第 9 節】從 Supabase Voice_profiles 取得導航錄音
 ========================================================= */
 
 async function getNavigationVoice(id){
 
-  const db =
-    await openNavigationVoiceDB();
+  try{
+
+    const {
+      data: {
+        user
+      },
+      error: userError
+    } =
+      await supabase.auth.getUser();
 
 
-  return new Promise(
-    function(resolve,reject){
+    if(
+      userError ||
+      !user
+    ){
 
-      const tx =
-        db.transaction(
-          NAVIGATION_VOICE_STORE,
-          "readonly"
-        );
-
-
-      const request =
-        tx.objectStore(
-          NAVIGATION_VOICE_STORE
-        ).get(id);
-
-
-      request.onsuccess =
-        function(){
-
-          db.close();
-
-          resolve(
-            request.result || null
-          );
-
-        };
-
-
-      request.onerror =
-        function(){
-
-          db.close();
-
-          reject(
-            request.error
-          );
-
-        };
+      return null;
 
     }
-  );
+
+
+    const filePath =
+      user.id +
+      "/navigation/" +
+      id +
+      ".webm";
+
+
+    const {
+      data,
+      error
+    } =
+      await supabase.storage
+        .from("Voice_profiles")
+        .download(filePath);
+
+
+    if(error){
+
+      console.error(
+        "取得導航語音失敗：",
+        error
+      );
+
+      return null;
+
+    }
+
+
+    return {
+      id:id,
+      blob:data
+    };
+
+
+  }catch(error){
+
+    console.error(
+      "取得導航語音發生錯誤：",
+      error
+    );
+
+    return null;
+
+  }
 
 }
-
-
 /* =========================================================
-   【第 10 節】刪除導航錄音
+   【第 10 節】刪除 Supabase 導航錄音
 ========================================================= */
 
 async function deleteNavigationVoice(id){
 
-  const db =
-    await openNavigationVoiceDB();
+  try{
+
+    const {
+      data: {
+        user
+      },
+      error: userError
+    } =
+      await supabase.auth.getUser();
 
 
-  return new Promise(
-    function(resolve,reject){
+    if(
+      userError ||
+      !user
+    ){
 
-      const tx =
-        db.transaction(
-          NAVIGATION_VOICE_STORE,
-          "readwrite"
-        );
-
-
-      tx.objectStore(
-        NAVIGATION_VOICE_STORE
-      ).delete(id);
-
-
-      tx.oncomplete =
-        function(){
-
-          db.close();
-
-          resolve();
-
-        };
-
-
-      tx.onerror =
-        function(){
-
-          db.close();
-
-          reject(
-            tx.error
-          );
-
-        };
+      throw new Error(
+        "尚未登入"
+      );
 
     }
-  );
+
+
+    const filePath =
+      user.id +
+      "/navigation/" +
+      id +
+      ".webm";
+
+
+    const {
+      error
+    } =
+      await supabase.storage
+        .from("Voice_profiles")
+        .remove([
+          filePath
+        ]);
+
+
+    if(error){
+
+      throw error;
+
+    }
+
+
+    console.log(
+      "✅ 導航語音已從後台刪除：",
+      filePath
+    );
+
+
+    return true;
+
+
+  }catch(error){
+
+    console.error(
+      "❌ 刪除導航語音失敗：",
+      error
+    );
+
+
+    return false;
+
+  }
 
 }
 
-
 /* =========================================================
-   【第 11 節】檢查錄音是否存在
+   【第 11 節】檢查後台導航錄音是否存在
 ========================================================= */
 
 async function hasNavigationVoice(id){
@@ -7049,9 +7186,8 @@ async function hasNavigationVoice(id){
 
 }
 
-
 /* =========================================================
-   【第 12 節】顯示錄音狀態
+   【第 12 節】顯示後台導航錄音狀態
 ========================================================= */
 
 async function renderNavigationVoiceSummary(){
@@ -7090,14 +7226,14 @@ async function renderNavigationVoiceSummary(){
     el.innerHTML =
       '<div class="text-muted" ' +
       'style="font-size:12px">' +
-      '尚未錄製導航聲音' +
+      '尚未儲存導航聲音' +
       '</div>';
 
   }else{
 
     el.innerHTML =
       '<div style="font-size:12px">' +
-      '🎙️ 已錄製 ' +
+      '☁️ 已儲存 ' +
       count +
       ' / ' +
       NAVIGATION_VOICE_PHRASES.length +
@@ -7107,50 +7243,76 @@ async function renderNavigationVoiceSummary(){
   }
 
 }
-
-
 /* =========================================================
-   【第 13 節】開啟導航語音錄製介面
+   【第 13 節】停止錄音 → 關閉麥克風 → 上傳後台
 ========================================================= */
 
-async function openNavigationVoiceRecorder(){
+mediaRecorder.onstop = async function(){
 
-  const html =
+  /* ① 立即關閉麥克風 */
+  if(mediaStream){
 
-    '<div style="margin-bottom:15px">' +
+    mediaStream
+      .getTracks()
+      .forEach(function(track){
 
-    '<div style="font-size:1.05rem;font-weight:700">' +
-    '🎙️ 我的導航聲音' +
-    '</div>' +
+        track.stop();
 
-    '<div class="text-muted" style="font-size:12px;margin-top:5px">' +
-    '請逐項錄製。未來導航時會依照導航事件播放對應聲音。' +
-    '</div>' +
+      });
 
-    '</div>' +
+    mediaStream = null;
 
-    '<div id="navigation-voice-recorder-list">' +
-
-    '<div class="text-muted">' +
-    '正在載入…' +
-    '</div>' +
-
-    '</div>';
+  }
 
 
-  openSettings(
-    "個人語音導航",
-    function(){
+  /* ② 產生錄音檔 */
+  const blob =
+    new Blob(
+      audioChunks,
+      {
+        type:
+          "audio/webm"
+      }
+    );
 
-      return html;
 
-    }
-  );
+  /* ③ 上傳 Voice_profiles */
+  const result =
+    await saveNavigationVoice(
+      currentNavigationVoiceId,
+      blob
+    );
 
 
-  await renderNavigationVoiceRecorder();
+  /* ④ 顯示結果 */
 
-}
+  if(result.success){
+
+    console.log(
+      "✅ 語音已儲存到後台"
+    );
+
+    alert(
+      "✅ 語音已儲存到後台"
+    );
+
+    await renderNavigationVoiceSummary();
+
+  }else{
+
+    console.error(
+      "❌ 語音上傳失敗",
+      result.error
+    );
+
+    alert(
+      "❌ 語音上傳失敗\n" +
+      result.error
+    );
+
+  }
+
+};
 
 
 /* =========================================================
