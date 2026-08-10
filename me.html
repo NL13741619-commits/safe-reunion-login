@@ -6435,7 +6435,1520 @@ if(
   */
 
 }
+/* =========================================================
+   【第 1 節】一般設定
+   功能：
+   1. 飲水準備天數
+   2. 個人導航語音
+   3. 導航語音開關
+   4. Google / 高德地圖手動切換
+   5. 匯出資料
+   6. 匯入資料
+   7. 清除本機資料
+========================================================= */
 
+function openGeneralSettings(){
+
+  openSettings(
+    "一般設定",
+    function(){
+
+      const settings =
+        Store.get("settings") ||
+        Store.getDefaultSettings();
+
+      const navigationProvider =
+        localStorage.getItem(
+          "navigation_provider"
+        ) || "taiwan";
+
+      const voiceEnabled =
+        localStorage.getItem(
+          "navigation_voice_enabled"
+        ) !== "false";
+
+      return (
+
+        /* -------------------------------------------------
+           飲水準備天數
+        ------------------------------------------------- */
+
+        '<div class="form-group">' +
+
+        '<label>飲水準備天數</label>' +
+
+        '<input id="target-days" ' +
+        'type="number" ' +
+        'min="1" ' +
+        'max="30" ' +
+        'value="' +
+        (settings.targetDays || 7) +
+        '">' +
+
+        '</div>' +
+
+        '<button class="btn btn-primary btn-block" ' +
+        'onclick="saveTargetDays()">' +
+
+        '儲存設定' +
+
+        '</button>' +
+
+
+        /* -------------------------------------------------
+           第 2 節
+           個人語音導航
+        ------------------------------------------------- */
+
+        '<hr style="margin:20px 0;border:0;border-top:1px solid #eee">' +
+
+        '<div style="font-size:1.05rem;font-weight:700;margin-bottom:6px">' +
+        '🗣️ 個人語音導航' +
+        '</div>' +
+
+        '<div class="text-muted" style="font-size:12px;margin-bottom:15px">' +
+        '錄製自己的聲音，未來導航時可使用你的個人導航語音。' +
+        '</div>' +
+
+
+        /* 語音導航開關 */
+
+        '<div class="switch-row">' +
+
+        '<div>' +
+
+        '<strong>啟用語音導航</strong>' +
+
+        '<div class="text-muted" style="font-size:12px">' +
+        '關閉後導航仍會顯示地圖路線，但不播放語音。' +
+        '</div>' +
+
+        '</div>' +
+
+        '<label class="switch">' +
+
+        '<input type="checkbox" ' +
+        (voiceEnabled ? "checked" : "") +
+        ' onchange="setNavigationVoiceEnabled(this.checked)">' +
+
+        '<span class="slider"></span>' +
+
+        '</label>' +
+
+        '</div>' +
+
+
+        '<div style="height:12px"></div>' +
+
+
+        /* 語音錄製按鈕 */
+
+        '<button class="btn btn-primary btn-block" ' +
+        'onclick="openNavigationVoiceRecorder()">' +
+
+        '🎙️ 錄製／管理我的導航聲音' +
+
+        '</button>' +
+
+
+        '<div id="navigation-voice-summary" ' +
+        'style="margin-top:10px">' +
+
+        '</div>' +
+
+
+        /* -------------------------------------------------
+           第 3 節
+           地圖服務手動切換
+        ------------------------------------------------- */
+
+        '<hr style="margin:20px 0;border:0;border-top:1px solid #eee">' +
+
+        '<div style="font-size:1.05rem;font-weight:700;margin-bottom:6px">' +
+        '🗺️ 導航地圖服務' +
+        '</div>' +
+
+        '<div class="text-muted" style="font-size:12px;margin-bottom:15px">' +
+        '可依所在地區手動選擇導航地圖。' +
+        '</div>' +
+
+
+        '<div class="radio-card" ' +
+        'style="cursor:pointer" ' +
+        'onclick="setNavigationProvider(\'taiwan\')">' +
+
+        '<div>' +
+
+        '<div style="font-weight:700">' +
+        '🇹🇼 台灣／Google Maps' +
+        '</div>' +
+
+        '<div class="text-muted" style="font-size:12px">' +
+        '適合台灣及 Google Maps 可用地區' +
+        '</div>' +
+
+        '</div>' +
+
+        '<div id="nav-provider-taiwan">' +
+        (navigationProvider === "taiwan" ? "●" : "○") +
+        '</div>' +
+
+        '</div>' +
+
+
+        '<div style="height:8px"></div>' +
+
+
+        '<div class="radio-card" ' +
+        'style="cursor:pointer" ' +
+        'onclick="setNavigationProvider(\'china\')">' +
+
+        '<div>' +
+
+        '<div style="font-weight:700">' +
+        '🇨🇳 中國大陸／高德地圖' +
+        '</div>' +
+
+        '<div class="text-muted" style="font-size:12px">' +
+        '進入中國大陸後可手動切換' +
+        '</div>' +
+
+        '</div>' +
+
+        '<div id="nav-provider-china">' +
+        (navigationProvider === "china" ? "●" : "○") +
+        '</div>' +
+
+        '</div>' +
+
+
+        '<div class="danger-box" style="margin-top:12px">' +
+
+        '⚠️ 目前僅設定導航服務切換。' +
+        '如果目前的 map.html 尚未載入高德 SDK，' +
+        '切換後仍需要先完成高德地圖載入，才可以實際導航。' +
+
+        '</div>' +
+
+
+        /* -------------------------------------------------
+           第 4 節
+           資料備份
+        ------------------------------------------------- */
+
+        '<hr style="margin:20px 0;border:0;border-top:1px solid #eee">' +
+
+        '<div style="font-size:1.05rem;font-weight:700;margin-bottom:12px">' +
+        '💾 資料管理' +
+        '</div>' +
+
+        '<button class="btn btn-outline btn-block" ' +
+        'onclick="exportData()">' +
+
+        '📤 匯出安全團聚資料' +
+
+        '</button>' +
+
+        '<div style="height:8px"></div>' +
+
+        '<button class="btn btn-outline btn-block" ' +
+        'onclick="document.getElementById(\'import-file\').click()">' +
+
+        '📥 匯入安全團聚資料' +
+
+        '</button>' +
+
+        '<input id="import-file" ' +
+        'type="file" ' +
+        'accept=".json" ' +
+        'style="display:none" ' +
+        'onchange="importData(event)">' +
+
+        '<div style="height:8px"></div>' +
+
+        '<button class="btn btn-danger btn-block" ' +
+        'onclick="clearAllLocalData()">' +
+
+        '⚠️ 清除本機資料' +
+
+        '</button>'
+
+      );
+
+    }
+  );
+
+
+  setTimeout(
+    renderNavigationVoiceSummary,
+    50
+  );
+
+}
+
+
+/* =========================================================
+   【第 5 節】導航地圖服務切換
+   台灣：Google
+   中國大陸：高德
+
+   注意：
+   這裡只負責「選擇」。
+   map.html 是否已載入 AMap，要另外處理。
+========================================================= */
+
+function setNavigationProvider(provider){
+
+  if(
+    provider !== "taiwan" &&
+    provider !== "china"
+  ){
+
+    return;
+
+  }
+
+
+  localStorage.setItem(
+    "navigation_provider",
+    provider
+  );
+
+
+  if(
+    typeof currentMapProvider !==
+    "undefined"
+  ){
+
+    currentMapProvider =
+      provider === "taiwan"
+        ? "taiwan"
+        : "china";
+
+  }
+
+
+  showToast(
+    provider === "taiwan"
+      ? "已切換為 Google Maps"
+      : "已切換為高德地圖"
+  );
+
+
+  openGeneralSettings();
+
+}
+
+
+/* =========================================================
+   【第 6 節】導航語音資料庫
+   使用 IndexedDB 儲存錄音
+   不使用 localStorage 儲存大型音訊
+========================================================= */
+
+const NAVIGATION_VOICE_DB =
+  "safe_reunion_navigation_voice";
+
+const NAVIGATION_VOICE_STORE =
+  "voice_clips";
+
+
+const NAVIGATION_VOICE_PHRASES = [
+
+  {
+    id:"start",
+    name:"開始導航",
+    example:"開始導航"
+  },
+
+  {
+    id:"straight",
+    name:"請直走",
+    example:"前方請直走"
+  },
+
+  {
+    id:"left",
+    name:"前方左轉",
+    example:"前方請左轉"
+  },
+
+  {
+    id:"right",
+    name:"前方右轉",
+    example:"前方請右轉"
+  },
+
+  {
+    id:"arriving",
+    name:"即將到達",
+    example:"即將到達目的地"
+  },
+
+  {
+    id:"arrived",
+    name:"已到達目的地",
+    example:"您已到達目的地"
+  },
+
+  {
+    id:"reroute",
+    name:"重新規劃路線",
+    example:"路線已重新規劃"
+  }
+
+];
+
+
+/* =========================================================
+   【第 7 節】建立語音 IndexedDB
+========================================================= */
+
+function openNavigationVoiceDB(){
+
+  return new Promise(
+    function(resolve,reject){
+
+      const request =
+        indexedDB.open(
+          NAVIGATION_VOICE_DB,
+          1
+        );
+
+
+      request.onupgradeneeded =
+        function(event){
+
+          const db =
+            event.target.result;
+
+          if(
+            !db.objectStoreNames.contains(
+              NAVIGATION_VOICE_STORE
+            )
+          ){
+
+            db.createObjectStore(
+              NAVIGATION_VOICE_STORE,
+              {
+                keyPath:"id"
+              }
+            );
+
+          }
+
+        };
+
+
+      request.onsuccess =
+        function(){
+
+          resolve(
+            request.result
+          );
+
+        };
+
+
+      request.onerror =
+        function(){
+
+          reject(
+            request.error
+          );
+
+        };
+
+    }
+  );
+
+}
+
+
+/* =========================================================
+   【第 8 節】儲存導航錄音
+========================================================= */
+
+async function saveNavigationVoice(
+  id,
+  blob
+){
+
+  const db =
+    await openNavigationVoiceDB();
+
+
+  return new Promise(
+    function(resolve,reject){
+
+      const tx =
+        db.transaction(
+          NAVIGATION_VOICE_STORE,
+          "readwrite"
+        );
+
+
+      tx.objectStore(
+        NAVIGATION_VOICE_STORE
+      ).put({
+
+        id:id,
+
+        blob:blob,
+
+        updatedAt:
+          new Date().toISOString()
+
+      });
+
+
+      tx.oncomplete =
+        function(){
+
+          db.close();
+
+          resolve();
+
+        };
+
+
+      tx.onerror =
+        function(){
+
+          db.close();
+
+          reject(
+            tx.error
+          );
+
+        };
+
+    }
+  );
+
+}
+
+
+/* =========================================================
+   【第 9 節】取得導航錄音
+========================================================= */
+
+async function getNavigationVoice(id){
+
+  const db =
+    await openNavigationVoiceDB();
+
+
+  return new Promise(
+    function(resolve,reject){
+
+      const tx =
+        db.transaction(
+          NAVIGATION_VOICE_STORE,
+          "readonly"
+        );
+
+
+      const request =
+        tx.objectStore(
+          NAVIGATION_VOICE_STORE
+        ).get(id);
+
+
+      request.onsuccess =
+        function(){
+
+          db.close();
+
+          resolve(
+            request.result || null
+          );
+
+        };
+
+
+      request.onerror =
+        function(){
+
+          db.close();
+
+          reject(
+            request.error
+          );
+
+        };
+
+    }
+  );
+
+}
+
+
+/* =========================================================
+   【第 10 節】刪除導航錄音
+========================================================= */
+
+async function deleteNavigationVoice(id){
+
+  const db =
+    await openNavigationVoiceDB();
+
+
+  return new Promise(
+    function(resolve,reject){
+
+      const tx =
+        db.transaction(
+          NAVIGATION_VOICE_STORE,
+          "readwrite"
+        );
+
+
+      tx.objectStore(
+        NAVIGATION_VOICE_STORE
+      ).delete(id);
+
+
+      tx.oncomplete =
+        function(){
+
+          db.close();
+
+          resolve();
+
+        };
+
+
+      tx.onerror =
+        function(){
+
+          db.close();
+
+          reject(
+            tx.error
+          );
+
+        };
+
+    }
+  );
+
+}
+
+
+/* =========================================================
+   【第 11 節】檢查錄音是否存在
+========================================================= */
+
+async function hasNavigationVoice(id){
+
+  const data =
+    await getNavigationVoice(id);
+
+  return !!data;
+
+}
+
+
+/* =========================================================
+   【第 12 節】顯示錄音狀態
+========================================================= */
+
+async function renderNavigationVoiceSummary(){
+
+  const el =
+    document.getElementById(
+      "navigation-voice-summary"
+    );
+
+  if(!el)return;
+
+
+  let count = 0;
+
+
+  for(
+    const phrase
+    of NAVIGATION_VOICE_PHRASES
+  ){
+
+    if(
+      await hasNavigationVoice(
+        phrase.id
+      )
+    ){
+
+      count++;
+
+    }
+
+  }
+
+
+  if(count === 0){
+
+    el.innerHTML =
+      '<div class="text-muted" ' +
+      'style="font-size:12px">' +
+      '尚未錄製導航聲音' +
+      '</div>';
+
+  }else{
+
+    el.innerHTML =
+      '<div style="font-size:12px">' +
+      '🎙️ 已錄製 ' +
+      count +
+      ' / ' +
+      NAVIGATION_VOICE_PHRASES.length +
+      ' 個導航語音' +
+      '</div>';
+
+  }
+
+}
+
+
+/* =========================================================
+   【第 13 節】開啟導航語音錄製介面
+========================================================= */
+
+async function openNavigationVoiceRecorder(){
+
+  const html =
+
+    '<div style="margin-bottom:15px">' +
+
+    '<div style="font-size:1.05rem;font-weight:700">' +
+    '🎙️ 我的導航聲音' +
+    '</div>' +
+
+    '<div class="text-muted" style="font-size:12px;margin-top:5px">' +
+    '請逐項錄製。未來導航時會依照導航事件播放對應聲音。' +
+    '</div>' +
+
+    '</div>' +
+
+    '<div id="navigation-voice-recorder-list">' +
+
+    '<div class="text-muted">' +
+    '正在載入…' +
+    '</div>' +
+
+    '</div>';
+
+
+  openSettings(
+    "個人語音導航",
+    function(){
+
+      return html;
+
+    }
+  );
+
+
+  await renderNavigationVoiceRecorder();
+
+}
+
+
+/* =========================================================
+   【第 14 節】產生每個語音項目
+========================================================= */
+
+async function renderNavigationVoiceRecorder(){
+
+  const container =
+    document.getElementById(
+      "navigation-voice-recorder-list"
+    );
+
+  if(!container)return;
+
+
+  let html = "";
+
+
+  for(
+    const phrase
+    of NAVIGATION_VOICE_PHRASES
+  ){
+
+    const saved =
+      await getNavigationVoice(
+        phrase.id
+      );
+
+
+    html +=
+
+      '<div class="radio-card" ' +
+      'style="display:block;margin-bottom:10px">' +
+
+      '<div style="font-weight:700">' +
+      escapeHtml(phrase.name) +
+      '</div>' +
+
+      '<div class="text-muted" ' +
+      'style="font-size:12px;margin-top:4px">' +
+      '建議說：「' +
+      escapeHtml(phrase.example) +
+      '」' +
+      '</div>' +
+
+      '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px">' +
+
+      (
+        saved
+
+          ?
+
+          '<button class="btn btn-sm btn-outline" ' +
+          'onclick="playNavigationVoice(\'' +
+          escapeJs(phrase.id) +
+          '\')">' +
+          '▶️ 試聽' +
+          '</button>'
+
+          :
+
+          ''
+      ) +
+
+      '<button class="btn btn-sm btn-primary" ' +
+      'onclick="startNavigationVoiceRecording(\'' +
+      escapeJs(phrase.id) +
+      '\')">' +
+
+      (
+        saved
+          ? "🔄 重新錄製"
+          : "🎙️ 開始錄製"
+      ) +
+
+      '</button>' +
+
+      (
+        saved
+
+          ?
+
+          '<button class="btn btn-sm btn-danger" ' +
+          'onclick="removeNavigationVoice(\'' +
+          escapeJs(phrase.id) +
+          '\')">' +
+          '🗑️ 刪除' +
+          '</button>'
+
+          :
+
+          ''
+      ) +
+
+      '</div>' +
+
+      '<div id="voice-status-' +
+      escapeHtml(phrase.id) +
+      '" ' +
+      'style="font-size:12px;margin-top:8px">' +
+
+      (
+        saved
+          ? "🟢 已錄製"
+          : "⚪ 尚未錄製"
+      ) +
+
+      '</div>' +
+
+      '</div>';
+
+  }
+
+
+  html +=
+
+    '<button class="btn btn-outline btn-block" ' +
+    'onclick="openGeneralSettings()">' +
+
+    '← 返回一般設定' +
+
+    '</button>';
+
+
+  container.innerHTML =
+    html;
+
+}
+
+
+/* =========================================================
+   【第 15 節】開始錄製
+========================================================= */
+
+let navigationMediaRecorder = null;
+
+let navigationRecordingChunks = [];
+
+let navigationRecordingId = null;
+
+
+async function startNavigationVoiceRecording(id){
+
+  if(
+    !navigator.mediaDevices ||
+    !navigator.mediaDevices.getUserMedia
+  ){
+
+    alert(
+      "此瀏覽器不支援錄音功能。"
+    );
+
+    return;
+
+  }
+
+
+  if(navigationMediaRecorder){
+
+    try{
+
+      navigationMediaRecorder.stop();
+
+    }catch(e){}
+
+    navigationMediaRecorder = null;
+
+  }
+
+
+  try{
+
+    const stream =
+      await navigator.mediaDevices
+        .getUserMedia({
+
+          audio:true
+
+        });
+
+
+    navigationRecordingChunks = [];
+
+    navigationRecordingId = id;
+
+
+    let options = {};
+
+
+    if(
+      MediaRecorder.isTypeSupported &&
+      MediaRecorder.isTypeSupported(
+        "audio/webm;codecs=opus"
+      )
+    ){
+
+      options.mimeType =
+        "audio/webm;codecs=opus";
+
+    }
+
+
+    navigationMediaRecorder =
+      new MediaRecorder(
+        stream,
+        options
+      );
+
+
+    navigationMediaRecorder.ondataavailable =
+      function(event){
+
+        if(
+          event.data &&
+          event.data.size > 0
+        ){
+
+          navigationRecordingChunks
+            .push(event.data);
+
+        }
+
+      };
+
+
+    navigationMediaRecorder.onstop =
+      async function(){
+
+        const mimeType =
+          navigationMediaRecorder.mimeType ||
+          "audio/webm";
+
+
+        const blob =
+          new Blob(
+            navigationRecordingChunks,
+            {
+              type:mimeType
+            }
+          );
+
+
+        stream
+          .getTracks()
+          .forEach(function(track){
+
+            track.stop();
+
+          });
+
+
+        try{
+
+          await saveNavigationVoice(
+            id,
+            blob
+          );
+
+
+          showToast(
+            "導航聲音已儲存"
+          );
+
+
+          navigationMediaRecorder =
+            null;
+
+          navigationRecordingChunks = [];
+
+          navigationRecordingId = null;
+
+
+          await renderNavigationVoiceRecorder();
+
+
+        }catch(error){
+
+          console.error(
+            error
+          );
+
+          alert(
+            "錄音儲存失敗"
+          );
+
+        }
+
+      };
+
+
+    navigationMediaRecorder.start();
+
+
+    const status =
+      document.getElementById(
+        "voice-status-" + id
+      );
+
+
+    if(status){
+
+      status.innerHTML =
+        "🔴 錄音中…請說出指定內容。 " +
+        '<button class="btn btn-sm btn-danger" ' +
+        'onclick="stopNavigationVoiceRecording()">' +
+        '⏹️ 停止錄音' +
+        '</button>';
+
+    }
+
+
+    showToast(
+      "開始錄製"
+    );
+
+
+  }catch(error){
+
+    console.error(
+      error
+    );
+
+
+    alert(
+      "無法使用麥克風。\n\n" +
+      "請允許瀏覽器使用麥克風，" +
+      "再重新錄製。"
+    );
+
+  }
+
+}
+
+
+/* =========================================================
+   【第 16 節】停止錄製
+========================================================= */
+
+function stopNavigationVoiceRecording(){
+
+  if(
+    navigationMediaRecorder &&
+    navigationMediaRecorder.state !==
+    "inactive"
+  ){
+
+    navigationMediaRecorder.stop();
+
+    showToast(
+      "正在儲存錄音…"
+    );
+
+  }
+
+}
+
+
+/* =========================================================
+   【第 17 節】播放自己的導航聲音
+========================================================= */
+
+let navigationVoiceAudio = null;
+
+
+async function playNavigationVoice(id){
+
+  try{
+
+    const data =
+      await getNavigationVoice(id);
+
+
+    if(!data || !data.blob){
+
+      alert(
+        "這個導航語音尚未錄製。"
+      );
+
+      return;
+
+    }
+
+
+    if(navigationVoiceAudio){
+
+      try{
+
+        navigationVoiceAudio.pause();
+
+      }catch(e){}
+
+      navigationVoiceAudio = null;
+
+    }
+
+
+    const url =
+      URL.createObjectURL(
+        data.blob
+      );
+
+
+    navigationVoiceAudio =
+      new Audio(url);
+
+
+    navigationVoiceAudio.onended =
+      function(){
+
+        URL.revokeObjectURL(
+          url
+        );
+
+      };
+
+
+    await navigationVoiceAudio.play();
+
+
+  }catch(error){
+
+    console.error(
+      error
+    );
+
+    alert(
+      "無法播放導航語音。"
+    );
+
+  }
+
+}
+
+
+/* =========================================================
+   【第 18 節】刪除自己的導航聲音
+========================================================= */
+
+async function removeNavigationVoice(id){
+
+  const phrase =
+    NAVIGATION_VOICE_PHRASES.find(
+      function(item){
+
+        return item.id === id;
+
+      }
+    );
+
+
+  if(
+    !confirm(
+      "確定要刪除「" +
+      (phrase
+        ? phrase.name
+        : "這段導航語音") +
+      "」嗎？"
+    )
+  ){
+
+    return;
+
+  }
+
+
+  try{
+
+    await deleteNavigationVoice(
+      id
+    );
+
+
+    showToast(
+      "已刪除導航語音"
+    );
+
+
+    await renderNavigationVoiceRecorder();
+
+
+  }catch(error){
+
+    console.error(
+      error
+    );
+
+    alert(
+      "刪除失敗"
+    );
+
+  }
+
+}
+
+
+/* =========================================================
+   【第 19 節】啟用／停用導航語音
+========================================================= */
+
+function setNavigationVoiceEnabled(enabled){
+
+  localStorage.setItem(
+    "navigation_voice_enabled",
+    enabled
+      ? "true"
+      : "false"
+  );
+
+
+  showToast(
+    enabled
+      ? "已啟用語音導航"
+      : "已關閉語音導航"
+  );
+
+}
+
+
+/* =========================================================
+   【第 20 節】導航系統播放介面
+   未來 Google / 高德導航都呼叫這個函式。
+========================================================= */
+
+async function speakNavigationEvent(
+  eventId
+){
+
+  const enabled =
+    localStorage.getItem(
+      "navigation_voice_enabled"
+    ) !== "false";
+
+
+  if(!enabled){
+
+    return;
+
+  }
+
+
+  const voice =
+    await getNavigationVoice(
+      eventId
+    );
+
+
+  if(
+    voice &&
+    voice.blob
+  ){
+
+    try{
+
+      const url =
+        URL.createObjectURL(
+          voice.blob
+        );
+
+
+      const audio =
+        new Audio(url);
+
+
+      audio.onended =
+        function(){
+
+          URL.revokeObjectURL(
+            url
+          );
+
+        };
+
+
+      await audio.play();
+
+      return;
+
+
+    }catch(error){
+
+      console.warn(
+        "個人導航語音播放失敗",
+        error
+      );
+
+    }
+
+  }
+
+
+  /* -------------------------------------------------
+     如果沒有錄自己的聲音，
+     自動退回手機系統語音。
+  ------------------------------------------------- */
+
+  speakSystemNavigationVoice(
+    eventId
+  );
+
+}
+
+
+/* =========================================================
+   【第 21 節】系統語音備援
+========================================================= */
+
+function speakSystemNavigationVoice(
+  eventId
+){
+
+  if(
+    !window.speechSynthesis
+  ){
+
+    return;
+
+  }
+
+
+  const textMap = {
+
+    start:
+      "開始導航",
+
+    straight:
+      "前方請直走",
+
+    left:
+      "前方請左轉",
+
+    right:
+      "前方請右轉",
+
+    arriving:
+      "即將到達目的地",
+
+    arrived:
+      "您已到達目的地",
+
+    reroute:
+      "路線已重新規劃"
+
+  };
+
+
+  const text =
+    textMap[eventId];
+
+
+  if(!text)return;
+
+
+  window.speechSynthesis.cancel();
+
+
+  const utterance =
+    new SpeechSynthesisUtterance(
+      text
+    );
+
+
+  utterance.lang =
+    "zh-TW";
+
+
+  utterance.rate =
+    0.95;
+
+
+  utterance.pitch =
+    1;
+
+
+  window.speechSynthesis.speak(
+    utterance
+  );
+
+}
+
+
+/* =========================================================
+   【第 22 節】測試導航語音
+========================================================= */
+
+async function testNavigationVoice(){
+
+  await speakNavigationEvent(
+    "start"
+  );
+
+}
+
+
+/* =========================================================
+   【第 23 節】初始化語音設定
+========================================================= */
+
+(function(){
+
+  if(
+    localStorage.getItem(
+      "navigation_voice_enabled"
+    ) === null
+  ){
+
+    localStorage.setItem(
+      "navigation_voice_enabled",
+      "true"
+    );
+
+  }
+
+
+  if(
+    localStorage.getItem(
+      "navigation_provider"
+    ) === null
+  ){
+
+    localStorage.setItem(
+      "navigation_provider",
+      "taiwan"
+    );
+
+  }
+
+})();
+
+
+/* =========================================================
+   【第 24 節】讓舊導航函式可以使用新的語音系統
+   目前只加入「開始導航」。
+   左轉／右轉等語音要等路線步驟資料接進來後再播放，
+   避免目前只是畫線卻亂報方向。
+========================================================= */
+
+const originalNavigateGoogle =
+  window.navigateGoogle;
+
+
+window.navigateGoogle =
+  function(
+    destLat,
+    destLng,
+    name
+  ){
+
+    speakNavigationEvent(
+      "start"
+    );
+
+
+    return originalNavigateGoogle
+      ? originalNavigateGoogle(
+          destLat,
+          destLng,
+          name
+        )
+      : undefined;
+
+  };
+
+
+const originalNavigateAmap =
+  window.navigateAmap;
+
+
+window.navigateAmap =
+  function(
+    destLat,
+    destLng,
+    name
+  ){
+
+    speakNavigationEvent(
+      "start"
+    );
+
+
+    return originalNavigateAmap
+      ? originalNavigateAmap(
+          destLat,
+          destLng,
+          name
+        )
+      : undefined;ㄝˉ
+
+  };
+
+
+/* =========================================================
+   【第 25 節】初始化完成
+========================================================= */
+
+console.log(
+  "安全團聚：個人語音導航模組已載入"
+);
 </script>
 
 </body>
