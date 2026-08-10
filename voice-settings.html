@@ -54,9 +54,7 @@ body {
 
   color: white;
 
-  padding:
-    14px
-    14px;
+  padding: 14px;
 
   display: flex;
 
@@ -229,6 +227,24 @@ body {
 
 }
 
+.status.error {
+
+  color: #d93025;
+
+  font-weight: 700;
+
+}
+
+.duration {
+
+  margin-top: 4px;
+
+  font-size: 11px;
+
+  color: #999;
+
+}
+
 .button-row {
 
   display: flex;
@@ -252,6 +268,8 @@ button {
   font-weight: 800;
 
   cursor: pointer;
+
+  -webkit-tap-highlight-color: transparent;
 
 }
 
@@ -325,8 +343,6 @@ button:disabled {
 
   background: #06C755;
 
-  transition: width .2s;
-
 }
 
 .global-status {
@@ -379,6 +395,8 @@ button:disabled {
   font-size: 13px;
 
   display: none;
+
+  margin-bottom: 14px;
 
 }
 
@@ -452,7 +470,7 @@ button:disabled {
 
     <br><br>
 
-    建議：
+    <strong>錄音建議</strong>
 
     <br>
 
@@ -465,6 +483,14 @@ button:disabled {
     <br>
 
     • 用正常說話速度
+
+    <br>
+
+    • 不需要刻意大聲
+
+    <br>
+
+    • 錄錯可以直接重新錄製
 
   </div>
 
@@ -509,7 +535,7 @@ const SUPABASE_URL =
 
 
 const SUPABASE_KEY =
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsImlzcyI6InN1cGFzZSIsInJlZiI6InBlcmZzaXBwZXJuY3Zqb2N6bmhsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODYwMTUyMzAsImV4cCI6MjEwMTU5MTIzMH0.I7vXkV247kAzRJ0RigDZt3Hzn8KJDyMc6o9E3oHJZoY";
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsImlzcyI6InN1cGVyYmFzZSIsInJlZiI6InBlcmZzaXBwZXJuY3Zqb2N6bmhsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODYwMTUyMzAsImV4cCI6MjEwMTU5MTIzMH0.I7vXkV247kAzRJ0RigDZt3Hzn8KJDyMc6o9E3oHJZoY";
 
 
 const sb =
@@ -528,11 +554,11 @@ const VOICE_BUCKET =
 
 
 /* =========================================================
-   3. 資料表
+   3. 正確的資料表
    ========================================================= */
 
 const VOICE_TABLE =
-  "user_voice_settings";
+  "voice_profiles";
 
 
 /* =========================================================
@@ -616,6 +642,12 @@ let recordingChunks = [];
 
 let recordingVoiceId = null;
 
+let recordingStream = null;
+
+let recordingStartTime = 0;
+
+let recordingTimer = null;
+
 let voiceData = {};
 
 
@@ -677,13 +709,92 @@ function showStatus(
 
 
 /* =========================================================
-   8. 建立頁面
+   8. 找到瀏覽器支援的錄音格式
+   ========================================================= */
+
+function getRecordingMimeType() {
+
+  const types = [
+
+    "audio/mp4",
+
+    "audio/webm;codecs=opus",
+
+    "audio/webm",
+
+    "audio/ogg;codecs=opus"
+
+  ];
+
+
+  for (
+    const type of types
+  ) {
+
+    if (
+      typeof MediaRecorder !== "undefined"
+      &&
+      MediaRecorder.isTypeSupported
+      &&
+      MediaRecorder.isTypeSupported(type)
+    ) {
+
+      return type;
+
+    }
+
+  }
+
+
+  return "";
+
+}
+
+
+/* =========================================================
+   9. 取得副檔名
+   ========================================================= */
+
+function getFileExtension(
+  mimeType
+) {
+
+  if (
+    mimeType.includes(
+      "mp4"
+    )
+  ) {
+
+    return "mp4";
+
+  }
+
+
+  if (
+    mimeType.includes(
+      "ogg"
+    )
+  ) {
+
+    return "ogg";
+
+  }
+
+
+  return "webm";
+
+}
+
+
+/* =========================================================
+   10. 建立頁面
    ========================================================= */
 
 function renderVoiceList() {
 
   voiceList.innerHTML =
     "";
+
 
   VOICES.forEach(
     function (voice, index) {
@@ -693,8 +804,10 @@ function renderVoiceList() {
           "div"
         );
 
+
       card.className =
         "voice-card";
+
 
       card.dataset.id =
         voice.id;
@@ -731,11 +844,22 @@ function renderVoiceList() {
         </div>
 
 
-        <div class="progress">
+        <div
+          class="duration"
+          id="duration-${voice.id}"
+        ></div>
+
+
+        <div
+          class="progress"
+          id="progress-${voice.id}"
+        >
+
           <div
             class="progress-bar"
-            id="progress-${voice.id}"
+            id="progress-bar-${voice.id}"
           ></div>
+
         </div>
 
 
@@ -744,27 +868,32 @@ function renderVoiceList() {
           <button
             type="button"
             class="record-btn"
+            data-action="record"
+            data-voice-id="${voice.id}"
             id="record-${voice.id}"
-            onclick="startRecording('${voice.id}')"
           >
             🎙️ 錄音
           </button>
 
+
           <button
             type="button"
             class="play-btn"
+            data-action="play"
+            data-voice-id="${voice.id}"
             id="play-${voice.id}"
-            onclick="playVoice('${voice.id}')"
             disabled
           >
             ▶️ 播放
           </button>
 
+
           <button
             type="button"
             class="delete-btn"
+            data-action="delete"
+            data-voice-id="${voice.id}"
             id="delete-${voice.id}"
-            onclick="deleteVoice('${voice.id}')"
             disabled
           >
             🗑️
@@ -786,56 +915,81 @@ function renderVoiceList() {
 
 
 /* =========================================================
-   9. 取得登入者
+   11. 取得登入者
    ========================================================= */
 
 async function loadUser() {
 
-  const result =
-    await sb.auth.getSession();
+  try {
+
+    const result =
+      await sb.auth.getSession();
 
 
-  if (
-    result.error
-  ) {
-
-    console.error(
+    if (
       result.error
-    );
+    ) {
 
-  }
+      throw result.error;
 
-
-  if (
-    result.data.session
-  ) {
-
-    currentUser =
-      result.data.session.user;
+    }
 
 
-    loginStatus.textContent =
-      "已登入｜"
-      +
-      (
-        currentUser.email
-        ||
-        "使用者"
+    if (
+      result.data
+      &&
+      result.data.session
+    ) {
+
+      currentUser =
+        result.data.session.user;
+
+
+      loginStatus.textContent =
+        "已登入｜"
+        +
+        (
+          currentUser.email
+          ||
+          "使用者"
+        );
+
+
+      loginBox.classList.remove(
+        "show"
       );
 
 
-    loginBox.classList.remove(
-      "show"
+      await loadVoiceSettings();
+
+    }
+    else {
+
+      loginStatus.textContent =
+        "尚未登入";
+
+
+      loginBox.classList.add(
+        "show"
+      );
+
+
+      disableAllButtons();
+
+    }
+
+  }
+
+  catch (error) {
+
+    console.error(
+      "取得登入狀態失敗：",
+      error
     );
 
 
-    await loadVoiceSettings();
-
-  }
-  else {
-
     loginStatus.textContent =
-      "尚未登入";
+      "登入狀態讀取失敗";
 
 
     loginBox.classList.add(
@@ -851,7 +1005,7 @@ async function loadUser() {
 
 
 /* =========================================================
-   10. 停用按鈕
+   12. 停用按鈕
    ========================================================= */
 
 function disableAllButtons() {
@@ -873,7 +1027,7 @@ function disableAllButtons() {
 
 
 /* =========================================================
-   11. 載入語音資料
+   13. 載入語音資料
    ========================================================= */
 
 async function loadVoiceSettings() {
@@ -887,104 +1041,140 @@ async function loadVoiceSettings() {
   }
 
 
-  const result =
-    await sb
-      .from(
-        VOICE_TABLE
-      )
-      .select("*")
-      .eq(
-        "user_id",
-        currentUser.id
+  try {
+
+    const result =
+      await sb
+        .from(
+          VOICE_TABLE
+        )
+        .select(
+          "id,user_id,voice_name,storage_path,mime_type,duration_seconds,created_at"
+        )
+        .eq(
+          "user_id",
+          currentUser.id
+        );
+
+
+    if (
+      result.error
+    ) {
+
+      throw result.error;
+
+    }
+
+
+    voiceData =
+      {};
+
+
+    (
+      result.data
+      ||
+      []
+    )
+      .forEach(
+        function (row) {
+
+          voiceData[
+            row.voice_name
+          ] =
+            row;
+
+        }
       );
 
 
-  if (
-    result.error
-  ) {
+    VOICES.forEach(
+      function (voice) {
 
-    console.error(
-      result.error
+        const row =
+          voiceData[
+            voice.id
+          ];
+
+
+        if (
+          row
+          &&
+          row.storage_path
+        ) {
+
+          updateVoiceUI(
+            voice.id,
+            true,
+            row
+          );
+
+        }
+        else {
+
+          updateVoiceUI(
+            voice.id,
+            false
+          );
+
+        }
+
+      }
     );
-
-    showStatus(
-      "載入語音設定失敗"
-    );
-
-    return;
 
   }
 
+  catch (error) {
 
-  voiceData =
-    {};
-
-
-  (result.data || [])
-    .forEach(
-      function (row) {
-
-        voiceData[
-          row.voice_id
-        ] =
-          row;
-
-      }
+    console.error(
+      "載入語音資料失敗：",
+      error
     );
 
 
-  VOICES.forEach(
-    function (voice) {
+    showStatus(
+      "載入語音導航失敗"
+    );
 
-      const row =
-        voiceData[
-          voice.id
-        ];
-
-
-      if (
-        row
-        &&
-        row.file_path
-      ) {
-
-        updateVoiceUI(
-          voice.id,
-          true
-        );
-
-      }
-
-    }
-  );
+  }
 
 }
 
 
 /* =========================================================
-   12. 更新 UI
+   14. 更新 UI
    ========================================================= */
 
 function updateVoiceUI(
   voiceId,
-  exists
+  exists,
+  row
 ) {
 
   const status =
     document.getElementById(
-      "status-" + voiceId
+      "status-" +
+      voiceId
+    );
+
+
+  const duration =
+    document.getElementById(
+      "duration-" +
+      voiceId
     );
 
 
   const play =
     document.getElementById(
-      "play-" + voiceId
+      "play-" +
+      voiceId
     );
 
 
   const del =
     document.getElementById(
-      "delete-" + voiceId
+      "delete-" +
+      voiceId
     );
 
 
@@ -1001,12 +1191,37 @@ function updateVoiceUI(
     );
 
 
+    status.classList.remove(
+      "error"
+    );
+
+
     play.disabled =
       false;
 
 
     del.disabled =
       false;
+
+
+    if (
+      row
+      &&
+      row.duration_seconds !== null
+      &&
+      row.duration_seconds !== undefined
+    ) {
+
+      duration.textContent =
+        "錄音長度："
+        +
+        Number(
+          row.duration_seconds
+        ).toFixed(1)
+        +
+        " 秒";
+
+    }
 
   }
   else {
@@ -1020,6 +1235,11 @@ function updateVoiceUI(
     );
 
 
+    status.classList.remove(
+      "error"
+    );
+
+
     play.disabled =
       true;
 
@@ -1027,13 +1247,17 @@ function updateVoiceUI(
     del.disabled =
       true;
 
+
+    duration.textContent =
+      "";
+
   }
 
 }
 
 
 /* =========================================================
-   13. 開始錄音
+   15. 開始錄音
    ========================================================= */
 
 async function startRecording(
@@ -1077,39 +1301,96 @@ async function startRecording(
   }
 
 
+  if (
+    typeof MediaRecorder ===
+    "undefined"
+  ) {
+
+    alert(
+      "此裝置不支援 MediaRecorder 錄音功能"
+    );
+
+    return;
+
+  }
+
+
   try {
 
     const stream =
       await navigator.mediaDevices.getUserMedia(
         {
-          audio: true
+          audio: {
+
+            echoCancellation:
+              true,
+
+            noiseSuppression:
+              true,
+
+            autoGainControl:
+              true
+
+          }
         }
       );
+
+
+    recordingStream =
+      stream;
 
 
     recordingChunks =
       [];
 
 
-    mediaRecorder =
-      new MediaRecorder(
-        stream
-      );
+    const mimeType =
+      getRecordingMimeType();
+
+
+    if (
+      mimeType
+    ) {
+
+      mediaRecorder =
+        new MediaRecorder(
+          stream,
+          {
+            mimeType:
+              mimeType
+          }
+        );
+
+    }
+    else {
+
+      mediaRecorder =
+        new MediaRecorder(
+          stream
+        );
+
+    }
 
 
     recordingVoiceId =
       voiceId;
 
 
+    recordingStartTime =
+      Date.now();
+
+
     const recordBtn =
       document.getElementById(
-        "record-" + voiceId
+        "record-" +
+        voiceId
       );
 
 
     const status =
       document.getElementById(
-        "status-" + voiceId
+        "status-" +
+        voiceId
       );
 
 
@@ -1123,7 +1404,7 @@ async function startRecording(
 
 
     status.textContent =
-      "🔴 正在錄音…再按一次停止";
+      "🔴 正在錄音…";
 
 
     status.classList.add(
@@ -1131,10 +1412,35 @@ async function startRecording(
     );
 
 
+    status.classList.remove(
+      "success"
+    );
+
+
+    updateRecordingTimer(
+      voiceId
+    );
+
+
+    recordingTimer =
+      setInterval(
+        function () {
+
+          updateRecordingTimer(
+            voiceId
+          );
+
+        },
+        200
+      );
+
+
     mediaRecorder.ondataavailable =
       function (event) {
 
         if (
+          event.data
+          &&
           event.data.size > 0
         ) {
 
@@ -1147,18 +1453,60 @@ async function startRecording(
       };
 
 
+    mediaRecorder.onerror =
+      function (event) {
+
+        console.error(
+          "MediaRecorder 錯誤：",
+          event
+        );
+
+      };
+
+
     mediaRecorder.onstop =
       async function () {
 
-        stream
-          .getTracks()
-          .forEach(
-            function (track) {
+        if (
+          recordingTimer
+        ) {
 
-              track.stop();
-
-            }
+          clearInterval(
+            recordingTimer
           );
+
+          recordingTimer =
+            null;
+
+        }
+
+
+        if (
+          recordingStream
+        ) {
+
+          recordingStream
+            .getTracks()
+            .forEach(
+              function (track) {
+
+                track.stop();
+
+              }
+            );
+
+          recordingStream =
+            null;
+
+        }
+
+
+        const finalMimeType =
+          mediaRecorder.mimeType
+          ||
+          mimeType
+          ||
+          "audio/webm";
 
 
         const blob =
@@ -1166,11 +1514,23 @@ async function startRecording(
             recordingChunks,
             {
               type:
-                mediaRecorder.mimeType
-                ||
-                "audio/webm"
+                finalMimeType
             }
           );
+
+
+        const durationSeconds =
+          (
+            Date.now()
+            -
+            recordingStartTime
+          )
+          /
+          1000;
+
+
+        const finishedVoiceId =
+          recordingVoiceId;
 
 
         mediaRecorder =
@@ -1179,10 +1539,6 @@ async function startRecording(
 
         recordingChunks =
           [];
-
-
-        const finishedVoiceId =
-          recordingVoiceId;
 
 
         recordingVoiceId =
@@ -1196,18 +1552,50 @@ async function startRecording(
           );
 
 
-        btn.textContent =
-          "🎙️ 錄音";
+        if (
+          btn
+        ) {
+
+          btn.textContent =
+            "🎙️ 錄音";
 
 
-        btn.classList.remove(
-          "recording"
-        );
+          btn.classList.remove(
+            "recording"
+          );
+
+        }
+
+
+        if (
+          blob.size === 0
+        ) {
+
+          const status =
+            document.getElementById(
+              "status-" +
+              finishedVoiceId
+            );
+
+
+          status.textContent =
+            "❌ 沒有錄到聲音";
+
+
+          status.classList.add(
+            "error"
+          );
+
+
+          return;
+
+        }
 
 
         await uploadVoice(
           finishedVoiceId,
-          blob
+          blob,
+          durationSeconds
         );
 
       };
@@ -1220,18 +1608,57 @@ async function startRecording(
   catch (error) {
 
     console.error(
+      "錄音錯誤：",
       error
     );
+
+
+    if (
+      recordingStream
+    ) {
+
+      recordingStream
+        .getTracks()
+        .forEach(
+          function (track) {
+
+            track.stop();
+
+          }
+        );
+
+      recordingStream =
+        null;
+
+    }
 
 
     recordingVoiceId =
       null;
 
 
+    if (
+      recordingTimer
+    ) {
+
+      clearInterval(
+        recordingTimer
+      );
+
+      recordingTimer =
+        null;
+
+    }
+
+
     alert(
       "無法使用麥克風："
       +
-      error.message
+      (
+        error.message
+        ||
+        error
+      )
     );
 
   }
@@ -1240,7 +1667,54 @@ async function startRecording(
 
 
 /* =========================================================
-   14. 停止錄音
+   16. 顯示錄音秒數
+   ========================================================= */
+
+function updateRecordingTimer(
+  voiceId
+) {
+
+  const status =
+    document.getElementById(
+      "status-" +
+      voiceId
+    );
+
+
+  if (
+    !status
+    ||
+    !recordingStartTime
+  ) {
+
+    return;
+
+  }
+
+
+  const seconds =
+    (
+      Date.now()
+      -
+      recordingStartTime
+    )
+    /
+    1000;
+
+
+  status.textContent =
+    "🔴 正在錄音 "
+    +
+    seconds.toFixed(1)
+    +
+    " 秒…";
+
+
+}
+
+
+/* =========================================================
+   17. 停止目前錄音
    ========================================================= */
 
 function stopCurrentRecording() {
@@ -1261,47 +1735,13 @@ function stopCurrentRecording() {
 
 
 /* =========================================================
-   15. 點擊錄音按鈕
-   ========================================================= */
-
-document.addEventListener(
-  "click",
-  function (event) {
-
-    const button =
-      event.target.closest(
-        ".record-btn"
-      );
-
-
-    if (
-      !button
-    ) {
-
-      return;
-
-    }
-
-
-    if (
-      recordingVoiceId
-    ) {
-
-      stopCurrentRecording();
-
-    }
-
-  }
-);
-
-
-/* =========================================================
-   16. 上傳錄音
+   18. 上傳錄音
    ========================================================= */
 
 async function uploadVoice(
   voiceId,
-  blob
+  blob,
+  durationSeconds
 ) {
 
   if (
@@ -1322,17 +1762,9 @@ async function uploadVoice(
 
   const progressBar =
     document.getElementById(
-      "progress-" +
+      "progress-bar-" +
       voiceId
-    )
-    .querySelector
-    ? null
-    : null;
-
-
-  progress.classList.add(
-    "show"
-  );
+    );
 
 
   const status =
@@ -1340,6 +1772,15 @@ async function uploadVoice(
       "status-" +
       voiceId
     );
+
+
+  progress.classList.add(
+    "show"
+  );
+
+
+  progressBar.style.width =
+    "20%";
 
 
   status.textContent =
@@ -1360,37 +1801,44 @@ async function uploadVoice(
 
 
     /*
-     * 如果原本有檔案，
-     * 先刪除舊檔案
+     * 舊檔案路徑
      */
 
-    if (
+    const oldStoragePath =
       old
       &&
-      old.file_path
-    ) {
+      old.storage_path
+        ? old.storage_path
+        : null;
 
-      await sb.storage
-        .from(
-          VOICE_BUCKET
-        )
-        .remove([
-          old.file_path
-        ]);
 
-    }
+    /*
+     * 取得 MIME
+     */
 
+    const mimeType =
+      blob.type
+      ||
+      "audio/webm";
+
+
+    /*
+     * 副檔名
+     */
 
     const extension =
-      blob.type.includes(
-        "mp4"
-      )
-        ? "mp4"
-        : "webm";
+      getFileExtension(
+        mimeType
+      );
 
+
+    /*
+     * 新檔案路徑
+     *
+     * 每個使用者自己的資料夾
+     */
 
     const filePath =
-
       currentUser.id
       +
       "/"
@@ -1402,6 +1850,47 @@ async function uploadVoice(
       extension;
 
 
+    progressBar.style.width =
+      "40%";
+
+
+    /*
+     * 如果舊檔案存在
+     * 先刪除
+     */
+
+    if (
+      oldStoragePath
+    ) {
+
+      const oldDelete =
+        await sb.storage
+          .from(
+            VOICE_BUCKET
+          )
+          .remove([
+            oldStoragePath
+          ]);
+
+
+      if (
+        oldDelete.error
+      ) {
+
+        console.warn(
+          "刪除舊語音失敗：",
+          oldDelete.error
+        );
+
+      }
+
+    }
+
+
+    /*
+     * 上傳新檔案
+     */
+
     const upload =
       await sb.storage
         .from(
@@ -1411,13 +1900,13 @@ async function uploadVoice(
           filePath,
           blob,
           {
+
             contentType:
-              blob.type
-              ||
-              "audio/webm",
+              mimeType,
 
             upsert:
               true
+
           }
         );
 
@@ -1431,46 +1920,124 @@ async function uploadVoice(
     }
 
 
+    progressBar.style.width =
+      "70%";
+
+
     /*
-     * 建立／更新資料表
+     * 先查詢這一段語音
      */
 
-    const save =
+    const existing =
       await sb
         .from(
           VOICE_TABLE
         )
-        .upsert(
-          {
-
-            user_id:
-              currentUser.id,
-
-            voice_id:
-              voiceId,
-
-            file_path:
-              filePath,
-
-            mime_type:
-              blob.type
-              ||
-              "audio/webm",
-
-            updated_at:
-              new Date()
-                .toISOString()
-
-          },
-
-          {
-            onConflict:
-              "user_id,voice_id"
-          }
-
+        .select(
+          "id"
         )
-        .select()
-        .single();
+        .eq(
+          "user_id",
+          currentUser.id
+        )
+        .eq(
+          "voice_name",
+          voiceId
+        )
+        .maybeSingle();
+
+
+    if (
+      existing.error
+    ) {
+
+      throw existing.error;
+
+    }
+
+
+    let save;
+
+
+    /*
+     * 已經有資料
+     * → UPDATE
+     */
+
+    if (
+      existing.data
+      &&
+      existing.data.id
+    ) {
+
+      save =
+        await sb
+          .from(
+            VOICE_TABLE
+          )
+          .update(
+            {
+
+              storage_path:
+                filePath,
+
+              mime_type:
+                mimeType,
+
+              duration_seconds:
+                Number(
+                  durationSeconds.toFixed(2)
+                )
+
+            }
+          )
+          .eq(
+            "id",
+            existing.data.id
+          )
+          .select()
+          .single();
+
+    }
+
+    /*
+     * 沒有資料
+     * → INSERT
+     */
+
+    else {
+
+      save =
+        await sb
+          .from(
+            VOICE_TABLE
+          )
+          .insert(
+            {
+
+              user_id:
+                currentUser.id,
+
+              voice_name:
+                voiceId,
+
+              storage_path:
+                filePath,
+
+              mime_type:
+                mimeType,
+
+              duration_seconds:
+                Number(
+                  durationSeconds.toFixed(2)
+                )
+
+            }
+          )
+          .select()
+          .single();
+
+    }
 
 
     if (
@@ -1482,6 +2049,10 @@ async function uploadVoice(
     }
 
 
+    progressBar.style.width =
+      "100%";
+
+
     voiceData[
       voiceId
     ] =
@@ -1490,7 +2061,8 @@ async function uploadVoice(
 
     updateVoiceUI(
       voiceId,
-      true
+      true,
+      save.data
     );
 
 
@@ -1499,7 +2071,21 @@ async function uploadVoice(
 
 
     showStatus(
-      "語音上傳成功"
+      "語音「"
+      +
+      (
+        VOICES.find(
+          function (v) {
+
+            return v.id === voiceId;
+
+          }
+        )?.title
+        ||
+        voiceId
+      )
+      +
+      "」上傳成功"
     );
 
   }
@@ -1507,6 +2093,7 @@ async function uploadVoice(
   catch (error) {
 
     console.error(
+      "語音上傳錯誤：",
       error
     );
 
@@ -1515,18 +2102,37 @@ async function uploadVoice(
       "❌ 上傳失敗";
 
 
+    status.classList.add(
+      "error"
+    );
+
+
     alert(
-      "語音上傳失敗："
+      "語音上傳失敗：\n"
       +
-      error.message
+      (
+        error.message
+        ||
+        error
+      )
     );
 
   }
 
   finally {
 
-    progress.classList.remove(
-      "show"
+    setTimeout(
+      function () {
+
+        progress.classList.remove(
+          "show"
+        );
+
+        progressBar.style.width =
+          "0%";
+
+      },
+      500
     );
 
   }
@@ -1535,30 +2141,40 @@ async function uploadVoice(
 
 
 /* =========================================================
-   17. 取得語音 URL
+   19. 取得私人語音 Signed URL
    ========================================================= */
 
-function getVoiceUrl(
+async function getVoiceUrl(
   filePath
 ) {
 
   const result =
-    sb.storage
+    await sb.storage
       .from(
         VOICE_BUCKET
       )
-      .getPublicUrl(
-        filePath
+      .createSignedUrl(
+        filePath,
+        3600
       );
 
 
-  return result.data.publicUrl;
+  if (
+    result.error
+  ) {
+
+    throw result.error;
+
+  }
+
+
+  return result.data.signedUrl;
 
 }
 
 
 /* =========================================================
-   18. 播放語音
+   20. 播放語音
    ========================================================= */
 
 async function playVoice(
@@ -1574,7 +2190,7 @@ async function playVoice(
   if (
     !row
     ||
-    !row.file_path
+    !row.storage_path
   ) {
 
     alert(
@@ -1588,16 +2204,27 @@ async function playVoice(
 
   try {
 
+    showStatus(
+      "正在準備播放…"
+    );
+
+
     const url =
-      getVoiceUrl(
-        row.file_path
+      await getVoiceUrl(
+        row.storage_path
       );
 
 
     const audio =
-      new Audio(
-        url
-      );
+      new Audio();
+
+
+    audio.preload =
+      "auto";
+
+
+    audio.src =
+      url;
 
 
     await audio.play();
@@ -1607,12 +2234,19 @@ async function playVoice(
   catch (error) {
 
     console.error(
+      "播放失敗：",
       error
     );
 
 
     alert(
-      "播放失敗，請確認 Storage Bucket 權限"
+      "播放失敗：\n"
+      +
+      (
+        error.message
+        ||
+        error
+      )
     );
 
   }
@@ -1621,7 +2255,7 @@ async function playVoice(
 
 
 /* =========================================================
-   19. 刪除語音
+   21. 刪除語音
    ========================================================= */
 
 async function deleteVoice(
@@ -1687,27 +2321,33 @@ async function deleteVoice(
      * 刪除 Storage
      */
 
-    const storageResult =
-      await sb.storage
-        .from(
-          VOICE_BUCKET
-        )
-        .remove([
-          row.file_path
-        ]);
-
-
     if (
-      storageResult.error
+      row.storage_path
     ) {
 
-      throw storageResult.error;
+      const storageResult =
+        await sb.storage
+          .from(
+            VOICE_BUCKET
+          )
+          .remove([
+            row.storage_path
+          ]);
+
+
+      if (
+        storageResult.error
+      ) {
+
+        throw storageResult.error;
+
+      }
 
     }
 
 
     /*
-     * 刪除資料表
+     * 刪除資料表資料
      */
 
     const dbResult =
@@ -1717,12 +2357,12 @@ async function deleteVoice(
         )
         .delete()
         .eq(
-          "user_id",
-          currentUser.id
+          "id",
+          row.id
         )
         .eq(
-          "voice_id",
-          voiceId
+          "user_id",
+          currentUser.id
         );
 
 
@@ -1755,14 +2395,19 @@ async function deleteVoice(
   catch (error) {
 
     console.error(
+      "刪除語音失敗：",
       error
     );
 
 
     alert(
-      "刪除失敗："
+      "刪除失敗：\n"
       +
-      error.message
+      (
+        error.message
+        ||
+        error
+      )
     );
 
   }
@@ -1771,7 +2416,134 @@ async function deleteVoice(
 
 
 /* =========================================================
-   20. 初始化
+   22. 按鈕事件
+   =========================================================
+   
+   注意：
+   不使用 HTML onclick。
+   避免開始錄音後被事件再次觸發，
+   造成「一按錄音就停止」的問題。
+   
+   ========================================================= */
+
+voiceList.addEventListener(
+  "click",
+  async function (event) {
+
+    const button =
+      event.target.closest(
+        "button"
+      );
+
+
+    if (
+      !button
+    ) {
+
+      return;
+
+    }
+
+
+    const action =
+      button.dataset.action;
+
+
+    const voiceId =
+      button.dataset.voiceId;
+
+
+    if (
+      !voiceId
+    ) {
+
+      return;
+
+    }
+
+
+    /*
+     * 錄音 / 停止
+     */
+
+    if (
+      action ===
+      "record"
+    ) {
+
+      if (
+        recordingVoiceId
+        ===
+        voiceId
+      ) {
+
+        stopCurrentRecording();
+
+      }
+      else {
+
+        if (
+          recordingVoiceId
+        ) {
+
+          return;
+
+        }
+
+
+        await startRecording(
+          voiceId
+        );
+
+      }
+
+
+      return;
+
+    }
+
+
+    /*
+     * 播放
+     */
+
+    if (
+      action ===
+      "play"
+    ) {
+
+      await playVoice(
+        voiceId
+      );
+
+      return;
+
+    }
+
+
+    /*
+     * 刪除
+     */
+
+    if (
+      action ===
+      "delete"
+    ) {
+
+      await deleteVoice(
+        voiceId
+      );
+
+      return;
+
+    }
+
+  }
+);
+
+
+/* =========================================================
+   23. 初始化
    ========================================================= */
 
 renderVoiceList();
