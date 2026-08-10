@@ -6863,7 +6863,46 @@ function openNavigationVoiceDB(){
   );
 
 }
+/* =========================================================
+   【第 7-1 節】開啟導航語音錄製管理
+========================================================= */
 
+function openNavigationVoiceRecorder(){
+
+  openSettings(
+    "錄製管理我的聲音",
+    function(){
+
+      return (
+
+        '<div style="font-size:1.05rem;font-weight:700;margin-bottom:8px">' +
+        '🎙️ 我的導航聲音' +
+        '</div>' +
+
+        '<div class="text-muted" ' +
+        'style="font-size:12px;margin-bottom:15px">' +
+        '請依照每個導航項目錄製自己的聲音。' +
+        '</div>' +
+
+        '<div id="navigation-voice-recorder-list">' +
+        '</div>'
+
+      );
+
+    }
+  );
+
+
+  setTimeout(
+    function(){
+
+      renderNavigationVoiceRecorder();
+
+    },
+    50
+  );
+
+}
 
 /* =========================================================
    【第 8 節】儲存導航錄音
@@ -7103,35 +7142,6 @@ async function renderNavigationVoiceSummary(){
       NAVIGATION_VOICE_PHRASES.length +
       ' 個導航語音' +
       '</div>';
-
-  }
-
-}
-/* =========================================================
-   【第 13 節】停止錄音
-========================================================= */
-
-async function stopNavigationVoiceRecording(){
-
-  if(
-    !navigationMediaRecorder
-  ){
-
-    return;
-
-  }
-
-
-  try{
-
-    navigationMediaRecorder.stop();
-
-  }catch(error){
-
-    console.error(
-      "停止錄音失敗：",
-      error
-    );
 
   }
 
