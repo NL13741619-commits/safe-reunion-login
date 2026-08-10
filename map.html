@@ -1,534 +1,4085 @@
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>集合地圖 - 安全團聚</title>
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-      height: 100vh; display: flex; flex-direction: column; background: #f5f5f5;
-    }
-    .header {
-      background: #06C755; color: #fff; padding: 12px 14px;
-      display: flex; align-items: center; gap: 10px; z-index: 1000;
-    }
-    .back { color: #fff; text-decoration: none; font-size: 24px; }
-    .header-info { flex: 1; min-width: 0; }
-    .header-title { font-weight: 700; font-size: 16px; }
-    .header-sub { font-size: 12px; opacity: 0.95; }
-    #map { flex: 1; width: 100%; min-height: 240px; }
-    .panel {
-      background: #fff; padding: 12px 14px 18px; border-top: 1px solid #eee;
-      max-height: 46vh; overflow-y: auto;
-    }
-    .row { display: flex; gap: 8px; align-items: center; margin-bottom: 8px; flex-wrap: wrap; }
-    .btn {
-      border: none; border-radius: 10px; padding: 10px 12px;
-      font-size: 13px; font-weight: 600; cursor: pointer;
-    }
-    .btn-green { background: #06C755; color: #fff; }
-    .btn-red { background: #e53935; color: #fff; }
-    .btn-orange { background: #fb8c00; color: #fff; }
-    .btn-outline { background: #fff; border: 1px solid #ddd; color: #333; }
-    .status { font-size: 13px; color: #555; flex: 1; }
-    .list-title { font-size: 13px; color: #888; margin: 10px 0 6px; }
-    input, select {
-      width: 100%; padding: 10px 12px; border: 1px solid #e0e0e0;
-      border-radius: 10px; font-size: 14px; margin-bottom: 8px; outline: none;
-    }
-    .wp-item {
-      display: flex; gap: 10px; align-items: flex-start;
-      padding: 10px 0; border-bottom: 1px solid #f0f0f0; font-size: 13px;
-    }
-    .num {
-      width: 26px; height: 26px; border-radius: 50%; background: #06C755; color: #fff;
-      display: flex; align-items: center; justify-content: center; font-weight: 700; flex-shrink: 0;
-    }
-    .sos-banner {
-      display: none; background: #c62828; color: #fff; padding: 10px 12px;
-      font-size: 14px; font-weight: 600; text-align: center;
-    }
-    .sos-banner.show { display: block; }
-    .marker-num {
-      background: #06C755; color: #fff; border-radius: 50%;
-      width: 28px; height: 28px; line-height: 28px; text-align: center;
-      font-weight: 700; border: 2px solid #fff; box-shadow: 0 1px 4px rgba(0,0,0,.3);
-    }
-  </style>
+<meta charset="UTF-8">
+
+<meta
+  name="viewport"
+  content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+>
+
+<title>導航・集合地圖 - 安全團聚</title>
+
+<link
+  rel="stylesheet"
+  href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+/>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<style>
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html,
+body {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  font-family:
+    -apple-system,
+    BlinkMacSystemFont,
+    "Noto Sans TC",
+    "Microsoft JhengHei",
+    sans-serif;
+  background: #f5f5f5;
+}
+
+/* =========================
+   頂部
+========================= */
+
+.header {
+
+  position: fixed;
+
+  top: 0;
+  left: 0;
+  right: 0;
+
+  height: 58px;
+
+  background: #06C755;
+
+  color: #fff;
+
+  padding: 10px 12px;
+
+  display: flex;
+
+  align-items: center;
+
+  gap: 10px;
+
+  z-index: 3000;
+}
+
+.back {
+
+  color: #fff;
+
+  text-decoration: none;
+
+  font-size: 27px;
+
+  width: 30px;
+
+  text-align: center;
+}
+
+.header-info {
+
+  flex: 1;
+
+  min-width: 0;
+}
+
+.header-title {
+
+  font-weight: 700;
+
+  font-size: 16px;
+}
+
+.header-sub {
+
+  font-size: 11px;
+
+  opacity: .95;
+
+  white-space: nowrap;
+
+  overflow: hidden;
+
+  text-overflow: ellipsis;
+}
+
+
+/* =========================
+   地圖
+========================= */
+
+#map {
+
+  position: fixed;
+
+  top: 58px;
+
+  left: 0;
+
+  right: 0;
+
+  bottom: 0;
+
+  z-index: 1;
+}
+
+
+/* =========================
+   導航搜尋
+========================= */
+
+.navigation-search {
+
+  position: fixed;
+
+  top: 68px;
+
+  left: 10px;
+
+  right: 10px;
+
+  z-index: 2000;
+
+  background: rgba(255,255,255,.97);
+
+  border-radius: 14px;
+
+  padding: 8px;
+
+  box-shadow:
+    0 3px 15px rgba(0,0,0,.2);
+}
+
+.navigation-row {
+
+  display: flex;
+
+  gap: 7px;
+}
+
+.navigation-row input {
+
+  flex: 1;
+
+  min-width: 0;
+
+  border: 1px solid #ddd;
+
+  border-radius: 10px;
+
+  padding: 10px;
+
+  font-size: 14px;
+
+  outline: none;
+}
+
+.btn {
+
+  border: none;
+
+  border-radius: 10px;
+
+  padding: 9px 12px;
+
+  font-size: 13px;
+
+  font-weight: 700;
+
+  cursor: pointer;
+}
+
+.btn-green {
+
+  background: #06C755;
+
+  color: #fff;
+}
+
+.btn-blue {
+
+  background: #1677ff;
+
+  color: #fff;
+}
+
+.btn-red {
+
+  background: #e53935;
+
+  color: #fff;
+}
+
+.btn-orange {
+
+  background: #fb8c00;
+
+  color: #fff;
+}
+
+.btn-gray {
+
+  background: #eee;
+
+  color: #333;
+}
+
+
+/* =========================
+   搜尋結果
+========================= */
+
+#navigationResults {
+
+  display: none;
+
+  margin-top: 7px;
+
+  max-height: 170px;
+
+  overflow-y: auto;
+
+  border: 1px solid #eee;
+
+  border-radius: 10px;
+
+  background: #fff;
+}
+
+.navigation-result {
+
+  padding: 10px;
+
+  font-size: 13px;
+
+  border-bottom: 1px solid #eee;
+
+  cursor: pointer;
+}
+
+
+/* =========================
+   導航資訊
+========================= */
+
+.navigation-info {
+
+  position: fixed;
+
+  left: 10px;
+
+  right: 10px;
+
+  bottom: 210px;
+
+  z-index: 2000;
+
+  background: rgba(255,255,255,.96);
+
+  border-radius: 16px;
+
+  padding: 10px;
+
+  box-shadow:
+    0 3px 18px rgba(0,0,0,.2);
+
+  display: none;
+}
+
+.navigation-info.show {
+
+  display: block;
+}
+
+.nav-grid {
+
+  display: grid;
+
+  grid-template-columns:
+    1fr 1fr 1fr;
+
+  gap: 7px;
+}
+
+.nav-card {
+
+  background: #f4f6f8;
+
+  border-radius: 10px;
+
+  padding: 7px;
+
+  text-align: center;
+}
+
+.nav-label {
+
+  color: #777;
+
+  font-size: 10px;
+}
+
+.nav-value {
+
+  font-size: 18px;
+
+  font-weight: 800;
+
+  margin-top: 2px;
+}
+
+.route-status {
+
+  margin-top: 7px;
+
+  font-size: 12px;
+
+  color: #555;
+}
+
+
+/* =========================
+   測速警告
+========================= */
+
+.camera-box {
+
+  position: fixed;
+
+  left: 10px;
+
+  right: 10px;
+
+  bottom: 125px;
+
+  z-index: 2100;
+
+  background: #fff3cd;
+
+  color: #5f4500;
+
+  border-radius: 14px;
+
+  padding: 11px;
+
+  box-shadow:
+    0 3px 15px rgba(0,0,0,.2);
+
+  display: none;
+}
+
+.camera-box.show {
+
+  display: block;
+}
+
+.camera-box.danger {
+
+  background: #ffe1e1;
+
+  color: #8b0000;
+}
+
+.camera-title {
+
+  font-size: 14px;
+
+  font-weight: 800;
+}
+
+.camera-info {
+
+  margin-top: 4px;
+
+  font-size: 13px;
+}
+
+
+/* =========================
+   下方控制面板
+========================= */
+
+.panel {
+
+  position: fixed;
+
+  left: 0;
+  right: 0;
+  bottom: 0;
+
+  z-index: 2000;
+
+  background: rgba(255,255,255,.98);
+
+  padding: 9px 10px 12px;
+
+  max-height: 200px;
+
+  overflow-y: auto;
+
+  border-top:
+    1px solid #eee;
+}
+
+.row {
+
+  display: flex;
+
+  gap: 7px;
+
+  align-items: center;
+
+  margin-bottom: 7px;
+
+  flex-wrap: wrap;
+}
+
+.status {
+
+  flex: 1;
+
+  min-width: 120px;
+
+  font-size: 12px;
+
+  color: #555;
+}
+
+
+/* =========================
+   行程
+========================= */
+
+.list-title {
+
+  font-size: 12px;
+
+  color: #888;
+
+  margin: 8px 0 5px;
+}
+
+input,
+select {
+
+  width: 100%;
+
+  padding: 9px 10px;
+
+  border: 1px solid #ddd;
+
+  border-radius: 9px;
+
+  font-size: 13px;
+
+  margin-bottom: 6px;
+
+  outline: none;
+}
+
+.wp-item {
+
+  display: flex;
+
+  gap: 8px;
+
+  align-items: center;
+
+  padding: 7px 0;
+
+  border-bottom: 1px solid #eee;
+
+  font-size: 12px;
+}
+
+.num {
+
+  width: 24px;
+
+  height: 24px;
+
+  border-radius: 50%;
+
+  background: #06C755;
+
+  color: #fff;
+
+  display: flex;
+
+  align-items: center;
+
+  justify-content: center;
+
+  font-weight: 700;
+
+  flex-shrink: 0;
+}
+
+
+/* =========================
+   SOS
+========================= */
+
+.sos-banner {
+
+  display: none;
+
+  position: fixed;
+
+  top: 58px;
+
+  left: 0;
+
+  right: 0;
+
+  z-index: 3500;
+
+  background: #c62828;
+
+  color: #fff;
+
+  padding: 10px;
+
+  text-align: center;
+
+  font-size: 13px;
+
+  font-weight: 700;
+}
+
+.sos-banner.show {
+
+  display: block;
+}
+
+
+/* =========================
+   地圖測速點
+========================= */
+
+.camera-marker {
+
+  width: 24px;
+
+  height: 24px;
+
+  border-radius: 50%;
+
+  background: #e53935;
+
+  color: white;
+
+  border: 2px solid white;
+
+  box-shadow:
+    0 2px 6px rgba(0,0,0,.35);
+
+  display: flex;
+
+  align-items: center;
+
+  justify-content: center;
+
+  font-size: 12px;
+
+  font-weight: 800;
+}
+
+
+/* =========================
+   集合點
+========================= */
+
+.marker-num {
+
+  background: #06C755;
+
+  color: #fff;
+
+  border-radius: 50%;
+
+  width: 28px;
+
+  height: 28px;
+
+  line-height: 28px;
+
+  text-align: center;
+
+  font-weight: 700;
+
+  border: 2px solid #fff;
+
+  box-shadow:
+    0 1px 4px rgba(0,0,0,.3);
+}
+
+
+/* =========================
+   Leaflet
+========================= */
+
+.leaflet-control-attribution {
+
+  font-size: 8px;
+}
+
+</style>
 </head>
+
 <body>
-  <div class="header">
-    <a class="back" id="btnBack" href="chat.html">‹</a>
-    <div class="header-info">
-      <div class="header-title" id="title">集合地圖</div>
-      <div class="header-sub" id="sub">尚未定位</div>
+
+
+<!-- =========================
+     Header
+========================= -->
+
+<div class="header">
+
+  <a
+    class="back"
+    id="btnBack"
+    href="chat.html"
+  >
+    ‹
+  </a>
+
+  <div class="header-info">
+
+    <div
+      class="header-title"
+      id="title"
+    >
+      安全團聚導航
     </div>
+
+    <div
+      class="header-sub"
+      id="sub"
+    >
+      尚未定位
+    </div>
+
   </div>
 
-  <div class="sos-banner" id="sosBanner"></div>
-  <div id="map"></div>
-
-  <div class="panel">
-    <div class="row">
-      <div class="status" id="shareStatus">定位：關閉</div>
-      <button type="button" class="btn btn-green" id="btnShare">開啟定位</button>
-      <button type="button" class="btn btn-red" id="btnSos">SOS</button>
-    </div>
-    <div class="status" id="partStatus">參與者：—</div>
-
-    <div class="list-title">新增行程／集合點（編號為先後順序）</div>
-<input id="wpTitle" placeholder="地點名稱（例如：花蓮車站）">
-<input id="wpTime" type="datetime-local">
-
-<div class="list-title">搜尋地址設為集合點</div>
-<input id="searchInput" placeholder="搜尋地址（例如：台北車站、花蓮火車站）"
-       onkeydown="if(event.key==='Enter')searchPlace()">
-<div class="row">
-  <button type="button" class="btn btn-green" id="btnSearch" style="flex:1">搜尋</button>
-</div>
-<div id="searchResults" style="display:none;border:1px solid #eee;border-radius:10px;margin-bottom:10px;max-height:160px;overflow:auto;"></div>
-
-<div class="row">
-  <button type="button" class="btn btn-green" id="btnAddHere" style="flex:1">用目前位置新增</button>
-  <button type="button" class="btn btn-outline" id="btnAddMap" style="flex:1">用地圖中心新增</button>
 </div>
 
-    <div class="list-title">行程列表</div>
-    <div id="wpList"></div>
+
+<!-- SOS -->
+
+<div
+  class="sos-banner"
+  id="sosBanner"
+></div>
+
+
+<!-- =========================
+     導航搜尋
+========================= -->
+
+<div class="navigation-search">
+
+  <div class="navigation-row">
+
+    <input
+      id="navigationInput"
+      placeholder="🔍 輸入目的地，例如：台北車站"
+    >
+
+    <button
+      class="btn btn-blue"
+      id="navigationSearchBtn"
+    >
+      導航
+    </button>
+
   </div>
 
-  <script>
-  (function () {
-    var SUPABASE_URL = 'https://perfsipperncvjocznhl.supabase.co';
-    var SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBlcmZzaXBwZXJuY3Zqb2N6bmhsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODYwMTUyMzAsImV4cCI6MjEwMTU5MTIzMH0.I7vXkV247kAzRJ0RigDZt3Hzn8KJDyMc6o9E3oHJZoY';
+  <div
+    id="navigationResults"
+  ></div>
 
-    var params = new URLSearchParams(location.search);
-    var roomId = params.get('id') || params.get('room') || 'general';
-    var roomName = params.get('name') ? decodeURIComponent(params.get('name')) : '集合地圖';
-    document.getElementById('title').textContent = roomName + '・集合';
-    document.getElementById('btnBack').href = roomId !== 'general'
-      ? ('room.html?id=' + encodeURIComponent(roomId) + '&name=' + encodeURIComponent(roomName))
-      : 'chat.html';
+</div>
 
-    var map = L.map('map').setView([23.97, 121.0], 8);
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      maxZoom: 19,
-      attribution: '&copy; OpenStreetMap'
-    }).addTo(map);
 
-    var sb = null, me = null;
-    var shareOn = false, watchId = null, uploadTimer = null;
-    var myLat = null, myLng = null, myMarker = null;
-    var wpMarkers = {};
-    var peerMarkers = {};
-    var waypoints = [];
+<!-- =========================
+     地圖
+========================= -->
 
-    function setSub(t) { document.getElementById('sub').textContent = t; }
-    function setShareStatus(t) { document.getElementById('shareStatus').textContent = t; }
+<div id="map"></div>
 
-    function numIcon(n) {
-      return L.divIcon({
-        className: '',
-        html: '<div class="marker-num">' + n + '</div>',
-        iconSize: [28, 28],
-        iconAnchor: [14, 14]
-      });
+
+<!-- =========================
+     導航資訊
+========================= -->
+
+<div
+  class="navigation-info"
+  id="navigationInfo"
+>
+
+  <div class="nav-grid">
+
+    <div class="nav-card">
+
+      <div class="nav-label">
+        目前速度
+      </div>
+
+      <div
+        class="nav-value"
+        id="navSpeed"
+      >
+        0
+      </div>
+
+      <div class="nav-label">
+        km/h
+      </div>
+
+    </div>
+
+
+    <div class="nav-card">
+
+      <div class="nav-label">
+        距離目的地
+      </div>
+
+      <div
+        class="nav-value"
+        id="navDistance"
+      >
+        --
+      </div>
+
+    </div>
+
+
+    <div class="nav-card">
+
+      <div class="nav-label">
+        行進方向
+      </div>
+
+      <div
+        class="nav-value"
+        id="navHeading"
+      >
+        --
+      </div>
+
+      <div class="nav-label">
+        °
+      </div>
+
+    </div>
+
+  </div>
+
+
+  <div
+    class="route-status"
+    id="routeStatus"
+  >
+    尚未開始導航
+  </div>
+
+  <div class="row">
+
+    <button
+      class="btn btn-red"
+      id="stopNavigationBtn"
+      style="display:none"
+    >
+      結束導航
+    </button>
+
+  </div>
+
+</div>
+
+
+<!-- =========================
+     測速
+========================= -->
+
+<div
+  class="camera-box"
+  id="cameraBox"
+>
+
+  <div
+    class="camera-title"
+    id="cameraTitle"
+  >
+    📷 前方測速
+  </div>
+
+  <div
+    class="camera-info"
+    id="cameraInfo"
+  ></div>
+
+</div>
+
+
+<!-- =========================
+     下方
+========================= -->
+
+<div class="panel">
+
+  <div class="row">
+
+    <div
+      class="status"
+      id="shareStatus"
+    >
+      定位：關閉
+    </div>
+
+    <button
+      type="button"
+      class="btn btn-green"
+      id="btnShare"
+    >
+      開啟定位
+    </button>
+
+    <button
+      type="button"
+      class="btn btn-red"
+      id="btnSos"
+    >
+      SOS
+    </button>
+
+  </div>
+
+
+  <div
+    class="status"
+    id="partStatus"
+  >
+    參與者：—
+  </div>
+
+
+  <div class="list-title">
+    新增行程／集合點
+  </div>
+
+  <input
+    id="wpTitle"
+    placeholder="地點名稱"
+  >
+
+  <input
+    id="wpTime"
+    type="datetime-local"
+  >
+
+
+  <div class="row">
+
+    <button
+      type="button"
+      class="btn btn-green"
+      id="btnAddHere"
+    >
+      用目前位置新增
+    </button>
+
+    <button
+      type="button"
+      class="btn btn-gray"
+      id="btnAddMap"
+    >
+      用地圖中心新增
+    </button>
+
+  </div>
+
+
+  <div class="list-title">
+    搜尋地址設為集合點
+  </div>
+
+  <input
+    id="searchInput"
+    placeholder="例如：台北車站"
+  >
+
+  <button
+    type="button"
+    class="btn btn-green"
+    id="btnSearch"
+  >
+    搜尋集合點
+  </button>
+
+
+  <div
+    id="searchResults"
+    style="
+      display:none;
+      border:1px solid #eee;
+      border-radius:10px;
+      margin-top:6px;
+      max-height:150px;
+      overflow:auto;
+    "
+  ></div>
+
+
+  <div class="list-title">
+    行程列表
+  </div>
+
+  <div id="wpList"></div>
+
+</div>
+
+
+<script>
+
+(function () {
+
+
+/* =========================================================
+   1. Supabase
+========================================================= */
+
+var SUPABASE_URL =
+  'https://perfsipperncvjocznhl.supabase.co';
+
+var SUPABASE_KEY =
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBlcmZzaXBwZXJuY3Zqb2N6bmhsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODYwMTUyMzAsImV4cCI6MjEwMTU5MTIzMH0.I7vXkV247kAzRJ0RigDZt3Hzn8KJDyMc6o9E3oHJZoY';
+
+
+var sb =
+  window.supabase
+    .createClient(
+      SUPABASE_URL,
+      SUPABASE_KEY
+    );
+
+
+/* =========================================================
+   2. 房間
+========================================================= */
+
+var params =
+  new URLSearchParams(
+    location.search
+  );
+
+var roomId =
+  params.get('id')
+  ||
+  params.get('room')
+  ||
+  'general';
+
+var roomName =
+  params.get('name')
+    ? decodeURIComponent(
+        params.get('name')
+      )
+    : '安全團聚';
+
+
+document.getElementById(
+  'title'
+).textContent =
+  roomName + '・導航';
+
+
+document.getElementById(
+  'btnBack'
+).href =
+  roomId !== 'general'
+
+    ? (
+        'room.html?id='
+        +
+        encodeURIComponent(roomId)
+        +
+        '&name='
+        +
+        encodeURIComponent(roomName)
+      )
+
+    : 'chat.html';
+
+
+/* =========================================================
+   3. 唯一地圖
+========================================================= */
+
+var map =
+  L.map(
+    'map',
+    {
+      zoomControl: false
     }
+  ).setView(
+    [23.97, 121.0],
+    8
+  );
 
-    function geoErrorText(err) {
-      if (!err) return '未知錯誤';
-      if (err.code === 1) return '權限被拒：請到 iPhone設定→Safari→位置→允許';
-      if (err.code === 2) return '目前無法取得位置（訊號／系統）';
-      if (err.code === 3) return '定位逾時，請到戶外再試';
-      return err.message || String(err);
-    }
 
-    async function bootAuth() {
-      if (!window.supabase) {
-        setSub('套件未載入');
-        return;
-      }
-      sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-      var sess = await sb.auth.getSession();
-      if (!sess.data.session) {
-        setSub('未登入（仍可本機定位）');
-        return;
-      }
-      me = sess.data.session.user;
-      setSub('已登入');
-      await loadWaypoints();
-      await loadPeers();
-      listenSos();
-      setInterval(loadPeers, 8000);
-    }
+L.tileLayer(
+  'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+  {
+    maxZoom: 19,
 
-    async function loadWaypoints() {
-      if (!sb) return;
-      var res = await sb.from('meetup_waypoints')
-        .select('*')
-        .eq('room_id', roomId)
-        .order('seq', { ascending: true });
-      if (res.error) {
-        setSub('行程載入失敗：' + res.error.message);
-        return;
-      }
-      waypoints = res.data || [];
-      renderWaypoints();
-    }
+    attribution:
+      '&copy; OpenStreetMap contributors'
+  }
+).addTo(map);
 
-    function renderWaypoints() {
-      Object.keys(wpMarkers).forEach(function (k) {
-        map.removeLayer(wpMarkers[k]);
-      });
-      wpMarkers = {};
 
-      var box = document.getElementById('wpList');
-      box.innerHTML = '';
-      if (!waypoints.length) {
-        box.innerHTML = '<div style="color:#888;font-size:13px;padding:8px 0">尚未設定行程點</div>';
-        return;
-      }
+/* 將縮放鍵移到右下 */
 
-      var bounds = [];
-      waypoints.forEach(function (w) {
-        var m = L.marker([w.lat, w.lng], { icon: numIcon(w.seq) }).addTo(map);
-        var timeStr = w.meet_at ? new Date(w.meet_at).toLocaleString() : '時間未定';
-        m.bindPopup('<b>#' + w.seq + ' ' + w.title + '</b><br>' + timeStr);
-        wpMarkers[w.id] = m;
-        bounds.push([w.lat, w.lng]);
+L.control.zoom({
+  position: 'bottomright'
+}).addTo(map);
 
-        var div = document.createElement('div');
-        div.className = 'wp-item';
-        div.innerHTML =
-          '<div class="num">' + w.seq + '</div>' +
-          '<div style="flex:1">' +
-            '<div style="font-weight:600">' + w.title + '</div>' +
-            '<div style="color:#888;margin-top:2px">' + timeStr + '</div>' +
-          '</div>' +
-          '<button type="button" class="btn btn-outline" data-id="' + w.id + '">刪</button>';
-        div.querySelector('button').onclick = function () { deleteWp(w.id); };
-        box.appendChild(div);
-      });
-      if (bounds.length) map.fitBounds(bounds, { padding: [40, 40] });
-    }
 
-    async function addWaypoint(lat, lng) {
-      if (!me || !sb) {
-        alert('請先登入才能設定集合點');
-        location.href = 'login.html';
-        return;
-      }
-      var title = document.getElementById('wpTitle').value.trim() || ('集合點 ' + (waypoints.length + 1));
-      var t = document.getElementById('wpTime').value;
-      var meetAt = t ? new Date(t).toISOString() : null;
-      var seq = waypoints.length ? (waypoints[waypoints.length - 1].seq + 1) : 1;
+/* =========================================================
+   4. 全域資料
+========================================================= */
 
-      var res = await sb.from('meetup_waypoints').insert({
-        room_id: roomId,
-        seq: seq,
-        title: title,
-        lat: lat,
-        lng: lng,
-        meet_at: meetAt,
-        created_by: me.id
-      }).select().single();
+var me = null;
 
-      if (res.error) {
-        alert('新增失敗：' + res.error.message);
-        return;
-      }
-      document.getElementById('wpTitle').value = '';
-      await loadWaypoints();
-    }
-    async function searchPlace() {
-  var q = document.getElementById('searchInput').value.trim();
+var shareOn = false;
 
-  if (!q) {
-    alert('請輸入要搜尋的地址或地名');
-    return;
+var watchId = null;
+
+var uploadTimer = null;
+
+var myLat = null;
+
+var myLng = null;
+
+var myMarker = null;
+
+var accuracyCircle = null;
+
+var lastPosition = null;
+
+var lastHeading = null;
+
+var currentSpeed = 0;
+
+var waypoints = [];
+
+var wpMarkers = {};
+
+var peerMarkers = {};
+
+var cameras = [];
+
+var cameraMarkers = [];
+
+var routeLine = null;
+
+var routeCoordinates = [];
+
+var destination = null;
+
+var navigationActive = false;
+
+var routeDistance = 0;
+
+var lastRerouteTime = 0;
+
+var lastWarningCameraId = null;
+
+var lastWarningTime = 0;
+
+
+/* =========================================================
+   5. UI
+========================================================= */
+
+function setSub(text) {
+
+  document.getElementById(
+    'sub'
+  ).textContent = text;
+
+}
+
+
+function setShareStatus(text) {
+
+  document.getElementById(
+    'shareStatus'
+  ).textContent = text;
+
+}
+
+
+/* =========================================================
+   6. 基本計算
+========================================================= */
+
+function distanceMeters(
+  lat1,
+  lng1,
+  lat2,
+  lng2
+) {
+
+  var R = 6371000;
+
+  var p1 =
+    lat1 * Math.PI / 180;
+
+  var p2 =
+    lat2 * Math.PI / 180;
+
+  var dp =
+    (lat2 - lat1)
+    * Math.PI / 180;
+
+  var dl =
+    (lng2 - lng1)
+    * Math.PI / 180;
+
+  var a =
+    Math.sin(dp / 2) *
+    Math.sin(dp / 2)
+    +
+    Math.cos(p1)
+    *
+    Math.cos(p2)
+    *
+    Math.sin(dl / 2)
+    *
+    Math.sin(dl / 2);
+
+  return (
+    2 *
+    R *
+    Math.atan2(
+      Math.sqrt(a),
+      Math.sqrt(1 - a)
+    )
+  );
+
+}
+
+
+function bearingDegrees(
+  lat1,
+  lng1,
+  lat2,
+  lng2
+) {
+
+  var p1 =
+    lat1 * Math.PI / 180;
+
+  var p2 =
+    lat2 * Math.PI / 180;
+
+  var dl =
+    (lng2 - lng1)
+    * Math.PI / 180;
+
+  var y =
+    Math.sin(dl)
+    *
+    Math.cos(p2);
+
+  var x =
+    Math.cos(p1)
+    *
+    Math.sin(p2)
+    -
+    Math.sin(p1)
+    *
+    Math.cos(p2)
+    *
+    Math.cos(dl);
+
+  return (
+    Math.atan2(y, x)
+    * 180 / Math.PI
+    + 360
+  ) % 360;
+
+}
+
+
+function angleDifference(
+  a,
+  b
+) {
+
+  return Math.abs(
+    ((a - b + 540) % 360)
+    - 180
+  );
+
+}
+
+
+function formatDistance(
+  meters
+) {
+
+  if (
+    meters < 1000
+  ) {
+
+    return (
+      Math.round(meters)
+      +
+      ' m'
+    );
+
   }
 
-  var box = document.getElementById('searchResults');
+  return (
+    (meters / 1000)
+      .toFixed(1)
+    +
+    ' km'
+  );
 
-  box.style.display = 'block';
-  box.innerHTML = '<div style="padding:10px;font-size:13px;color:#888">搜尋中…</div>';
+}
 
-  try {
-    var url = 'https://nominatim.openstreetmap.org/search?format=json&q=' +
-      encodeURIComponent(q) +
-      '&limit=6&accept-language=zh-TW';
 
-    var res = await fetch(url, {
-      headers: {
-        'Accept': 'application/json'
+/* =========================================================
+   7. 速度
+========================================================= */
+
+function getSpeed(
+  position
+) {
+
+  var gpsSpeed =
+    position.coords.speed;
+
+  if (
+    Number.isFinite(
+      gpsSpeed
+    )
+    &&
+    gpsSpeed >= 0
+  ) {
+
+    return gpsSpeed * 3.6;
+
+  }
+
+
+  if (
+    !lastPosition
+  ) {
+
+    return 0;
+
+  }
+
+
+  var dt =
+    (
+      position.timestamp
+      -
+      lastPosition.timestamp
+    ) / 1000;
+
+
+  if (
+    dt <= 0
+  ) {
+
+    return 0;
+
+  }
+
+
+  var d =
+    distanceMeters(
+
+      lastPosition.coords.latitude,
+
+      lastPosition.coords.longitude,
+
+      position.coords.latitude,
+
+      position.coords.longitude
+
+    );
+
+
+  return (
+    d / dt
+  ) * 3.6;
+
+}
+
+
+/* =========================================================
+   8. 方向
+========================================================= */
+
+function getHeading(
+  position
+) {
+
+  var heading =
+    position.coords.heading;
+
+  if (
+    Number.isFinite(
+      heading
+    )
+    &&
+    heading >= 0
+  ) {
+
+    return heading;
+
+  }
+
+
+  if (
+    lastPosition
+  ) {
+
+    var moved =
+      distanceMeters(
+
+        lastPosition.coords.latitude,
+
+        lastPosition.coords.longitude,
+
+        position.coords.latitude,
+
+        position.coords.longitude
+
+      );
+
+
+    if (
+      moved >= 3
+    ) {
+
+      return bearingDegrees(
+
+        lastPosition.coords.latitude,
+
+        lastPosition.coords.longitude,
+
+        position.coords.latitude,
+
+        position.coords.longitude
+
+      );
+
+    }
+
+  }
+
+
+  return lastHeading;
+
+}
+
+
+/* =========================================================
+   9. 使用者 Marker
+========================================================= */
+
+function updateMyMarker(
+  accuracy
+) {
+
+  if (
+    myLat == null
+  ) {
+
+    return;
+
+  }
+
+
+  if (
+    myMarker
+  ) {
+
+    myMarker.setLatLng([
+      myLat,
+      myLng
+    ]);
+
+  }
+
+  else {
+
+    myMarker =
+      L.circleMarker(
+
+        [
+          myLat,
+          myLng
+        ],
+
+        {
+
+          radius: 8,
+
+          color: '#06C755',
+
+          fillColor: '#06C755',
+
+          fillOpacity: .95
+
+        }
+
+      ).addTo(map);
+
+    myMarker.bindPopup(
+      '我的位置'
+    );
+
+  }
+
+
+  if (
+    Number.isFinite(
+      accuracy
+    )
+  ) {
+
+    if (
+      !accuracyCircle
+    ) {
+
+      accuracyCircle =
+        L.circle(
+
+          [
+            myLat,
+            myLng
+          ],
+
+          {
+
+            radius: accuracy,
+
+            weight: 1,
+
+            fillOpacity: .05
+
+          }
+
+        ).addTo(map);
+
+    }
+
+    else {
+
+      accuracyCircle.setLatLng([
+        myLat,
+        myLng
+      ]);
+
+      accuracyCircle.setRadius(
+        accuracy
+      );
+
+    }
+
+  }
+
+}
+
+
+/* =========================================================
+   10. GPS
+========================================================= */
+
+function onPosition(
+  position
+) {
+
+  myLat =
+    position.coords.latitude;
+
+  myLng =
+    position.coords.longitude;
+
+  currentSpeed =
+    Math.max(
+      0,
+      getSpeed(position)
+    );
+
+
+  var heading =
+    getHeading(position);
+
+
+  if (
+    Number.isFinite(
+      heading
+    )
+  ) {
+
+    lastHeading =
+      heading;
+
+  }
+
+
+  updateMyMarker(
+    position.coords.accuracy
+  );
+
+
+  document.getElementById(
+    'navSpeed'
+  ).textContent =
+    Math.round(
+      currentSpeed
+    );
+
+
+  document.getElementById(
+    'navHeading'
+  ).textContent =
+    Number.isFinite(
+      lastHeading
+    )
+      ? Math.round(
+          lastHeading
+        )
+      : '--';
+
+
+  setSub(
+    '定位中｜'
+    +
+    Math.round(
+      currentSpeed
+    )
+    +
+    ' km/h'
+  );
+
+
+  if (
+    navigationActive
+  ) {
+
+    updateNavigation();
+
+  }
+
+
+  checkSpeedCamera();
+
+
+  uploadLocation();
+
+
+  lastPosition =
+    position;
+
+}
+
+
+/* =========================================================
+   11. 定位分享
+========================================================= */
+
+function geoErrorText(
+  err
+) {
+
+  if (!err) {
+
+    return '未知錯誤';
+
+  }
+
+  if (
+    err.code === 1
+  ) {
+
+    return '定位權限被拒絕';
+
+  }
+
+  if (
+    err.code === 2
+  ) {
+
+    return '目前無法取得位置';
+
+  }
+
+  if (
+    err.code === 3
+  ) {
+
+    return '定位逾時';
+
+  }
+
+  return (
+    err.message
+    ||
+    String(err)
+  );
+
+}
+
+
+function startShare() {
+
+  if (
+    !navigator.geolocation
+  ) {
+
+    alert(
+      '此裝置不支援定位'
+    );
+
+    return;
+
+  }
+
+
+  shareOn = true;
+
+
+  document.getElementById(
+    'btnShare'
+  ).textContent =
+    '關閉定位';
+
+
+  document.getElementById(
+    'btnShare'
+  ).className =
+    'btn btn-red';
+
+
+  setShareStatus(
+    '定位：開啟中…'
+  );
+
+
+  navigator.geolocation.getCurrentPosition(
+
+    function (pos) {
+
+      onPosition(pos);
+
+      map.setView(
+        [
+          myLat,
+          myLng
+        ],
+        16
+      );
+
+      setShareStatus(
+        '定位：開啟'
+      );
+
+    },
+
+    function (err) {
+
+      stopShare();
+
+      alert(
+        '定位失敗：'
+        +
+        geoErrorText(err)
+      );
+
+    },
+
+    {
+
+      enableHighAccuracy: true,
+
+      timeout: 15000,
+
+      maximumAge: 0
+
+    }
+
+  );
+
+
+  watchId =
+    navigator.geolocation.watchPosition(
+
+      onPosition,
+
+      function (err) {
+
+        setSub(
+          '定位異常：'
+          +
+          geoErrorText(err)
+        );
+
+      },
+
+      {
+
+        enableHighAccuracy: true,
+
+        timeout: 15000,
+
+        maximumAge: 1000
+
       }
+
+    );
+
+
+  uploadTimer =
+    setInterval(
+
+      function () {
+
+        if (
+          myLat != null
+        ) {
+
+          uploadLocation();
+
+        }
+
+      },
+
+      5000
+
+    );
+
+}
+
+
+function stopShare() {
+
+  shareOn = false;
+
+
+  if (
+    watchId != null
+  ) {
+
+    navigator.geolocation.clearWatch(
+      watchId
+    );
+
+    watchId = null;
+
+  }
+
+
+  if (
+    uploadTimer
+  ) {
+
+    clearInterval(
+      uploadTimer
+    );
+
+    uploadTimer = null;
+
+  }
+
+
+  document.getElementById(
+    'btnShare'
+  ).textContent =
+    '開啟定位';
+
+
+  document.getElementById(
+    'btnShare'
+  ).className =
+    'btn btn-green';
+
+
+  setShareStatus(
+    '定位：關閉'
+  );
+
+}
+
+
+/* =========================================================
+   12. Supabase 定位
+========================================================= */
+
+async function uploadLocation() {
+
+  if (
+    !me
+    ||
+    myLat == null
+  ) {
+
+    return;
+
+  }
+
+
+  await sb
+    .from('location_shares')
+    .upsert({
+
+      user_id: me.id,
+
+      room_id: roomId,
+
+      lat: myLat,
+
+      lng: myLng,
+
+      display_name:
+        (
+          me.email
+          ||
+          'user'
+        ).split('@')[0],
+
+      updated_at:
+        new Date().toISOString()
+
     });
 
-    var arr = await res.json();
+}
+
+
+/* =========================================================
+   13. 成員
+========================================================= */
+
+async function loadPeers() {
+
+  if (
+    !roomId
+  ) {
+
+    return;
+
+  }
+
+
+  var res =
+    await sb
+      .from('location_shares')
+      .select('*')
+      .eq(
+        'room_id',
+        roomId
+      )
+      .gte(
+        'updated_at',
+        new Date(
+          Date.now()
+          -
+          30 * 60 * 1000
+        ).toISOString()
+      );
+
+
+  var rows =
+    res.data
+    ||
+    [];
+
+
+  Object.keys(
+    peerMarkers
+  ).forEach(
+    function (key) {
+
+      map.removeLayer(
+        peerMarkers[key]
+      );
+
+    }
+  );
+
+
+  peerMarkers = {};
+
+
+  var count = 0;
+
+
+  rows.forEach(
+    function (r) {
+
+      if (
+        me
+        &&
+        r.user_id === me.id
+      ) {
+
+        return;
+
+      }
+
+
+      if (
+        r.lat == null
+      ) {
+
+        return;
+
+      }
+
+
+      count++;
+
+
+      peerMarkers[
+        r.user_id
+      ] =
+        L.circleMarker(
+
+          [
+            r.lat,
+            r.lng
+          ],
+
+          {
+
+            radius: 7,
+
+            color: '#1e88e5',
+
+            fillColor: '#1e88e5',
+
+            fillOpacity: .9
+
+          }
+
+        ).addTo(map)
+          .bindPopup(
+            r.display_name
+            ||
+            '成員'
+          );
+
+    }
+  );
+
+
+  document.getElementById(
+    'partStatus'
+  ).textContent =
+    '目前分享定位人數：'
+    +
+    (
+      count
+      +
+      (
+        shareOn
+        &&
+        myLat != null
+          ? 1
+          : 0
+      )
+    )
+    +
+    '｜集合點：'
+    +
+    waypoints.length;
+
+}
+
+
+/* =========================================================
+   14. 測速資料
+========================================================= */
+
+async function loadCameras() {
+
+  var res =
+    await sb
+      .from('speed_cameras')
+      .select(
+        'CityName,RegionName,Address,Longitude,Latitude,direct,limit'
+      );
+
+
+  if (
+    res.error
+  ) {
+
+    console.error(
+      res.error
+    );
+
+    return;
+
+  }
+
+
+  cameras =
+    (
+      res.data
+      ||
+      []
+    )
+    .map(
+      function (row, index) {
+
+        return {
+
+          id: index,
+
+          city:
+            String(
+              row.CityName
+              ||
+              ''
+            ),
+
+          region:
+            String(
+              row.RegionName
+              ||
+              ''
+            ),
+
+          address:
+            String(
+              row.Address
+              ||
+              ''
+            ),
+
+          lat:
+            Number(
+              row.Latitude
+            ),
+
+          lng:
+            Number(
+              row.Longitude
+            ),
+
+          direct:
+            String(
+              row.direct
+              ||
+              ''
+            ),
+
+          limit:
+            Number(
+              row.limit
+            )
+
+        };
+
+      }
+    )
+    .filter(
+      function (c) {
+
+        return Number.isFinite(c.lat)
+          &&
+          Number.isFinite(c.lng);
+
+      }
+    );
+
+
+  drawCameraMarkers();
+
+}
+
+
+/* =========================================================
+   15. 測速 Marker
+========================================================= */
+
+function cameraIcon() {
+
+  return L.divIcon({
+
+    className: '',
+
+    html:
+      '<div class="camera-marker">📷</div>',
+
+    iconSize:
+      [24, 24],
+
+    iconAnchor:
+      [12, 12]
+
+  });
+
+}
+
+
+function drawCameraMarkers() {
+
+  cameraMarkers.forEach(
+    function (m) {
+
+      map.removeLayer(m);
+
+    }
+  );
+
+
+  cameraMarkers = [];
+
+
+  /*
+    不要一開始把全台大量測速點
+    全部畫到地圖。
+
+    只在目前位置附近畫。
+  */
+
+}
+
+
+/* =========================================================
+   16. 測速方向
+========================================================= */
+
+function directionMatches(
+  direct,
+  heading
+) {
+
+  if (
+    !Number.isFinite(
+      heading
+    )
+  ) {
+
+    return true;
+
+  }
+
+
+  var text =
+    String(
+      direct
+      ||
+      ''
+    );
+
+
+  if (
+    text.includes('南北')
+  ) {
+
+    return (
+      Math.min(
+        angleDifference(
+          heading,
+          0
+        ),
+        angleDifference(
+          heading,
+          180
+        )
+      )
+      <=
+      55
+    );
+
+  }
+
+
+  if (
+    text.includes('東西')
+  ) {
+
+    return (
+      Math.min(
+        angleDifference(
+          heading,
+          90
+        ),
+        angleDifference(
+          heading,
+          270
+        )
+      )
+      <=
+      55
+    );
+
+  }
+
+
+  return true;
+
+}
+
+
+/* =========================================================
+   17. 找前方測速
+========================================================= */
+
+function findCamera() {
+
+  if (
+    myLat == null
+  ) {
+
+    return null;
+
+  }
+
+
+  var best = null;
+
+
+  cameras.forEach(
+    function (camera) {
+
+      var d =
+        distanceMeters(
+
+          myLat,
+          myLng,
+
+          camera.lat,
+          camera.lng
+
+        );
+
+
+      /*
+        先找 2 公里內。
+      */
+
+      if (
+        d > 2000
+      ) {
+
+        return;
+
+      }
+
+
+      if (
+        !directionMatches(
+          camera.direct,
+          lastHeading
+        )
+      ) {
+
+        return;
+
+      }
+
+
+      if (
+        Number.isFinite(
+          lastHeading
+        )
+      ) {
+
+        var toCamera =
+          bearingDegrees(
+
+            myLat,
+            myLng,
+
+            camera.lat,
+            camera.lng
+
+          );
+
+
+        if (
+          angleDifference(
+            lastHeading,
+            toCamera
+          )
+          >
+          70
+        ) {
+
+          return;
+
+        }
+
+      }
+
+
+      /*
+        如果正在導航，
+        優先判斷測速點是否靠近導航路線。
+      */
+
+      if (
+        navigationActive
+        &&
+        routeCoordinates.length
+      ) {
+
+        var nearRoute =
+          false;
+
+
+        for (
+          var i = 0;
+          i < routeCoordinates.length;
+          i += 10
+        ) {
+
+          var p =
+            routeCoordinates[i];
+
+
+          if (
+            distanceMeters(
+
+              camera.lat,
+              camera.lng,
+
+              p[0],
+              p[1]
+
+            )
+            <=
+            100
+          ) {
+
+            nearRoute = true;
+
+            break;
+
+          }
+
+        }
+
+
+        if (
+          !nearRoute
+        ) {
+
+          return;
+
+        }
+
+      }
+
+
+      if (
+        !best
+        ||
+        d < best.distance
+      ) {
+
+        best = {
+
+          camera: camera,
+
+          distance: d
+
+        };
+
+      }
+
+    }
+  );
+
+
+  return best;
+
+}
+
+
+/* =========================================================
+   18. 測速警告
+========================================================= */
+
+function speak(
+  text
+) {
+
+  if (
+    !('speechSynthesis' in window)
+  ) {
+
+    return;
+
+  }
+
+
+  speechSynthesis.cancel();
+
+
+  var u =
+    new SpeechSynthesisUtterance(
+      text
+    );
+
+
+  u.lang =
+    'zh-TW';
+
+  u.rate =
+    .95;
+
+
+  speechSynthesis.speak(u);
+
+}
+
+
+function checkSpeedCamera() {
+
+  var result =
+    findCamera();
+
+
+  if (
+    !result
+  ) {
+
+    document.getElementById(
+      'cameraBox'
+    ).classList.remove(
+      'show'
+    );
+
+    return;
+
+  }
+
+
+  var camera =
+    result.camera;
+
+
+  var d =
+    result.distance;
+
+
+  var over =
+    Number.isFinite(
+      camera.limit
+    )
+    &&
+    currentSpeed >
+    camera.limit;
+
+
+  var box =
+    document.getElementById(
+      'cameraBox'
+    );
+
+
+  box.classList.add(
+    'show'
+  );
+
+
+  box.classList.toggle(
+    'danger',
+    over
+  );
+
+
+  document.getElementById(
+    'cameraTitle'
+  ).textContent =
+    over
+      ? '⚠️ 前方測速・目前超速'
+      : '📷 前方測速照相';
+
+
+  document.getElementById(
+    'cameraInfo'
+  ).textContent =
+
+    '距離 '
+    +
+    formatDistance(d)
+    +
+    '｜速限 '
+    +
+    (
+      camera.limit
+      ||
+      '--'
+    )
+    +
+    ' km/h｜目前 '
+    +
+    Math.round(
+      currentSpeed
+    )
+    +
+    ' km/h';
+
+
+  /*
+    700 公尺語音。
+  */
+
+  if (
+    d <= 700
+  ) {
+
+    var now =
+      Date.now();
+
+
+    if (
+      lastWarningCameraId
+      !==
+      camera.id
+      ||
+      now -
+      lastWarningTime
+      >
+      30000
+    ) {
+
+      var text =
+        '前方 '
+        +
+        Math.round(d)
+        +
+        ' 公尺測速照相';
+
+
+      if (
+        Number.isFinite(
+          camera.limit
+        )
+      ) {
+
+        text +=
+          '，速限 '
+          +
+          camera.limit
+          +
+          ' 公里';
+
+      }
+
+
+      if (
+        over
+      ) {
+
+        text +=
+          '，目前超速，請減速';
+
+      }
+
+
+      speak(text);
+
+
+      lastWarningCameraId =
+        camera.id;
+
+
+      lastWarningTime =
+        now;
+
+    }
+
+  }
+
+}
+
+
+/* =========================================================
+   19. 地址搜尋
+========================================================= */
+
+async function searchPlace() {
+
+  var q =
+    document.getElementById(
+      'navigationInput'
+    ).value.trim();
+
+
+  if (
+    !q
+  ) {
+
+    alert(
+      '請輸入目的地'
+    );
+
+    return;
+
+  }
+
+
+  var box =
+    document.getElementById(
+      'navigationResults'
+    );
+
+
+  box.style.display =
+    'block';
+
+
+  box.innerHTML =
+    '<div style="padding:10px;color:#888">搜尋中…</div>';
+
+
+  try {
+
+    var url =
+      'https://nominatim.openstreetmap.org/search?format=json&q='
+      +
+      encodeURIComponent(q)
+      +
+      '&limit=6&accept-language=zh-TW';
+
+
+    var response =
+      await fetch(url);
+
+
+    var arr =
+      await response.json();
+
 
     box.innerHTML = '';
 
-    if (!arr || !arr.length) {
+
+    if (
+      !arr.length
+    ) {
+
       box.innerHTML =
-        '<div style="padding:10px;font-size:13px;color:#888">找不到地點</div>';
+        '<div style="padding:10px;color:#888">找不到地點</div>';
+
       return;
+
     }
 
-    arr.forEach(function (item) {
 
-      var div = document.createElement('div');
+    arr.forEach(
+      function (item) {
 
-      div.style.cssText =
-        'padding:10px 12px;' +
-        'border-bottom:1px solid #f5f5f5;' +
-        'font-size:13px;' +
-        'cursor:pointer;';
+        var div =
+          document.createElement(
+            'div'
+          );
 
-      div.textContent = item.display_name;
 
-      div.onclick = async function () {
+        div.className =
+          'navigation-result';
 
-        var lat = parseFloat(item.lat);
-        var lng = parseFloat(item.lon);
 
-        var shortName =
-          (item.display_name || q).split(',')[0];
+        div.textContent =
+          item.display_name;
 
-        // 如果地點名稱沒有輸入，
-        // 自動使用搜尋結果名稱
-        var titleInput =
-          document.getElementById('wpTitle');
 
-        if (!titleInput.value.trim()) {
-          titleInput.value = shortName;
-        }
+        div.onclick =
+          function () {
 
-        // 地圖移動到搜尋的位置
-        map.setView([lat, lng], 16);
+            var lat =
+              Number(
+                item.lat
+              );
 
-        // 在地圖上顯示搜尋位置
-        L.circleMarker([lat, lng], {
-          radius: 6,
-          color: '#1565c0',
-          fillColor: '#1565c0',
-          fillOpacity: 0.8
-        }).addTo(map);
+            var lng =
+              Number(
+                item.lon
+              );
 
-        // 隱藏搜尋結果
-        box.style.display = 'none';
 
-        // 直接建立集合點
-        await addWaypoint(lat, lng);
-      };
+            box.style.display =
+              'none';
 
-      box.appendChild(div);
-    });
 
-  } catch (e) {
+            startNavigation(
+              lat,
+              lng,
+              item.display_name
+            );
+
+          };
+
+
+        box.appendChild(div);
+
+      }
+    );
+
+  }
+
+  catch (error) {
 
     box.innerHTML =
-      '<div style="padding:10px;font-size:13px;color:#c62828">' +
-      '搜尋失敗（網路或服務限制）' +
-      '</div>';
+      '<div style="padding:10px;color:#c62828">搜尋失敗</div>';
+
   }
+
 }
 
-document.getElementById('btnSearch').onclick = searchPlace;
-    async function deleteWp(id) {
-      if (!sb || !me) return;
-      var res = await sb.from('meetup_waypoints').delete().eq('id', id).eq('created_by', me.id);
-      if (res.error) alert('刪除失敗：' + res.error.message);
-      await loadWaypoints();
-    }
 
-    function updateMyMarker() {
-      if (myLat == null) return;
-      if (myMarker) myMarker.setLatLng([myLat, myLng]);
-      else {
-        myMarker = L.circleMarker([myLat, myLng], {
-          radius: 8, color: '#06C755', fillColor: '#06C755', fillOpacity: 0.9
-        }).addTo(map).bindPopup('我');
-      }
-    }
+/* =========================================================
+   20. 導航
+========================================================= */
 
-    async function uploadLocation() {
-      if (!sb || !me || myLat == null) return;
-      await sb.from('location_shares').upsert({
-        user_id: me.id,
-        room_id: roomId,
-        lat: myLat,
-        lng: myLng,
-        display_name: (me.email || 'user').split('@')[0],
-        updated_at: new Date().toISOString()
-      });
-    }
+async function startNavigation(
+  lat,
+  lng,
+  name
+) {
 
-    async function loadPeers() {
-      if (!sb || !roomId) return;
-      var res = await sb.from('location_shares')
-        .select('*')
-        .eq('room_id', roomId)
-        .gte('updated_at', new Date(Date.now() - 30 * 60 * 1000).toISOString());
-      var rows = res.data || [];
-      var count = 0;
-      Object.keys(peerMarkers).forEach(function (k) {
-        map.removeLayer(peerMarkers[k]);
-      });
-      peerMarkers = {};
-      rows.forEach(function (r) {
-        if (me && r.user_id === me.id) return;
-        if (r.lat == null) return;
-        count += 1;
-        peerMarkers[r.user_id] = L.circleMarker([r.lat, r.lng], {
-          radius: 7, color: '#1e88e5', fillColor: '#1e88e5', fillOpacity: 0.9
-        }).addTo(map).bindPopup(r.display_name || '成員');
-      });
-      document.getElementById('partStatus').textContent =
-        '目前分享定位人數：' + (count + (shareOn && myLat != null ? 1 : 0)) +
-        '（含行程點 ' + waypoints.length + ' 個）';
-    }
+  if (
+    myLat == null
+  ) {
 
-    function onPosition(pos) {
-      myLat = pos.coords.latitude;
-      myLng = pos.coords.longitude;
-      updateMyMarker();
-      var t = new Date();
-      setSub('定位中 ' + t.getHours() + ':' + String(t.getMinutes()).padStart(2, '0') + ':' +
-        String(t.getSeconds()).padStart(2, '0'));
-      uploadLocation();
-      loadPeers();
-    }
+    alert(
+      '請先開啟定位'
+    );
 
-    function stopShare() {
-      shareOn = false;
-      if (watchId != null) {
-        navigator.geolocation.clearWatch(watchId);
-        watchId = null;
-      }
-      if (uploadTimer) {
-        clearInterval(uploadTimer);
-        uploadTimer = null;
-      }
-      document.getElementById('btnShare').textContent = '開啟定位';
-      document.getElementById('btnShare').className = 'btn btn-green';
-      setShareStatus('定位：關閉');
-      setSub('定位已關閉');
-    }
+    return;
 
-    function startShare() {
-      if (!window.isSecureContext && location.protocol !== 'https:') {
-        alert('定位需要 HTTPS。請用 GitHub Pages 網址開啟，不要用檔案直接開。');
-        return;
-      }
-      if (!navigator.geolocation) {
-        alert('此裝置／瀏覽器不支援定位');
-        return;
-      }
-      shareOn = true;
-      document.getElementById('btnShare').textContent = '關閉定位';
-      document.getElementById('btnShare').className = 'btn btn-red';
-      setShareStatus('定位：開啟中…');
-      setSub('正在請求定位權限…');
+  }
 
-      navigator.geolocation.getCurrentPosition(function (pos) {
-        onPosition(pos);
-        map.setView([myLat, myLng], 15);
-        setShareStatus('定位：開啟');
-      }, function (err) {
-        stopShare();
-        alert('定位失敗：' + geoErrorText(err));
-      }, { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 });
 
-      watchId = navigator.geolocation.watchPosition(
-        onPosition,
-        function (err) {
-          setSub('定位異常：' + geoErrorText(err));
-        },
-        { enableHighAccuracy: true, timeout: 15000, maximumAge: 3000 }
+  destination = {
+
+    lat: lat,
+
+    lng: lng,
+
+    name: name
+
+  };
+
+
+  document.getElementById(
+    'navigationInfo'
+  ).classList.add(
+    'show'
+  );
+
+
+  document.getElementById(
+    'routeStatus'
+  ).textContent =
+    '正在規劃道路…';
+
+
+  await calculateRoute();
+
+}
+
+
+/* =========================================================
+   21. OSRM 道路路線
+========================================================= */
+
+async function calculateRoute() {
+
+  if (
+    !destination
+    ||
+    myLat == null
+  ) {
+
+    return;
+
+  }
+
+
+  var url =
+
+    'https://router.project-osrm.org/route/v1/driving/'
+    +
+
+    myLng
+    +
+    ','
+    +
+    myLat
+    +
+    ';'
+    +
+    destination.lng
+    +
+    ','
+    +
+    destination.lat
+    +
+
+    '?overview=full&geometries=geojson&steps=true';
+
+
+  try {
+
+    var response =
+      await fetch(url);
+
+
+    if (
+      !response.ok
+    ) {
+
+      throw new Error(
+        'route error'
       );
 
-      uploadTimer = setInterval(function () {
-        if (myLat != null) uploadLocation();
-      }, 5000);
     }
 
-    document.getElementById('btnShare').onclick = function () {
-      if (shareOn) stopShare();
-      else startShare();
-    };
 
-    document.getElementById('btnAddHere').onclick = function () {
-      if (myLat == null) {
-        alert('請先開啟定位');
-        return;
-      }
-      addWaypoint(myLat, myLng);
-    };
-    document.getElementById('btnAddMap').onclick = function () {
-      var c = map.getCenter();
-      addWaypoint(c.lat, c.lng);
-    };
+    var data =
+      await response.json();
 
-    document.getElementById('btnSos').onclick = async function () {
-      if (!me || !sb) {
-        alert('請先登入');
-        return;
-      }
-      if (!confirm('向本群組／活動發送 SOS 求助？')) return;
-      var res = await sb.from('sos_events').insert({
-        room_id: roomId,
-        user_id: me.id,
-        display_name: (me.email || 'user').split('@')[0],
-        lat: myLat,
-        lng: myLng,
-        message: '遇到危險或迷路，需要協助'
-      });
-      if (res.error) {
-        alert('SOS 失敗：' + res.error.message);
-        return;
-      }
-      if (myLat != null) {
-        L.circleMarker([myLat, myLng], {
-          radius: 12, color: '#c62828', fillColor: '#c62828', fillOpacity: 0.5
-        }).addTo(map).bindPopup('SOS').openPopup();
-      }
-      alert('已向群組發送 SOS');
-      if (navigator.vibrate) navigator.vibrate([200, 100, 200, 100, 400]);
-    };
 
-    function listenSos() {
-      if (!sb) return;
-      sb.channel('sos-' + roomId)
-        .on('postgres_changes', {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'sos_events',
-          filter: 'room_id=eq.' + roomId
-        }, function (payload) {
-          var row = payload.new;
-          if (!row) return;
-          var ban = document.getElementById('sosBanner');
-          ban.textContent = '🚨 SOS ' + (row.display_name || '成員') + '：' + (row.message || '需要協助');
-          ban.classList.add('show');
-          if (row.lat != null) {
-            L.circleMarker([row.lat, row.lng], {
-              radius: 12, color: '#c62828', fillColor: '#c62828', fillOpacity: 0.5
-            }).addTo(map).bindPopup('SOS ' + (row.display_name || '')).openPopup();
-            map.setView([row.lat, row.lng], 15);
+    if (
+      data.code !== 'Ok'
+      ||
+      !data.routes.length
+    ) {
+
+      throw new Error(
+        '找不到道路'
+      );
+
+    }
+
+
+    var route =
+      data.routes[0];
+
+
+    routeDistance =
+      route.distance;
+
+
+    routeCoordinates =
+      route.geometry.coordinates.map(
+        function (p) {
+
+          return [
+            p[1],
+            p[0]
+          ];
+
+        }
+      );
+
+
+    if (
+      routeLine
+    ) {
+
+      map.removeLayer(
+        routeLine
+      );
+
+    }
+
+
+    routeLine =
+      L.polyline(
+
+        routeCoordinates,
+
+        {
+
+          weight: 6,
+
+          opacity: .85
+
+        }
+
+      ).addTo(map);
+
+
+    map.fitBounds(
+      routeLine.getBounds(),
+      {
+        padding: [70, 70]
+      }
+    );
+
+
+    navigationActive =
+      true;
+
+
+    document.getElementById(
+      'stopNavigationBtn'
+    ).style.display =
+      'inline-block';
+
+
+    document.getElementById(
+      'routeStatus'
+    ).textContent =
+      '導航前往：'
+      +
+      destination.name
+      +
+      '｜總距離 '
+      +
+      formatDistance(
+        routeDistance
+      );
+
+
+    speak(
+      '導航開始，前往'
+      +
+      destination.name
+    );
+
+  }
+
+  catch (error) {
+
+    console.error(
+      error
+    );
+
+
+    document.getElementById(
+      'routeStatus'
+    ).textContent =
+      '導航路線規劃失敗';
+
+    alert(
+      '目前無法取得導航路線，請稍後再試。'
+    );
+
+  }
+
+}
+
+
+/* =========================================================
+   22. 計算目前距離目的地
+========================================================= */
+
+function updateNavigation() {
+
+  if (
+    !navigationActive
+    ||
+    !destination
+    ||
+    myLat == null
+  ) {
+
+    return;
+
+  }
+
+
+  var d =
+    distanceMeters(
+
+      myLat,
+      myLng,
+
+      destination.lat,
+      destination.lng
+
+    );
+
+
+  document.getElementById(
+    'navDistance'
+  ).textContent =
+    formatDistance(d);
+
+
+  /*
+    接近目的地
+  */
+
+  if (
+    d <= 40
+  ) {
+
+    document.getElementById(
+      'routeStatus'
+    ).textContent =
+      '🏁 已抵達目的地';
+
+
+    speak(
+      '您已抵達目的地'
+    );
+
+
+    navigationActive =
+      false;
+
+
+    return;
+
+  }
+
+
+  /*
+    判斷是否偏離導航路線
+  */
+
+  var nearest =
+    nearestRouteDistance();
+
+
+  if (
+    nearest > 80
+  ) {
+
+    var now =
+      Date.now();
+
+
+    if (
+      now -
+      lastRerouteTime
+      >
+      10000
+    ) {
+
+      lastRerouteTime =
+        now;
+
+
+      document.getElementById(
+        'routeStatus'
+      ).textContent =
+        '↻ 偵測到偏離路線，重新規劃…';
+
+
+      calculateRoute();
+
+    }
+
+  }
+
+}
+
+
+/* =========================================================
+   23. 找最近路線距離
+========================================================= */
+
+function nearestRouteDistance() {
+
+  if (
+    !routeCoordinates.length
+    ||
+    myLat == null
+  ) {
+
+    return Infinity;
+
+  }
+
+
+  var min =
+    Infinity;
+
+
+  /*
+    每隔幾個點檢查一次，
+    避免手機負擔太大。
+  */
+
+  for (
+    var i = 0;
+    i < routeCoordinates.length;
+    i += 3
+  ) {
+
+    var p =
+      routeCoordinates[i];
+
+
+    var d =
+      distanceMeters(
+
+        myLat,
+        myLng,
+
+        p[0],
+        p[1]
+
+      );
+
+
+    if (
+      d < min
+    ) {
+
+      min = d;
+
+    }
+
+  }
+
+
+  return min;
+
+}
+
+
+/* =========================================================
+   24. 結束導航
+========================================================= */
+
+function stopNavigation() {
+
+  navigationActive =
+    false;
+
+
+  destination =
+    null;
+
+
+  routeCoordinates =
+    [];
+
+
+  if (
+    routeLine
+  ) {
+
+    map.removeLayer(
+      routeLine
+    );
+
+    routeLine =
+      null;
+
+  }
+
+
+  document.getElementById(
+    'navigationInfo'
+  ).classList.remove(
+    'show'
+  );
+
+
+  document.getElementById(
+    'stopNavigationBtn'
+  ).style.display =
+    'none';
+
+
+  document.getElementById(
+    'navDistance'
+  ).textContent =
+    '--';
+
+
+  document.getElementById(
+    'routeStatus'
+  ).textContent =
+    '尚未開始導航';
+
+}
+
+
+/* =========================================================
+   25. 集合點
+========================================================= */
+
+function numIcon(n) {
+
+  return L.divIcon({
+
+    className: '',
+
+    html:
+      '<div class="marker-num">'
+      +
+      n
+      +
+      '</div>',
+
+    iconSize:
+      [28,28],
+
+    iconAnchor:
+      [14,14]
+
+  });
+
+}
+
+
+async function loadWaypoints() {
+
+  var res =
+    await sb
+      .from('meetup_waypoints')
+      .select('*')
+      .eq(
+        'room_id',
+        roomId
+      )
+      .order(
+        'seq',
+        {
+          ascending: true
+        }
+      );
+
+
+  if (
+    res.error
+  ) {
+
+    console.error(
+      res.error
+    );
+
+    return;
+
+  }
+
+
+  waypoints =
+    res.data
+    ||
+    [];
+
+
+  renderWaypoints();
+
+}
+
+
+function renderWaypoints() {
+
+  Object.keys(
+    wpMarkers
+  ).forEach(
+    function (key) {
+
+      map.removeLayer(
+        wpMarkers[key]
+      );
+
+    }
+  );
+
+
+  wpMarkers = {};
+
+
+  var box =
+    document.getElementById(
+      'wpList'
+    );
+
+
+  box.innerHTML = '';
+
+
+  waypoints.forEach(
+    function (w) {
+
+      var m =
+        L.marker(
+
+          [
+            w.lat,
+            w.lng
+          ],
+
+          {
+            icon:
+              numIcon(w.seq)
           }
-          if (navigator.vibrate) navigator.vibrate([300, 150, 300]);
-        })
-        .subscribe();
+
+        ).addTo(map);
+
+
+      m.bindPopup(
+        '<b>#'
+        +
+        w.seq
+        +
+        ' '
+        +
+        w.title
+        +
+        '</b>'
+      );
+
+
+      wpMarkers[w.id] =
+        m;
+
+
+      var div =
+        document.createElement(
+          'div'
+        );
+
+
+      div.className =
+        'wp-item';
+
+
+      div.innerHTML =
+
+        '<div class="num">'
+        +
+        w.seq
+        +
+        '</div>'
+
+        +
+
+        '<div style="flex:1">'
+        +
+        '<b>'
+        +
+        w.title
+        +
+        '</b>'
+        +
+        '</div>'
+
+        +
+
+        '<button class="btn btn-gray">導航</button>';
+
+
+      div.querySelector(
+        'button'
+      ).onclick =
+        function () {
+
+          if (
+            myLat == null
+          ) {
+
+            alert(
+              '請先開啟定位'
+            );
+
+            return;
+
+          }
+
+
+          startNavigation(
+            w.lat,
+            w.lng,
+            w.title
+          );
+
+        };
+
+
+      box.appendChild(
+        div
+      );
+
+    }
+  );
+
+
+  document.getElementById(
+    'partStatus'
+  ).textContent =
+    '集合點：'
+    +
+    waypoints.length;
+
+}
+
+
+/* =========================================================
+   26. 新增集合點
+========================================================= */
+
+async function addWaypoint(
+  lat,
+  lng
+) {
+
+  if (
+    !me
+  ) {
+
+    alert(
+      '請先登入'
+    );
+
+    return;
+
+  }
+
+
+  var title =
+    document.getElementById(
+      'wpTitle'
+    ).value.trim()
+    ||
+    (
+      '集合點 '
+      +
+      (
+        waypoints.length
+        +
+        1
+      )
+    );
+
+
+  var t =
+    document.getElementById(
+      'wpTime'
+    ).value;
+
+
+  var meetAt =
+    t
+      ? new Date(t).toISOString()
+      : null;
+
+
+  var seq =
+    waypoints.length
+      ? (
+          waypoints[
+            waypoints.length - 1
+          ].seq
+          +
+          1
+        )
+      : 1;
+
+
+  var res =
+    await sb
+      .from('meetup_waypoints')
+      .insert({
+
+        room_id:
+          roomId,
+
+        seq:
+          seq,
+
+        title:
+          title,
+
+        lat:
+          lat,
+
+        lng:
+          lng,
+
+        meet_at:
+          meetAt,
+
+        created_by:
+          me.id
+
+      });
+
+
+  if (
+    res.error
+  ) {
+
+    alert(
+      '新增失敗：'
+      +
+      res.error.message
+    );
+
+    return;
+
+  }
+
+
+  document.getElementById(
+    'wpTitle'
+  ).value = '';
+
+
+  await loadWaypoints();
+
+}
+
+
+/* =========================================================
+   27. 集合點地址搜尋
+========================================================= */
+
+async function searchCollectionPlace() {
+
+  var q =
+    document.getElementById(
+      'searchInput'
+    ).value.trim();
+
+
+  if (
+    !q
+  ) {
+
+    alert(
+      '請輸入地址'
+    );
+
+    return;
+
+  }
+
+
+  var box =
+    document.getElementById(
+      'searchResults'
+    );
+
+
+  box.style.display =
+    'block';
+
+
+  box.innerHTML =
+    '<div style="padding:10px">搜尋中…</div>';
+
+
+  try {
+
+    var response =
+      await fetch(
+
+        'https://nominatim.openstreetmap.org/search?format=json&q='
+        +
+        encodeURIComponent(q)
+        +
+        '&limit=6&accept-language=zh-TW'
+
+      );
+
+
+    var arr =
+      await response.json();
+
+
+    box.innerHTML = '';
+
+
+    arr.forEach(
+      function (item) {
+
+        var div =
+          document.createElement(
+            'div'
+          );
+
+
+        div.style.cssText =
+          'padding:10px;border-bottom:1px solid #eee;font-size:12px';
+
+
+        div.textContent =
+          item.display_name;
+
+
+        div.onclick =
+          function () {
+
+            addWaypoint(
+
+              Number(
+                item.lat
+              ),
+
+              Number(
+                item.lon
+              )
+
+            );
+
+
+            map.setView(
+
+              [
+                Number(item.lat),
+                Number(item.lon)
+              ],
+
+              16
+
+            );
+
+
+            box.style.display =
+              'none';
+
+          };
+
+
+        box.appendChild(
+          div
+        );
+
+      }
+    );
+
+  }
+
+  catch (error) {
+
+    box.innerHTML =
+      '<div style="padding:10px;color:red">搜尋失敗</div>';
+
+  }
+
+}
+
+
+/* =========================================================
+   28. SOS
+========================================================= */
+
+document.getElementById(
+  'btnSos'
+).onclick =
+  async function () {
+
+    if (
+      !me
+    ) {
+
+      alert(
+        '請先登入'
+      );
+
+      return;
+
     }
 
-    bootAuth();
-  })();
-  </script>
-  <script src="call-notify.js"></script>
+
+    if (
+      !confirm(
+        '向本群組發送 SOS？'
+      )
+    ) {
+
+      return;
+
+    }
+
+
+    var res =
+      await sb
+        .from('sos_events')
+        .insert({
+
+          room_id:
+            roomId,
+
+          user_id:
+            me.id,
+
+          display_name:
+            (
+              me.email
+              ||
+              'user'
+            ).split('@')[0],
+
+          lat:
+            myLat,
+
+          lng:
+            myLng,
+
+          message:
+            '遇到危險或迷路，需要協助'
+
+        });
+
+
+    if (
+      res.error
+    ) {
+
+      alert(
+        'SOS 失敗：'
+        +
+        res.error.message
+      );
+
+      return;
+
+    }
+
+
+    alert(
+      '已向群組發送 SOS'
+    );
+
+
+    if (
+      navigator.vibrate
+    ) {
+
+      navigator.vibrate([
+        200,
+        100,
+        200,
+        100,
+        400
+      ]);
+
+    }
+
+  };
+
+
+/* =========================================================
+   29. SOS 即時監聽
+========================================================= */
+
+function listenSos() {
+
+  sb.channel(
+    'sos-' + roomId
+  )
+
+  .on(
+
+    'postgres_changes',
+
+    {
+
+      event:
+        'INSERT',
+
+      schema:
+        'public',
+
+      table:
+        'sos_events',
+
+      filter:
+        'room_id=eq.'
+        +
+        roomId
+
+    },
+
+    function (payload) {
+
+      var row =
+        payload.new;
+
+
+      if (
+        !row
+      ) {
+
+        return;
+
+      }
+
+
+      var banner =
+        document.getElementById(
+          'sosBanner'
+        );
+
+
+      banner.textContent =
+        '🚨 SOS '
+        +
+        (
+          row.display_name
+          ||
+          '成員'
+        )
+        +
+        '：'
+        +
+        (
+          row.message
+          ||
+          '需要協助'
+        );
+
+
+      banner.classList.add(
+        'show'
+      );
+
+
+      if (
+        row.lat != null
+      ) {
+
+        L.circleMarker(
+
+          [
+            row.lat,
+            row.lng
+          ],
+
+          {
+
+            radius: 12,
+
+            color: '#c62828',
+
+            fillColor: '#c62828',
+
+            fillOpacity: .5
+
+          }
+
+        )
+        .addTo(map)
+        .bindPopup(
+          '🚨 SOS '
+          +
+          (
+            row.display_name
+            ||
+            ''
+          )
+        )
+        .openPopup();
+
+      }
+
+
+      if (
+        navigator.vibrate
+      ) {
+
+        navigator.vibrate([
+          300,
+          150,
+          300
+        ]);
+
+      }
+
+    }
+
+  )
+
+  .subscribe();
+
+}
+
+
+/* =========================================================
+   30. 按鈕
+========================================================= */
+
+document.getElementById(
+  'btnShare'
+).onclick =
+  function () {
+
+    if (
+      shareOn
+    ) {
+
+      stopShare();
+
+    }
+
+    else {
+
+      startShare();
+
+    }
+
+  };
+
+
+document.getElementById(
+  'navigationSearchBtn'
+).onclick =
+  searchPlace;
+
+
+document.getElementById(
+  'navigationInput'
+).addEventListener(
+  'keydown',
+  function (event) {
+
+    if (
+      event.key === 'Enter'
+    ) {
+
+      searchPlace();
+
+    }
+
+  }
+);
+
+
+document.getElementById(
+  'stopNavigationBtn'
+).onclick =
+  stopNavigation;
+
+
+document.getElementById(
+  'btnAddHere'
+).onclick =
+  function () {
+
+    if (
+      myLat == null
+    ) {
+
+      alert(
+        '請先開啟定位'
+      );
+
+      return;
+
+    }
+
+
+    addWaypoint(
+      myLat,
+      myLng
+    );
+
+  };
+
+
+document.getElementById(
+  'btnAddMap'
+).onclick =
+  function () {
+
+    var center =
+      map.getCenter();
+
+
+    addWaypoint(
+      center.lat,
+      center.lng
+    );
+
+  };
+
+
+document.getElementById(
+  'btnSearch'
+).onclick =
+  searchCollectionPlace;
+
+
+/* =========================================================
+   31. 登入初始化
+========================================================= */
+
+async function bootAuth() {
+
+  var session =
+    await sb.auth.getSession();
+
+
+  if (
+    session.data.session
+  ) {
+
+    me =
+      session.data.session.user;
+
+
+    setSub(
+      '已登入｜準備地圖'
+    );
+
+
+    await loadWaypoints();
+
+    await loadPeers();
+
+    listenSos();
+
+  }
+
+  else {
+
+    setSub(
+      '未登入｜可使用導航與本機定位'
+    );
+
+  }
+
+
+  await loadCameras();
+
+
+  setInterval(
+    loadPeers,
+    8000
+  );
+
+}
+
+
+/* =========================================================
+   32. 啟動
+========================================================= */
+
+bootAuth();
+
+
+})();
+</script>
+
+<script src="call-notify.js"></script>
+
 </body>
 </html>
