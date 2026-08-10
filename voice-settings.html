@@ -7,10 +7,13 @@
 
 <meta
   name="viewport"
-  content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+  content="width=device-width,
+           initial-scale=1.0,
+           maximum-scale=1.0,
+           user-scalable=no"
 >
 
-<title>我的聲音設定 - 安全團聚</title>
+<title>我的導航聲音｜安全團聚</title>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
@@ -22,11 +25,7 @@
   padding: 0;
 }
 
-html,
 body {
-
-  width: 100%;
-  min-height: 100%;
 
   font-family:
     -apple-system,
@@ -35,203 +34,198 @@ body {
     "Microsoft JhengHei",
     sans-serif;
 
-  background: #f5f5f5;
+  background: #f4f6f8;
+
   color: #222;
+
+  padding-bottom: 30px;
 
 }
 
 .header {
 
   position: sticky;
+
   top: 0;
-
-  height: 58px;
-
-  background: #06C755;
-  color: white;
-
-  display: flex;
-  align-items: center;
-
-  padding: 0 12px;
 
   z-index: 100;
 
+  background: #06C755;
+
+  color: white;
+
+  padding:
+    14px
+    14px;
+
+  display: flex;
+
+  align-items: center;
+
+  gap: 10px;
+
   box-shadow:
-    0 2px 8px rgba(0,0,0,.18);
+    0 2px 10px rgba(0,0,0,.18);
 
 }
 
 .back {
 
-  width: 38px;
-  height: 38px;
-
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
   color: white;
+
   text-decoration: none;
 
   font-size: 30px;
+
+  width: 35px;
+
+  text-align: center;
 
 }
 
 .header-title {
 
   font-size: 17px;
-  font-weight: 800;
 
-  margin-left: 6px;
+  font-weight: 900;
+
+}
+
+.header-sub {
+
+  font-size: 11px;
+
+  margin-top: 3px;
+
+  opacity: .9;
 
 }
 
 .container {
 
-  padding: 15px;
+  padding: 14px;
 
-  max-width: 600px;
+  max-width: 700px;
 
   margin: auto;
 
 }
 
-.card {
+.notice {
 
   background: white;
 
-  border-radius: 16px;
+  border-radius: 14px;
 
-  padding: 16px;
+  padding: 14px;
 
   margin-bottom: 14px;
 
   box-shadow:
     0 2px 10px rgba(0,0,0,.08);
 
-}
-
-.card-title {
-
-  font-size: 17px;
-
-  font-weight: 800;
-
-  margin-bottom: 8px;
-
-}
-
-.description {
-
   font-size: 13px;
-
-  color: #666;
 
   line-height: 1.6;
 
-  margin-bottom: 14px;
+}
+
+.notice strong {
+
+  color: #06C755;
 
 }
 
-.voice-name {
+.voice-card {
 
-  width: 100%;
+  background: white;
 
-  padding: 11px;
+  border-radius: 15px;
 
-  border:
-    1px solid #ddd;
-
-  border-radius: 10px;
-
-  font-size: 14px;
+  padding: 14px;
 
   margin-bottom: 12px;
 
-  outline: none;
+  box-shadow:
+    0 2px 10px rgba(0,0,0,.08);
 
 }
 
-.record-area {
+.voice-top {
 
-  text-align: center;
+  display: flex;
 
-  padding: 12px 0;
+  align-items: center;
+
+  gap: 10px;
 
 }
 
-.record-button {
+.voice-number {
 
-  width: 90px;
-  height: 90px;
+  width: 34px;
+
+  height: 34px;
 
   border-radius: 50%;
 
-  border: none;
-
-  background: #e53935;
+  background: #06C755;
 
   color: white;
 
-  font-size: 34px;
+  display: flex;
 
-  cursor: pointer;
+  align-items: center;
 
-  box-shadow:
-    0 4px 14px rgba(0,0,0,.2);
+  justify-content: center;
 
-}
+  font-weight: 900;
 
-.record-button.recording {
-
-  background: #b71c1c;
-
-  animation: pulse 1.2s infinite;
+  flex-shrink: 0;
 
 }
 
-@keyframes pulse {
+.voice-title {
 
-  0% {
-    transform: scale(1);
-  }
+  font-size: 15px;
 
-  50% {
-    transform: scale(1.08);
-  }
-
-  100% {
-    transform: scale(1);
-  }
+  font-weight: 900;
 
 }
 
-.record-status {
+.voice-text {
 
-  margin-top: 12px;
+  margin-top: 4px;
 
-  font-size: 14px;
+  color: #555;
+
+  font-size: 13px;
+
+}
+
+.status {
+
+  margin-top: 10px;
+
+  font-size: 12px;
+
+  color: #888;
+
+}
+
+.status.success {
+
+  color: #06a044;
 
   font-weight: 700;
 
 }
 
-.timer {
+.status.recording {
 
-  margin-top: 6px;
+  color: #d93025;
 
-  color: #777;
-
-  font-size: 13px;
-
-}
-
-audio {
-
-  width: 100%;
-
-  margin-top: 14px;
+  font-weight: 900;
 
 }
 
@@ -239,144 +233,158 @@ audio {
 
   display: flex;
 
-  gap: 8px;
+  gap: 7px;
 
-  margin-top: 12px;
+  margin-top: 11px;
 
 }
 
-.btn {
-
-  flex: 1;
+button {
 
   border: none;
 
   border-radius: 10px;
 
-  padding: 11px;
+  padding: 10px 12px;
 
-  font-size: 14px;
+  font-size: 12px;
 
-  font-weight: 700;
+  font-weight: 800;
 
   cursor: pointer;
 
 }
 
-.btn-green {
+.record-btn {
+
+  flex: 1;
 
   background: #06C755;
+
   color: white;
 
 }
 
-.btn-blue {
+.record-btn.recording {
+
+  background: #d93025;
+
+}
+
+.play-btn {
 
   background: #1677ff;
+
   color: white;
 
 }
 
-.btn-gray {
+.delete-btn {
 
   background: #eee;
+
   color: #333;
 
 }
 
-.btn-red {
-
-  background: #e53935;
-  color: white;
-
-}
-
-.btn:disabled {
+button:disabled {
 
   opacity: .45;
 
-}
-
-.voice-item {
-
-  border-bottom:
-    1px solid #eee;
-
-  padding: 12px 0;
+  cursor: not-allowed;
 
 }
 
-.voice-item:last-child {
+.progress {
 
-  border-bottom: none;
+  margin-top: 10px;
 
-}
+  height: 5px;
 
-.voice-item-title {
+  background: #eee;
 
-  font-weight: 700;
+  border-radius: 10px;
 
-  font-size: 14px;
+  overflow: hidden;
 
-  margin-bottom: 4px;
-
-}
-
-.voice-item-info {
-
-  color: #888;
-
-  font-size: 11px;
-
-  margin-bottom: 6px;
+  display: none;
 
 }
 
-.voice-item audio {
+.progress.show {
 
-  margin-top: 4px;
+  display: block;
 
 }
 
-.empty {
+.progress-bar {
+
+  height: 100%;
+
+  width: 0%;
+
+  background: #06C755;
+
+  transition: width .2s;
+
+}
+
+.global-status {
+
+  position: fixed;
+
+  left: 12px;
+
+  right: 12px;
+
+  bottom: 12px;
+
+  z-index: 999;
+
+  display: none;
+
+  background: #222;
+
+  color: white;
+
+  border-radius: 12px;
+
+  padding: 11px 13px;
 
   text-align: center;
-
-  color: #888;
-
-  padding: 20px 0;
-
-  font-size: 13px;
-
-}
-
-.loading {
-
-  text-align: center;
-
-  color: #777;
-
-  padding: 20px;
-
-  font-size: 13px;
-
-}
-
-.notice {
-
-  background: #fff8e1;
-
-  border-left: 4px solid #ffb300;
-
-  padding: 10px;
-
-  border-radius: 8px;
 
   font-size: 12px;
 
-  line-height: 1.6;
+  box-shadow:
+    0 4px 15px rgba(0,0,0,.25);
 
-  margin-top: 12px;
+}
+
+.global-status.show {
+
+  display: block;
+
+}
+
+.login-box {
+
+  background: #fff3cd;
+
+  color: #664d03;
+
+  border-radius: 12px;
+
+  padding: 14px;
+
+  font-size: 13px;
+
+  display: none;
+
+}
+
+.login-box.show {
+
+  display: block;
 
 }
 
@@ -388,6 +396,10 @@ audio {
 <body>
 
 
+<!-- =====================================================
+     頂部
+     ===================================================== -->
+
 <div class="header">
 
   <a
@@ -397,8 +409,19 @@ audio {
     ‹
   </a>
 
-  <div class="header-title">
-    我的聲音設定
+  <div>
+
+    <div class="header-title">
+      我的導航聲音
+    </div>
+
+    <div
+      class="header-sub"
+      id="loginStatus"
+    >
+      載入中…
+    </div>
+
   </div>
 
 </div>
@@ -407,127 +430,78 @@ audio {
 <div class="container">
 
 
-  <!-- 錄音 -->
+  <!-- ===================================================
+       說明
+       =================================================== -->
 
-  <div class="card">
+  <div class="notice">
 
-    <div class="card-title">
-      🎙️ 錄製我的聲音
-    </div>
+    <strong>🎙️ 建立你的導航語音</strong>
 
-    <div class="description">
+    <br>
 
-      錄製自己的聲音，未來可以用於
-      「安全團聚」的 AI 語音功能、
-      導航提醒及家庭 AI 助手。
+    請依照每個句子錄音。
 
-    </div>
+    <br>
 
+    錄好後會自動上傳到安全團聚的 Supabase Storage。
 
-    <input
-      id="voiceName"
-      class="voice-name"
-      placeholder="例如：我的聲音"
-      value="我的聲音"
-    >
+    <br>
 
+    之後導航時，可以播放你自己錄製的聲音。
 
-    <div class="record-area">
+    <br><br>
 
-      <button
-        id="recordButton"
-        class="record-button"
-        type="button"
-      >
-        🎙️
-      </button>
+    建議：
 
-      <div
-        id="recordStatus"
-        class="record-status"
-      >
-        按下開始錄音
-      </div>
+    <br>
 
-      <div
-        id="timer"
-        class="timer"
-      >
-        00:00
-      </div>
+    • 在安靜環境錄音
 
-    </div>
+    <br>
 
+    • 每句約 1～3 秒
 
-    <audio
-      id="previewAudio"
-      controls
-      style="display:none"
-    ></audio>
+    <br>
 
-
-    <div class="button-row">
-
-      <button
-        id="uploadButton"
-        class="btn btn-green"
-        disabled
-      >
-        ☁️ 上傳聲音
-      </button>
-
-      <button
-        id="resetButton"
-        class="btn btn-gray"
-        disabled
-      >
-        🔄 重新錄音
-      </button>
-
-    </div>
-
-
-    <div class="notice">
-
-      建議錄音環境保持安靜。
-      每段錄音建議約 10～30 秒，
-      說話自然、清楚即可。
-
-    </div>
+    • 用正常說話速度
 
   </div>
 
 
-  <!-- 已有聲音 -->
+  <div
+    class="login-box"
+    id="loginBox"
+  >
 
-  <div class="card">
-
-    <div class="card-title">
-      🎵 我的聲音
-    </div>
-
-    <div
-      id="voiceList"
-      class="loading"
-    >
-      載入中…
-    </div>
+    ⚠️ 請先登入安全團聚，再使用導航語音。
 
   </div>
+
+
+  <!-- ===================================================
+       10 組語音
+       =================================================== -->
+
+  <div id="voiceList"></div>
 
 
 </div>
 
 
-<script>
+<div
+  class="global-status"
+  id="globalStatus"
+></div>
 
-(function () {
+
+<script>
 
 "use strict";
 
 
 /* =========================================================
-   Supabase
+   1. Supabase
    ========================================================= */
 
 const SUPABASE_URL =
@@ -535,7 +509,7 @@ const SUPABASE_URL =
 
 
 const SUPABASE_KEY =
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBlcmZzaXBwZXJuY3Zqb2N6bmhsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODYwMTUyMzAsImV4cCI6MjEwMTU5MTIzMH0.I7vXkV247kAzRJ0RigDZt3Hzn8KJDyMc6o9E3oHJZoY";
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsImlzcyI6InN1cGFzZSIsInJlZiI6InBlcmZzaXBwZXJuY3Zqb2N6bmhsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODYwMTUyMzAsImV4cCI6MjEwMTU5MTIzMH0.I7vXkV247kAzRJ0RigDZt3Hzn8KJDyMc6o9E3oHJZoY";
 
 
 const sb =
@@ -545,55 +519,109 @@ const sb =
   );
 
 
-const BUCKET =
+/* =========================================================
+   2. Storage Bucket
+   ========================================================= */
+
+const VOICE_BUCKET =
   "voice-recordings";
 
 
 /* =========================================================
-   DOM
+   3. 資料表
    ========================================================= */
 
-const recordButton =
-  document.getElementById(
-    "recordButton"
-  );
+const VOICE_TABLE =
+  "user_voice_settings";
 
 
-const recordStatus =
-  document.getElementById(
-    "recordStatus"
-  );
+/* =========================================================
+   4. 10 組導航語音
+   ========================================================= */
+
+const VOICES = [
+
+  {
+    id: "start",
+    title: "開始導航",
+    text: "導航開始"
+  },
+
+  {
+    id: "camera",
+    title: "測速提醒",
+    text: "前方測速照相"
+  },
+
+  {
+    id: "slow",
+    title: "減速提醒",
+    text: "請減速"
+  },
+
+  {
+    id: "overspeed",
+    title: "超速提醒",
+    text: "目前超速，請減速"
+  },
+
+  {
+    id: "right",
+    title: "右轉",
+    text: "前方右轉"
+  },
+
+  {
+    id: "left",
+    title: "左轉",
+    text: "前方左轉"
+  },
+
+  {
+    id: "near_destination",
+    title: "即將到達",
+    text: "即將抵達目的地"
+  },
+
+  {
+    id: "arrived",
+    title: "已到達",
+    text: "已到達目的地"
+  },
+
+  {
+    id: "attention",
+    title: "注意路況",
+    text: "請注意前方路況"
+  },
+
+  {
+    id: "stop",
+    title: "導航停止",
+    text: "導航已停止"
+  }
+
+];
 
 
-const timerEl =
-  document.getElementById(
-    "timer"
-  );
+/* =========================================================
+   5. 全域變數
+   ========================================================= */
+
+let currentUser = null;
+
+let mediaRecorder = null;
+
+let recordingChunks = [];
+
+let recordingVoiceId = null;
+
+let voiceData = {};
 
 
-const previewAudio =
-  document.getElementById(
-    "previewAudio"
-  );
-
-
-const uploadButton =
-  document.getElementById(
-    "uploadButton"
-  );
-
-
-const resetButton =
-  document.getElementById(
-    "resetButton"
-  );
-
-
-const voiceName =
-  document.getElementById(
-    "voiceName"
-  );
-
+/* =========================================================
+   6. DOM
+   ========================================================= */
 
 const voiceList =
   document.getElementById(
@@ -601,30 +629,167 @@ const voiceList =
   );
 
 
+const loginStatus =
+  document.getElementById(
+    "loginStatus"
+  );
+
+
+const loginBox =
+  document.getElementById(
+    "loginBox"
+  );
+
+
+const globalStatus =
+  document.getElementById(
+    "globalStatus"
+  );
+
+
 /* =========================================================
-   狀態
+   7. 顯示訊息
    ========================================================= */
 
-let user = null;
+function showStatus(
+  text
+) {
 
-let mediaRecorder = null;
+  globalStatus.textContent =
+    text;
 
-let audioChunks = [];
+  globalStatus.classList.add(
+    "show"
+  );
 
-let audioBlob = null;
+  setTimeout(
+    function () {
 
-let audioUrl = null;
+      globalStatus.classList.remove(
+        "show"
+      );
 
-let timerInterval = null;
+    },
+    2500
+  );
 
-let recordingSeconds = 0;
+}
 
 
 /* =========================================================
-   登入
+   8. 建立頁面
    ========================================================= */
 
-async function checkAuth() {
+function renderVoiceList() {
+
+  voiceList.innerHTML =
+    "";
+
+  VOICES.forEach(
+    function (voice, index) {
+
+      const card =
+        document.createElement(
+          "div"
+        );
+
+      card.className =
+        "voice-card";
+
+      card.dataset.id =
+        voice.id;
+
+
+      card.innerHTML = `
+
+        <div class="voice-top">
+
+          <div class="voice-number">
+            ${index + 1}
+          </div>
+
+          <div>
+
+            <div class="voice-title">
+              ${voice.title}
+            </div>
+
+            <div class="voice-text">
+              請錄：「${voice.text}」
+            </div>
+
+          </div>
+
+        </div>
+
+
+        <div
+          class="status"
+          id="status-${voice.id}"
+        >
+          尚未錄音
+        </div>
+
+
+        <div class="progress">
+          <div
+            class="progress-bar"
+            id="progress-${voice.id}"
+          ></div>
+        </div>
+
+
+        <div class="button-row">
+
+          <button
+            type="button"
+            class="record-btn"
+            id="record-${voice.id}"
+            onclick="startRecording('${voice.id}')"
+          >
+            🎙️ 錄音
+          </button>
+
+          <button
+            type="button"
+            class="play-btn"
+            id="play-${voice.id}"
+            onclick="playVoice('${voice.id}')"
+            disabled
+          >
+            ▶️ 播放
+          </button>
+
+          <button
+            type="button"
+            class="delete-btn"
+            id="delete-${voice.id}"
+            onclick="deleteVoice('${voice.id}')"
+            disabled
+          >
+            🗑️
+          </button>
+
+        </div>
+
+      `;
+
+
+      voiceList.appendChild(
+        card
+      );
+
+    }
+  );
+
+}
+
+
+/* =========================================================
+   9. 取得登入者
+   ========================================================= */
+
+async function loadUser() {
 
   const result =
     await sb.auth.getSession();
@@ -632,339 +797,53 @@ async function checkAuth() {
 
   if (
     result.error
-    ||
-    !result.data.session
   ) {
-
-    recordStatus.textContent =
-      "請先登入安全團聚";
-
-    recordButton.disabled =
-      true;
-
-    uploadButton.disabled =
-      true;
-
-    voiceList.innerHTML =
-      '<div class="empty">請先登入</div>';
-
-    return false;
-
-  }
-
-
-  user =
-    result.data.session.user;
-
-
-  return true;
-
-}
-
-
-/* =========================================================
-   格式化時間
-   ========================================================= */
-
-function formatTime(
-  seconds
-) {
-
-  const min =
-    Math.floor(
-      seconds / 60
-    );
-
-  const sec =
-    seconds % 60;
-
-
-  return (
-    String(min).padStart(2, "0")
-    +
-    ":"
-    +
-    String(sec).padStart(2, "0")
-  );
-
-}
-
-
-/* =========================================================
-   找可用錄音格式
-   ========================================================= */
-
-function getMimeType() {
-
-  const types = [
-
-    "audio/webm;codecs=opus",
-
-    "audio/webm",
-
-    "audio/mp4",
-
-    "audio/ogg;codecs=opus"
-
-  ];
-
-
-  for (
-    const type
-    of types
-  ) {
-
-    if (
-      window.MediaRecorder
-      &&
-      MediaRecorder.isTypeSupported
-      &&
-      MediaRecorder.isTypeSupported(
-        type
-      )
-    ) {
-
-      return type;
-
-    }
-
-  }
-
-
-  return "";
-
-}
-
-
-/* =========================================================
-   開始錄音
-   ========================================================= */
-
-async function startRecording() {
-
-  try {
-
-    if (
-      !navigator.mediaDevices
-      ||
-      !navigator.mediaDevices.getUserMedia
-    ) {
-
-      alert(
-        "此瀏覽器不支援錄音"
-      );
-
-      return;
-
-    }
-
-
-    const stream =
-      await navigator.mediaDevices.getUserMedia({
-
-        audio: {
-
-          echoCancellation: true,
-
-          noiseSuppression: true,
-
-          autoGainControl: true
-
-        }
-
-      });
-
-
-    audioChunks =
-      [];
-
-
-    audioBlob =
-      null;
-
-
-    if (audioUrl) {
-
-      URL.revokeObjectURL(
-        audioUrl
-      );
-
-      audioUrl =
-        null;
-
-    }
-
-
-    const mimeType =
-      getMimeType();
-
-
-    mediaRecorder =
-      mimeType
-
-        ? new MediaRecorder(
-            stream,
-            {
-              mimeType:
-                mimeType
-            }
-          )
-
-        : new MediaRecorder(
-            stream
-          );
-
-
-    mediaRecorder.ondataavailable =
-      function (event) {
-
-        if (
-          event.data
-          &&
-          event.data.size > 0
-        ) {
-
-          audioChunks.push(
-            event.data
-          );
-
-        }
-
-      };
-
-
-    mediaRecorder.onstop =
-      function () {
-
-        const finalType =
-          mediaRecorder.mimeType
-          ||
-          mimeType
-          ||
-          "audio/webm";
-
-
-        audioBlob =
-          new Blob(
-            audioChunks,
-            {
-              type:
-                finalType
-            }
-          );
-
-
-        audioUrl =
-          URL.createObjectURL(
-            audioBlob
-          );
-
-
-        previewAudio.src =
-          audioUrl;
-
-
-        previewAudio.style.display =
-          "block";
-
-
-        uploadButton.disabled =
-          false;
-
-
-        resetButton.disabled =
-          false;
-
-
-        recordStatus.textContent =
-          "錄音完成，可以播放或上傳";
-
-
-        stream
-          .getTracks()
-          .forEach(
-            function (track) {
-
-              track.stop();
-
-            }
-          );
-
-      };
-
-
-    mediaRecorder.start();
-
-
-    recordingSeconds =
-      0;
-
-
-    timerEl.textContent =
-      "00:00";
-
-
-    recordButton.classList.add(
-      "recording"
-    );
-
-
-    recordButton.textContent =
-      "⏹️";
-
-
-    recordStatus.textContent =
-      "正在錄音…";
-
-
-    uploadButton.disabled =
-      true;
-
-
-    resetButton.disabled =
-      true;
-
-
-    timerInterval =
-      setInterval(
-        function () {
-
-          recordingSeconds++;
-
-
-          timerEl.textContent =
-            formatTime(
-              recordingSeconds
-            );
-
-
-          if (
-            recordingSeconds >= 60
-          ) {
-
-            stopRecording();
-
-          }
-
-        },
-        1000
-      );
-
-
-  }
-
-  catch (error) {
 
     console.error(
-      error
+      result.error
     );
 
+  }
 
-    alert(
-      "無法開始錄音："
+
+  if (
+    result.data.session
+  ) {
+
+    currentUser =
+      result.data.session.user;
+
+
+    loginStatus.textContent =
+      "已登入｜"
       +
-      error.message
+      (
+        currentUser.email
+        ||
+        "使用者"
+      );
+
+
+    loginBox.classList.remove(
+      "show"
     );
+
+
+    await loadVoiceSettings();
+
+  }
+  else {
+
+    loginStatus.textContent =
+      "尚未登入";
+
+
+    loginBox.classList.add(
+      "show"
+    );
+
+
+    disableAllButtons();
 
   }
 
@@ -972,13 +851,35 @@ async function startRecording() {
 
 
 /* =========================================================
-   停止錄音
+   10. 停用按鈕
    ========================================================= */
 
-function stopRecording() {
+function disableAllButtons() {
+
+  document
+    .querySelectorAll(
+      "button"
+    )
+    .forEach(
+      function (button) {
+
+        button.disabled =
+          true;
+
+      }
+    );
+
+}
+
+
+/* =========================================================
+   11. 載入語音資料
+   ========================================================= */
+
+async function loadVoiceSettings() {
 
   if (
-    !mediaRecorder
+    !currentUser
   ) {
 
     return;
@@ -986,176 +887,161 @@ function stopRecording() {
   }
 
 
+  const result =
+    await sb
+      .from(
+        VOICE_TABLE
+      )
+      .select("*")
+      .eq(
+        "user_id",
+        currentUser.id
+      );
+
+
   if (
-    mediaRecorder.state ===
-    "recording"
+    result.error
   ) {
 
-    mediaRecorder.stop();
-
-  }
-
-
-  if (
-    timerInterval
-  ) {
-
-    clearInterval(
-      timerInterval
+    console.error(
+      result.error
     );
 
-    timerInterval =
-      null;
+    showStatus(
+      "載入語音設定失敗"
+    );
+
+    return;
 
   }
 
 
-  recordButton.classList.remove(
-    "recording"
+  voiceData =
+    {};
+
+
+  (result.data || [])
+    .forEach(
+      function (row) {
+
+        voiceData[
+          row.voice_id
+        ] =
+          row;
+
+      }
+    );
+
+
+  VOICES.forEach(
+    function (voice) {
+
+      const row =
+        voiceData[
+          voice.id
+        ];
+
+
+      if (
+        row
+        &&
+        row.file_path
+      ) {
+
+        updateVoiceUI(
+          voice.id,
+          true
+        );
+
+      }
+
+    }
   );
-
-
-  recordButton.textContent =
-    "🎙️";
 
 }
 
 
 /* =========================================================
-   錄音按鈕
+   12. 更新 UI
    ========================================================= */
 
-recordButton.onclick =
-  function () {
+function updateVoiceUI(
+  voiceId,
+  exists
+) {
 
-    if (
-      mediaRecorder
-      &&
-      mediaRecorder.state ===
-      "recording"
-    ) {
-
-      stopRecording();
-
-    }
-    else {
-
-      startRecording();
-
-    }
-
-  };
-
-
-/* =========================================================
-   重新錄音
-   ========================================================= */
-
-resetButton.onclick =
-  function () {
-
-    if (
-      mediaRecorder
-      &&
-      mediaRecorder.state ===
-      "recording"
-    ) {
-
-      stopRecording();
-
-    }
-
-
-    audioChunks =
-      [];
-
-
-    audioBlob =
-      null;
-
-
-    if (audioUrl) {
-
-      URL.revokeObjectURL(
-        audioUrl
-      );
-
-      audioUrl =
-        null;
-
-    }
-
-
-    previewAudio.removeAttribute(
-      "src"
+  const status =
+    document.getElementById(
+      "status-" + voiceId
     );
 
 
-    previewAudio.style.display =
-      "none";
+  const play =
+    document.getElementById(
+      "play-" + voiceId
+    );
 
 
-    uploadButton.disabled =
+  const del =
+    document.getElementById(
+      "delete-" + voiceId
+    );
+
+
+  if (
+    exists
+  ) {
+
+    status.textContent =
+      "✅ 已錄製";
+
+
+    status.classList.add(
+      "success"
+    );
+
+
+    play.disabled =
+      false;
+
+
+    del.disabled =
+      false;
+
+  }
+  else {
+
+    status.textContent =
+      "尚未錄音";
+
+
+    status.classList.remove(
+      "success"
+    );
+
+
+    play.disabled =
       true;
 
 
-    resetButton.disabled =
+    del.disabled =
       true;
 
+  }
 
-    recordingSeconds =
-      0;
-
-
-    timerEl.textContent =
-      "00:00";
-
-
-    recordStatus.textContent =
-      "按下開始錄音";
-
-  };
+}
 
 
 /* =========================================================
-   取得副檔名
+   13. 開始錄音
    ========================================================= */
 
-function getExtension(
-  mime
+async function startRecording(
+  voiceId
 ) {
 
   if (
-    mime.includes("mp4")
-  ) {
-
-    return "mp4";
-
-  }
-
-
-  if (
-    mime.includes("ogg")
-  ) {
-
-    return "ogg";
-
-  }
-
-
-  return "webm";
-
-}
-
-
-/* =========================================================
-   上傳
-   ========================================================= */
-
-async function uploadVoice() {
-
-  if (
-    !user
+    !currentUser
   ) {
 
     alert(
@@ -1168,11 +1054,22 @@ async function uploadVoice() {
 
 
   if (
-    !audioBlob
+    recordingVoiceId
+  ) {
+
+    return;
+
+  }
+
+
+  if (
+    !navigator.mediaDevices
+    ||
+    !navigator.mediaDevices.getUserMedia
   ) {
 
     alert(
-      "請先錄音"
+      "此瀏覽器不支援錄音功能"
     );
 
     return;
@@ -1180,130 +1077,530 @@ async function uploadVoice() {
   }
 
 
-  const name =
-    voiceName.value.trim()
-    ||
-    "我的聲音";
+  try {
+
+    const stream =
+      await navigator.mediaDevices.getUserMedia(
+        {
+          audio: true
+        }
+      );
 
 
-  uploadButton.disabled =
-    true;
+    recordingChunks =
+      [];
 
 
-  uploadButton.textContent =
-    "上傳中…";
+    mediaRecorder =
+      new MediaRecorder(
+        stream
+      );
+
+
+    recordingVoiceId =
+      voiceId;
+
+
+    const recordBtn =
+      document.getElementById(
+        "record-" + voiceId
+      );
+
+
+    const status =
+      document.getElementById(
+        "status-" + voiceId
+      );
+
+
+    recordBtn.textContent =
+      "⏹️ 停止錄音";
+
+
+    recordBtn.classList.add(
+      "recording"
+    );
+
+
+    status.textContent =
+      "🔴 正在錄音…再按一次停止";
+
+
+    status.classList.add(
+      "recording"
+    );
+
+
+    mediaRecorder.ondataavailable =
+      function (event) {
+
+        if (
+          event.data.size > 0
+        ) {
+
+          recordingChunks.push(
+            event.data
+          );
+
+        }
+
+      };
+
+
+    mediaRecorder.onstop =
+      async function () {
+
+        stream
+          .getTracks()
+          .forEach(
+            function (track) {
+
+              track.stop();
+
+            }
+          );
+
+
+        const blob =
+          new Blob(
+            recordingChunks,
+            {
+              type:
+                mediaRecorder.mimeType
+                ||
+                "audio/webm"
+            }
+          );
+
+
+        mediaRecorder =
+          null;
+
+
+        recordingChunks =
+          [];
+
+
+        const finishedVoiceId =
+          recordingVoiceId;
+
+
+        recordingVoiceId =
+          null;
+
+
+        const btn =
+          document.getElementById(
+            "record-" +
+            finishedVoiceId
+          );
+
+
+        btn.textContent =
+          "🎙️ 錄音";
+
+
+        btn.classList.remove(
+          "recording"
+        );
+
+
+        await uploadVoice(
+          finishedVoiceId,
+          blob
+        );
+
+      };
+
+
+    mediaRecorder.start();
+
+  }
+
+  catch (error) {
+
+    console.error(
+      error
+    );
+
+
+    recordingVoiceId =
+      null;
+
+
+    alert(
+      "無法使用麥克風："
+      +
+      error.message
+    );
+
+  }
+
+}
+
+
+/* =========================================================
+   14. 停止錄音
+   ========================================================= */
+
+function stopCurrentRecording() {
+
+  if (
+    mediaRecorder
+    &&
+    mediaRecorder.state
+    !==
+    "inactive"
+  ) {
+
+    mediaRecorder.stop();
+
+  }
+
+}
+
+
+/* =========================================================
+   15. 點擊錄音按鈕
+   ========================================================= */
+
+document.addEventListener(
+  "click",
+  function (event) {
+
+    const button =
+      event.target.closest(
+        ".record-btn"
+      );
+
+
+    if (
+      !button
+    ) {
+
+      return;
+
+    }
+
+
+    if (
+      recordingVoiceId
+    ) {
+
+      stopCurrentRecording();
+
+    }
+
+  }
+);
+
+
+/* =========================================================
+   16. 上傳錄音
+   ========================================================= */
+
+async function uploadVoice(
+  voiceId,
+  blob
+) {
+
+  if (
+    !currentUser
+  ) {
+
+    return;
+
+  }
+
+
+  const progress =
+    document.getElementById(
+      "progress-" +
+      voiceId
+    );
+
+
+  const progressBar =
+    document.getElementById(
+      "progress-" +
+      voiceId
+    )
+    .querySelector
+    ? null
+    : null;
+
+
+  progress.classList.add(
+    "show"
+  );
+
+
+  const status =
+    document.getElementById(
+      "status-" +
+      voiceId
+    );
+
+
+  status.textContent =
+    "☁️ 正在上傳…";
+
+
+  status.classList.remove(
+    "recording"
+  );
 
 
   try {
 
+    const old =
+      voiceData[
+        voiceId
+      ];
+
+
+    /*
+     * 如果原本有檔案，
+     * 先刪除舊檔案
+     */
+
+    if (
+      old
+      &&
+      old.file_path
+    ) {
+
+      await sb.storage
+        .from(
+          VOICE_BUCKET
+        )
+        .remove([
+          old.file_path
+        ]);
+
+    }
+
+
     const extension =
-      getExtension(
-        audioBlob.type
-      );
+      blob.type.includes(
+        "mp4"
+      )
+        ? "mp4"
+        : "webm";
 
 
-    const fileName =
+    const filePath =
 
-      "voice_"
+      currentUser.id
       +
-      Date.now()
+      "/"
+      +
+      voiceId
       +
       "."
       +
       extension;
 
 
-    const storagePath =
-
-      user.id
-      +
-      "/"
-      +
-      fileName;
-
-
-    const uploadResult =
+    const upload =
       await sb.storage
         .from(
-          BUCKET
+          VOICE_BUCKET
         )
         .upload(
-          storagePath,
-          audioBlob,
+          filePath,
+          blob,
           {
-
             contentType:
-              audioBlob.type
+              blob.type
               ||
               "audio/webm",
 
             upsert:
-              false
-
+              true
           }
         );
 
 
     if (
-      uploadResult.error
+      upload.error
     ) {
 
-      throw uploadResult.error;
+      throw upload.error;
 
     }
 
 
-    const dbResult =
+    /*
+     * 建立／更新資料表
+     */
+
+    const save =
       await sb
         .from(
-          "voice_profiles"
+          VOICE_TABLE
         )
-        .insert({
+        .upsert(
+          {
 
-          user_id:
-            user.id,
+            user_id:
+              currentUser.id,
 
-          voice_name:
-            name,
+            voice_id:
+              voiceId,
 
-          storage_path:
-            storagePath,
+            file_path:
+              filePath,
 
-          mime_type:
-            audioBlob.type,
+            mime_type:
+              blob.type
+              ||
+              "audio/webm",
 
-          duration_seconds:
-            recordingSeconds
+            updated_at:
+              new Date()
+                .toISOString()
 
-        });
+          },
+
+          {
+            onConflict:
+              "user_id,voice_id"
+          }
+
+        )
+        .select()
+        .single();
 
 
     if (
-      dbResult.error
+      save.error
     ) {
 
-      await sb.storage
-        .from(
-          BUCKET
-        )
-        .remove([
-          storagePath
-        ]);
-
-      throw dbResult.error;
+      throw save.error;
 
     }
 
 
-    alert(
-      "聲音已成功儲存"
+    voiceData[
+      voiceId
+    ] =
+      save.data;
+
+
+    updateVoiceUI(
+      voiceId,
+      true
     );
 
 
-    resetButton.click();
+    status.textContent =
+      "✅ 上傳成功";
 
 
-    await loadVoiceList();
+    showStatus(
+      "語音上傳成功"
+    );
+
+  }
+
+  catch (error) {
+
+    console.error(
+      error
+    );
+
+
+    status.textContent =
+      "❌ 上傳失敗";
+
+
+    alert(
+      "語音上傳失敗："
+      +
+      error.message
+    );
+
+  }
+
+  finally {
+
+    progress.classList.remove(
+      "show"
+    );
+
+  }
+
+}
+
+
+/* =========================================================
+   17. 取得語音 URL
+   ========================================================= */
+
+function getVoiceUrl(
+  filePath
+) {
+
+  const result =
+    sb.storage
+      .from(
+        VOICE_BUCKET
+      )
+      .getPublicUrl(
+        filePath
+      );
+
+
+  return result.data.publicUrl;
+
+}
+
+
+/* =========================================================
+   18. 播放語音
+   ========================================================= */
+
+async function playVoice(
+  voiceId
+) {
+
+  const row =
+    voiceData[
+      voiceId
+    ];
+
+
+  if (
+    !row
+    ||
+    !row.file_path
+  ) {
+
+    alert(
+      "這段語音尚未錄製"
+    );
+
+    return;
+
+  }
+
+
+  try {
+
+    const url =
+      getVoiceUrl(
+        row.file_path
+      );
+
+
+    const audio =
+      new Audio(
+        url
+      );
+
+
+    await audio.play();
 
   }
 
@@ -1315,292 +1612,7 @@ async function uploadVoice() {
 
 
     alert(
-      "上傳失敗："
-      +
-      error.message
-    );
-
-  }
-
-
-  uploadButton.disabled =
-    false;
-
-
-  uploadButton.textContent =
-    "☁️ 上傳聲音";
-
-}
-
-
-/* =========================================================
-   上傳按鈕
-   ========================================================= */
-
-uploadButton.onclick =
-  uploadVoice;
-
-
-/* =========================================================
-   產生私人下載 URL
-   ========================================================= */
-
-async function createAudioUrl(
-  path
-) {
-
-  const result =
-    await sb.storage
-      .from(
-        BUCKET
-      )
-      .createSignedUrl(
-        path,
-        3600
-      );
-
-
-  if (
-    result.error
-  ) {
-
-    console.error(
-      result.error
-    );
-
-    return null;
-
-  }
-
-
-  return result.data.signedUrl;
-
-}
-
-
-/* =========================================================
-   載入聲音列表
-   ========================================================= */
-
-async function loadVoiceList() {
-
-  if (
-    !user
-  ) {
-
-    return;
-
-  }
-
-
-  voiceList.innerHTML =
-    '<div class="loading">載入中…</div>';
-
-
-  const result =
-    await sb
-      .from(
-        "voice_profiles"
-      )
-      .select("*")
-      .eq(
-        "user_id",
-        user.id
-      )
-      .order(
-        "created_at",
-        {
-          ascending:
-            false
-        }
-      );
-
-
-  if (
-    result.error
-  ) {
-
-    console.error(
-      result.error
-    );
-
-
-    voiceList.innerHTML =
-      '<div class="empty">聲音資料載入失敗</div>';
-
-    return;
-
-  }
-
-
-  const rows =
-    result.data
-    ||
-    [];
-
-
-  if (
-    !rows.length
-  ) {
-
-    voiceList.innerHTML =
-      '<div class="empty">目前還沒有錄製的聲音</div>';
-
-    return;
-
-  }
-
-
-  voiceList.innerHTML =
-    "";
-
-
-  for (
-    const row
-    of rows
-  ) {
-
-    const item =
-      document.createElement(
-        "div"
-      );
-
-
-    item.className =
-      "voice-item";
-
-
-    const title =
-      document.createElement(
-        "div"
-      );
-
-
-    title.className =
-      "voice-item-title";
-
-
-    title.textContent =
-      "🎵 "
-      +
-      row.voice_name;
-
-
-    const info =
-      document.createElement(
-        "div"
-      );
-
-
-    info.className =
-      "voice-item-info";
-
-
-    const date =
-      new Date(
-        row.created_at
-      ).toLocaleString(
-        "zh-TW"
-      );
-
-
-    info.textContent =
-
-      date
-      +
-      "｜"
-      +
-      (
-        row.duration_seconds
-        ||
-        0
-      )
-      +
-      " 秒";
-
-
-    const audio =
-      document.createElement(
-        "audio"
-      );
-
-
-    audio.controls =
-      true;
-
-
-    const signedUrl =
-      await createAudioUrl(
-        row.storage_path
-      );
-
-
-    if (signedUrl) {
-
-      audio.src =
-        signedUrl;
-
-    }
-
-
-    const buttonRow =
-      document.createElement(
-        "div"
-      );
-
-
-    buttonRow.className =
-      "button-row";
-
-
-    const deleteButton =
-      document.createElement(
-        "button"
-      );
-
-
-    deleteButton.className =
-      "btn btn-red";
-
-
-    deleteButton.textContent =
-      "🗑️ 刪除";
-
-
-    deleteButton.onclick =
-      function () {
-
-        deleteVoice(
-          row
-        );
-
-      };
-
-
-    buttonRow.appendChild(
-      deleteButton
-    );
-
-
-    item.appendChild(
-      title
-    );
-
-    item.appendChild(
-      info
-    );
-
-    item.appendChild(
-      audio
-    );
-
-    item.appendChild(
-      buttonRow
-    );
-
-
-    voiceList.appendChild(
-      item
+      "播放失敗，請確認 Storage Bucket 權限"
     );
 
   }
@@ -1609,16 +1621,58 @@ async function loadVoiceList() {
 
 
 /* =========================================================
-   刪除聲音
+   19. 刪除語音
    ========================================================= */
 
 async function deleteVoice(
-  row
+  voiceId
 ) {
 
   if (
+    !currentUser
+  ) {
+
+    return;
+
+  }
+
+
+  const row =
+    voiceData[
+      voiceId
+    ];
+
+
+  if (
+    !row
+  ) {
+
+    return;
+
+  }
+
+
+  const voice =
+    VOICES.find(
+      function (item) {
+
+        return item.id === voiceId;
+
+      }
+    );
+
+
+  if (
     !confirm(
-      "確定要刪除這段聲音嗎？"
+      "確定刪除「"
+      +
+      (
+        voice
+          ? voice.title
+          : voiceId
+      )
+      +
+      "」的錄音嗎？"
     )
   ) {
 
@@ -1629,13 +1683,17 @@ async function deleteVoice(
 
   try {
 
+    /*
+     * 刪除 Storage
+     */
+
     const storageResult =
       await sb.storage
         .from(
-          BUCKET
+          VOICE_BUCKET
         )
         .remove([
-          row.storage_path
+          row.file_path
         ]);
 
 
@@ -1648,19 +1706,23 @@ async function deleteVoice(
     }
 
 
+    /*
+     * 刪除資料表
+     */
+
     const dbResult =
       await sb
         .from(
-          "voice_profiles"
+          VOICE_TABLE
         )
         .delete()
         .eq(
-          "id",
-          row.id
+          "user_id",
+          currentUser.id
         )
         .eq(
-          "user_id",
-          user.id
+          "voice_id",
+          voiceId
         );
 
 
@@ -1673,7 +1735,20 @@ async function deleteVoice(
     }
 
 
-    await loadVoiceList();
+    delete voiceData[
+      voiceId
+    ];
+
+
+    updateVoiceUI(
+      voiceId,
+      false
+    );
+
+
+    showStatus(
+      "錄音已刪除"
+    );
 
   }
 
@@ -1696,32 +1771,16 @@ async function deleteVoice(
 
 
 /* =========================================================
-   啟動
+   20. 初始化
    ========================================================= */
 
-async function init() {
+renderVoiceList();
 
-  const ok =
-    await checkAuth();
-
-
-  if (!ok) {
-
-    return;
-
-  }
+loadUser();
 
 
-  await loadVoiceList();
-
-}
-
-
-init();
-
-
-})();
 </script>
 
 </body>
+
 </html>
