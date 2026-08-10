@@ -174,9 +174,55 @@ button {
 
     <div id="preview" class="status hidden"></div>
 
-    <button id="updateBtn" disabled>
+        <button id="updateBtn" disabled>
       確認更新測速照相資料
     </button>
+
+  </div>
+
+
+  <!-- 🚨 科技執法資料 -->
+  <div class="card">
+
+    <h2>🚨 科技執法資料</h2>
+
+    <p>
+      上傳官方科技執法資料。
+      系統會自動辨識台北、台中等不同官方格式。
+    </p>
+
+    <input
+      type="file"
+      id="techCsvFile"
+      accept=".csv,text/csv"
+    >
+
+    <button
+      id="techPreviewBtn"
+      style="background:#7c3aed;color:white;"
+    >
+      預覽科技執法 CSV
+    </button>
+
+    <div
+      id="techPreview"
+      class="status hidden"
+    ></div>
+
+    <button
+      id="techUpdateBtn"
+      disabled
+      style="background:#ea580c;color:white;"
+    >
+      確認更新科技執法資料
+    </button>
+
+  </div>
+
+
+</div>
+
+<script>
 
   </div>
 
