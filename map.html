@@ -2080,23 +2080,7 @@ function speakCameraWarning(
   }
 
 
-  if (
-    !(
-      "speechSynthesis"
-      in window
-    )
-  ) {
-
-    return;
-
-  }
-
-
-  window.speechSynthesis.cancel();
-
-
   let text =
-
     "前方 "
     +
     Math.round(
@@ -2113,7 +2097,6 @@ function speakCameraWarning(
   ) {
 
     text +=
-
       "，速限 "
       +
       camera.speedLimit
@@ -2128,36 +2111,16 @@ function speakCameraWarning(
   ) {
 
     text +=
-
       "，目前超速，請減速";
 
   }
 
 
-  const utterance =
-    new SpeechSynthesisUtterance(
-      text
-    );
-
-
-  utterance.lang =
-    "zh-TW";
-
-
-  utterance.rate =
-    .95;
-
-
-  utterance.pitch =
-    1;
-
-
-  window.speechSynthesis.speak(
-    utterance
+  speak(
+    text
   );
 
 }
-
 
 /* =========================================================
    14. GPS 速度
@@ -2665,7 +2628,13 @@ async function startNavigation() {
 
   navigationOn =
     true;
+  if (
+  voiceOn
+) {
 
+  unlockSpeech();
+
+}
 
   document.body.classList.add(
     "navigation-mode"
@@ -2804,11 +2773,607 @@ navigationBtn.onclick =
 
 
 /* =========================================================
-   21. 語音開關
+   21. 語音系統＋聲音選擇
    ========================================================= */
+
+let speechReady = false;
+
+let selectedVoice = null;
+
+
+/* ---------------------------------------------------------
+   讀取已儲存的聲音
+   --------------------------------------------------------- */
+
+const savedVoiceName =
+  localStorage.getItem(
+    "safeReunionVoice"
+  );
+
+
+/* ---------------------------------------------------------
+   取得手機可用聲音
+   --------------------------------------------------------- */
+
+function getAvailableVoices() {
+
+  if (
+    !("speechSynthesis" in window)
+  ) {
+
+    return [];
+
+  }
+
+
+  return window
+    .speechSynthesis
+    .getVoices();
+
+}
+
+
+/* ---------------------------------------------------------
+   選擇最佳中文聲音
+   --------------------------------------------------------- */
+
+function chooseDefaultVoice() {
+
+  const voices =
+    getAvailableVoices();
+
+
+  if (
+    !voices.length
+  ) {
+
+    return null;
+
+  }
+
+
+  /*
+   * 如果使用者之前已經選過聲音
+   * 優先使用之前的選擇
+   */
+
+  if (
+    savedVoiceName
+  ) {
+
+    const saved =
+      voices.find(
+        function (voice) {
+
+          return (
+            voice.name
+            ===
+            savedVoiceName
+          );
+
+        }
+      );
+
+
+    if (
+      saved
+    ) {
+
+      return saved;
+
+    }
+
+  }
+
+
+  /*
+   * 優先台灣中文
+   */
+
+  let voice =
+    voices.find(
+      function (voice) {
+
+        return (
+          voice.lang
+          .toLowerCase()
+          ===
+          "zh-tw"
+        );
+
+      }
+    );
+
+
+  /*
+   * 再找其他中文
+   */
+
+  if (
+    !voice
+  ) {
+
+    voice =
+      voices.find(
+        function (voice) {
+
+          return (
+            voice.lang
+              .toLowerCase()
+              .startsWith(
+                "zh"
+              )
+          );
+
+        }
+      );
+
+  }
+
+
+  /*
+   * 最後使用系統第一個聲音
+   */
+
+  if (
+    !voice
+  ) {
+
+    voice =
+      voices[0];
+
+  }
+
+
+  return voice;
+
+}
+
+
+/* ---------------------------------------------------------
+   初始化語音
+   --------------------------------------------------------- */
+
+function initSpeech() {
+
+  if (
+    !("speechSynthesis" in window)
+  ) {
+
+    console.warn(
+      "此裝置不支援語音"
+    );
+
+    return;
+
+  }
+
+
+  function refreshVoices() {
+
+    const voices =
+      getAvailableVoices();
+
+
+    if (
+      voices.length
+    ) {
+
+      speechReady =
+        true;
+
+
+      if (
+        !selectedVoice
+      ) {
+
+        selectedVoice =
+          chooseDefaultVoice();
+
+      }
+
+
+      console.log(
+        "可用語音：",
+        voices
+      );
+
+    }
+
+  }
+
+
+  refreshVoices();
+
+
+  /*
+   * iPhone / Safari
+   * 語音清單可能延遲載入
+   */
+
+  window
+    .speechSynthesis
+    .onvoiceschanged =
+      refreshVoices;
+
+}
+
+
+/* ---------------------------------------------------------
+   播放語音
+   --------------------------------------------------------- */
+
+function speak(
+  text
+) {
+
+  if (
+    !voiceOn
+  ) {
+
+    return;
+
+  }
+
+
+  if (
+    !("speechSynthesis" in window)
+  ) {
+
+    return;
+
+  }
+
+
+  if (
+    !text
+  ) {
+
+    return;
+
+  }
+
+
+  const voices =
+    getAvailableVoices();
+
+
+  /*
+   * 如果聲音還沒準備好
+   * 再重新找一次
+   */
+
+  if (
+    !selectedVoice
+    &&
+    voices.length
+  ) {
+
+    selectedVoice =
+      chooseDefaultVoice();
+
+  }
+
+
+  try {
+
+    window
+      .speechSynthesis
+      .cancel();
+
+
+    const utterance =
+      new SpeechSynthesisUtterance(
+        text
+      );
+
+
+    /*
+     * 使用使用者選擇的聲音
+     */
+
+    if (
+      selectedVoice
+    ) {
+
+      utterance.voice =
+        selectedVoice;
+
+      utterance.lang =
+        selectedVoice.lang;
+
+    }
+    else {
+
+      utterance.lang =
+        "zh-TW";
+
+    }
+
+
+    utterance.rate =
+      0.95;
+
+
+    utterance.pitch =
+      1;
+
+
+    utterance.volume =
+      1;
+
+
+    utterance.onerror =
+      function (event) {
+
+        console.error(
+          "語音播放錯誤：",
+          event
+        );
+
+      };
+
+
+    window
+      .speechSynthesis
+      .speak(
+        utterance
+      );
+
+  }
+
+  catch (error) {
+
+    console.error(
+      "語音錯誤：",
+      error
+    );
+
+  }
+
+}
+
+
+/* ---------------------------------------------------------
+   iPhone / Safari 語音啟動
+   --------------------------------------------------------- */
+
+function unlockSpeech() {
+
+  if (
+    !("speechSynthesis" in window)
+  ) {
+
+    return;
+
+  }
+
+
+  try {
+
+    window
+      .speechSynthesis
+      .cancel();
+
+
+    const utterance =
+      new SpeechSynthesisUtterance(
+        "語音導航已開啟"
+      );
+
+
+    if (
+      selectedVoice
+    ) {
+
+      utterance.voice =
+        selectedVoice;
+
+      utterance.lang =
+        selectedVoice.lang;
+
+    }
+    else {
+
+      utterance.lang =
+        "zh-TW";
+
+    }
+
+
+    utterance.rate =
+      1;
+
+
+    utterance.volume =
+      1;
+
+
+    window
+      .speechSynthesis
+      .speak(
+        utterance
+      );
+
+  }
+
+  catch (error) {
+
+    console.error(
+      "語音初始化失敗：",
+      error
+    );
+
+  }
+
+}
+
+
+/* ---------------------------------------------------------
+   建立聲音選擇器
+   --------------------------------------------------------- */
+
+function showVoiceSelector() {
+
+  const voices =
+    getAvailableVoices();
+
+
+  if (
+    !voices.length
+  ) {
+
+    alert(
+      "目前還沒有取得手機語音清單，請稍後再試。"
+    );
+
+    return;
+
+  }
+
+
+  /*
+   * 只顯示中文優先，
+   * 但如果沒有中文就顯示全部。
+   */
+
+  let chineseVoices =
+    voices.filter(
+      function (voice) {
+
+        return voice.lang
+          .toLowerCase()
+          .startsWith("zh");
+
+      }
+    );
+
+
+  const list =
+    chineseVoices.length
+      ? chineseVoices
+      : voices;
+
+
+  let message =
+    "選擇語音：\n\n";
+
+
+  list.forEach(
+    function (voice, index) {
+
+      message +=
+
+        (
+          index + 1
+        )
+        +
+        ". "
+        +
+        voice.name
+        +
+        "（"
+        +
+        voice.lang
+        +
+        "）";
+
+      if (
+        selectedVoice
+        &&
+        voice.name
+        ===
+        selectedVoice.name
+      ) {
+
+        message +=
+          " ✓";
+
+      }
+
+
+      message +=
+        "\n";
+
+    }
+  );
+
+
+  const answer =
+    prompt(
+      message
+      +
+      "\n請輸入編號："
+    );
+
+
+  if (
+    answer === null
+  ) {
+
+    return;
+
+  }
+
+
+  const index =
+    parseInt(
+      answer,
+      10
+    );
+
+
+  if (
+    !Number.isInteger(index)
+    ||
+    index < 1
+    ||
+    index > list.length
+  ) {
+
+    alert(
+      "編號無效"
+    );
+
+    return;
+
+  }
+
+
+  selectedVoice =
+    list[
+      index - 1
+    ];
+
+
+  localStorage.setItem(
+    "safeReunionVoice",
+    selectedVoice.name
+  );
+
+
+  /*
+   * 立即測試新聲音
+   */
+
+  speak(
+    "這是新的導航語音"
+  );
+
+}
+
+
+/* ---------------------------------------------------------
+   語音按鈕
+   --------------------------------------------------------- */
 
 voiceBtn.onclick =
   function () {
+
+    /*
+     * 如果長按／一般點擊，
+     * 這裡先切換開關。
+     */
 
     voiceOn =
       !voiceOn;
@@ -2825,6 +3390,14 @@ voiceBtn.onclick =
         "silent"
       );
 
+
+      /*
+       * 使用者主動點擊，
+       * 可以解鎖 iPhone 語音。
+       */
+
+      unlockSpeech();
+
     }
     else {
 
@@ -2840,7 +3413,9 @@ voiceBtn.onclick =
         window.speechSynthesis
       ) {
 
-        window.speechSynthesis.cancel();
+        window
+          .speechSynthesis
+          .cancel();
 
       }
 
@@ -2848,6 +3423,80 @@ voiceBtn.onclick =
 
   };
 
+
+/* ---------------------------------------------------------
+   長按／右鍵／雙擊選擇聲音
+   --------------------------------------------------------- */
+
+voiceBtn.addEventListener(
+  "dblclick",
+  function (event) {
+
+    event.preventDefault();
+
+    showVoiceSelector();
+
+  }
+);
+
+
+/* ---------------------------------------------------------
+   語音按鈕長按
+   --------------------------------------------------------- */
+
+let voicePressTimer = null;
+
+
+voiceBtn.addEventListener(
+  "touchstart",
+  function () {
+
+    voicePressTimer =
+      setTimeout(
+        function () {
+
+          showVoiceSelector();
+
+        },
+        700
+      );
+
+  },
+  {
+    passive: true
+  }
+);
+
+
+voiceBtn.addEventListener(
+  "touchend",
+  function () {
+
+    if (
+      voicePressTimer
+    ) {
+
+      clearTimeout(
+        voicePressTimer
+      );
+
+      voicePressTimer =
+        null;
+
+    }
+
+  },
+  {
+    passive: true
+  }
+);
+
+
+/* ---------------------------------------------------------
+   初始化
+   --------------------------------------------------------- */
+
+initSpeech();
 
 /* =========================================================
    22. 開啟一般定位
