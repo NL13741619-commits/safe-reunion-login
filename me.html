@@ -6994,36 +6994,7 @@ async function saveNavigationVoice(
   }
 
 }
-/* =========================================================
-   【第 8-1 節】建立 Voice_profiles 資料表紀錄
-========================================================= */
 
-const {
-  error: profileError
-} = await supabase
-  .from("Voice_profiles")
-  .upsert({
-    user_id:
-      user.id,
-
-    voice_name:
-      id,
-
-    storage_path:
-      filePath,
-
-    mime_type:
-      blob.type || "audio/webm",
-
-    duration_seconds:
-      0
-  });
-
-if(profileError){
-
-  throw profileError;
-
-}
 /* =========================================================
    【第 9 節】從 Supabase Voice_profiles 取得導航錄音
 ========================================================= */
