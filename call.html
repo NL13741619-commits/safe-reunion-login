@@ -858,7 +858,10 @@
             e
           );
 
-          setStatus('設定 answer 失敗');
+          setStatus(
+  '設定 answer 失敗：' +
+  (e.message || String(e))
+);
         }
       }
 
