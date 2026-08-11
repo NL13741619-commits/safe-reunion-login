@@ -6497,7 +6497,14 @@ alert("openGeneralSettings 有執行");
   openSettings(
     "一般設定",
     function(){
-
+        return (
+  '<div style="padding:20px">' +
+  '<h3>一般設定測試</h3>' +
+  '<button class="btn btn-danger btn-block">' +
+  '🗑️ 刪除帳號測試' +
+  '</button>' +
+  '</div>'
+);
       const settings =
         Store.get("settings") ||
         Store.getDefaultSettings();
