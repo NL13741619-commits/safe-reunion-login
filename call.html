@@ -2,7 +2,13 @@
 <html lang="zh-TW">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0,
+             maximum-scale=1.0, user-scalable=no"
+  >
+
   <title>通話 - 安全團聚</title>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -14,12 +20,22 @@
       padding: 0;
     }
 
+    html,
     body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
       background: #111;
       color: #fff;
-      height: 100vh;
-      overflow: hidden;
+      font-family:
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        Roboto,
+        sans-serif;
+    }
+
+    body {
       position: relative;
     }
 
@@ -30,6 +46,7 @@
       height: 100%;
       object-fit: cover;
       background: #1a1a1a;
+      z-index: 1;
     }
 
     #localVideo {
@@ -42,31 +59,52 @@
       object-fit: cover;
       transform: scaleX(-1);
       border: 2px solid rgba(255,255,255,0.55);
-      z-index: 10;
       background: #333;
+      z-index: 10;
     }
 
     #audioBg {
       position: absolute;
       inset: 0;
-      background: linear-gradient(160deg, #1b5e20, #0d47a1);
+      z-index: 2;
+
       display: none;
+
       align-items: center;
       justify-content: center;
       flex-direction: column;
+
       gap: 12px;
-      z-index: 1;
+
+      background:
+        linear-gradient(
+          160deg,
+          #1b5e20,
+          #0d47a1
+        );
     }
 
     .top-bar {
       position: absolute;
+
       top: 0;
       left: 0;
       right: 0;
+
       z-index: 20;
-      padding: 48px 16px 14px;
+
+      padding:
+        48px
+        16px
+        18px;
+
       text-align: center;
-      background: linear-gradient(rgba(0,0,0,0.55), transparent);
+
+      background:
+        linear-gradient(
+          rgba(0,0,0,0.65),
+          rgba(0,0,0,0)
+        );
     }
 
     .top-name {
@@ -75,35 +113,72 @@
     }
 
     .top-status {
-      font-size: 13px;
-      opacity: 0.95;
       margin-top: 6px;
+
+      font-size: 13px;
+
+      opacity: 0.95;
+
+      min-height: 18px;
     }
 
     .controls {
       position: absolute;
+
       bottom: 0;
       left: 0;
       right: 0;
+
       z-index: 20;
-      padding: 16px 12px 36px;
-      background: linear-gradient(transparent, rgba(0,0,0,0.78));
+
+      padding:
+        16px
+        12px
+        36px;
+
       display: flex;
+
       justify-content: center;
+
+      align-items: center;
+
       gap: 12px;
+
       flex-wrap: wrap;
+
+      background:
+        linear-gradient(
+          transparent,
+          rgba(0,0,0,0.82)
+        );
     }
 
     .ctrl {
       min-width: 54px;
       height: 54px;
-      border-radius: 50%;
+
       border: none;
-      background: rgba(255,255,255,0.22);
+
+      border-radius: 50%;
+
+      background:
+        rgba(255,255,255,0.22);
+
       color: #fff;
+
       font-size: 12px;
+
       font-weight: 600;
+
       padding: 0 8px;
+
+      cursor: pointer;
+
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .ctrl:active {
+      transform: scale(0.95);
     }
 
     .ctrl.off {
@@ -111,26 +186,37 @@
     }
 
     .ctrl.hangup {
-      background: #e53935;
       width: 58px;
       height: 58px;
+
+      background: #e53935;
     }
 
     .ctrl.accept {
-      background: #06C755;
       width: 58px;
       height: 58px;
+
+      background: #06C755;
     }
 
     #incomingPanel {
       display: none;
+
       position: absolute;
+
       inset: 0;
+
       z-index: 30;
-      background: rgba(0,0,0,0.88);
+
+      background:
+        rgba(0,0,0,0.90);
+
       flex-direction: column;
+
       align-items: center;
+
       justify-content: center;
+
       gap: 16px;
     }
 
@@ -139,77 +225,305 @@
     }
 
     #incomingPanel .big {
-      font-size: 22px;
+      font-size: 24px;
       font-weight: 700;
+    }
+
+    #incomingSub {
+      font-size: 15px;
+      opacity: 0.9;
+    }
+
+    #connectingPanel {
+      position: absolute;
+
+      inset: 0;
+
+      z-index: 25;
+
+      display: none;
+
+      align-items: center;
+
+      justify-content: center;
+
+      flex-direction: column;
+
+      gap: 12px;
+
+      background:
+        rgba(0,0,0,0.55);
+
+      pointer-events: none;
+    }
+
+    #connectingPanel.show {
+      display: flex;
+    }
+
+    .loading-circle {
+      width: 34px;
+      height: 34px;
+
+      border-radius: 50%;
+
+      border:
+        3px solid
+        rgba(255,255,255,0.25);
+
+      border-top-color: #fff;
+
+      animation:
+        spin 0.8s linear infinite;
+    }
+
+    @keyframes spin {
+      from {
+        transform: rotate(0deg);
+      }
+
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+    #errorPanel {
+      position: absolute;
+
+      left: 12px;
+      right: 12px;
+
+      top: 110px;
+
+      z-index: 40;
+
+      display: none;
+
+      padding: 12px 14px;
+
+      border-radius: 12px;
+
+      background:
+        rgba(180,0,0,0.88);
+
+      font-size: 13px;
+
+      line-height: 1.5;
+
+      text-align: center;
+    }
+
+    #errorPanel.show {
+      display: block;
     }
   </style>
 </head>
 
 <body>
 
-  <video id="remoteVideo" autoplay playsinline></video>
+  <!-- 遠端影像 -->
+  <video
+    id="remoteVideo"
+    autoplay
+    playsinline
+  ></video>
 
+
+  <!-- 語音背景 -->
   <div id="audioBg">
     <div style="font-size:64px">📞</div>
-    <div style="font-size:18px;font-weight:600">語音通話</div>
-  </div>
 
-  <video id="localVideo" autoplay playsinline muted></video>
-
-  <div class="top-bar">
-    <div class="top-name" id="callName">通話</div>
-    <div class="top-status" id="callStatus">準備中…</div>
-  </div>
-
-  <div id="incomingPanel">
-    <div class="big" id="incomingTitle">來電</div>
-    <div id="incomingSub">邀請你通話</div>
-
-    <div style="display:flex;gap:24px;margin-top:20px">
-      <button class="ctrl hangup" type="button" id="btnReject">拒接</button>
-      <button class="ctrl accept" type="button" id="btnAccept">接聽</button>
+    <div
+      style="
+        font-size:18px;
+        font-weight:600;
+      "
+    >
+      語音通話
     </div>
   </div>
 
-  <div class="controls" id="controls">
-    <button class="ctrl" id="btnMic" type="button">麥</button>
-    <button class="ctrl" id="btnCam" type="button">鏡頭</button>
-    <button class="ctrl hangup" id="btnHang" type="button">掛斷</button>
+
+  <!-- 本機影像 -->
+  <video
+    id="localVideo"
+    autoplay
+    playsinline
+    muted
+  ></video>
+
+
+  <!-- 上方資訊 -->
+  <div class="top-bar">
+
+    <div
+      class="top-name"
+      id="callName"
+    >
+      通話
+    </div>
+
+    <div
+      class="top-status"
+      id="callStatus"
+    >
+      正在啟動通話…
+    </div>
+
+  </div>
+
+
+  <!-- 連線中 -->
+  <div id="connectingPanel">
+
+    <div class="loading-circle"></div>
+
+    <div id="connectingText">
+      正在建立安全連線…
+    </div>
+
+  </div>
+
+
+  <!-- 錯誤 -->
+  <div
+    id="errorPanel"
+  ></div>
+
+
+  <!-- 來電 -->
+  <div id="incomingPanel">
+
+    <div
+      class="big"
+      id="incomingTitle"
+    >
+      來電
+    </div>
+
+    <div id="incomingSub">
+      邀請你通話
+    </div>
+
+    <div
+      style="
+        display:flex;
+        gap:24px;
+        margin-top:20px;
+      "
+    >
+
+      <button
+        class="ctrl hangup"
+        type="button"
+        id="btnReject"
+      >
+        拒接
+      </button>
+
+      <button
+        class="ctrl accept"
+        type="button"
+        id="btnAccept"
+      >
+        接聽
+      </button>
+
+    </div>
+
+  </div>
+
+
+  <!-- 控制列 -->
+  <div
+    class="controls"
+    id="controls"
+  >
+
+    <button
+      class="ctrl"
+      id="btnMic"
+      type="button"
+    >
+      麥
+    </button>
+
+    <button
+      class="ctrl"
+      id="btnCam"
+      type="button"
+    >
+      鏡頭
+    </button>
+
+    <button
+      class="ctrl hangup"
+      id="btnHang"
+      type="button"
+    >
+      掛斷
+    </button>
+
   </div>
 
 
   <script>
   (function () {
 
+    "use strict";
+
+
     /* =========================================================
        Supabase
     ========================================================= */
 
-    var SUPABASE_URL = 'https://perfsipperncvjocznhl.supabase.co';
+    var SUPABASE_URL =
+      "https://perfsipperncvjocznhl.supabase.co";
+
+
+    /*
+     * 這裡使用你目前 Supabase 顯示的 Publishable Key。
+     *
+     * 不放 Metered TURN 密碼。
+     */
 
     var SUPABASE_KEY =
-      'sb_publishable_qpqAwj49L6HcWqWTnNsTxw_oBEauWBA';
+      "sb_publishable_qpqAwj49L6HcWqWTnNsTxw_oBEauWBA";
 
 
     /* =========================================================
        URL 參數
     ========================================================= */
 
-    var params = new URLSearchParams(location.search);
+    var params =
+      new URLSearchParams(
+        window.location.search
+      );
 
-    var mode = params.get('mode') || 'video';
 
-    var toUser = params.get('to') || '';
+    var mode =
+      params.get("mode") || "video";
 
-    var name = params.get('name')
-      ? decodeURIComponent(params.get('name'))
-      : '通話';
 
-    document.getElementById('callName').textContent = name;
+    var toUser =
+      params.get("to") || "";
+
+
+    var name =
+      params.get("name")
+        ? decodeURIComponent(
+            params.get("name")
+          )
+        : "通話";
+
+
+    document
+      .getElementById("callName")
+      .textContent = name;
 
 
     /* =========================================================
-       全域變數
+       全域狀態
     ========================================================= */
 
     var supabase = null;
@@ -234,39 +548,143 @@
 
     var pollTimer = null;
 
+    var incomingTimer = null;
+
     var channel = null;
 
-    var appliedIce = {};
+    var incomingChannel = null;
 
-    var pendingRemoteIce = [];
+    var shuttingDown = false;
 
-    var pendingLocalIce = [];
+    var remoteDescriptionSet = false;
+
+    var answerApplied = false;
+
+    var offerApplied = false;
+
+    var iceGatheringFinished = false;
 
 
     /* =========================================================
-       狀態
+       UI 狀態
     ========================================================= */
 
-    function setStatus(t) {
-      document.getElementById('callStatus').textContent = t;
+    function setStatus(text) {
+
+      var el =
+        document.getElementById(
+          "callStatus"
+        );
+
+      if (el) {
+        el.textContent = text;
+      }
+    }
+
+
+    function showConnecting(text) {
+
+      var panel =
+        document.getElementById(
+          "connectingPanel"
+        );
+
+      var label =
+        document.getElementById(
+          "connectingText"
+        );
+
+      if (label) {
+        label.textContent =
+          text || "正在建立安全連線…";
+      }
+
+      if (panel) {
+        panel.classList.add("show");
+      }
+    }
+
+
+    function hideConnecting() {
+
+      var panel =
+        document.getElementById(
+          "connectingPanel"
+        );
+
+      if (panel) {
+        panel.classList.remove("show");
+      }
+    }
+
+
+    function showError(text) {
+
+      var panel =
+        document.getElementById(
+          "errorPanel"
+        );
+
+      if (!panel) {
+        return;
+      }
+
+      panel.textContent = text;
+
+      panel.classList.add("show");
+    }
+
+
+    function hideError() {
+
+      var panel =
+        document.getElementById(
+          "errorPanel"
+        );
+
+      if (panel) {
+        panel.classList.remove("show");
+      }
     }
 
 
     /* =========================================================
-       聲音
+       音效
     ========================================================= */
 
     function ensureAudio() {
 
-      if (!audioCtx) {
-        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-      }
+      try {
 
-      if (audioCtx.state === 'suspended') {
-        audioCtx.resume();
-      }
+        if (!audioCtx) {
 
-      return audioCtx;
+          var AudioContext =
+            window.AudioContext ||
+            window.webkitAudioContext;
+
+          if (!AudioContext) {
+            return null;
+          }
+
+          audioCtx =
+            new AudioContext();
+        }
+
+        if (
+          audioCtx.state ===
+          "suspended"
+        ) {
+
+          audioCtx.resume()
+            .catch(function () {});
+        }
+
+        return audioCtx;
+
+      } catch (e) {
+
+        return null;
+      }
     }
 
 
@@ -274,28 +692,41 @@
 
       try {
 
-        var ctx = ensureAudio();
+        var ctx =
+          ensureAudio();
 
-        var o = ctx.createOscillator();
+        if (!ctx) {
+          return;
+        }
 
-        var g = ctx.createGain();
+        var oscillator =
+          ctx.createOscillator();
 
-        o.type = 'sine';
+        var gain =
+          ctx.createGain();
 
-        o.frequency.value = freq;
+        oscillator.type = "sine";
 
-        g.gain.value = 0.08;
+        oscillator.frequency.value =
+          freq;
 
-        o.connect(g);
+        gain.gain.value =
+          0.08;
 
-        g.connect(ctx.destination);
+        oscillator.connect(gain);
 
-        o.start();
+        gain.connect(
+          ctx.destination
+        );
 
-        o.stop(ctx.currentTime + (dur || 0.2));
+        oscillator.start();
+
+        oscillator.stop(
+          ctx.currentTime +
+          (dur || 0.2)
+        );
 
       } catch (e) {}
-
     }
 
 
@@ -303,15 +734,18 @@
 
       stopRing();
 
-      ringTimer = setInterval(function () {
+      beep(440, 0.15);
 
-        beep(440, 0.15);
+      ringTimer =
+        setInterval(function () {
 
-        setTimeout(function () {
-          beep(480, 0.15);
-        }, 180);
+          beep(440, 0.15);
 
-      }, 1200);
+          setTimeout(function () {
+            beep(480, 0.15);
+          }, 180);
+
+        }, 1200);
     }
 
 
@@ -319,318 +753,399 @@
 
       stopRing();
 
-      if (navigator.vibrate) {
-        navigator.vibrate([300, 200, 300, 200]);
-      }
-
-      ringTimer = setInterval(function () {
-
-        beep(880, 0.25);
-
-        setTimeout(function () {
-          beep(980, 0.25);
-        }, 300);
+      try {
 
         if (navigator.vibrate) {
-          navigator.vibrate(200);
+
+          navigator.vibrate([
+            300,
+            200,
+            300,
+            200
+          ]);
         }
 
-      }, 1500);
+      } catch (e) {}
+
+
+      beep(880, 0.25);
+
+
+      ringTimer =
+        setInterval(function () {
+
+          beep(880, 0.25);
+
+          setTimeout(function () {
+
+            beep(980, 0.25);
+
+          }, 300);
+
+
+          try {
+
+            if (navigator.vibrate) {
+
+              navigator.vibrate(200);
+
+            }
+
+          } catch (e) {}
+
+        }, 1500);
     }
 
 
     function stopRing() {
 
       if (ringTimer) {
-        clearInterval(ringTimer);
+
+        clearInterval(
+          ringTimer
+        );
+
         ringTimer = null;
       }
     }
 
 
     /* =========================================================
-       ★ 從 Supabase Edge Function 取得 Metered TURN
-       ========================================================= */
+       取得 TURN
+    ========================================================= */
 
     async function getIceServers() {
 
-      setStatus('取得安全連線設定…');
+      setStatus(
+        "正在取得安全連線設定…"
+      );
+
+      showConnecting(
+        "正在取得安全連線設定…"
+      );
+
 
       try {
 
-        var result = await supabase.functions.invoke(
-          'get-turn-credentials',
-          {
-            method: 'POST',
-            body: {}
-          }
-        );
+        var result =
+          await supabase.functions.invoke(
+            "get-turn-credentials",
+            {
+              method: "POST",
+              body: {}
+            }
+          );
+
 
         if (result.error) {
-          console.error('TURN Function Error:', result.error);
+
+          console.error(
+            "TURN Function Error:",
+            result.error
+          );
+
           throw new Error(
-            '無法取得 TURN 設定：' + result.error.message
+            result.error.message ||
+            "TURN Edge Function 無法使用"
           );
         }
 
-        if (!result.data || !result.data.iceServers) {
-          throw new Error('TURN 設定格式錯誤');
+
+        if (
+          !result.data ||
+          !result.data.iceServers
+        ) {
+
+          throw new Error(
+            "TURN 設定格式錯誤"
+          );
         }
 
-        console.log('TURN ICE Servers 已取得');
+
+        console.log(
+          "TURN ICE Servers 已取得"
+        );
+
 
         return {
-          iceServers: result.data.iceServers
+          iceServers:
+            result.data.iceServers
         };
 
-      } catch (e) {
 
-        console.error('getIceServers error:', e);
+      } catch (error) {
 
-        throw e;
+        console.error(
+          "getIceServers:",
+          error
+        );
+
+        throw error;
       }
     }
 
 
     /* =========================================================
-       取得麥克風／相機
+       取得媒體
     ========================================================= */
 
     async function getMedia() {
 
-      var constraints = mode === 'audio'
-        ? {
-            audio: true,
-            video: false
-          }
-        : {
-            audio: true,
-            video: {
-              facingMode: 'user'
-            }
-          };
+      setStatus(
+        mode === "audio"
+          ? "正在啟動麥克風…"
+          : "正在啟動麥克風與相機…"
+      );
 
-      localStream =
-        await navigator.mediaDevices.getUserMedia(constraints);
 
-      var localVideo =
-        document.getElementById('localVideo');
+      var constraints;
 
-      if (mode === 'audio') {
 
-        document.getElementById('audioBg').style.display = 'flex';
+      if (mode === "audio") {
 
-        document.getElementById('remoteVideo').style.display = 'none';
-
-        localVideo.style.display = 'none';
-
-        document.getElementById('btnCam').style.display = 'none';
+        constraints = {
+          audio: true,
+          video: false
+        };
 
       } else {
 
-        localVideo.srcObject = localStream;
-
-        localVideo.style.display = 'block';
+        constraints = {
+          audio: true,
+          video: {
+            facingMode: "user"
+          }
+        };
       }
+
+
+      if (
+        !navigator.mediaDevices ||
+        !navigator.mediaDevices.getUserMedia
+      ) {
+
+        throw new Error(
+          "此瀏覽器不支援相機／麥克風"
+        );
+      }
+
+
+      localStream =
+        await navigator.mediaDevices
+          .getUserMedia(
+            constraints
+          );
+
+
+      var localVideo =
+        document.getElementById(
+          "localVideo"
+        );
+
+
+      if (mode === "audio") {
+
+        document
+          .getElementById(
+            "audioBg"
+          )
+          .style.display = "flex";
+
+
+        document
+          .getElementById(
+            "remoteVideo"
+          )
+          .style.display = "none";
+
+
+        localVideo.style.display =
+          "none";
+
+
+        document
+          .getElementById(
+            "btnCam"
+          )
+          .style.display = "none";
+
+      } else {
+
+        localVideo.srcObject =
+          localStream;
+
+        localVideo.style.display =
+          "block";
+
+
+        try {
+
+          await localVideo.play();
+
+        } catch (e) {}
+      }
+
 
       return localStream;
     }
 
 
     /* =========================================================
-       上傳 ICE Candidate
+       等待 ICE Gathering 完成
+       
+       這一版故意等 ICE 完成後才交換 SDP，
+       避免你目前 call_sessions 裡面
+       caller_ice / callee_ice 的時序問題。
     ========================================================= */
 
-    async function pushIce(role, candidate) {
+    function waitForIceGatheringComplete() {
 
-      if (!candidate) return;
+      return new Promise(
+        function (resolve) {
 
-      /*
-       * Caller 建立 PeerConnection 時，
-       * callRowId 可能還沒產生。
-       *
-       * 先暫存，等 call_sessions 建立後再送。
-       */
+          if (!pc) {
 
-      if (!callRowId) {
+            resolve();
 
-        pendingLocalIce.push({
-          role: role,
-          candidate: candidate
-        });
+            return;
+          }
 
-        return;
-      }
 
-      var col =
-        role === 'caller'
-          ? 'caller_ice'
-          : 'callee_ice';
+          if (
+            pc.iceGatheringState ===
+            "complete"
+          ) {
 
-      try {
+            iceGatheringFinished =
+              true;
 
-        var cur =
-          await supabase
-            .from('call_sessions')
-            .select(col)
-            .eq('id', callRowId)
-            .single();
+            resolve();
 
-        var arr =
-          (cur.data && cur.data[col])
-            ? cur.data[col]
-            : [];
+            return;
+          }
 
-        if (!Array.isArray(arr)) {
-          arr = [];
+
+          var timeout =
+            setTimeout(
+              function () {
+
+                iceGatheringFinished =
+                  true;
+
+                resolve();
+
+              },
+              15000
+            );
+
+
+          function check() {
+
+            if (!pc) {
+
+              clearTimeout(timeout);
+
+              resolve();
+
+              return;
+            }
+
+
+            if (
+              pc.iceGatheringState ===
+              "complete"
+            ) {
+
+              clearTimeout(timeout);
+
+              iceGatheringFinished =
+                true;
+
+              pc.removeEventListener(
+                "icegatheringstatechange",
+                check
+              );
+
+              resolve();
+            }
+          }
+
+
+          pc.addEventListener(
+            "icegatheringstatechange",
+            check
+          );
+
         }
-
-        arr.push(candidate);
-
-        var patch = {};
-
-        patch[col] = arr;
-
-        await supabase
-          .from('call_sessions')
-          .update(patch)
-          .eq('id', callRowId);
-
-      } catch (e) {
-
-        console.error('pushIce error:', e);
-      }
+      );
     }
 
 
     /* =========================================================
-       把暫存 ICE 全部送出去
+       建立 PeerConnection
     ========================================================= */
 
-    async function flushLocalIce() {
+    async function createPeerConnection(role) {
 
-      if (!callRowId || !pendingLocalIce.length) {
-        return;
-      }
+      showConnecting(
+        "正在建立安全連線…"
+      );
 
-      var list = pendingLocalIce.slice();
-
-      pendingLocalIce = [];
-
-      for (var i = 0; i < list.length; i++) {
-
-        await pushIce(
-          list[i].role,
-          list[i].candidate
-        );
-      }
-    }
-
-
-    /* =========================================================
-       套用遠端 ICE
-    ========================================================= */
-
-    async function addRemoteIceCandidate(c) {
-
-      if (!pc || !c) return;
-
-      var key = JSON.stringify(c);
-
-      if (appliedIce[key]) {
-        return;
-      }
-
-      /*
-       * 如果 RemoteDescription 還沒有建立，
-       * 暫時不要 addIceCandidate。
-       */
-
-      if (!pc.remoteDescription) {
-
-        pendingRemoteIce.push(c);
-
-        return;
-      }
-
-      try {
-
-        await pc.addIceCandidate(c);
-
-        appliedIce[key] = true;
-
-      } catch (e) {
-
-        console.error('addIceCandidate error:', e);
-      }
-    }
-
-
-    async function applyRemoteIce(list) {
-
-      if (!list || !list.length) {
-        return;
-      }
-
-      for (var i = 0; i < list.length; i++) {
-
-        await addRemoteIceCandidate(list[i]);
-      }
-    }
-
-
-    async function flushRemoteIce() {
-
-      if (!pc || !pc.remoteDescription) {
-        return;
-      }
-
-      var list = pendingRemoteIce.slice();
-
-      pendingRemoteIce = [];
-
-      for (var i = 0; i < list.length; i++) {
-
-        await addRemoteIceCandidate(list[i]);
-      }
-    }
-
-
-    /* =========================================================
-       ★ 建立 WebRTC PeerConnection
-    ========================================================= */
-
-    async function createPc(role) {
-
-      /*
-       * 先從 Edge Function 取得 TURN
-       */
 
       var rtcConfig =
         await getIceServers();
 
+
       console.log(
-        '建立 RTCPeerConnection:',
+        "RTCPeerConnection config:",
         rtcConfig
       );
 
+
       pc =
-        new RTCPeerConnection(rtcConfig);
+        new RTCPeerConnection(
+          rtcConfig
+        );
+
+
+      /*
+       * 每次建立新的 PeerConnection
+       * 都重置這些狀態。
+       */
+
+      remoteDescriptionSet =
+        false;
+
+      answerApplied =
+        false;
+
+      offerApplied =
+        false;
+
+      iceGatheringFinished =
+        false;
 
 
       /* -------------------------------------------------------
-         加入本機媒體
+         加入本機音訊／影像
       ------------------------------------------------------- */
 
       if (localStream) {
 
-        localStream
-          .getTracks()
-          .forEach(function (t) {
+        var tracks =
+          localStream.getTracks();
 
-            pc.addTrack(t, localStream);
 
-          });
+        tracks.forEach(
+          function (track) {
+
+            pc.addTrack(
+              track,
+              localStream
+            );
+
+          }
+        );
       }
 
 
@@ -638,100 +1153,274 @@
          收到遠端媒體
       ------------------------------------------------------- */
 
-      pc.ontrack = function (ev) {
+      pc.ontrack =
+        function (event) {
 
-        var remote =
-          document.getElementById('remoteVideo');
+          console.log(
+            "收到遠端 Track:",
+            event.track.kind
+          );
 
-        if (ev.streams && ev.streams[0]) {
 
-          remote.srcObject =
-            ev.streams[0];
+          var remoteVideo =
+            document.getElementById(
+              "remoteVideo"
+            );
 
-        } else {
 
-          if (!remote.srcObject) {
+          if (
+            event.streams &&
+            event.streams.length > 0
+          ) {
 
-            remote.srcObject =
-              new MediaStream();
+            remoteVideo.srcObject =
+              event.streams[0];
 
+          } else {
+
+            /*
+             * 某些瀏覽器不提供 streams，
+             * 自己建立 MediaStream。
+             */
+
+            if (
+              !remoteVideo.srcObject
+            ) {
+
+              remoteVideo.srcObject =
+                new MediaStream();
+            }
+
+
+            try {
+
+              remoteVideo.srcObject
+                .addTrack(
+                  event.track
+                );
+
+            } catch (e) {}
           }
 
-          remote.srcObject.addTrack(ev.track);
-        }
 
-        if (mode !== 'audio') {
+          if (mode !== "audio") {
 
-          remote.style.display = 'block';
+            remoteVideo.style.display =
+              "block";
 
-        }
+            try {
 
-        remote.play().catch(function () {});
+              remoteVideo.play();
 
-        setStatus('通話中');
+            } catch (e) {}
 
-        stopRing();
-      };
+          } else {
+
+            /*
+             * 語音模式仍然使用
+             * remoteVideo 元素播放遠端音訊。
+             */
+
+            remoteVideo.style.display =
+              "block";
+
+            remoteVideo.style.width =
+              "1px";
+
+            remoteVideo.style.height =
+              "1px";
+
+            remoteVideo.style.opacity =
+              "0";
+          }
+
+
+          hideConnecting();
+
+          setStatus(
+            "通話中"
+          );
+
+          stopRing();
+        };
 
 
       /* -------------------------------------------------------
-         ICE 狀態
+         ICE Connection State
       ------------------------------------------------------- */
 
       pc.oniceconnectionstatechange =
         function () {
 
-          if (!pc) return;
+          if (!pc) {
+            return;
+          }
+
 
           var state =
             pc.iceConnectionState;
 
-          setStatus('連線：' + state);
 
           console.log(
-            'ICE connection state:',
+            "ICE:",
             state
           );
 
-          if (state === 'connected' ||
-              state === 'completed') {
 
-            setStatus('通話中');
-
-            stopRing();
-          }
-
-          if (state === 'checking') {
-
-            setStatus('正在建立安全連線…');
-          }
-
-          if (state === 'failed') {
+          if (
+            state === "checking"
+          ) {
 
             setStatus(
-              '連線失敗，正在嘗試 TURN 中繼…'
+              "正在建立安全連線…"
             );
+
+            showConnecting(
+              "正在建立安全連線…"
+            );
+
+            return;
           }
 
-          if (state === 'disconnected') {
 
-            setStatus('網路暫時中斷…');
+          if (
+            state === "connected" ||
+            state === "completed"
+          ) {
+
+            hideConnecting();
+
+            setStatus(
+              "通話中"
+            );
+
+            stopRing();
+
+            return;
+          }
+
+
+          if (
+            state === "disconnected"
+          ) {
+
+            setStatus(
+              "網路暫時中斷…"
+            );
+
+            return;
+          }
+
+
+          if (
+            state === "failed"
+          ) {
+
+            hideConnecting();
+
+            setStatus(
+              "連線失敗"
+            );
+
+            showError(
+              "WebRTC 連線失敗，請檢查網路或 TURN 設定。"
+            );
+
+            return;
+          }
+
+
+          if (
+            state === "closed"
+          ) {
+
+            setStatus(
+              "通話已結束"
+            );
           }
         };
 
 
       /* -------------------------------------------------------
          ICE Candidate
+         
+         這一版不再逐筆寫入資料庫。
+         因為我們會等待 ICE gathering complete，
+         Candidate 會包含在 offer / answer SDP 裡。
       ------------------------------------------------------- */
 
       pc.onicecandidate =
-        function (ev) {
+        function (event) {
 
-          if (ev.candidate) {
+          if (event.candidate) {
 
-            pushIce(
-              role,
-              ev.candidate.toJSON()
+            console.log(
+              "ICE candidate 已產生"
+            );
+          }
+        };
+
+
+      /* -------------------------------------------------------
+         Connection State
+      ------------------------------------------------------- */
+
+      pc.onconnectionstatechange =
+        function () {
+
+          if (!pc) {
+            return;
+          }
+
+
+          var state =
+            pc.connectionState;
+
+
+          console.log(
+            "Peer connection:",
+            state
+          );
+
+
+          if (
+            state === "connected"
+          ) {
+
+            hideConnecting();
+
+            hideError();
+
+            setStatus(
+              "通話中"
+            );
+
+            stopRing();
+          }
+
+
+          if (
+            state === "failed"
+          ) {
+
+            hideConnecting();
+
+            setStatus(
+              "通話連線失敗"
+            );
+
+            showError(
+              "通話連線失敗，請確認雙方網路是否正常。"
+            );
+          }
+
+
+          if (
+            state === "disconnected"
+          ) {
+
+            setStatus(
+              "網路暫時中斷…"
             );
           }
         };
@@ -751,27 +1440,42 @@
         return;
       }
 
+
       if (channel) {
 
         try {
-          supabase.removeChannel(channel);
+
+          supabase.removeChannel(
+            channel
+          );
+
         } catch (e) {}
+
+        channel = null;
       }
+
 
       channel =
         supabase
-          .channel('call-row-' + callRowId)
+          .channel(
+            "call-row-" +
+            callRowId
+          )
 
           .on(
-            'postgres_changes',
+            "postgres_changes",
             {
-              event: 'UPDATE',
-              schema: 'public',
-              table: 'call_sessions',
-              filter: 'id=eq.' + callRowId
+              event: "UPDATE",
+              schema: "public",
+              table: "call_sessions",
+              filter:
+                "id=eq." +
+                callRowId
             },
 
-            async function (payload) {
+            async function (
+              payload
+            ) {
 
               await handleCallUpdate(
                 payload.new
@@ -779,107 +1483,355 @@
             }
           )
 
-          .subscribe();
+          .subscribe(
+            function (
+              status
+            ) {
+
+              console.log(
+                "Call Realtime:",
+                status
+              );
+
+            }
+          );
     }
 
 
     /* =========================================================
-       處理通話資料更新
+       處理通話資料
     ========================================================= */
 
-    async function handleCallUpdate(row) {
+    async function handleCallUpdate(
+      row
+    ) {
 
-      if (!row) {
+      if (!row || shuttingDown) {
         return;
       }
 
 
       /* -------------------------------------------------------
-         對方拒接
+         拒接
       ------------------------------------------------------- */
 
-      if (row.status === 'rejected') {
+      if (
+        row.status ===
+        "rejected"
+      ) {
 
         stopRing();
 
-        setStatus('對方已拒接');
+        hideConnecting();
 
-        setTimeout(function () {
+        setStatus(
+          "對方已拒接"
+        );
 
-          hangup(false);
 
-        }, 800);
+        setTimeout(
+          function () {
+
+            hangup(
+              false
+            );
+
+          },
+          800
+        );
 
         return;
       }
 
 
       /* -------------------------------------------------------
-         對方掛斷
+         掛斷
       ------------------------------------------------------- */
 
-      if (row.status === 'ended') {
+      if (
+        row.status ===
+        "ended"
+      ) {
 
-        hangup(false);
+        hangup(
+          false
+        );
 
         return;
       }
 
 
       /* -------------------------------------------------------
-   Caller 收到 Answer
-------------------------------------------------------- */
-
-if (
-  isCaller &&
-  row.answer &&
-  pc &&
-  pc.signalingState === 'have-local-offer'
-) {
-
-  try {
-
-    console.log('收到 Answer，設定遠端 SDP');
-
-    await pc.setRemoteDescription(row.answer);
-
-    setStatus('已接通，建立媒體中…');
-
-    stopRing();
-
-    await flushRemoteIce();
-
-  } catch (e) {
-
-    console.error(
-      '設定 answer 失敗:',
-      e
-    );
-
-    setStatus(
-      '設定 answer 失敗：' +
-      (e.message || String(e))
-    );
-  }
-}
-
-
-      /* -------------------------------------------------------
-         ICE
+         Caller 收到 Answer
+         
+         最重要的修正：
+         一旦 Answer 已經套用，
+         Realtime 或 polling 再收到相同 Answer，
+         絕對不能再次 setRemoteDescription。
       ------------------------------------------------------- */
 
-      if (isCaller) {
+      if (
+        isCaller &&
+        row.answer &&
+        pc &&
+        !answerApplied
+      ) {
 
-        await applyRemoteIce(
-          row.callee_ice
-        );
+        /*
+         * 只有目前仍在等待 Remote Answer
+         * 才允許套用。
+         */
 
-      } else {
+        if (
+          pc.signalingState !==
+          "have-local-offer"
+        ) {
 
-        await applyRemoteIce(
-          row.caller_ice
+          console.warn(
+            "忽略重複 Answer，state:",
+            pc.signalingState
+          );
+
+        } else {
+
+          try {
+
+            answerApplied =
+              true;
+
+
+            await pc.setRemoteDescription(
+              row.answer
+            );
+
+
+            remoteDescriptionSet =
+              true;
+
+
+            hideConnecting();
+
+
+            setStatus(
+              "已接通，建立媒體中…"
+            );
+
+
+            stopRing();
+
+
+          } catch (error) {
+
+            /*
+             * 如果瀏覽器表示 stable，
+             * 不再重試同一個 Answer。
+             */
+
+            console.error(
+              "setRemoteDescription(answer):",
+              error
+            );
+
+
+            if (
+              String(
+                error.message || ""
+              ).indexOf(
+                "wrong state"
+              ) !== -1
+            ) {
+
+              answerApplied =
+                true;
+
+              hideConnecting();
+
+              setStatus(
+                "通話中"
+              );
+
+            } else {
+
+              answerApplied =
+                false;
+
+              setStatus(
+                "設定對方通話資料失敗"
+              );
+            }
+          }
+        }
+      }
+
+
+      /*
+       * 注意：
+       *
+       * 這一版不再處理 caller_ice / callee_ice。
+       *
+       * 因為我們等 ICE gathering complete，
+       * Candidate 已經寫入 SDP。
+       */
+    }
+
+
+    /* =========================================================
+       建立 Offer
+    ========================================================= */
+
+    async function createCallerOffer() {
+
+      if (!pc) {
+        throw new Error(
+          "PeerConnection 尚未建立"
         );
       }
+
+
+      setStatus(
+        "正在建立通話邀請…"
+      );
+
+
+      var offer =
+        await pc.createOffer({
+          offerToReceiveAudio: true,
+          offerToReceiveVideo:
+            mode !== "audio"
+        });
+
+
+      await pc.setLocalDescription(
+        offer
+      );
+
+
+      setStatus(
+        "正在取得網路連線資訊…"
+      );
+
+
+      /*
+       * 等待 ICE 完成。
+       *
+       * 完成後 localDescription.sdp
+       * 已經包含必要 Candidate。
+       */
+
+      await waitForIceGatheringComplete();
+
+
+      if (
+        !pc.localDescription
+      ) {
+
+        throw new Error(
+          "Offer 建立失敗"
+        );
+      }
+
+
+      return {
+        type:
+          pc.localDescription.type,
+
+        sdp:
+          pc.localDescription.sdp
+      };
+    }
+
+
+    /* =========================================================
+       建立 Answer
+    ========================================================= */
+
+    async function createCalleeAnswer(
+      offer
+    ) {
+
+      if (!pc) {
+
+        throw new Error(
+          "PeerConnection 尚未建立"
+        );
+      }
+
+
+      if (
+        pc.signalingState !==
+        "stable"
+      ) {
+
+        throw new Error(
+          "目前通話狀態不允許設定 Offer：" +
+          pc.signalingState
+        );
+      }
+
+
+      if (offerApplied) {
+
+        throw new Error(
+          "Offer 已經處理過"
+        );
+      }
+
+
+      offerApplied = true;
+
+
+      await pc.setRemoteDescription(
+        offer
+      );
+
+
+      remoteDescriptionSet =
+        true;
+
+
+      setStatus(
+        "正在建立接聽連線…"
+      );
+
+
+      var answer =
+        await pc.createAnswer({
+          offerToReceiveAudio: true,
+          offerToReceiveVideo:
+            mode !== "audio"
+        });
+
+
+      await pc.setLocalDescription(
+        answer
+      );
+
+
+      setStatus(
+        "正在完成安全連線…"
+      );
+
+
+      await waitForIceGatheringComplete();
+
+
+      if (
+        !pc.localDescription
+      ) {
+
+        throw new Error(
+          "Answer 建立失敗"
+        );
+      }
+
+
+      return {
+        type:
+          pc.localDescription.type,
+
+        sdp:
+          pc.localDescription.sdp
+      };
     }
 
 
@@ -887,16 +1839,42 @@ if (
        掛斷
     ========================================================= */
 
-    async function hangup(updateDb) {
+    async function hangup(
+      updateDb
+    ) {
+
+      if (shuttingDown) {
+        return;
+      }
+
+
+      shuttingDown = true;
+
 
       stopRing();
 
+      hideConnecting();
+
+
       if (pollTimer) {
 
-        clearInterval(pollTimer);
+        clearInterval(
+          pollTimer
+        );
 
         pollTimer = null;
       }
+
+
+      if (incomingTimer) {
+
+        clearInterval(
+          incomingTimer
+        );
+
+        incomingTimer = null;
+      }
+
 
       if (channel) {
 
@@ -911,27 +1889,56 @@ if (
         channel = null;
       }
 
+
+      if (incomingChannel) {
+
+        try {
+
+          await supabase.removeChannel(
+            incomingChannel
+          );
+
+        } catch (e) {}
+
+        incomingChannel = null;
+      }
+
+
       if (pc) {
 
         try {
+
+          pc.ontrack = null;
+
+          pc.onicecandidate = null;
+
           pc.close();
+
         } catch (e) {}
 
         pc = null;
       }
 
+
       if (localStream) {
 
         localStream
           .getTracks()
-          .forEach(function (t) {
+          .forEach(
+            function (track) {
 
-            t.stop();
+              try {
 
-          });
+                track.stop();
+
+              } catch (e) {}
+
+            }
+          );
 
         localStream = null;
       }
+
 
       if (
         updateDb &&
@@ -942,16 +1949,30 @@ if (
         try {
 
           await supabase
-            .from('call_sessions')
+            .from(
+              "call_sessions"
+            )
             .update({
-              status: 'ended'
+              status:
+                "ended"
             })
-            .eq('id', callRowId);
+            .eq(
+              "id",
+              callRowId
+            );
 
-        } catch (e) {}
+        } catch (e) {
+
+          console.error(
+            "掛斷更新失敗:",
+            e
+          );
+        }
       }
 
-      location.href = 'contacts.html';
+
+      window.location.href =
+        "contacts.html";
     }
 
 
@@ -963,81 +1984,127 @@ if (
 
       isCaller = true;
 
-      setStatus('撥號中…');
+      hideError();
+
+
+      setStatus(
+        "正在撥號…"
+      );
+
 
       startDialTone();
 
 
       /* -------------------------------------------------------
-         取得媒體
+         相機／麥克風
       ------------------------------------------------------- */
 
       try {
 
         await getMedia();
 
-      } catch (e) {
-
-        stopRing();
-
-        console.error(e);
-
-        setStatus(
-          '請允許麥克風／相機'
-        );
-
-        return;
-      }
-
-
-      /* -------------------------------------------------------
-         建立 PeerConnection
-      ------------------------------------------------------- */
-
-      try {
-
-        await createPc('caller');
-
-      } catch (e) {
+      } catch (error) {
 
         stopRing();
 
         console.error(
-          'TURN / WebRTC 建立失敗:',
-          e
+          "getUserMedia:",
+          error
         );
 
+
+        hideConnecting();
+
+
         setStatus(
-          '無法建立安全連線：' +
-          (e.message || e)
+          "無法取得麥克風／相機"
         );
+
+
+        showError(
+          "請允許瀏覽器使用麥克風與相機。"
+        );
+
 
         return;
       }
 
 
       /* -------------------------------------------------------
-         建立 Offer
+         PeerConnection
       ------------------------------------------------------- */
 
       try {
 
-        var offer =
-          await pc.createOffer();
-
-        await pc.setLocalDescription(
-          offer
+        await createPeerConnection(
+          "caller"
         );
 
-      } catch (e) {
+      } catch (error) {
 
         stopRing();
 
-        console.error(e);
+        hideConnecting();
+
+
+        console.error(
+          "createPeerConnection:",
+          error
+        );
+
 
         setStatus(
-          '建立通話邀請失敗'
+          "無法建立安全連線"
         );
+
+
+        showError(
+          "TURN 設定取得失敗：" +
+          (error.message ||
+           error)
+        );
+
+
+        return;
+      }
+
+
+      /* -------------------------------------------------------
+         Offer
+      ------------------------------------------------------- */
+
+      var offer;
+
+
+      try {
+
+        offer =
+          await createCallerOffer();
+
+      } catch (error) {
+
+        stopRing();
+
+        hideConnecting();
+
+
+        console.error(
+          "createOffer:",
+          error
+        );
+
+
+        setStatus(
+          "建立通話邀請失敗"
+        );
+
+
+        showError(
+          "建立通話邀請失敗：" +
+          (error.message ||
+           error)
+        );
+
 
         return;
       }
@@ -1047,88 +2114,148 @@ if (
          建立 call_sessions
       ------------------------------------------------------- */
 
-      var ins =
+      setStatus(
+        "正在發送通話邀請…"
+      );
+
+
+      var insertResult =
         await supabase
-          .from('call_sessions')
+          .from(
+            "call_sessions"
+          )
           .insert({
 
-            caller_id: me.id,
+            caller_id:
+              me.id,
 
-            callee_id: toUser,
+            callee_id:
+              toUser,
 
-            mode: mode,
+            mode:
+              mode,
 
-            status: 'ringing',
+            status:
+              "ringing",
 
-            offer: offer,
+            offer:
+              offer,
 
-            caller_ice: [],
+            caller_ice:
+              [],
 
-            callee_ice: []
+            callee_ice:
+              []
 
           })
           .select()
           .single();
 
 
-      if (ins.error) {
+      if (
+        insertResult.error
+      ) {
 
         stopRing();
 
+        hideConnecting();
+
+
         console.error(
-          ins.error
+          "call_sessions insert:",
+          insertResult.error
         );
 
+
         setStatus(
-          '撥號失敗：' +
-          ins.error.message
+          "撥號失敗"
         );
+
+
+        showError(
+          "撥號失敗：" +
+          insertResult.error.message
+        );
+
 
         return;
       }
 
 
       callRowId =
-        ins.data.id;
+        insertResult.data.id;
 
 
-      /*
-       * 現在 callRowId 已經有了，
-       * 把剛才可能太早產生的 ICE 補送。
-       */
-
-      await flushLocalIce();
+      console.log(
+        "Call ID:",
+        callRowId
+      );
 
 
       subscribeCallRow();
 
 
+      setStatus(
+        "等待對方接聽…"
+      );
+
+
+      showConnecting(
+        "等待對方接聽…"
+      );
+
+
       /* -------------------------------------------------------
-         輪詢備援
+         Polling 備援
       ------------------------------------------------------- */
 
       pollTimer =
-        setInterval(async function () {
+        setInterval(
+          async function () {
 
-          if (!callRowId) {
-            return;
-          }
+            if (
+              !callRowId ||
+              shuttingDown
+            ) {
+              return;
+            }
 
-          var res =
-            await supabase
-              .from('call_sessions')
-              .select('*')
-              .eq('id', callRowId)
-              .single();
 
-          if (res.data) {
+            try {
 
-            await handleCallUpdate(
-              res.data
-            );
-          }
+              var result =
+                await supabase
+                  .from(
+                    "call_sessions"
+                  )
+                  .select("*")
+                  .eq(
+                    "id",
+                    callRowId
+                  )
+                  .single();
 
-        }, 2000);
+
+              if (
+                result.data
+              ) {
+
+                await handleCallUpdate(
+                  result.data
+                );
+              }
+
+            } catch (error) {
+
+              console.error(
+                "Call polling:",
+                error
+              );
+            }
+
+          },
+          2000
+        );
     }
 
 
@@ -1138,40 +2265,75 @@ if (
 
     function showIncoming(row) {
 
-      if (!row || !row.id) {
+      if (
+        !row ||
+        !row.id
+      ) {
         return;
       }
 
+
+      if (
+        isCaller
+      ) {
+        return;
+      }
+
+
       if (
         document
-          .getElementById('incomingPanel')
+          .getElementById(
+            "incomingPanel"
+          )
           .classList
-          .contains('show')
+          .contains(
+            "show"
+          )
       ) {
 
         return;
       }
 
-      callRowId = row.id;
 
-      mode = row.mode || mode;
+      callRowId =
+        row.id;
+
+
+      mode =
+        row.mode ||
+        mode;
+
 
       document
-        .getElementById('incomingPanel')
+        .getElementById(
+          "incomingPanel"
+        )
         .classList
-        .add('show');
+        .add(
+          "show"
+        );
+
 
       document
-        .getElementById('incomingSub')
+        .getElementById(
+          "incomingSub"
+        )
         .textContent =
-          (mode === 'audio'
-            ? '語音'
-            : '視訊') +
-          '通話邀請';
+          (
+            mode === "audio"
+              ? "語音"
+              : "視訊"
+          ) +
+          "通話邀請";
+
+
+      setStatus(
+        "來電中"
+      );
+
 
       startIncomingRing();
 
-      setStatus('來電中');
 
       subscribeCallRow();
     }
@@ -1183,14 +2345,37 @@ if (
 
     async function acceptCall() {
 
+      if (
+        !callRowId
+      ) {
+
+        setStatus(
+          "來電資料不存在"
+        );
+
+        return;
+      }
+
+
       stopRing();
 
-      document
-        .getElementById('incomingPanel')
-        .classList
-        .remove('show');
 
-      setStatus('接聽中…');
+      document
+        .getElementById(
+          "incomingPanel"
+        )
+        .classList
+        .remove(
+          "show"
+        );
+
+
+      hideError();
+
+
+      setStatus(
+        "正在接聽…"
+      );
 
 
       /* -------------------------------------------------------
@@ -1201,13 +2386,23 @@ if (
 
         await getMedia();
 
-      } catch (e) {
+      } catch (error) {
 
-        console.error(e);
+        console.error(
+          "getUserMedia:",
+          error
+        );
+
 
         setStatus(
-          '請允許麥克風／相機'
+          "無法取得麥克風／相機"
         );
+
+
+        showError(
+          "請允許瀏覽器使用麥克風與相機。"
+        );
+
 
         return;
       }
@@ -1219,19 +2414,32 @@ if (
 
       try {
 
-        await createPc('callee');
+        await createPeerConnection(
+          "callee"
+        );
 
-      } catch (e) {
+      } catch (error) {
 
         console.error(
-          'TURN / WebRTC 建立失敗:',
-          e
+          "createPeerConnection:",
+          error
         );
 
+
+        hideConnecting();
+
+
         setStatus(
-          '無法建立安全連線：' +
-          (e.message || e)
+          "無法建立安全連線"
         );
+
+
+        showError(
+          "TURN 設定取得失敗：" +
+          (error.message ||
+           error)
+        );
+
 
         return;
       }
@@ -1243,131 +2451,217 @@ if (
 
       var result =
         await supabase
-          .from('call_sessions')
-          .select('*')
-          .eq('id', callRowId)
+          .from(
+            "call_sessions"
+          )
+          .select("*")
+          .eq(
+            "id",
+            callRowId
+          )
           .single();
-
-      var row = result.data;
-
-      var error = result.error;
 
 
       if (
-        error ||
-        !row ||
-        !row.offer
+        result.error ||
+        !result.data
       ) {
 
+        hideConnecting();
+
+
         setStatus(
-          '來電已失效'
+          "來電已失效"
         );
+
 
         return;
       }
 
 
-      try {
-
-        /* -----------------------------------------------------
-           設定 Offer
-        ----------------------------------------------------- */
-
-        await pc.setRemoteDescription(
-          row.offer
-        );
+      var row =
+        result.data;
 
 
-        /* -----------------------------------------------------
-           先加入已經存在的 Caller ICE
-        ----------------------------------------------------- */
+      if (
+        !row.offer
+      ) {
 
-        await applyRemoteIce(
-          row.caller_ice
-        );
+        hideConnecting();
 
-
-        /* -----------------------------------------------------
-           建立 Answer
-        ----------------------------------------------------- */
-
-        var answer =
-          await pc.createAnswer();
-
-        await pc.setLocalDescription(
-          answer
-        );
-
-
-        /* -----------------------------------------------------
-           更新 call_sessions
-        ----------------------------------------------------- */
-
-        await supabase
-          .from('call_sessions')
-          .update({
-
-            status: 'accepted',
-
-            answer: answer
-
-          })
-          .eq('id', callRowId);
-
-
-        await flushRemoteIce();
-
-
-        /*
-         * 把可能在 callRowId 建立後產生的
-         * 本機 ICE 補送出去。
-         */
-
-        await flushLocalIce();
-
-
-        setStatus('通話中');
-
-
-      } catch (e) {
-
-        console.error(e);
 
         setStatus(
-          '接聽失敗：' +
-          (e.message || e)
+          "找不到通話邀請"
         );
+
 
         return;
       }
 
 
       /* -------------------------------------------------------
-         輪詢備援
+         建立 Answer
       ------------------------------------------------------- */
 
+      var answer;
+
+
+      try {
+
+        answer =
+          await createCalleeAnswer(
+            row.offer
+          );
+
+
+      } catch (error) {
+
+        console.error(
+          "createAnswer:",
+          error
+        );
+
+
+        hideConnecting();
+
+
+        setStatus(
+          "接聽失敗"
+        );
+
+
+        showError(
+          "建立接聽連線失敗：" +
+          (error.message ||
+           error)
+        );
+
+
+        return;
+      }
+
+
+      /* -------------------------------------------------------
+         寫入 Answer
+      ------------------------------------------------------- */
+
+      var updateResult =
+        await supabase
+          .from(
+            "call_sessions"
+          )
+          .update({
+
+            status:
+              "accepted",
+
+            answer:
+              answer
+
+          })
+          .eq(
+            "id",
+            callRowId
+          );
+
+
+      if (
+        updateResult.error
+      ) {
+
+        console.error(
+          "Answer update:",
+          updateResult.error
+        );
+
+
+        hideConnecting();
+
+
+        setStatus(
+          "接聽失敗"
+        );
+
+
+        showError(
+          "無法傳送接聽資訊：" +
+          updateResult.error.message
+        );
+
+
+        return;
+      }
+
+
+      setStatus(
+        "已接聽，正在建立媒體連線…"
+      );
+
+
+      showConnecting(
+        "正在建立媒體連線…"
+      );
+
+
+      /* -------------------------------------------------------
+         Polling 備援
+      ------------------------------------------------------- */
+
+      if (pollTimer) {
+
+        clearInterval(
+          pollTimer
+        );
+      }
+
+
       pollTimer =
-        setInterval(async function () {
+        setInterval(
+          async function () {
 
-          if (!callRowId) {
-            return;
-          }
+            if (
+              !callRowId ||
+              shuttingDown
+            ) {
+              return;
+            }
 
-          var res =
-            await supabase
-              .from('call_sessions')
-              .select('*')
-              .eq('id', callRowId)
-              .single();
 
-          if (res.data) {
+            try {
 
-            await handleCallUpdate(
-              res.data
-            );
-          }
+              var pollResult =
+                await supabase
+                  .from(
+                    "call_sessions"
+                  )
+                  .select("*")
+                  .eq(
+                    "id",
+                    callRowId
+                  )
+                  .single();
 
-        }, 2000);
+
+              if (
+                pollResult.data
+              ) {
+
+                await handleCallUpdate(
+                  pollResult.data
+                );
+              }
+
+            } catch (error) {
+
+              console.error(
+                "Call polling:",
+                error
+              );
+            }
+
+          },
+          2000
+        );
     }
 
 
@@ -1379,18 +2673,39 @@ if (
 
       stopRing();
 
-      if (callRowId) {
 
-        await supabase
-          .from('call_sessions')
-          .update({
-            status: 'rejected'
-          })
-          .eq('id', callRowId);
+      if (
+        callRowId &&
+        supabase
+      ) {
+
+        try {
+
+          await supabase
+            .from(
+              "call_sessions"
+            )
+            .update({
+              status:
+                "rejected"
+            })
+            .eq(
+              "id",
+              callRowId
+            );
+
+        } catch (error) {
+
+          console.error(
+            "reject:",
+            error
+          );
+        }
       }
 
-      location.href =
-        'contacts.html';
+
+      window.location.href =
+        "contacts.html";
     }
 
 
@@ -1402,79 +2717,129 @@ if (
 
       try {
 
-        supabase
-          .channel('incoming-' + me.id)
+        incomingChannel =
+          supabase
+            .channel(
+              "incoming-" +
+              me.id
+            )
 
-          .on(
-            'postgres_changes',
-            {
-              event: 'INSERT',
-              schema: 'public',
-              table: 'call_sessions',
-              filter:
-                'callee_id=eq.' + me.id
-            },
+            .on(
+              "postgres_changes",
+              {
+                event: "INSERT",
+                schema: "public",
+                table: "call_sessions",
+                filter:
+                  "callee_id=eq." +
+                  me.id
+              },
 
-            function (payload) {
-
-              if (
-                payload.new &&
-                payload.new.status === 'ringing' &&
-                !isCaller
+              function (
+                payload
               ) {
 
-                showIncoming(
-                  payload.new
+                if (
+                  payload.new &&
+                  payload.new.status ===
+                    "ringing" &&
+                  !isCaller
+                ) {
+
+                  showIncoming(
+                    payload.new
+                  );
+                }
+              }
+            )
+
+            .subscribe(
+              function (
+                status
+              ) {
+
+                console.log(
+                  "Incoming Realtime:",
+                  status
                 );
               }
-            }
-          )
+            );
 
-          .subscribe();
+      } catch (error) {
 
-      } catch (e) {
-
-        console.error(e);
+        console.error(
+          "Incoming Realtime:",
+          error
+        );
       }
 
 
       async function checkOnce() {
 
-        if (isCaller) {
+        if (
+          isCaller ||
+          shuttingDown
+        ) {
           return;
         }
+
 
         if (
           document
-            .getElementById('incomingPanel')
+            .getElementById(
+              "incomingPanel"
+            )
             .classList
-            .contains('show')
+            .contains(
+              "show"
+            )
         ) {
 
           return;
         }
 
-        var res =
-          await supabase
-            .from('call_sessions')
-            .select('*')
-            .eq('callee_id', me.id)
-            .eq('status', 'ringing')
-            .order(
-              'created_at',
-              {
-                ascending: false
-              }
-            )
-            .limit(1);
 
-        if (
-          res.data &&
-          res.data[0]
-        ) {
+        try {
 
-          showIncoming(
-            res.data[0]
+          var result =
+            await supabase
+              .from(
+                "call_sessions"
+              )
+              .select("*")
+              .eq(
+                "callee_id",
+                me.id
+              )
+              .eq(
+                "status",
+                "ringing"
+              )
+              .order(
+                "created_at",
+                {
+                  ascending:
+                    false
+                }
+              )
+              .limit(1);
+
+
+          if (
+            result.data &&
+            result.data.length
+          ) {
+
+            showIncoming(
+              result.data[0]
+            );
+          }
+
+        } catch (error) {
+
+          console.error(
+            "check incoming:",
+            error
           );
         }
       }
@@ -1482,19 +2847,130 @@ if (
 
       await checkOnce();
 
-      setInterval(
-        checkOnce,
-        2000
-      );
+
+      incomingTimer =
+        setInterval(
+          checkOnce,
+          2000
+        );
     }
 
 
     /* =========================================================
-       按鈕
+       麥克風
     ========================================================= */
 
     document
-      .getElementById('btnHang')
+      .getElementById(
+        "btnMic"
+      )
+      .onclick =
+        function () {
+
+          if (
+            !localStream
+          ) {
+            return;
+          }
+
+
+          micOn =
+            !micOn;
+
+
+          localStream
+            .getAudioTracks()
+            .forEach(
+              function (track) {
+
+                track.enabled =
+                  micOn;
+
+              }
+            );
+
+
+          var button =
+            document.getElementById(
+              "btnMic"
+            );
+
+
+          button.textContent =
+            micOn
+              ? "麥"
+              : "靜音";
+
+
+          button.classList.toggle(
+            "off",
+            !micOn
+          );
+        };
+
+
+    /* =========================================================
+       鏡頭
+    ========================================================= */
+
+    document
+      .getElementById(
+        "btnCam"
+      )
+      .onclick =
+        function () {
+
+          if (
+            !localStream ||
+            mode === "audio"
+          ) {
+            return;
+          }
+
+
+          camOn =
+            !camOn;
+
+
+          localStream
+            .getVideoTracks()
+            .forEach(
+              function (track) {
+
+                track.enabled =
+                  camOn;
+
+              }
+            );
+
+
+          var button =
+            document.getElementById(
+              "btnCam"
+            );
+
+
+          button.textContent =
+            camOn
+              ? "鏡頭"
+              : "關鏡";
+
+
+          button.classList.toggle(
+            "off",
+            !camOn
+          );
+        };
+
+
+    /* =========================================================
+       掛斷按鈕
+    ========================================================= */
+
+    document
+      .getElementById(
+        "btnHang"
+      )
       .onclick =
         function () {
 
@@ -1503,91 +2979,31 @@ if (
         };
 
 
-    document
-      .getElementById('btnAccept')
-      .onclick =
-        acceptCall;
-
+    /* =========================================================
+       接聽／拒接
+    ========================================================= */
 
     document
-      .getElementById('btnReject')
-      .onclick =
-        rejectCall;
-
-
-    document
-      .getElementById('btnMic')
+      .getElementById(
+        "btnAccept"
+      )
       .onclick =
         function () {
 
-          if (!localStream) {
-            return;
-          }
+          acceptCall();
 
-          micOn = !micOn;
-
-          localStream
-            .getAudioTracks()
-            .forEach(function (t) {
-
-              t.enabled = micOn;
-
-            });
-
-          document
-            .getElementById('btnMic')
-            .textContent =
-              micOn
-                ? '麥'
-                : '靜音';
-
-          document
-            .getElementById('btnMic')
-            .classList
-            .toggle(
-              'off',
-              !micOn
-            );
         };
 
 
     document
-      .getElementById('btnCam')
+      .getElementById(
+        "btnReject"
+      )
       .onclick =
         function () {
 
-          if (
-            !localStream ||
-            mode === 'audio'
-          ) {
+          rejectCall();
 
-            return;
-          }
-
-          camOn = !camOn;
-
-          localStream
-            .getVideoTracks()
-            .forEach(function (t) {
-
-              t.enabled = camOn;
-
-            });
-
-          document
-            .getElementById('btnCam')
-            .textContent =
-              camOn
-                ? '鏡頭'
-                : '關鏡';
-
-          document
-            .getElementById('btnCam')
-            .classList
-            .toggle(
-              'off',
-              !camOn
-            );
         };
 
 
@@ -1597,94 +3013,177 @@ if (
 
     async function boot() {
 
-      if (!window.supabase) {
+      try {
 
         setStatus(
-          'Supabase 套件載入失敗'
-        );
-
-        return;
-      }
-
-
-      supabase =
-        window.supabase.createClient(
-          SUPABASE_URL,
-          SUPABASE_KEY
+          "正在啟動通話…"
         );
 
 
-      var sess =
-        await supabase.auth.getSession();
+        if (
+          !window.supabase
+        ) {
 
-
-      if (!sess.data.session) {
-
-        location.href =
-          'login.html';
-
-        return;
-      }
-
-
-      me =
-        sess.data.session.user;
-
-
-      /*
-       * 第一次點擊時解除瀏覽器音訊限制
-       */
-
-      document.body.addEventListener(
-        'click',
-        function () {
-
-          try {
-            ensureAudio();
-          } catch (e) {}
-
-        },
-        {
-          once: true
-        }
-      );
-
-
-      await listenIncoming();
-
-
-      /* -------------------------------------------------------
-         如果 URL 有 to，代表這是撥出電話
-      ------------------------------------------------------- */
-
-      if (toUser) {
-
-        if (toUser === me.id) {
-
-          setStatus(
-            '不能打給自己'
+          throw new Error(
+            "Supabase 套件載入失敗"
           );
+        }
+
+
+        supabase =
+          window.supabase.createClient(
+            SUPABASE_URL,
+            SUPABASE_KEY
+          );
+
+
+        setStatus(
+          "正在確認登入狀態…"
+        );
+
+
+        var sessionResult =
+          await supabase.auth.getSession();
+
+
+        if (
+          sessionResult.error
+        ) {
+
+          throw new Error(
+            sessionResult.error.message
+          );
+        }
+
+
+        if (
+          !sessionResult.data.session
+        ) {
+
+          window.location.href =
+            "login.html";
 
           return;
         }
 
-        await startAsCaller();
 
-      } else {
+        me =
+          sessionResult
+            .data
+            .session
+            .user;
+
+
+        console.log(
+          "目前使用者:",
+          me.id
+        );
+
 
         /*
-         * 沒有 to：
-         * 等待來電。
+         * 第一次使用者操作解除
+         * iPhone / Safari 音訊限制。
          */
 
+        document.body.addEventListener(
+          "click",
+          function () {
+
+            try {
+
+              ensureAudio();
+
+            } catch (e) {}
+
+          },
+          {
+            once: true
+          }
+        );
+
+
+        /*
+         * 先啟動來電監聽。
+         */
+
+        await listenIncoming();
+
+
+        /*
+         * 有 to：
+         * 代表從聯絡人／群組成員
+         * 發起一對一電話。
+         */
+
+        if (toUser) {
+
+
+          if (
+            toUser === me.id
+          ) {
+
+            hideConnecting();
+
+            setStatus(
+              "不能打給自己"
+            );
+
+            return;
+          }
+
+
+          await startAsCaller();
+
+
+        } else {
+
+
+          /*
+           * 沒有 to：
+           * 這個頁面只等待來電。
+           */
+
+          hideConnecting();
+
+
+          setStatus(
+            "等待來電…"
+          );
+        }
+
+
+      } catch (error) {
+
+        console.error(
+          "CALL BOOT ERROR:",
+          error
+        );
+
+
+        stopRing();
+
+        hideConnecting();
+
+
         setStatus(
-          '等待來電…（請保持此頁開啟）'
+          "通話初始化失敗"
+        );
+
+
+        showError(
+          error.message ||
+          "通話初始化失敗"
         );
       }
     }
 
 
+    /* =========================================================
+       開始
+    ========================================================= */
+
     boot();
+
 
   })();
   </script>
