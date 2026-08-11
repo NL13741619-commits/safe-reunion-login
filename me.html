@@ -7943,6 +7943,41 @@ window.navigateAmap =
 console.log(
   "安全團聚：個人語音導航模組已載入"
 );
+  /* =========================================================
+   從 Home 進入指定設定
+   ========================================================= */
+
+(function () {
+
+  const params =
+    new URLSearchParams(
+      window.location.search
+    );
+
+  const setting =
+    params.get('settings');
+
+  if (setting === 'general') {
+
+    setTimeout(function () {
+
+      openGeneralSettings();
+
+    }, 100);
+
+  }
+
+  if (setting === 'notifications') {
+
+    setTimeout(function () {
+
+      openNotificationSettings();
+
+    }, 100);
+
+  }
+
+})();
 </script>
 
 </body>
