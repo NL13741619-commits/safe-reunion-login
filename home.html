@@ -46,6 +46,25 @@
       font-size: 20px;
     }
 
+    .header-action {
+      cursor: pointer;
+      width: 34px;
+      height: 34px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 50%;
+      text-decoration: none;
+      color: white;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .header-action:active {
+      background: rgba(255,255,255,0.18);
+      transform: scale(0.94);
+    }
+
     .alert-banner {
       background: #fdecea;
       border-left: 5px solid #e74c3c;
@@ -206,6 +225,59 @@
       pointer-events: none;
     }
 
+    /* SOS 群組選擇 */
+    .sos-group-panel {
+      display: none;
+      background: white;
+      border-radius: 14px;
+      padding: 16px;
+      margin-bottom: 16px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    }
+
+    .sos-group-panel.show {
+      display: block;
+    }
+
+    .sos-group-title {
+      font-size: 15px;
+      font-weight: 700;
+      margin-bottom: 6px;
+    }
+
+    .sos-group-desc {
+      font-size: 12px;
+      color: #777;
+      margin-bottom: 12px;
+      line-height: 1.4;
+    }
+
+    .sos-group-select {
+      width: 100%;
+      padding: 12px;
+      border: 1px solid #ddd;
+      border-radius: 10px;
+      background: white;
+      font-size: 15px;
+      color: #222;
+      outline: none;
+    }
+
+    .sos-group-select:focus {
+      border-color: #06C755;
+    }
+
+    .sos-group-actions {
+      display: flex;
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    .sos-group-actions button {
+      flex: 1;
+      margin: 0;
+    }
+
     .quick-row {
       display: grid;
       grid-template-columns: repeat(4, 1fr);
@@ -278,12 +350,31 @@
 
   <!-- 頂部 -->
   <div class="header">
+
     <h1>安全團聚</h1>
 
     <div class="header-right">
-      <span>🔔</span>
-      <span>⚙️</span>
+
+      <!-- 通知設定 -->
+      <a
+        class="header-action"
+        href="me.html?settings=notifications"
+        aria-label="通知設定"
+      >
+        🔔
+      </a>
+
+      <!-- 一般設定 -->
+      <a
+        class="header-action"
+        href="me.html?settings=general"
+        aria-label="一般設定"
+      >
+        ⚙️
+      </a>
+
     </div>
+
   </div>
 
 
@@ -337,12 +428,64 @@
 
   <div class="content">
 
-    <!-- SOS -->
+    <!-- =====================================================
+         SOS
+    ====================================================== -->
+
     <div
       class="sos-bar"
       id="btnSos"
     >
       🚨 緊急求助 SOS
+    </div>
+
+
+    <!-- =====================================================
+         SOS 群組選擇
+    ====================================================== -->
+
+    <div
+      class="sos-group-panel"
+      id="sosGroupPanel"
+    >
+
+      <div class="sos-group-title">
+        🚨 選擇 SOS 發送群組
+      </div>
+
+      <div class="sos-group-desc">
+        請選擇要通知的群組。SOS 不會自動發送給你所有群組。
+      </div>
+
+      <select
+        id="sosGroupSelect"
+        class="sos-group-select"
+      >
+        <option value="">
+          載入群組中…
+        </option>
+      </select>
+
+      <div class="sos-group-actions">
+
+        <button
+          type="button"
+          class="btn btn-outline"
+          id="btnCancelSos"
+        >
+          取消
+        </button>
+
+        <button
+          type="button"
+          class="btn btn-primary"
+          id="btnConfirmSos"
+        >
+          🚨 發送 SOS
+        </button>
+
+      </div>
+
     </div>
 
 
@@ -382,24 +525,30 @@
 
     <!-- 快速功能 -->
     <div class="quick-row">
-      <a
-  class="quick-item"
-  id="adminQuickItem"
-  href="speed-camera-admin.html"
-  style="display:none;"
->
-  <div class="quick-icon">
-    ⚙️
-  </div>
 
-  <div class="quick-label">
-    後台管理員
-  </div>
-</a>
+      <a
+        class="quick-item"
+        id="adminQuickItem"
+        href="speed-camera-admin.html"
+        style="display:none;"
+      >
+
+        <div class="quick-icon">
+          ⚙️
+        </div>
+
+        <div class="quick-label">
+          後台管理員
+        </div>
+
+      </a>
+
+
       <a
         class="quick-item"
         href="map.html"
       >
+
         <div class="quick-icon">
           🗺️
         </div>
@@ -407,6 +556,7 @@
         <div class="quick-label">
           地圖
         </div>
+
       </a>
 
 
@@ -414,6 +564,7 @@
         class="quick-item"
         href="chat.html"
       >
+
         <div class="quick-icon">
           💬
         </div>
@@ -421,6 +572,7 @@
         <div class="quick-label">
           聊天
         </div>
+
       </a>
 
 
@@ -428,6 +580,7 @@
         class="quick-item"
         href="me.html"
       >
+
         <div class="quick-icon">
           📦
         </div>
@@ -435,6 +588,7 @@
         <div class="quick-label">
           物資
         </div>
+
       </a>
 
 
@@ -442,6 +596,7 @@
         class="quick-item"
         href="chat.html"
       >
+
         <div class="quick-icon">
           📍
         </div>
@@ -449,6 +604,7 @@
         <div class="quick-label">
           去聊天設集合
         </div>
+
       </a>
 
     </div>
@@ -511,7 +667,7 @@
 
   /* =========================================================
      Supabase
-     ========================================================= */
+  ========================================================= */
 
   var SUPABASE_URL =
     'https://perfsipperncvjocznhl.supabase.co';
@@ -524,7 +680,7 @@
 
   /* =========================================================
      初始化 Supabase
-     ========================================================= */
+  ========================================================= */
 
   function initSupabase() {
 
@@ -559,57 +715,67 @@
 
   initSupabase();
 
+
+  /* =========================================================
+     管理員
+  ========================================================= */
+
   var MY_ADMIN_UID =
-  '11dd26d5-42fb-4947-9676-119279b63dd8';
+    '11dd26d5-42fb-4947-9676-119279b63dd8';
 
-async function checkAdminButton() {
 
-  if (!supabase) {
-    return;
-  }
+  async function checkAdminButton() {
 
-  try {
-
-    var result =
-      await supabase.auth.getUser();
-
-    var user =
-      result.data &&
-      result.data.user;
-
-    if (
-      user &&
-      user.id === MY_ADMIN_UID
-    ) {
-
-      var adminButton =
-        document.getElementById(
-          'adminQuickItem'
-        );
-
-      if (adminButton) {
-        adminButton.style.display =
-          'block';
-      }
+    if (!supabase) {
+      return;
     }
 
-  } catch (e) {
+    try {
 
-    console.error(
-      '管理員判斷失敗：',
-      e
-    );
+      var result =
+        await supabase.auth.getUser();
+
+      var user =
+        result.data &&
+        result.data.user;
+
+      if (
+        user &&
+        user.id === MY_ADMIN_UID
+      ) {
+
+        var adminButton =
+          document.getElementById(
+            'adminQuickItem'
+          );
+
+        if (adminButton) {
+
+          adminButton.style.display =
+            'block';
+
+        }
+
+      }
+
+    } catch (e) {
+
+      console.error(
+        '管理員判斷失敗：',
+        e
+      );
+
+    }
 
   }
-}
 
-checkAdminButton();
 
-  
+  checkAdminButton();
+
 
   /* =========================================================
      警訊
-     ========================================================= */
+  ========================================================= */
 
   var audioCtx = null;
   var oscillator = null;
@@ -618,66 +784,93 @@ checkAdminButton();
   var stopTimer = null;
   var sweepTimer = null;
 
-  var ALERT_ID = 'alert-20260807';
+  var ALERT_ID =
+    'alert-20260807';
 
 
   function closeAlert() {
 
     var banner =
-      document.getElementById('alertBanner');
+      document.getElementById(
+        'alertBanner'
+      );
 
     if (banner) {
-      banner.style.display = 'none';
+
+      banner.style.display =
+        'none';
+
     }
 
     try {
+
       localStorage.setItem(
         ALERT_ID,
         'seen'
       );
+
     } catch (e) {}
 
     stopSiren();
+
   }
 
 
   function stopSiren() {
 
     if (stopTimer) {
+
       clearTimeout(stopTimer);
+
       stopTimer = null;
+
     }
 
     if (sweepTimer) {
+
       clearInterval(sweepTimer);
+
       sweepTimer = null;
+
     }
 
     if (oscillator) {
 
       try {
+
         oscillator.stop();
+
       } catch (e) {}
 
       oscillator = null;
+
     }
 
     isPlaying = false;
 
     var btn =
-      document.getElementById('btnSiren');
+      document.getElementById(
+        'btnSiren'
+      );
 
     if (btn) {
-      btn.textContent = '▶ 播放警笛';
+
+      btn.textContent =
+        '▶ 播放警笛';
+
     }
+
   }
 
 
   function playSiren() {
 
     if (isPlaying) {
+
       stopSiren();
+
       return;
+
     }
 
     try {
@@ -690,8 +883,12 @@ checkAdminButton();
 
     } catch (e) {
 
-      alert('此裝置不支援網頁音效');
+      alert(
+        '此裝置不支援網頁音效'
+      );
+
       return;
+
     }
 
 
@@ -700,10 +897,15 @@ checkAdminButton();
       isPlaying = true;
 
       var btn =
-        document.getElementById('btnSiren');
+        document.getElementById(
+          'btnSiren'
+        );
 
       if (btn) {
-        btn.textContent = '■ 停止警笛';
+
+        btn.textContent =
+          '■ 停止警笛';
+
       }
 
 
@@ -713,7 +915,8 @@ checkAdminButton();
       gainNode =
         audioCtx.createGain();
 
-      oscillator.type = 'sawtooth';
+      oscillator.type =
+        'sawtooth';
 
       gainNode.gain.setValueAtTime(
         0.12,
@@ -721,7 +924,9 @@ checkAdminButton();
       );
 
 
-      oscillator.connect(gainNode);
+      oscillator.connect(
+        gainNode
+      );
 
       gainNode.connect(
         audioCtx.destination
@@ -755,78 +960,98 @@ checkAdminButton();
 
 
       sweepTimer =
-        setInterval(function () {
+        setInterval(
+          function () {
 
-          if (!oscillator || !audioCtx) {
-            return;
-          }
+            if (
+              !oscillator ||
+              !audioCtx
+            ) {
 
-          phase += 1;
-
-          var now =
-            audioCtx.currentTime;
-
-          try {
-
-            if (phase % 2 === 1) {
-
-              oscillator.frequency.cancelScheduledValues(
-                now
-              );
-
-              oscillator.frequency.setValueAtTime(
-                800,
-                now
-              );
-
-              oscillator.frequency.linearRampToValueAtTime(
-                1200,
-                now + 0.5
-              );
-
-            } else {
-
-              oscillator.frequency.cancelScheduledValues(
-                now
-              );
-
-              oscillator.frequency.setValueAtTime(
-                1200,
-                now
-              );
-
-              oscillator.frequency.linearRampToValueAtTime(
-                800,
-                now + 0.5
-              );
+              return;
 
             }
 
-          } catch (e) {}
+            phase += 1;
 
-        }, 500);
+            var now =
+              audioCtx.currentTime;
+
+            try {
+
+              if (
+                phase % 2 === 1
+              ) {
+
+                oscillator.frequency.cancelScheduledValues(
+                  now
+                );
+
+                oscillator.frequency.setValueAtTime(
+                  800,
+                  now
+                );
+
+                oscillator.frequency.linearRampToValueAtTime(
+                  1200,
+                  now + 0.5
+                );
+
+              } else {
+
+                oscillator.frequency.cancelScheduledValues(
+                  now
+                );
+
+                oscillator.frequency.setValueAtTime(
+                  1200,
+                  now
+                );
+
+                oscillator.frequency.linearRampToValueAtTime(
+                  800,
+                  now + 0.5
+                );
+
+              }
+
+            } catch (e) {}
+
+          },
+          500
+        );
 
 
       stopTimer =
-        setTimeout(function () {
-          stopSiren();
-        }, 8000);
+        setTimeout(
+          function () {
+
+            stopSiren();
+
+          },
+          8000
+        );
 
     }
 
 
-    if (audioCtx.state === 'suspended') {
+    if (
+      audioCtx.state ===
+      'suspended'
+    ) {
 
       audioCtx
         .resume()
         .then(startTone)
-        .catch(function () {
+        .catch(
+          function () {
 
-          alert(
-            '請再點一次播放警笛（需解除靜音）'
-          );
+            alert(
+              '請再點一次播放警笛（需解除靜音）'
+            );
 
-        });
+          }
+        );
 
     } else {
 
@@ -839,26 +1064,34 @@ checkAdminButton();
 
   document.getElementById(
     'btnSiren'
-  ).onclick = playSiren;
+  ).onclick =
+    playSiren;
 
 
   document.getElementById(
     'btnCloseAlert'
-  ).onclick = closeAlert;
+  ).onclick =
+    closeAlert;
 
 
   try {
 
     if (
-      localStorage.getItem(ALERT_ID) ===
-      'seen'
+      localStorage.getItem(
+        ALERT_ID
+      ) === 'seen'
     ) {
 
       var banner =
-        document.getElementById('alertBanner');
+        document.getElementById(
+          'alertBanner'
+        );
 
       if (banner) {
-        banner.style.display = 'none';
+
+        banner.style.display =
+          'none';
+
       }
 
     }
@@ -872,16 +1105,358 @@ checkAdminButton();
      重要：
      1. 取得登入者
      2. 取得 GPS
-     3. 找出群組
-     4. 寫入 sos_events
-     5. 寫入 messages
-     
-     messages 是讓群組聊天室即時看到 SOS 的關鍵。
-     ========================================================= */
+     3. 取得「目前使用者所屬的群組」
+     4. 讓使用者選擇一個群組
+     5. 只發送到選定的群組
+  ========================================================= */
 
   var sosButton =
-    document.getElementById('btnSos');
+    document.getElementById(
+      'btnSos'
+    );
 
+
+  var sosGroupPanel =
+    document.getElementById(
+      'sosGroupPanel'
+    );
+
+
+  var sosGroupSelect =
+    document.getElementById(
+      'sosGroupSelect'
+    );
+
+
+  var btnCancelSos =
+    document.getElementById(
+      'btnCancelSos'
+    );
+
+
+  var btnConfirmSos =
+    document.getElementById(
+      'btnConfirmSos'
+    );
+
+
+  /* =========================================================
+     取消 SOS 群組選擇
+  ========================================================= */
+
+  function cancelSOSSelection() {
+
+    if (sosGroupPanel) {
+
+      sosGroupPanel.classList.remove(
+        'show'
+      );
+
+    }
+
+  }
+
+
+  if (btnCancelSos) {
+
+    btnCancelSos.onclick =
+      cancelSOSSelection;
+
+  }
+
+
+  /* =========================================================
+     取得目前使用者的群組
+     
+     注意：
+     不寫死任何 group_id。
+     
+     只根據 group_members：
+     user_id = 目前登入者
+     
+     找到的群組就是這個使用者實際加入的群組。
+  ========================================================= */
+
+  async function loadMySOSGroups() {
+
+    if (!supabase) {
+
+      throw new Error(
+        'Supabase 尚未初始化'
+      );
+
+    }
+
+
+    var sessionResult =
+      await supabase.auth.getSession();
+
+
+    var session =
+      sessionResult.data &&
+      sessionResult.data.session;
+
+
+    if (!session) {
+
+      throw new Error(
+        '請先登入安全團聚。'
+      );
+
+    }
+
+
+    var user =
+      session.user;
+
+
+    var memberResult =
+      await supabase
+        .from('group_members')
+        .select('group_id')
+        .eq(
+          'user_id',
+          user.id
+        );
+
+
+    if (memberResult.error) {
+
+      throw memberResult.error;
+
+    }
+
+
+    var rows =
+      memberResult.data || [];
+
+
+    if (!rows.length) {
+
+      return [];
+
+    }
+
+
+    /*
+     * 取得群組基本資料
+     *
+     * 這裡嘗試讀取常見欄位：
+     * id / name
+     *
+     * 如果你的 groups 表實際欄位就是這兩個，
+     * 就會直接取得群組名稱。
+     */
+
+    var groupIds =
+      rows
+        .map(
+          function(row) {
+            return row.group_id;
+          }
+        )
+        .filter(
+          function(id) {
+            return !!id;
+          }
+        );
+
+
+    if (!groupIds.length) {
+
+      return [];
+
+    }
+
+
+    var groupResult =
+      await supabase
+        .from('groups')
+        .select('id,name')
+        .in(
+          'id',
+          groupIds
+        );
+
+
+    /*
+     * 如果 groups 查詢失敗，
+     * 仍然保留 group_id，
+     * 不讓 SOS 整個不能使用。
+     */
+
+    if (groupResult.error) {
+
+      console.warn(
+        '群組名稱讀取失敗：',
+        groupResult.error
+      );
+
+
+      return groupIds.map(
+        function(groupId) {
+
+          return {
+
+            id:
+              groupId,
+
+            name:
+              '群組 ' +
+              String(groupId).slice(0,8)
+
+          };
+
+        }
+      );
+
+    }
+
+
+    var groupRows =
+      groupResult.data || [];
+
+
+    return groupIds.map(
+      function(groupId) {
+
+        var group =
+          groupRows.find(
+            function(item) {
+
+              return String(item.id) ===
+                String(groupId);
+
+            }
+          );
+
+
+        return {
+
+          id:
+            groupId,
+
+          name:
+            group &&
+            group.name
+              ? group.name
+              : '群組 ' +
+                String(groupId).slice(0,8)
+
+        };
+
+      }
+    );
+
+  }
+
+
+  /* =========================================================
+     顯示群組選擇器
+  ========================================================= */
+
+  async function openSOSGroupSelector() {
+
+    if (!sosGroupPanel) {
+      return;
+    }
+
+
+    sosGroupPanel.classList.add(
+      'show'
+    );
+
+
+    sosGroupSelect.innerHTML =
+      '<option value="">載入群組中…</option>';
+
+
+    try {
+
+      var groups =
+        await loadMySOSGroups();
+
+
+      if (!groups.length) {
+
+        sosGroupSelect.innerHTML =
+          '<option value="">你目前沒有加入任何群組</option>';
+
+
+        alert(
+          '你目前沒有加入任何群組，因此無法發送 SOS。'
+        );
+
+
+        return;
+
+      }
+
+
+      sosGroupSelect.innerHTML =
+        '<option value="">請選擇要發送的群組</option>';
+
+
+      groups.forEach(
+        function(group) {
+
+          var option =
+            document.createElement(
+              'option'
+            );
+
+
+          option.value =
+            String(group.id);
+
+
+          option.textContent =
+            group.name;
+
+
+          sosGroupSelect.appendChild(
+            option
+          );
+
+        }
+      );
+
+
+    } catch (error) {
+
+      console.error(
+        '取得 SOS 群組失敗：',
+        error
+      );
+
+
+      sosGroupSelect.innerHTML =
+        '<option value="">無法取得群組</option>';
+
+
+      alert(
+        '無法取得你的群組。\n\n' +
+        (
+          error &&
+          error.message
+            ? error.message
+            : error
+        )
+      );
+
+    }
+
+  }
+
+
+  /* =========================================================
+     點擊 SOS
+     
+     第一次點：
+     → 開啟群組選擇
+     
+     不會直接發送。
+  ========================================================= */
 
   async function sendSOS() {
 
@@ -890,18 +1465,16 @@ checkAdminButton();
     }
 
 
-    /* 防止連續狂按 */
-
     if (
-      sosButton.classList.contains('sending')
+      sosButton.classList.contains(
+        'sending'
+      )
     ) {
+
       return;
+
     }
 
-
-    /* -----------------------------------------------------
-       檢查 Supabase
-       ----------------------------------------------------- */
 
     if (!supabase) {
 
@@ -910,10 +1483,62 @@ checkAdminButton();
       );
 
       return;
+
     }
 
 
-    sosButton.classList.add('sending');
+    await openSOSGroupSelector();
+
+  }
+
+
+  sosButton.onclick =
+    sendSOS;
+
+
+  /* =========================================================
+     確認發送 SOS
+     
+     這裡才真正取得 GPS 並發送。
+  ========================================================= */
+
+  async function confirmSendSOS() {
+
+    if (!sosGroupSelect) {
+      return;
+    }
+
+
+    var selectedGroupId =
+      sosGroupSelect.value;
+
+
+    if (!selectedGroupId) {
+
+      alert(
+        '請先選擇要發送 SOS 的群組。'
+      );
+
+      return;
+
+    }
+
+
+    if (
+      sosButton.classList.contains(
+        'sending'
+      )
+    ) {
+
+      return;
+
+    }
+
+
+    sosButton.classList.add(
+      'sending'
+    );
+
 
     sosButton.textContent =
       '📍 正在取得位置…';
@@ -923,7 +1548,7 @@ checkAdminButton();
 
       /* ---------------------------------------------------
          取得登入狀態
-         --------------------------------------------------- */
+      --------------------------------------------------- */
 
       var sessionResult =
         await supabase.auth.getSession();
@@ -936,16 +1561,10 @@ checkAdminButton();
 
       if (!session) {
 
-        alert(
+        throw new Error(
           '請先登入安全團聚。'
         );
 
-        sosButton.classList.remove('sending');
-
-        sosButton.textContent =
-          '🚨 緊急求助 SOS';
-
-        return;
       }
 
 
@@ -955,35 +1574,30 @@ checkAdminButton();
 
       /* ---------------------------------------------------
          檢查定位
-         --------------------------------------------------- */
+      --------------------------------------------------- */
 
       if (!navigator.geolocation) {
 
-        alert(
+        throw new Error(
           '此裝置不支援定位功能。'
         );
 
-        sosButton.classList.remove('sending');
-
-        sosButton.textContent =
-          '🚨 緊急求助 SOS';
-
-        return;
       }
 
 
       /* ---------------------------------------------------
          取得 GPS
-         --------------------------------------------------- */
+      --------------------------------------------------- */
 
       navigator.geolocation.getCurrentPosition(
 
-        async function (position) {
+        async function(position) {
 
           try {
 
             var latitude =
               position.coords.latitude;
+
 
             var longitude =
               position.coords.longitude;
@@ -995,7 +1609,7 @@ checkAdminButton();
 
             /* ---------------------------------------------
                使用者名稱
-               --------------------------------------------- */
+            --------------------------------------------- */
 
             var displayName =
               (
@@ -1014,46 +1628,8 @@ checkAdminButton();
 
 
             /* ---------------------------------------------
-               找出使用者加入的群組
-               --------------------------------------------- */
-
-            var memberResult =
-              await supabase
-                .from('group_members')
-                .select('group_id')
-                .eq(
-                  'user_id',
-                  user.id
-                );
-
-
-            if (memberResult.error) {
-              throw memberResult.error;
-            }
-
-
-            var groupRows =
-              memberResult.data || [];
-
-
-            if (!groupRows.length) {
-
-              alert(
-                '你目前沒有加入任何群組，因此無法通知群組成員。'
-              );
-
-              sosButton.classList.remove('sending');
-
-              sosButton.textContent =
-                '🚨 緊急求助 SOS';
-
-              return;
-            }
-
-
-            /* ---------------------------------------------
                SOS 內容
-               --------------------------------------------- */
+            --------------------------------------------- */
 
             var sosMessage =
               '🚨 SOS 緊急求助！\n' +
@@ -1066,146 +1642,126 @@ checkAdminButton();
               longitude.toFixed(6);
 
 
-            var successCount = 0;
+            /* =============================================
+               只建立「選定群組」的 SOS EVENT
+            ============================================= */
+
+            var eventResult =
+              await supabase
+                .from('sos_events')
+                .insert({
+
+                  room_id:
+                    String(
+                      selectedGroupId
+                    ),
+
+                  user_id:
+                    user.id,
+
+                  display_name:
+                    displayName,
+
+                  lat:
+                    latitude,
+
+                  lng:
+                    longitude,
+
+                  message:
+                    sosMessage
+
+                })
+                .select()
+                .single();
 
 
-            /* ---------------------------------------------
-               對每一個群組發送
-               --------------------------------------------- */
+            if (eventResult.error) {
 
-            for (
-              var i = 0;
-              i < groupRows.length;
-              i++
-            ) {
-
-              var groupId =
-                groupRows[i].group_id;
-
-
-              /* ===========================================
-                 ① 建立 SOS EVENT
-                 
-                 這是 SOS 專用紀錄。
-                 =========================================== */
-
-              var eventResult =
-                await supabase
-                  .from('sos_events')
-                  .insert({
-
-                    room_id:
-                      String(groupId),
-
-                    user_id:
-                      user.id,
-
-                    display_name:
-                      displayName,
-
-                    lat:
-                      latitude,
-
-                    lng:
-                      longitude,
-
-                    message:
-                      sosMessage
-
-                  })
-                  .select()
-                  .single();
-
-
-              if (eventResult.error) {
-
-                console.error(
-                  'sos_events 寫入失敗：',
-                  eventResult.error
-                );
-
-                continue;
-              }
-
-
-              /* ===========================================
-                 ② 建立群組聊天訊息
-                 
-                 這是非常重要的。
-                 
-                 room.html 目前監聽 messages，
-                 所以 SOS 必須同時進 messages。
-                 =========================================== */
-
-              var messageResult =
-                await supabase
-                  .from('messages')
-                  .insert({
-
-                    room_id:
-                      String(groupId),
-
-                    user_id:
-                      user.id,
-
-                    sender_name:
-                      displayName,
-
-                    kind:
-                      'sos',
-
-                    body:
-                      sosMessage,
-
-                    is_all:
-                      true
-
-                  });
-
-
-              if (messageResult.error) {
-
-                console.error(
-                  'messages SOS 寫入失敗：',
-                  messageResult.error
-                );
-
-                continue;
-              }
-
-
-              successCount++;
+              throw eventResult.error;
 
             }
 
 
-            /* ---------------------------------------------
-               發送結果
-               --------------------------------------------- */
+            /* =============================================
+               只建立「選定群組」的聊天 SOS 訊息
+            ============================================= */
 
-            if (successCount > 0) {
+            var messageResult =
+              await supabase
+                .from('messages')
+                .insert({
 
-              alert(
-                '🚨 SOS 已發送！\n\n' +
-                '已通知 ' +
-                successCount +
-                ' 個群組。\n\n' +
-                '群組成員可以在聊天中看到你的求救訊息。'
-              );
+                  room_id:
+                    String(
+                      selectedGroupId
+                    ),
 
-            } else {
+                  user_id:
+                    user.id,
 
-              alert(
-                'SOS 發送失敗。\n\n' +
-                '請檢查網路連線及 Supabase 權限設定。'
-              );
+                  sender_name:
+                    displayName,
+
+                  kind:
+                    'sos',
+
+                  body:
+                    sosMessage,
+
+                  is_all:
+                    true
+
+                });
+
+
+            if (messageResult.error) {
+
+              throw messageResult.error;
 
             }
+
+
+            /* =============================================
+               找到選擇的群組名稱
+            ============================================= */
+
+            var selectedOption =
+              sosGroupSelect.options[
+                sosGroupSelect.selectedIndex
+              ];
+
+
+            var selectedGroupName =
+              selectedOption
+                ? selectedOption.textContent
+                : '指定群組';
+
+
+            alert(
+              '🚨 SOS 已發送！\n\n' +
+              '發送群組：' +
+              selectedGroupName +
+              '\n\n' +
+              '群組成員可以在聊天中看到你的求救訊息。'
+            );
+
+
+            /* 關閉選擇器 */
+
+            sosGroupPanel.classList.remove(
+              'show'
+            );
+
+
+            sosGroupSelect.value =
+              '';
 
 
             sosButton.classList.remove(
               'sending'
             );
+
 
             sosButton.textContent =
               '🚨 緊急求助 SOS';
@@ -1218,6 +1774,7 @@ checkAdminButton();
               e
             );
 
+
             alert(
               'SOS 發送發生錯誤：\n' +
               (
@@ -1227,9 +1784,11 @@ checkAdminButton();
               )
             );
 
+
             sosButton.classList.remove(
               'sending'
             );
+
 
             sosButton.textContent =
               '🚨 緊急求助 SOS';
@@ -1241,9 +1800,9 @@ checkAdminButton();
 
         /* ---------------------------------------------
            GPS 失敗
-           --------------------------------------------- */
+        --------------------------------------------- */
 
-        function (error) {
+        function(error) {
 
           console.error(
             'GPS 定位失敗：',
@@ -1255,17 +1814,23 @@ checkAdminButton();
             '無法取得你的位置。';
 
 
-          if (error.code === 1) {
+          if (
+            error.code === 1
+          ) {
 
             message +=
               '\n請允許瀏覽器使用定位功能。';
 
-          } else if (error.code === 2) {
+          } else if (
+            error.code === 2
+          ) {
 
             message +=
               '\n目前無法取得 GPS 位置。';
 
-          } else if (error.code === 3) {
+          } else if (
+            error.code === 3
+          ) {
 
             message +=
               '\n定位逾時，請再試一次。';
@@ -1280,6 +1845,7 @@ checkAdminButton();
             'sending'
           );
 
+
           sosButton.textContent =
             '🚨 緊急求助 SOS';
 
@@ -1288,7 +1854,7 @@ checkAdminButton();
 
         /* ---------------------------------------------
            GPS 設定
-           --------------------------------------------- */
+        --------------------------------------------- */
 
         {
           enableHighAccuracy: true,
@@ -1306,6 +1872,7 @@ checkAdminButton();
         e
       );
 
+
       alert(
         'SOS 發送發生錯誤：\n' +
         (
@@ -1315,9 +1882,11 @@ checkAdminButton();
         )
       );
 
+
       sosButton.classList.remove(
         'sending'
       );
+
 
       sosButton.textContent =
         '🚨 緊急求助 SOS';
@@ -1327,8 +1896,12 @@ checkAdminButton();
   }
 
 
-  sosButton.onclick =
-    sendSOS;
+  if (btnConfirmSos) {
+
+    btnConfirmSos.onclick =
+      confirmSendSOS;
+
+  }
 
 
 })();
