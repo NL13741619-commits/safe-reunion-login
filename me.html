@@ -6385,9 +6385,45 @@ document.addEventListener(
 
       });
 
+
+    /* =========================================
+       從 home.html 開啟指定設定
+       
+       home.html：
+       🔔 → me.html?settings=notifications
+       ⚙️ → me.html?settings=general
+       ========================================= */
+
+    const params =
+      new URLSearchParams(
+        window.location.search
+      );
+
+    const setting =
+      params.get("settings");
+
+
+    if(
+      setting === "notifications" &&
+      typeof openNotificationSettings === "function"
+    ){
+
+      openNotificationSettings();
+
+    }
+
+
+    if(
+      setting === "general" &&
+      typeof openGeneralSettings === "function"
+    ){
+
+      openGeneralSettings();
+
+    }
+
   }
 );
-
 
 /* =========================================================
    點擊功能區
