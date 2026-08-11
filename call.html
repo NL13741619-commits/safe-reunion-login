@@ -827,43 +827,41 @@
 
 
       /* -------------------------------------------------------
-         Caller 收到 Answer
-      ------------------------------------------------------- */
+   Caller 收到 Answer
+------------------------------------------------------- */
 
-      if (
-        isCaller &&
-        row.answer &&
-        pc &&
-        !pc.currentRemoteDescription
-      ) {
+if (
+  isCaller &&
+  row.answer &&
+  pc &&
+  pc.signalingState === 'have-local-offer'
+) {
 
-        try {
+  try {
 
-          await pc.setRemoteDescription(
-            row.answer
-          );
+    console.log('收到 Answer，設定遠端 SDP');
 
-          setStatus(
-            '已接通，建立媒體中…'
-          );
+    await pc.setRemoteDescription(row.answer);
 
-          stopRing();
+    setStatus('已接通，建立媒體中…');
 
-          await flushRemoteIce();
+    stopRing();
 
-        } catch (e) {
+    await flushRemoteIce();
 
-          console.error(
-            '設定 answer 失敗:',
-            e
-          );
+  } catch (e) {
 
-          setStatus(
-  '設定 answer 失敗：' +
-  (e.message || String(e))
-);
-        }
-      }
+    console.error(
+      '設定 answer 失敗:',
+      e
+    );
+
+    setStatus(
+      '設定 answer 失敗：' +
+      (e.message || String(e))
+    );
+  }
+}
 
 
       /* -------------------------------------------------------
