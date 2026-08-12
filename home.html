@@ -343,6 +343,125 @@
       font-size: 20px;
       line-height: 1.2;
     }
+        /* =====================================================
+       天氣卡片
+    ====================================================== */
+
+    .weather-card {
+      background: white;
+      border-radius: 14px;
+      margin-bottom: 16px;
+      padding: 16px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    }
+
+    .weather-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 14px;
+    }
+
+    .weather-title {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 15px;
+      font-weight: 700;
+      color: #222;
+    }
+
+    .weather-location {
+      font-size: 12px;
+      color: #888;
+      margin-top: 3px;
+      font-weight: 400;
+    }
+
+    .weather-update {
+      font-size: 11px;
+      color: #999;
+      text-align: right;
+    }
+
+    .weather-main {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .weather-current {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      min-width: 0;
+    }
+
+    .weather-icon {
+      width: 58px;
+      height: 58px;
+      border-radius: 16px;
+      background: #e8f5e9;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 30px;
+      flex-shrink: 0;
+    }
+
+    .weather-temp {
+      font-size: 30px;
+      font-weight: 700;
+      color: #222;
+      line-height: 1;
+    }
+
+    .weather-description {
+      font-size: 12px;
+      color: #777;
+      margin-top: 5px;
+    }
+
+    .weather-details {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 8px;
+      margin-top: 14px;
+    }
+
+    .weather-detail {
+      background: #f7f7f7;
+      border-radius: 10px;
+      padding: 10px;
+    }
+
+    .weather-detail-label {
+      font-size: 11px;
+      color: #888;
+      margin-bottom: 4px;
+    }
+
+    .weather-detail-value {
+      font-size: 14px;
+      font-weight: 700;
+      color: #333;
+    }
+
+    .weather-loading {
+      text-align: center;
+      color: #999;
+      font-size: 13px;
+      padding: 12px 0;
+    }
+
+    .weather-error {
+      text-align: center;
+      color: #999;
+      font-size: 13px;
+      line-height: 1.5;
+      padding: 8px 0;
+    }
   </style>
 </head>
 
@@ -388,35 +507,43 @@
 
     <div class="alert-content">
 
-      <div class="alert-title">
-        警訊通知
-      </div>
+     <div
+  class="alert-title"
+  id="alertTitle"
+>
+  警訊通知
+</div>
 
-      <div class="alert-text">
-        [演習預告] 8/10 中部地區及 8/13 北部地區將實施城鎮韌性（防空）演習，行動網路可能受影響。
-      </div>
+<div
+  class="alert-text"
+  id="alertText"
+>
+  載入警訊中…
+</div>
 
-      <div class="alert-actions">
+<div class="alert-actions">
 
-        <a
-          class="alert-link"
-          href="https://gov.tw/KxS"
-          target="_blank"
-          rel="noopener"
-        >
-          查看詳細資訊 →
-        </a>
+  <a
+    class="alert-link"
+    id="alertLink"
+    href="#"
+    target="_blank"
+    rel="noopener"
+    style="display:none;"
+  >
+    查看詳細資訊 →
+  </a>
 
-        <button
-          type="button"
-          class="siren-btn"
-          id="btnSiren"
-        >
-          ▶ 播放警笛
-        </button>
+  <button
+    type="button"
+    class="siren-btn"
+    id="btnSiren"
+  >
+    ▶ 播放警笛
+  </button>
 
-      </div>
-
+</div>
+         
     </div>
 
     <div
@@ -431,6 +558,155 @@
 
   <div class="content">
 
+      <div class="content">
+
+    <!-- =====================================================
+         天氣
+    ====================================================== -->
+
+    <div class="weather-card" id="weatherCard">
+
+      <div class="weather-header">
+
+        <div>
+
+          <div class="weather-title">
+            🌤️ 天氣
+          </div>
+
+          <div
+            class="weather-location"
+            id="weatherLocation"
+          >
+            載入位置…
+          </div>
+
+        </div>
+
+        <div
+          class="weather-update"
+          id="weatherUpdated"
+        >
+          載入中…
+        </div>
+
+      </div>
+
+
+      <!-- 天氣主要資訊 -->
+
+      <div
+        class="weather-main"
+        id="weatherMain"
+      >
+
+        <div class="weather-current">
+
+          <div
+            class="weather-icon"
+            id="weatherIcon"
+          >
+            🌤️
+          </div>
+
+          <div>
+
+            <div
+              class="weather-temp"
+              id="weatherTemp"
+            >
+              --°C
+            </div>
+
+            <div
+              class="weather-description"
+              id="weatherDescription"
+            >
+              載入天氣資料…
+            </div>
+
+          </div>
+
+        </div>
+
+      </div>
+
+
+      <!-- 天氣詳細資料 -->
+
+      <div class="weather-details">
+
+        <div class="weather-detail">
+
+          <div class="weather-detail-label">
+            最高溫
+          </div>
+
+          <div
+            class="weather-detail-value"
+            id="weatherMax"
+          >
+            --°C
+          </div>
+
+        </div>
+
+
+        <div class="weather-detail">
+
+          <div class="weather-detail-label">
+            最低溫
+          </div>
+
+          <div
+            class="weather-detail-value"
+            id="weatherMin"
+          >
+            --°C
+          </div>
+
+        </div>
+
+
+        <div class="weather-detail">
+
+          <div class="weather-detail-label">
+            降雨機率
+          </div>
+
+          <div
+            class="weather-detail-value"
+            id="weatherRain"
+          >
+            --%
+          </div>
+
+        </div>
+
+
+        <div class="weather-detail">
+
+          <div class="weather-detail-label">
+            資料狀態
+          </div>
+
+          <div
+            class="weather-detail-value"
+            id="weatherStatus"
+          >
+            載入中
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+
+
+    <!-- =====================================================
+         SOS
+    ====================================================== -->
     <!-- =====================================================
          SOS
     ====================================================== -->
