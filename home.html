@@ -2601,63 +2601,19 @@ async function loadWeather() {
 
 
 
-/* 啟動天氣 */
+/* =========================================================
+   啟動天氣測試
+========================================================= */
 
-(function () {
+console.log('【天氣】開始啟動');
 
-  try {
+setTimeout(function () {
 
-    var saved =
-      localStorage.getItem(
-        'safeReunionWeatherLocation'
-      );
-
-    if (saved) {
-
-      var location =
-        JSON.parse(saved);
-
-      if (
-        location &&
-        location.cityName &&
-        Number.isFinite(
-          Number(location.latitude)
-        ) &&
-        Number.isFinite(
-          Number(location.longitude)
-        )
-      ) {
-
-        document.getElementById(
-          'weatherLocation'
-        ).textContent =
-          location.cityName;
-
-        loadWeatherByLocation(
-          location.cityName,
-          Number(location.latitude),
-          Number(location.longitude)
-        );
-
-        return;
-
-      }
-
-    }
-
-  } catch (e) {
-
-    console.warn(
-      '讀取已保存天氣地點失敗：',
-      e
-    );
-
-  }
-
-
-  /* 第一次使用才讀取 Supabase 預設天氣 */
+  console.log('【天氣】開始執行 loadWeather');
 
   loadWeather();
+
+}, 300);
 
 })();
   /* =========================================================
