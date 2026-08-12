@@ -462,6 +462,111 @@
       line-height: 1.5;
       padding: 8px 0;
     }
+    /* =====================================================
+   天氣地點選擇器
+===================================================== */
+
+.weather-location-picker {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 5px;
+}
+
+.weather-location-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  border: none;
+  background: transparent;
+  padding: 0;
+  color: #06C755;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.weather-location-btn:active {
+  opacity: 0.7;
+}
+
+.weather-location-arrow {
+  font-size: 11px;
+  color: #777;
+}
+
+
+/* =====================================================
+   地點選擇面板
+===================================================== */
+
+.weather-location-panel {
+  display: none;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid #eee;
+}
+
+.weather-location-panel.show {
+  display: block;
+}
+
+.weather-location-search {
+  width: 100%;
+  height: 42px;
+  padding: 0 12px;
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  background: #fff;
+  color: #222;
+  font-size: 14px;
+  outline: none;
+}
+
+.weather-location-search:focus {
+  border-color: #06C755;
+  box-shadow: 0 0 0 2px rgba(6,199,85,0.08);
+}
+
+.weather-location-results {
+  margin-top: 8px;
+  max-height: 220px;
+  overflow-y: auto;
+  border-radius: 10px;
+}
+
+.weather-location-result {
+  width: 100%;
+  border: none;
+  background: #f7f7f7;
+  padding: 11px 12px;
+  text-align: left;
+  font-size: 13px;
+  color: #333;
+  cursor: pointer;
+  border-bottom: 1px solid #eee;
+}
+
+.weather-location-result:first-child {
+  border-radius: 10px 10px 0 0;
+}
+
+.weather-location-result:last-child {
+  border-bottom: none;
+  border-radius: 0 0 10px 10px;
+}
+
+.weather-location-result:active {
+  background: #e8f5e9;
+}
+
+.weather-location-empty {
+  text-align: center;
+  padding: 12px;
+  color: #999;
+  font-size: 12px;
+}
   </style>
 </head>
 
@@ -573,12 +678,49 @@
             🌤️ 天氣
           </div>
 
-          <div
-            class="weather-location"
-            id="weatherLocation"
-          >
-            載入位置…
-          </div>
+         <div class="weather-location-picker">
+
+  <button
+    type="button"
+    class="weather-location-btn"
+    id="weatherLocationBtn"
+  >
+    📍
+    <span id="weatherLocation">
+      台北市
+    </span>
+    <span class="weather-location-arrow">
+      ▾
+    </span>
+  </button>
+
+</div>
+
+<div
+  class="weather-location-panel"
+  id="weatherLocationPanel"
+>
+
+  <input
+    type="search"
+    class="weather-location-search"
+    id="weatherLocationSearch"
+    placeholder="搜尋城市，例如：台南、北京、東京"
+    autocomplete="off"
+  >
+
+  <div
+    class="weather-location-results"
+    id="weatherLocationResults"
+  >
+
+    <div class="weather-location-empty">
+      請輸入城市名稱
+    </div>
+
+  </div>
+
+</div>
 
         </div>
 
@@ -2461,6 +2603,352 @@ async function loadWeather() {
 /* 啟動天氣 */
 
 loadWeather();
+  /* =========================================================
+   天氣地點選擇器
+   第 1 階段：
+   點擊地點 → 展開搜尋
+   輸入城市 → 顯示搜尋結果
+========================================================= */
+
+(function () {
+
+  var locationBtn =
+    document.getElementById(
+      'weatherLocationBtn'
+    );
+
+  var locationPanel =
+    document.getElementById(
+      'weatherLocationPanel'
+    );
+
+  var locationSearch =
+    document.getElementById(
+      'weatherLocationSearch'
+    );
+
+  var locationResults =
+    document.getElementById(
+      'weatherLocationResults'
+    );
+
+
+  /* =====================================================
+     點擊目前地點
+  ===================================================== */
+
+  if (locationBtn && locationPanel) {
+
+    locationBtn.onclick =
+      function () {
+
+        locationPanel.classList.toggle(
+          'show'
+        );
+
+        if (
+          locationPanel.classList.contains(
+            'show'
+          ) &&
+          locationSearch
+        ) {
+
+          setTimeout(
+            function () {
+
+              locationSearch.focus();
+
+            },
+            100
+          );
+
+        }
+
+      };
+
+  }
+
+
+  /* =====================================================
+     搜尋城市
+     使用 OpenStreetMap Nominatim 全球地名搜尋
+  ===================================================== */
+
+  var searchTimer = null;
+
+
+  if (locationSearch) {
+
+    locationSearch.addEventListener(
+      'input',
+      function () {
+
+        var keyword =
+          locationSearch.value.trim();
+
+
+        if (searchTimer) {
+
+          clearTimeout(
+            searchTimer
+          );
+
+        }
+
+
+        if (!keyword) {
+
+          locationResults.innerHTML =
+            '<div class="weather-location-empty">' +
+            '請輸入城市名稱' +
+            '</div>';
+
+          return;
+
+        }
+
+
+        locationResults.innerHTML =
+          '<div class="weather-location-empty">' +
+          '搜尋中…' +
+          '</div>';
+
+
+        searchTimer =
+          setTimeout(
+            function () {
+
+              searchWeatherCities(
+                keyword
+              );
+
+            },
+            400
+          );
+
+      }
+    );
+
+  }
+
+
+  /* =====================================================
+     全球城市搜尋
+  ===================================================== */
+
+  async function searchWeatherCities(
+    keyword
+  ) {
+
+    if (!locationResults) {
+      return;
+    }
+
+
+    try {
+
+      var url =
+        'https://nominatim.openstreetmap.org/search' +
+        '?format=jsonv2' +
+        '&q=' +
+        encodeURIComponent(
+          keyword
+        ) +
+        '&limit=8' +
+        '&addressdetails=1' +
+        '&accept-language=zh-TW';
+
+
+      var response =
+        await fetch(
+          url,
+          {
+            headers: {
+              'Accept':
+                'application/json'
+            }
+          }
+        );
+
+
+      if (!response.ok) {
+
+        throw new Error(
+          '城市搜尋失敗'
+        );
+
+      }
+
+
+      var results =
+        await response.json();
+
+
+      if (!results.length) {
+
+        locationResults.innerHTML =
+          '<div class="weather-location-empty">' +
+          '找不到這個地點' +
+          '</div>';
+
+        return;
+
+      }
+
+
+      locationResults.innerHTML =
+        '';
+
+
+      results.forEach(
+        function (place) {
+
+          var button =
+            document.createElement(
+              'button'
+            );
+
+
+          button.type =
+            'button';
+
+
+          button.className =
+            'weather-location-result';
+
+
+          button.textContent =
+            place.display_name;
+
+
+          button.addEventListener(
+            'click',
+            function () {
+
+              selectWeatherLocation(
+                place
+              );
+
+            }
+          );
+
+
+          locationResults.appendChild(
+            button
+          );
+
+        }
+      );
+
+
+    } catch (error) {
+
+      console.error(
+        '城市搜尋失敗：',
+        error
+      );
+
+
+      locationResults.innerHTML =
+        '<div class="weather-location-empty">' +
+        '城市搜尋失敗，請稍後再試' +
+        '</div>';
+
+    }
+
+  }
+
+
+  /* =====================================================
+     選擇城市
+     ===================================================== */
+
+  function selectWeatherLocation(
+    place
+  ) {
+
+    var address =
+      place.address ||
+      {};
+
+
+    var cityName =
+      address.city ||
+      address.town ||
+      address.municipality ||
+      address.county ||
+      address.state ||
+      place.name ||
+      place.display_name;
+
+
+    var locationElement =
+      document.getElementById(
+        'weatherLocation'
+      );
+
+
+    if (locationElement) {
+
+      locationElement.textContent =
+        cityName;
+
+    }
+
+
+    /* 關閉選擇面板 */
+
+    if (locationPanel) {
+
+      locationPanel.classList.remove(
+        'show'
+      );
+
+    }
+
+
+    if (locationSearch) {
+
+      locationSearch.value =
+        '';
+
+    }
+
+
+    if (locationResults) {
+
+      locationResults.innerHTML =
+        '<div class="weather-location-empty">' +
+        '已選擇：' +
+        cityName +
+        '</div>';
+
+    }
+
+
+    console.log(
+      '選擇天氣地點：',
+      {
+        name:
+          cityName,
+
+        latitude:
+          place.lat,
+
+        longitude:
+          place.lon
+      }
+    );
+
+
+    /*
+     * 下一階段：
+     * 使用 latitude / longitude
+     * 取得這個城市的即時天氣。
+     */
+
+  }
+
 })();
 
 </script>
