@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+
 <title>災害管理 - 安全團聚</title>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -321,6 +322,14 @@ textarea{
   .grid{
     grid-template-columns:1fr;
   }
+
+  .actions{
+    flex-direction:column;
+  }
+
+  .action{
+    width:100%;
+  }
 }
 </style>
 </head>
@@ -329,7 +338,8 @@ textarea{
 
 <header class="header">
 
-  <a class="back" href="admin.html">←</a>
+  <!-- 回到災害資訊中心 -->
+  <a class="back" href="disaster-center.html">←</a>
 
   <div class="title">
     災害管理
@@ -353,6 +363,7 @@ textarea{
     <button
       class="secondary"
       onclick="loadDisasters()"
+      aria-label="重新整理"
     >
       ↻
     </button>
@@ -371,9 +382,9 @@ textarea{
 </div>
 
 
-<!-- ================================
-     MODAL
-================================ -->
+<!-- ==================================================
+     災害編輯視窗
+================================================== -->
 
 <div
   class="modal"
@@ -385,6 +396,7 @@ textarea{
     <button
       class="close"
       onclick="closeModal()"
+      type="button"
     >
       ×
     </button>
@@ -396,7 +408,6 @@ textarea{
       新增災害
     </div>
 
-
     <form id="disasterForm">
 
       <input
@@ -404,11 +415,9 @@ textarea{
         id="recordId"
       >
 
-
       <div class="section">
         基本資訊
       </div>
-
 
       <div class="grid">
 
@@ -452,7 +461,6 @@ textarea{
 
         </div>
 
-
         <div class="form-group">
 
           <label>
@@ -483,7 +491,6 @@ textarea{
 
       </div>
 
-
       <div class="form-group">
 
         <label>
@@ -498,7 +505,6 @@ textarea{
 
       </div>
 
-
       <div class="form-group">
 
         <label>
@@ -511,7 +517,6 @@ textarea{
         ></textarea>
 
       </div>
-
 
       <div class="grid">
 
@@ -528,7 +533,6 @@ textarea{
 
         </div>
 
-
         <div class="form-group">
 
           <label>
@@ -543,7 +547,6 @@ textarea{
         </div>
 
       </div>
-
 
       <div class="grid">
 
@@ -561,7 +564,6 @@ textarea{
 
         </div>
 
-
         <div class="form-group">
 
           <label>
@@ -578,7 +580,6 @@ textarea{
 
       </div>
 
-
       <div class="grid">
 
         <div class="form-group">
@@ -593,7 +594,6 @@ textarea{
           >
 
         </div>
-
 
         <div class="form-group">
 
@@ -610,11 +610,9 @@ textarea{
 
       </div>
 
-
       <div class="section">
         🌀 颱風資訊
       </div>
-
 
       <div class="grid">
 
@@ -624,12 +622,9 @@ textarea{
             颱風名稱
           </label>
 
-          <input
-            id="typhoonName"
-          >
+          <input id="typhoonName">
 
         </div>
-
 
         <div class="form-group">
 
@@ -637,12 +632,9 @@ textarea{
             颱風狀態
           </label>
 
-          <input
-            id="typhoonStatus"
-          >
+          <input id="typhoonStatus">
 
         </div>
-
 
         <div class="form-group">
 
@@ -656,7 +648,6 @@ textarea{
           >
 
         </div>
-
 
         <div class="form-group">
 
@@ -672,19 +663,15 @@ textarea{
 
         </div>
 
-
         <div class="form-group">
 
           <label>
             移動方向
           </label>
 
-          <input
-            id="movementDirection"
-          >
+          <input id="movementDirection">
 
         </div>
-
 
         <div class="form-group">
 
@@ -702,11 +689,9 @@ textarea{
 
       </div>
 
-
       <div class="section">
         🌎 地震資訊
       </div>
-
 
       <div class="grid">
 
@@ -724,7 +709,6 @@ textarea{
 
         </div>
 
-
         <div class="form-group">
 
           <label>
@@ -739,19 +723,15 @@ textarea{
 
         </div>
 
-
         <div class="form-group">
 
           <label>
             震央位置
           </label>
 
-          <input
-            id="earthquakeLocation"
-          >
+          <input id="earthquakeLocation">
 
         </div>
-
 
         <div class="form-group">
 
@@ -759,19 +739,15 @@ textarea{
             最大震度
           </label>
 
-          <input
-            id="intensity"
-          >
+          <input id="intensity">
 
         </div>
 
       </div>
 
-
       <div class="section">
         🌧️ 降雨資訊
       </div>
-
 
       <div class="grid">
 
@@ -788,7 +764,6 @@ textarea{
           >
 
         </div>
-
 
         <div class="form-group">
 
@@ -807,11 +782,9 @@ textarea{
 
       </div>
 
-
       <div class="section">
         📡 資料來源
       </div>
-
 
       <div class="form-group">
 
@@ -825,7 +798,6 @@ textarea{
         >
 
       </div>
-
 
       <div class="form-group">
 
@@ -841,14 +813,12 @@ textarea{
 
       </div>
 
-
       <button
         type="submit"
         class="save"
       >
         儲存災害資料
       </button>
-
 
       <button
         type="button"
@@ -874,17 +844,17 @@ textarea{
 const SUPABASE_URL =
   'https://perfsipperncvjocznhl.supabase.co';
 
+const SUPABASE_KEY =
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5vbmUifQ';
+
 
 /*
- * 這裡使用你專案原本的 anon /
- * publishable key。
+ * 注意：
+ * 上面的 KEY 請換回你目前專案正在使用的
+ * anon / publishable key。
  *
- * 不要放 service_role key。
+ * 不要使用 service_role key。
  */
-
-const SUPABASE_KEY =
-  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBlcmZzaXBwZXJuY3Zqb2N6bmhsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODYwMTUyMzAsImV4cCI6MjEwMTU5MTIzMH0.I7vXkV247kAzRJ0RigDZt3Hzn8KJDyMc6o9E3oHJZoY';
-
 
 const db =
   window.supabase.createClient(
@@ -964,12 +934,26 @@ function typeName(type){
 }
 
 
+function severityName(value){
+
+  const names = {
+
+    critical:'極高',
+    high:'高',
+    medium:'中',
+    low:'低'
+
+  };
+
+  return names[value] || value || '';
+
+}
+
+
 function formatDate(value){
 
   if(!value){
-
     return '';
-
   }
 
   const d =
@@ -995,9 +979,7 @@ function formatDate(value){
 function inputDate(value){
 
   if(!value){
-
     return '';
-
   }
 
   const d =
@@ -1054,7 +1036,7 @@ async function loadDisasters(){
     );
 
   status.textContent =
-    '正在讀取 disaster_data…';
+    '正在讀取災害資料…';
 
   try{
 
@@ -1064,9 +1046,7 @@ async function loadDisasters(){
     } =
       await db
 
-        .from(
-          'disaster_data'
-        )
+        .from('disaster_data')
 
         .select('*')
 
@@ -1079,9 +1059,7 @@ async function loadDisasters(){
 
 
     if(error){
-
       throw error;
-
     }
 
 
@@ -1100,7 +1078,7 @@ async function loadDisasters(){
     console.error(error);
 
     status.textContent =
-      '無法讀取 disaster_data：' +
+      '無法讀取災害資料：' +
       (
         error.message ||
         '未知錯誤'
@@ -1182,13 +1160,8 @@ function render(){
             <div class="card-head">
 
               <div class="icon">
-
-                ${icon(
-                  record.disaster_type
-                )}
-
+                ${icon(record.disaster_type)}
               </div>
-
 
               <div class="main">
 
@@ -1200,7 +1173,6 @@ function render(){
                   )}
 
                 </div>
-
 
                 <div class="meta">
 
@@ -1221,13 +1193,14 @@ function render(){
                     record.severity
                       ? ' · ' +
                         escapeHtml(
-                          record.severity
+                          severityName(
+                            record.severity
+                          )
                         )
                       : ''
                   }
 
                 </div>
-
 
                 <span
                   class="
@@ -1250,21 +1223,17 @@ function render(){
 
             </div>
 
-
             ${
               record.description
                 ? `
                   <div class="description">
-
                     ${escapeHtml(
                       record.description
                     )}
-
                   </div>
                 `
                 : ''
             }
-
 
             ${
               record.start_at
@@ -1296,7 +1265,6 @@ function render(){
                 : ''
             }
 
-
             <div class="actions">
 
               <button
@@ -1305,7 +1273,6 @@ function render(){
               >
                 ✏️ 編輯
               </button>
-
 
               <button
                 class="action toggle"
@@ -1317,7 +1284,6 @@ function render(){
                     : '▶️ 啟用'
                 }
               </button>
-
 
               <button
                 class="action delete"
@@ -1339,37 +1305,26 @@ function render(){
 
 
 /* =====================================================
-   開啟新增
+   新增
 ===================================================== */
 
 function openCreate(){
 
   document
-    .getElementById(
-      'disasterForm'
-    )
+    .getElementById('disasterForm')
     .reset();
 
-
   document
-    .getElementById(
-      'recordId'
-    )
+    .getElementById('recordId')
     .value = '';
 
-
   document
-    .getElementById(
-      'modalTitle'
-    )
+    .getElementById('modalTitle')
     .textContent =
       '新增災害';
 
-
   document
-    .getElementById(
-      'modal'
-    )
+    .getElementById('modal')
     .classList
     .add('show');
 
@@ -1392,201 +1347,93 @@ function editRecord(id){
 
   if(!record){
 
-    alert(
-      '找不到這筆資料'
-    );
+    alert('找不到這筆資料');
 
     return;
 
   }
 
 
-  document.getElementById(
-    'recordId'
-  ).value =
+  document.getElementById('recordId').value =
     record.id || '';
 
+  document.getElementById('disasterType').value =
+    record.disaster_type || 'other';
 
-  document.getElementById(
-    'disasterType'
-  ).value =
-    record.disaster_type ||
-    'other';
+  document.getElementById('severity').value =
+    record.severity || 'medium';
 
+  document.getElementById('titleInput').value =
+    record.title || '';
 
-  document.getElementById(
-    'severity'
-  ).value =
-    record.severity ||
-    'medium';
+  document.getElementById('description').value =
+    record.description || '';
 
+  document.getElementById('region').value =
+    record.region || '';
 
-  document.getElementById(
-    'titleInput'
-  ).value =
-    record.title ||
-    '';
+  document.getElementById('alertLevel').value =
+    record.alert_level || '';
 
+  document.getElementById('latitude').value =
+    record.latitude ?? '';
 
-  document.getElementById(
-    'description'
-  ).value =
-    record.description ||
-    '';
+  document.getElementById('longitude').value =
+    record.longitude ?? '';
 
+  document.getElementById('startAt').value =
+    inputDate(record.start_at);
 
-  document.getElementById(
-    'region'
-  ).value =
-    record.region ||
-    '';
+  document.getElementById('endAt').value =
+    inputDate(record.end_at);
 
+  document.getElementById('typhoonName').value =
+    record.typhoon_name || '';
 
-  document.getElementById(
-    'alertLevel'
-  ).value =
-    record.alert_level ||
-    '';
+  document.getElementById('typhoonStatus').value =
+    record.typhoon_status || '';
 
+  document.getElementById('pressure').value =
+    record.pressure ?? '';
 
-  document.getElementById(
-    'latitude'
-  ).value =
-    record.latitude ??
-    '';
+  document.getElementById('maxWindSpeed').value =
+    record.max_wind_speed ?? '';
 
+  document.getElementById('movementDirection').value =
+    record.movement_direction || '';
 
-  document.getElementById(
-    'longitude'
-  ).value =
-    record.longitude ??
-    '';
+  document.getElementById('movementSpeed').value =
+    record.movement_speed ?? '';
 
+  document.getElementById('magnitude').value =
+    record.magnitude ?? '';
 
-  document.getElementById(
-    'startAt'
-  ).value =
-    inputDate(
-      record.start_at
-    );
+  document.getElementById('depth').value =
+    record.depth ?? '';
 
+  document.getElementById('earthquakeLocation').value =
+    record.earthquake_location || '';
 
-  document.getElementById(
-    'endAt'
-  ).value =
-    inputDate(
-      record.end_at
-    );
+  document.getElementById('intensity').value =
+    record.intensity || '';
 
+  document.getElementById('rainfall').value =
+    record.rainfall ?? '';
 
-  document.getElementById(
-    'typhoonName'
-  ).value =
-    record.typhoon_name ||
-    '';
+  document.getElementById('rainProbability').value =
+    record.rain_probability ?? '';
 
+  document.getElementById('source').value =
+    record.source || '';
 
-  document.getElementById(
-    'typhoonStatus'
-  ).value =
-    record.typhoon_status ||
-    '';
+  document.getElementById('sourceUrl').value =
+    record.source_url || '';
 
-
-  document.getElementById(
-    'pressure'
-  ).value =
-    record.pressure ??
-    '';
-
-
-  document.getElementById(
-    'maxWindSpeed'
-  ).value =
-    record.max_wind_speed ??
-    '';
-
-
-  document.getElementById(
-    'movementDirection'
-  ).value =
-    record.movement_direction ||
-    '';
-
-
-  document.getElementById(
-    'movementSpeed'
-  ).value =
-    record.movement_speed ??
-    '';
-
-
-  document.getElementById(
-    'magnitude'
-  ).value =
-    record.magnitude ??
-    '';
-
-
-  document.getElementById(
-    'depth'
-  ).value =
-    record.depth ??
-    '';
-
-
-  document.getElementById(
-    'earthquakeLocation'
-  ).value =
-    record.earthquake_location ||
-    '';
-
-
-  document.getElementById(
-    'intensity'
-  ).value =
-    record.intensity ||
-    '';
-
-
-  document.getElementById(
-    'rainfall'
-  ).value =
-    record.rainfall ??
-    '';
-
-
-  document.getElementById(
-    'rainProbability'
-  ).value =
-    record.rain_probability ??
-    '';
-
-
-  document.getElementById(
-    'source'
-  ).value =
-    record.source ||
-    '';
-
-
-  document.getElementById(
-    'sourceUrl'
-  ).value =
-    record.source_url ||
-    '';
-
-
-  document.getElementById(
-    'modalTitle'
-  ).textContent =
+  document.getElementById('modalTitle').textContent =
     '編輯災害';
 
-
   document
-    .getElementById(
-      'modal'
-    )
+    .getElementById('modal')
     .classList
     .add('show');
 
@@ -1600,9 +1447,7 @@ function editRecord(id){
 function closeModal(){
 
   document
-    .getElementById(
-      'modal'
-    )
+    .getElementById('modal')
     .classList
     .remove('show');
 
@@ -1614,9 +1459,7 @@ function closeModal(){
 ===================================================== */
 
 document
-  .getElementById(
-    'disasterForm'
-  )
+  .getElementById('disasterForm')
   .addEventListener(
     'submit',
     async function(event){
@@ -1767,50 +1610,35 @@ document
           result =
             await db
 
-              .from(
-                'disaster_data'
-              )
+              .from('disaster_data')
 
-              .update(
-                payload
-              )
+              .update(payload)
 
-              .eq(
-                'id',
-                id
-              );
+              .eq('id',id);
 
         }else{
 
           payload.is_active =
             true;
 
-
           result =
             await db
 
-              .from(
-                'disaster_data'
-              )
+              .from('disaster_data')
 
-              .insert(
-                payload
-              );
+              .insert(payload);
 
         }
 
 
         if(result.error){
-
           throw result.error;
-
         }
 
 
         closeModal();
 
         await loadDisasters();
-
 
         alert(
           '災害資料已儲存'
@@ -1819,10 +1647,7 @@ document
 
       }catch(error){
 
-        console.error(
-          error
-        );
-
+        console.error(error);
 
         alert(
           '儲存失敗：\n' +
@@ -1838,12 +1663,17 @@ document
   );
 
 
+/* =====================================================
+   工具
+===================================================== */
+
 function valueOrNull(id){
 
   const value =
-    document.getElementById(
-      id
-    ).value.trim();
+    document
+      .getElementById(id)
+      .value
+      .trim();
 
   return value || null;
 
@@ -1853,15 +1683,13 @@ function valueOrNull(id){
 function numberOrNull(id){
 
   const value =
-    document.getElementById(
-      id
-    ).value;
+    document
+      .getElementById(id)
+      .value;
 
 
   if(value === ''){
-
     return null;
-
   }
 
 
@@ -1869,9 +1697,7 @@ function numberOrNull(id){
     Number(value);
 
 
-  return Number.isFinite(
-    number
-  )
+  return Number.isFinite(number)
     ? number
     : null;
 
@@ -1881,21 +1707,18 @@ function numberOrNull(id){
 function dateOrNull(id){
 
   const value =
-    document.getElementById(
-      id
-    ).value;
+    document
+      .getElementById(id)
+      .value;
 
 
   if(!value){
-
     return null;
-
   }
 
 
-  return new Date(
-    value
-  ).toISOString();
+  return new Date(value)
+    .toISOString();
 
 }
 
@@ -1915,9 +1738,7 @@ async function toggleRecord(id){
 
 
   if(!record){
-
     return;
-
   }
 
 
@@ -1932,15 +1753,10 @@ async function toggleRecord(id){
     } =
       await db
 
-        .from(
-          'disaster_data'
-        )
+        .from('disaster_data')
 
         .update({
-
-          is_active:
-            newStatus
-
+          is_active:newStatus
         })
 
         .eq(
@@ -1950,9 +1766,7 @@ async function toggleRecord(id){
 
 
     if(error){
-
       throw error;
-
     }
 
 
@@ -1989,9 +1803,7 @@ async function deleteRecord(id){
 
 
   if(!record){
-
     return;
-
   }
 
 
@@ -2001,14 +1813,12 @@ async function deleteRecord(id){
         record.title ||
         '這筆災害資料'
       }」嗎？\n\n` +
-      `刪除後資料將無法從前台顯示。`
+      '刪除後資料將無法從前台顯示。'
     );
 
 
   if(!ok){
-
     return;
-
   }
 
 
@@ -2019,9 +1829,7 @@ async function deleteRecord(id){
     } =
       await db
 
-        .from(
-          'disaster_data'
-        )
+        .from('disaster_data')
 
         .delete()
 
@@ -2032,9 +1840,7 @@ async function deleteRecord(id){
 
 
     if(error){
-
       throw error;
-
     }
 
 
