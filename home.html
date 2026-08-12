@@ -66,35 +66,29 @@
     }
 
     /* =====================================================
-   左上角固定首頁入口
-===================================================== */
+       左上角固定首頁入口
+    ===================================================== */
 
-.home-header-btn {
-  width: 34px;
-  height: 34px;
+    .home-header-btn {
+      width: 34px;
+      height: 34px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 50%;
+      text-decoration: none;
+      color: white;
+      font-size: 20px;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+      flex-shrink: 0;
+    }
 
-  display: flex;
-  align-items: center;
-  justify-content: center;
+    .home-header-btn:active {
+      background: rgba(255,255,255,0.18);
+      transform: scale(0.94);
+    }
 
-  border-radius: 50%;
-
-  text-decoration: none;
-  color: white;
-
-  font-size: 20px;
-
-  user-select: none;
-  -webkit-tap-highlight-color: transparent;
-
-  flex-shrink: 0;
-}
-
-.home-header-btn:active {
-  background: rgba(255,255,255,0.18);
-  transform: scale(0.94);
-}
-    
     .alert-banner {
       background: #fdecea;
       border-left: 5px solid #e74c3c;
@@ -154,6 +148,7 @@
       padding: 6px 12px;
       font-size: 12px;
       font-weight: 600;
+      cursor: pointer;
     }
 
     .alert-close {
@@ -229,7 +224,10 @@
       margin-left: 8px;
     }
 
-    /* SOS */
+    /* =====================================================
+       SOS
+    ===================================================== */
+
     .sos-bar {
       background: #e53935;
       color: white;
@@ -255,7 +253,10 @@
       pointer-events: none;
     }
 
-    /* SOS 群組選擇 */
+    /* =====================================================
+       SOS 群組選擇
+    ===================================================== */
+
     .sos-group-panel {
       display: none;
       background: white;
@@ -341,6 +342,10 @@
       color: #555;
     }
 
+    /* =====================================================
+       底部導航
+    ===================================================== */
+
     .tabbar {
       position: fixed;
       left: 0;
@@ -373,9 +378,10 @@
       font-size: 20px;
       line-height: 1.2;
     }
-        /* =====================================================
+
+    /* =====================================================
        天氣卡片
-    ====================================================== */
+    ===================================================== */
 
     .weather-card {
       background: white;
@@ -492,204 +498,207 @@
       line-height: 1.5;
       padding: 8px 0;
     }
+
     /* =====================================================
-   天氣地點選擇器
-===================================================== */
+       天氣地點選擇器
+    ===================================================== */
 
-.weather-location-picker {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  margin-top: 5px;
-}
+    .weather-location-picker {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-top: 5px;
+    }
 
-.weather-location-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  border: none;
-  background: transparent;
-  padding: 0;
-  color: #06C755;
-  font-size: 13px;
-  font-weight: 600;
-  cursor: pointer;
-  -webkit-tap-highlight-color: transparent;
-}
+    .weather-location-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      border: none;
+      background: transparent;
+      padding: 0;
+      color: #06C755;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+    }
 
-.weather-location-btn:active {
-  opacity: 0.7;
-}
+    .weather-location-btn:active {
+      opacity: 0.7;
+    }
 
-.weather-location-arrow {
-  font-size: 11px;
-  color: #777;
-}
+    .weather-location-arrow {
+      font-size: 11px;
+      color: #777;
+    }
 
+    /* =====================================================
+       地點選擇面板
+    ===================================================== */
 
-/* =====================================================
-   地點選擇面板
-===================================================== */
+    .weather-location-panel {
+      display: none;
+      margin-top: 12px;
+      padding-top: 12px;
+      border-top: 1px solid #eee;
+    }
 
-.weather-location-panel {
-  display: none;
-  margin-top: 12px;
-  padding-top: 12px;
-  border-top: 1px solid #eee;
-}
+    .weather-location-panel.show {
+      display: block;
+    }
 
-.weather-location-panel.show {
-  display: block;
-}
+    .weather-location-search {
+      width: 100%;
+      height: 42px;
+      padding: 0 12px;
+      border: 1px solid #ddd;
+      border-radius: 10px;
+      background: #fff;
+      color: #222;
+      font-size: 14px;
+      outline: none;
+    }
 
-.weather-location-search {
-  width: 100%;
-  height: 42px;
-  padding: 0 12px;
-  border: 1px solid #ddd;
-  border-radius: 10px;
-  background: #fff;
-  color: #222;
-  font-size: 14px;
-  outline: none;
-}
+    .weather-location-search:focus {
+      border-color: #06C755;
+      box-shadow: 0 0 0 2px rgba(6,199,85,0.08);
+    }
 
-.weather-location-search:focus {
-  border-color: #06C755;
-  box-shadow: 0 0 0 2px rgba(6,199,85,0.08);
-}
+    .weather-location-results {
+      margin-top: 8px;
+      max-height: 220px;
+      overflow-y: auto;
+      border-radius: 10px;
+    }
 
-.weather-location-results {
-  margin-top: 8px;
-  max-height: 220px;
-  overflow-y: auto;
-  border-radius: 10px;
-}
+    .weather-location-result {
+      width: 100%;
+      border: none;
+      background: #f7f7f7;
+      padding: 11px 12px;
+      text-align: left;
+      font-size: 13px;
+      color: #333;
+      cursor: pointer;
+      border-bottom: 1px solid #eee;
+    }
 
-.weather-location-result {
-  width: 100%;
-  border: none;
-  background: #f7f7f7;
-  padding: 11px 12px;
-  text-align: left;
-  font-size: 13px;
-  color: #333;
-  cursor: pointer;
-  border-bottom: 1px solid #eee;
-}
+    .weather-location-result:first-child {
+      border-radius: 10px 10px 0 0;
+    }
 
-.weather-location-result:first-child {
-  border-radius: 10px 10px 0 0;
-}
+    .weather-location-result:last-child {
+      border-bottom: none;
+      border-radius: 0 0 10px 10px;
+    }
 
-.weather-location-result:last-child {
-  border-bottom: none;
-  border-radius: 0 0 10px 10px;
-}
+    .weather-location-result:active {
+      background: #e8f5e9;
+    }
 
-.weather-location-result:active {
-  background: #e8f5e9;
-}
-
-.weather-location-empty {
-  text-align: center;
-  padding: 12px;
-  color: #999;
-  font-size: 12px;
-}
+    .weather-location-empty {
+      text-align: center;
+      padding: 12px;
+      color: #999;
+      font-size: 12px;
+    }
   </style>
 </head>
 
 <body>
 
-  <!-- 頂部 -->
-<div class="header">
+  <!-- =====================================================
+       頂部
+  ===================================================== -->
 
-  <!-- 左上角首頁入口 -->
- <a
-  class="home-header-btn"
-  href="home.html"
-  aria-label="首頁"
-  title="首頁"
->
-  🏠
-</a>
+  <div class="header">
 
-  
-  <h1>安全團聚</h1>
-
-  <div class="header-right">
-
-    <!-- 安全中心 -->
     <a
-      class="header-action"
-      href="safety-center.html"
-      aria-label="安全中心"
-      title="安全中心"
+      class="home-header-btn"
+      href="home.html"
+      aria-label="首頁"
+      title="首頁"
     >
-      📡
+      🏠
     </a>
 
-    <!-- 設定 -->
-    <a
-      class="header-action"
-      href="settings.html"
-      aria-label="設定"
-      title="設定"
-    >
-      ⚙️
-    </a>
+    <h1>安全團聚</h1>
+
+    <div class="header-right">
+
+      <a
+        class="header-action"
+        href="safety-center.html"
+        aria-label="安全中心"
+        title="安全中心"
+      >
+        📡
+      </a>
+
+      <a
+        class="header-action"
+        href="settings.html"
+        aria-label="設定"
+        title="設定"
+      >
+        ⚙️
+      </a>
+
+    </div>
 
   </div>
 
-</div>
- 
 
+  <!-- =====================================================
+       警訊
+  ===================================================== -->
 
-  <!-- 警訊 -->
   <div class="alert-banner" id="alertBanner">
 
-    <div class="alert-icon">⚠️</div>
+    <div class="alert-icon">
+      ⚠️
+    </div>
 
     <div class="alert-content">
 
-     <div
-  class="alert-title"
-  id="alertTitle"
->
-  警訊通知
-</div>
+      <div
+        class="alert-title"
+        id="alertTitle"
+      >
+        警訊通知
+      </div>
 
-<div
-  class="alert-text"
-  id="alertText"
->
-  載入警訊中…
-</div>
+      <div
+        class="alert-text"
+        id="alertText"
+      >
+        載入警訊中…
+      </div>
 
-<div class="alert-actions">
+      <div class="alert-actions">
 
-  <a
-    class="alert-link"
-    id="alertLink"
-    href="#"
-    target="_blank"
-    rel="noopener"
-    style="display:none;"
-  >
-    查看詳細資訊 →
-  </a>
+        <a
+          class="alert-link"
+          id="alertLink"
+          href="#"
+          target="_blank"
+          rel="noopener"
+          style="display:none;"
+        >
+          查看詳細資訊 →
+        </a>
 
-  <button
-    type="button"
-    class="siren-btn"
-    id="btnSiren"
-  >
-    ▶ 播放警笛
-  </button>
+        <button
+          type="button"
+          class="siren-btn"
+          id="btnSiren"
+        >
+          ▶ 播放警笛
+        </button>
 
-</div>
-         
+      </div>
+
     </div>
 
     <div
@@ -704,12 +713,14 @@
 
   <div class="content">
 
-
     <!-- =====================================================
          天氣
-    ====================================================== -->
+    ===================================================== -->
 
-    <div class="weather-card" id="weatherCard">
+    <div
+      class="weather-card"
+      id="weatherCard"
+    >
 
       <div class="weather-header">
 
@@ -719,49 +730,52 @@
             🌤️ 天氣
           </div>
 
-         <div class="weather-location-picker">
+          <div class="weather-location-picker">
 
-  <button
-    type="button"
-    class="weather-location-btn"
-    id="weatherLocationBtn"
-  >
-    📍
-    <span id="weatherLocation">
-      台北市
-    </span>
-    <span class="weather-location-arrow">
-      ▾
-    </span>
-  </button>
+            <button
+              type="button"
+              class="weather-location-btn"
+              id="weatherLocationBtn"
+            >
+              📍
 
-</div>
+              <span id="weatherLocation">
+                台北市
+              </span>
 
-<div
-  class="weather-location-panel"
-  id="weatherLocationPanel"
->
+              <span class="weather-location-arrow">
+                ▾
+              </span>
 
-  <input
-    type="search"
-    class="weather-location-search"
-    id="weatherLocationSearch"
-    placeholder="搜尋城市，例如：台南、北京、東京"
-    autocomplete="off"
-  >
+            </button>
 
-  <div
-    class="weather-location-results"
-    id="weatherLocationResults"
-  >
+          </div>
 
-    <div class="weather-location-empty">
-      請輸入城市名稱
-    </div>
+          <div
+            class="weather-location-panel"
+            id="weatherLocationPanel"
+          >
 
-  </div>
+            <input
+              type="search"
+              class="weather-location-search"
+              id="weatherLocationSearch"
+              placeholder="搜尋城市，例如：台南、北京、東京"
+              autocomplete="off"
+            >
 
-</div>
+            <div
+              class="weather-location-results"
+              id="weatherLocationResults"
+            >
+
+              <div class="weather-location-empty">
+                請輸入城市名稱
+              </div>
+
+            </div>
+
+          </div>
 
         </div>
 
@@ -774,8 +788,6 @@
 
       </div>
 
-
-      <!-- 天氣主要資訊 -->
 
       <div
         class="weather-main"
@@ -813,8 +825,6 @@
 
       </div>
 
-
-      <!-- 天氣詳細資料 -->
 
       <div class="weather-details">
 
@@ -886,9 +896,9 @@
     </div>
 
 
-        <!-- =====================================================
+    <!-- =====================================================
          SOS
-    ====================================================== -->
+    ===================================================== -->
 
     <div
       class="sos-bar"
@@ -900,7 +910,7 @@
 
     <!-- =====================================================
          SOS 群組選擇
-    ====================================================== -->
+    ===================================================== -->
 
     <div
       class="sos-group-panel"
@@ -919,9 +929,11 @@
         id="sosGroupSelect"
         class="sos-group-select"
       >
+
         <option value="">
           載入群組中…
         </option>
+
       </select>
 
       <div class="sos-group-actions">
@@ -947,7 +959,10 @@
     </div>
 
 
-    <!-- 成員 -->
+    <!-- =====================================================
+         成員
+    ===================================================== -->
+
     <div class="empty-state">
 
       <div class="empty-icon">
@@ -981,7 +996,10 @@
     </div>
 
 
-    <!-- 快速功能 -->
+    <!-- =====================================================
+         快速功能
+    ===================================================== -->
+
     <div class="quick-row">
 
       <a
@@ -1071,77 +1089,71 @@
 
 
   <!-- =====================================================
-     五大平台底部導航
-====================================================== -->
+       五大平台底部導航
+  ===================================================== -->
 
-<div class="tabbar">
+  <div class="tabbar">
 
-  <!-- 社群 -->
-  <a
-    class="tab"
-    href="social.html"
-    aria-label="社群"
-  >
-    <div class="ico">
-      ◎
-    </div>
-    社群
-  </a>
-
-
-  <!-- 學習 -->
-  <a
-    class="tab"
-    href="learning.html"
-    aria-label="學習"
-  >
-    <div class="ico">
-      🎓
-    </div>
-    學習
-  </a>
+    <a
+      class="tab"
+      href="social.html"
+      aria-label="社群"
+    >
+      <div class="ico">
+        ◎
+      </div>
+      社群
+    </a>
 
 
-  <!-- 購物 -->
-  <a
-    class="tab"
-    href="shop.html"
-    aria-label="購物"
-  >
-    <div class="ico">
-      🛍️
-    </div>
-    購物
-  </a>
+    <a
+      class="tab"
+      href="learning.html"
+      aria-label="學習"
+    >
+      <div class="ico">
+        🎓
+      </div>
+      學習
+    </a>
 
 
-  <!-- 聊天 -->
-  <a
-    class="tab"
-    href="chat.html"
-    aria-label="聊天"
-  >
-    <div class="ico">
-      💬
-    </div>
-    聊天
-  </a>
+    <a
+      class="tab"
+      href="shop.html"
+      aria-label="購物"
+    >
+      <div class="ico">
+        🛍️
+      </div>
+      購物
+    </a>
 
 
-  <!-- 我 -->
-  <a
-    class="tab"
-    href="me.html"
-    aria-label="我"
-  >
-    <div class="ico">
-      👤
-    </div>
-    我
-  </a>
+    <a
+      class="tab"
+      href="chat.html"
+      aria-label="聊天"
+    >
+      <div class="ico">
+        💬
+      </div>
+      聊天
+    </a>
 
-</div>
 
+    <a
+      class="tab"
+      href="me.html"
+      aria-label="我"
+    >
+      <div class="ico">
+        👤
+      </div>
+      我
+    </a>
+
+  </div>
 
 
 <script>
@@ -1256,510 +1268,478 @@
   checkAdminButton();
 
 
- /* =========================================================
-   動態警訊
-   從 Supabase alerts 資料表自動讀取
-========================================================= */
+  /* =========================================================
+     動態警訊
+  ========================================================= */
 
-var audioCtx = null;
-var oscillator = null;
-var gainNode = null;
-var isPlaying = false;
-var stopTimer = null;
-var sweepTimer = null;
-
-
-/* =========================================================
-   停止警笛
-========================================================= */
-
-function stopSiren() {
-
-  if (stopTimer) {
-    clearTimeout(stopTimer);
-    stopTimer = null;
-  }
-
-  if (sweepTimer) {
-    clearInterval(sweepTimer);
-    sweepTimer = null;
-  }
-
-  if (oscillator) {
-
-    try {
-      oscillator.stop();
-    } catch (e) {}
-
-    oscillator = null;
-  }
-
-  isPlaying = false;
-
-  var btn =
-    document.getElementById('btnSiren');
-
-  if (btn) {
-    btn.textContent = '▶ 播放警笛';
-  }
-}
+  var audioCtx = null;
+  var oscillator = null;
+  var gainNode = null;
+  var isPlaying = false;
+  var stopTimer = null;
+  var sweepTimer = null;
 
 
-/* =========================================================
-   播放警笛
-========================================================= */
+  /* =========================================================
+     停止警笛
+  ========================================================= */
 
-function playSiren() {
+  function stopSiren() {
 
-  if (isPlaying) {
-    stopSiren();
-    return;
-  }
+    if (stopTimer) {
+      clearTimeout(stopTimer);
+      stopTimer = null;
+    }
 
-  try {
+    if (sweepTimer) {
+      clearInterval(sweepTimer);
+      sweepTimer = null;
+    }
 
-    audioCtx =
-      new (
-        window.AudioContext ||
-        window.webkitAudioContext
-      )();
+    if (oscillator) {
 
-  } catch (e) {
+      try {
+        oscillator.stop();
+      } catch (e) {}
 
-    alert('此裝置不支援網頁音效');
-    return;
-  }
+      oscillator = null;
+    }
 
-
-  function startTone() {
-
-    isPlaying = true;
+    isPlaying = false;
 
     var btn =
       document.getElementById('btnSiren');
 
     if (btn) {
-      btn.textContent = '■ 停止警笛';
+      btn.textContent = '▶ 播放警笛';
+    }
+  }
+
+
+  /* =========================================================
+     播放警笛
+  ========================================================= */
+
+  function playSiren() {
+
+    if (isPlaying) {
+      stopSiren();
+      return;
     }
 
+    try {
 
-    oscillator =
-      audioCtx.createOscillator();
+      audioCtx =
+        new (
+          window.AudioContext ||
+          window.webkitAudioContext
+        )();
 
-    gainNode =
-      audioCtx.createGain();
+    } catch (e) {
 
-
-    oscillator.type =
-      'sawtooth';
-
-
-    gainNode.gain.setValueAtTime(
-      0.12,
-      audioCtx.currentTime
-    );
-
-
-    oscillator.connect(
-      gainNode
-    );
-
-    gainNode.connect(
-      audioCtx.destination
-    );
-
-
-    var t0 =
-      audioCtx.currentTime;
-
-
-    oscillator.frequency.setValueAtTime(
-      800,
-      t0
-    );
-
-    oscillator.frequency.linearRampToValueAtTime(
-      1200,
-      t0 + 0.5
-    );
-
-    oscillator.frequency.linearRampToValueAtTime(
-      800,
-      t0 + 1
-    );
-
-
-    oscillator.start();
-
-
-    var phase = 0;
-
-
-    sweepTimer =
-      setInterval(
-        function () {
-
-          if (
-            !oscillator ||
-            !audioCtx
-          ) {
-            return;
-          }
-
-
-          phase += 1;
-
-
-          var now =
-            audioCtx.currentTime;
-
-
-          try {
-
-            if (
-              phase % 2 === 1
-            ) {
-
-              oscillator.frequency.cancelScheduledValues(
-                now
-              );
-
-              oscillator.frequency.setValueAtTime(
-                800,
-                now
-              );
-
-              oscillator.frequency.linearRampToValueAtTime(
-                1200,
-                now + 0.5
-              );
-
-            } else {
-
-              oscillator.frequency.cancelScheduledValues(
-                now
-              );
-
-              oscillator.frequency.setValueAtTime(
-                1200,
-                now
-              );
-
-              oscillator.frequency.linearRampToValueAtTime(
-                800,
-                now + 0.5
-              );
-
-            }
-
-          } catch (e) {}
-
-        },
-        500
-      );
-
-
-    stopTimer =
-      setTimeout(
-        function () {
-
-          stopSiren();
-
-        },
-        8000
-      );
-
-  }
-
-
-  if (
-    audioCtx.state ===
-    'suspended'
-  ) {
-
-    audioCtx
-      .resume()
-      .then(startTone)
-      .catch(
-        function () {
-
-          alert(
-            '請再點一次播放警笛（需解除靜音）'
-          );
-
-        }
-      );
-
-  } else {
-
-    startTone();
-
-  }
-
-}
-
-
-/* =========================================================
-   關閉警訊
-========================================================= */
-
-function closeAlert() {
-
-  var banner =
-    document.getElementById(
-      'alertBanner'
-    );
-
-  if (banner) {
-    banner.style.display = 'none';
-  }
-
-  stopSiren();
-}
-
-
-/* =========================================================
-   從 alerts 取得目前有效的警訊
-========================================================= */
-
-async function loadCurrentAlert() {
-
-  if (!supabase) {
-    console.warn(
-      'Supabase 尚未初始化，無法讀取 alerts'
-    );
-    return;
-  }
-
-
-  try {
-
-    var now =
-      new Date().toISOString();
-
-
-    var result =
-      await supabase
-        .from('alerts')
-        .select(
-          'id,title,message,region,start_at,end_at,detail_url,siren_enabled,is_active'
-        )
-        .eq(
-          'is_active',
-          true
-        )
-        .lte(
-          'start_at',
-          now
-        )
-        .gte(
-          'end_at',
-          now
-        )
-        .order(
-          'start_at',
-          {
-            ascending: false
-          }
-        )
-        .limit(1);
-
-
-    if (result.error) {
-
-      console.error(
-        '讀取 alerts 失敗：',
-        result.error
-      );
-
+      alert('此裝置不支援網頁音效');
       return;
     }
 
 
-    var alerts =
-      result.data || [];
+    function startTone() {
 
+      isPlaying = true;
+
+      var btn =
+        document.getElementById('btnSiren');
+
+      if (btn) {
+        btn.textContent = '■ 停止警笛';
+      }
+
+
+      oscillator =
+        audioCtx.createOscillator();
+
+      gainNode =
+        audioCtx.createGain();
+
+
+      oscillator.type =
+        'sawtooth';
+
+
+      gainNode.gain.setValueAtTime(
+        0.12,
+        audioCtx.currentTime
+      );
+
+
+      oscillator.connect(
+        gainNode
+      );
+
+      gainNode.connect(
+        audioCtx.destination
+      );
+
+
+      var t0 =
+        audioCtx.currentTime;
+
+
+      oscillator.frequency.setValueAtTime(
+        800,
+        t0
+      );
+
+      oscillator.frequency.linearRampToValueAtTime(
+        1200,
+        t0 + 0.5
+      );
+
+      oscillator.frequency.linearRampToValueAtTime(
+        800,
+        t0 + 1
+      );
+
+
+      oscillator.start();
+
+
+      var phase = 0;
+
+
+      sweepTimer =
+        setInterval(
+          function () {
+
+            if (
+              !oscillator ||
+              !audioCtx
+            ) {
+              return;
+            }
+
+
+            phase += 1;
+
+
+            var now =
+              audioCtx.currentTime;
+
+
+            try {
+
+              if (
+                phase % 2 === 1
+              ) {
+
+                oscillator.frequency.cancelScheduledValues(
+                  now
+                );
+
+                oscillator.frequency.setValueAtTime(
+                  800,
+                  now
+                );
+
+                oscillator.frequency.linearRampToValueAtTime(
+                  1200,
+                  now + 0.5
+                );
+
+              } else {
+
+                oscillator.frequency.cancelScheduledValues(
+                  now
+                );
+
+                oscillator.frequency.setValueAtTime(
+                  1200,
+                  now
+                );
+
+                oscillator.frequency.linearRampToValueAtTime(
+                  800,
+                  now + 0.5
+                );
+
+              }
+
+            } catch (e) {}
+
+          },
+          500
+        );
+
+
+      stopTimer =
+        setTimeout(
+          function () {
+
+            stopSiren();
+
+          },
+          8000
+        );
+
+    }
+
+
+    if (
+      audioCtx.state ===
+      'suspended'
+    ) {
+
+      audioCtx
+        .resume()
+        .then(startTone)
+        .catch(
+          function () {
+
+            alert(
+              '請再點一次播放警笛（需解除靜音）'
+            );
+
+          }
+        );
+
+    } else {
+
+      startTone();
+
+    }
+
+  }
+
+
+  /* =========================================================
+     關閉警訊
+  ========================================================= */
+
+  function closeAlert() {
 
     var banner =
       document.getElementById(
         'alertBanner'
       );
 
+    if (banner) {
+      banner.style.display = 'none';
+    }
 
-    if (!banner) {
+    stopSiren();
+  }
+
+
+  /* =========================================================
+     從 alerts 取得目前有效警訊
+  ========================================================= */
+
+  async function loadCurrentAlert() {
+
+    if (!supabase) {
+
+      console.warn(
+        'Supabase 尚未初始化，無法讀取 alerts'
+      );
+
       return;
     }
 
 
-    /* 沒有有效警訊 */
+    try {
 
-    if (!alerts.length) {
+      var now =
+        new Date().toISOString();
+
+
+      var result =
+        await supabase
+          .from('alerts')
+          .select(
+            'id,title,message,region,start_at,end_at,detail_url,siren_enabled,is_active'
+          )
+          .eq(
+            'is_active',
+            true
+          )
+          .lte(
+            'start_at',
+            now
+          )
+          .gte(
+            'end_at',
+            now
+          )
+          .order(
+            'start_at',
+            {
+              ascending: false
+            }
+          )
+          .limit(1);
+
+
+      if (result.error) {
+
+        console.error(
+          '讀取 alerts 失敗：',
+          result.error
+        );
+
+        return;
+      }
+
+
+      var alerts =
+        result.data || [];
+
+
+      var banner =
+        document.getElementById(
+          'alertBanner'
+        );
+
+
+      if (!banner) {
+        return;
+      }
+
+
+      if (!alerts.length) {
+
+        banner.style.display =
+          'none';
+
+        return;
+      }
+
+
+      var alertData =
+        alerts[0];
+
+
+      var title =
+        document.getElementById(
+          'alertTitle'
+        );
+
+      if (title) {
+
+        title.textContent =
+          alertData.title ||
+          '警訊通知';
+
+      }
+
+
+      var text =
+        document.getElementById(
+          'alertText'
+        );
+
+      if (text) {
+
+        var regionText =
+          alertData.region
+            ? '【' +
+              alertData.region +
+              '】'
+            : '';
+
+
+        text.textContent =
+          regionText +
+          ' ' +
+          (
+            alertData.message ||
+            ''
+          );
+      }
+
+
+      var link =
+        document.getElementById(
+          'alertLink'
+        );
+
+      if (link) {
+
+        if (alertData.detail_url) {
+
+          link.href =
+            alertData.detail_url;
+
+          link.style.display =
+            'inline';
+
+        } else {
+
+          link.style.display =
+            'none';
+
+        }
+      }
+
+
+      var sirenButton =
+        document.getElementById(
+          'btnSiren'
+        );
+
+      if (sirenButton) {
+
+        if (
+          alertData.siren_enabled
+        ) {
+
+          sirenButton.style.display =
+            'inline-block';
+
+          sirenButton.onclick =
+            playSiren;
+
+        } else {
+
+          sirenButton.style.display =
+            'none';
+
+        }
+      }
+
+
+      var closeButton =
+        document.getElementById(
+          'btnCloseAlert'
+        );
+
+      if (closeButton) {
+
+        closeButton.onclick =
+          closeAlert;
+
+      }
+
 
       banner.style.display =
-        'none';
-
-      return;
-    }
+        'flex';
 
 
-    var alertData =
-      alerts[0];
+    } catch (e) {
 
-
-    /* =====================================================
-       標題
-    ===================================================== */
-
-    var title =
-      document.getElementById(
-        'alertTitle'
+      console.error(
+        '載入目前警訊失敗：',
+        e
       );
 
-    if (title) {
-
-      title.textContent =
-        alertData.title ||
-        '警訊通知';
     }
-
-
-    /* =====================================================
-       內容
-    ===================================================== */
-
-    var text =
-      document.getElementById(
-        'alertText'
-      );
-
-    if (text) {
-
-      var regionText =
-        alertData.region
-          ? '【' +
-            alertData.region +
-            '】'
-          : '';
-
-
-      text.textContent =
-        regionText +
-        ' ' +
-        (
-          alertData.message ||
-          ''
-        );
-    }
-
-
-    /* =====================================================
-       詳細資訊
-    ===================================================== */
-
-    var link =
-      document.getElementById(
-        'alertLink'
-      );
-
-    if (link) {
-
-      if (alertData.detail_url) {
-
-        link.href =
-          alertData.detail_url;
-
-        link.style.display =
-          'inline';
-
-      } else {
-
-        link.style.display =
-          'none';
-      }
-    }
-
-
-    /* =====================================================
-       警笛
-    ===================================================== */
-
-    var sirenButton =
-      document.getElementById(
-        'btnSiren'
-      );
-
-    if (sirenButton) {
-
-      if (
-        alertData.siren_enabled
-      ) {
-
-        sirenButton.style.display =
-          'inline-block';
-
-        sirenButton.onclick =
-          playSiren;
-
-      } else {
-
-        sirenButton.style.display =
-          'none';
-      }
-    }
-
-
-    /* =====================================================
-       關閉按鈕
-    ===================================================== */
-
-    var closeButton =
-      document.getElementById(
-        'btnCloseAlert'
-      );
-
-    if (closeButton) {
-
-      closeButton.onclick =
-        closeAlert;
-    }
-
-
-    /* =====================================================
-       顯示警訊
-    ===================================================== */
-
-    banner.style.display =
-      'flex';
-
-
-  } catch (e) {
-
-    console.error(
-      '載入目前警訊失敗：',
-      e
-    );
 
   }
 
-}
 
-
-/* =========================================================
-   啟動
-========================================================= */
-
-loadCurrentAlert();
+  loadCurrentAlert();
 
 
   /* =========================================================
      SOS
-     
-     重要：
-     1. 取得登入者
-     2. 取得 GPS
-     3. 取得「目前使用者所屬的群組」
-     4. 讓使用者選擇一個群組
-     5. 只發送到選定的群組
   ========================================================= */
 
   var sosButton =
@@ -1818,15 +1798,17 @@ loadCurrentAlert();
 
 
   /* =========================================================
-     取得目前使用者的群組
+     ★ 修正版 SOS 群組
      
-     注意：
-     不寫死任何 group_id。
+     group_members
+       ↓
+     group_id
+       ↓
+     chat_groups
+       ↓
+     id / name
      
-     只根據 group_members：
-     user_id = 目前登入者
-     
-     找到的群組就是這個使用者實際加入的群組。
+     這裡不再使用錯誤的 groups。
   ========================================================= */
 
   async function loadMySOSGroups() {
@@ -1840,8 +1822,19 @@ loadCurrentAlert();
     }
 
 
+    /* -----------------------------------------------------
+       取得目前登入者
+    ----------------------------------------------------- */
+
     var sessionResult =
       await supabase.auth.getSession();
+
+
+    if (sessionResult.error) {
+
+      throw sessionResult.error;
+
+    }
 
 
     var session =
@@ -1862,6 +1855,10 @@ loadCurrentAlert();
       session.user;
 
 
+    /* -----------------------------------------------------
+       從 group_members 找出使用者加入的群組
+    ----------------------------------------------------- */
+
     var memberResult =
       await supabase
         .from('group_members')
@@ -1874,42 +1871,45 @@ loadCurrentAlert();
 
     if (memberResult.error) {
 
+      console.error(
+        '讀取 group_members 失敗：',
+        memberResult.error
+      );
+
       throw memberResult.error;
 
     }
 
 
-    var rows =
+    var memberRows =
       memberResult.data || [];
 
 
-    if (!rows.length) {
+    if (!memberRows.length) {
 
       return [];
 
     }
 
 
-    /*
-     * 取得群組基本資料
-     *
-     * 這裡嘗試讀取常見欄位：
-     * id / name
-     *
-     * 如果你的 groups 表實際欄位就是這兩個，
-     * 就會直接取得群組名稱。
-     */
+    /* -----------------------------------------------------
+       整理 group_id
+    ----------------------------------------------------- */
 
     var groupIds =
-      rows
+      memberRows
         .map(
           function(row) {
+
             return row.group_id;
+
           }
         )
         .filter(
-          function(id) {
-            return !!id;
+          function(groupId) {
+
+            return !!groupId;
+
           }
         );
 
@@ -1921,9 +1921,15 @@ loadCurrentAlert();
     }
 
 
+    /* -----------------------------------------------------
+       ★ 正式群組資料表：chat_groups
+       
+       取得真正的群組名稱
+    ----------------------------------------------------- */
+
     var groupResult =
       await supabase
-        .from('groups')
+        .from('chat_groups')
         .select('id,name')
         .in(
           'id',
@@ -1931,36 +1937,14 @@ loadCurrentAlert();
         );
 
 
-    /*
-     * 如果 groups 查詢失敗，
-     * 仍然保留 group_id，
-     * 不讓 SOS 整個不能使用。
-     */
-
     if (groupResult.error) {
 
-      console.warn(
-        '群組名稱讀取失敗：',
+      console.error(
+        '讀取 chat_groups 失敗：',
         groupResult.error
       );
 
-
-      return groupIds.map(
-        function(groupId) {
-
-          return {
-
-            id:
-              groupId,
-
-            name:
-              '群組 ' +
-              String(groupId).slice(0,8)
-
-          };
-
-        }
-      );
+      throw groupResult.error;
 
     }
 
@@ -1968,6 +1952,11 @@ loadCurrentAlert();
     var groupRows =
       groupResult.data || [];
 
+
+    /* -----------------------------------------------------
+       將 group_members.group_id
+       對應到 chat_groups.id
+    ----------------------------------------------------- */
 
     return groupIds.map(
       function(groupId) {
@@ -1992,8 +1981,7 @@ loadCurrentAlert();
             group &&
             group.name
               ? group.name
-              : '群組 ' +
-                String(groupId).slice(0,8)
+              : '未命名群組'
 
         };
 
@@ -2004,7 +1992,7 @@ loadCurrentAlert();
 
 
   /* =========================================================
-     顯示群組選擇器
+     顯示 SOS 群組選擇器
   ========================================================= */
 
   async function openSOSGroupSelector() {
@@ -2045,9 +2033,17 @@ loadCurrentAlert();
       }
 
 
+      /* ---------------------------------------------------
+         清除舊選項
+      --------------------------------------------------- */
+
       sosGroupSelect.innerHTML =
         '<option value="">請選擇要發送的群組</option>';
 
+
+      /* ---------------------------------------------------
+         顯示真正的群組名稱
+      --------------------------------------------------- */
 
       groups.forEach(
         function(group) {
@@ -2102,12 +2098,10 @@ loadCurrentAlert();
 
 
   /* =========================================================
-     點擊 SOS
+     第一次點 SOS
      
-     第一次點：
-     → 開啟群組選擇
-     
-     不會直接發送。
+     只開啟群組選擇
+     不會直接發送
   ========================================================= */
 
   async function sendSOS() {
@@ -2150,8 +2144,6 @@ loadCurrentAlert();
 
   /* =========================================================
      確認發送 SOS
-     
-     這裡才真正取得 GPS 並發送。
   ========================================================= */
 
   async function confirmSendSOS() {
@@ -2168,7 +2160,7 @@ loadCurrentAlert();
     if (!selectedGroupId) {
 
       alert(
-        '請先選擇要發送 SOS 的群組。'
+        '請先選擇要發送的 SOS 群組。'
       );
 
       return;
@@ -2295,7 +2287,7 @@ loadCurrentAlert();
 
 
             /* =============================================
-               只建立「選定群組」的 SOS EVENT
+               只建立選定群組的 SOS EVENT
             ============================================= */
 
             var eventResult =
@@ -2336,7 +2328,7 @@ loadCurrentAlert();
 
 
             /* =============================================
-               只建立「選定群組」的聊天 SOS 訊息
+               只建立選定群組的聊天 SOS 訊息
             ============================================= */
 
             var messageResult =
@@ -2375,7 +2367,7 @@ loadCurrentAlert();
 
 
             /* =============================================
-               找到選擇的群組名稱
+               取得目前選擇的群組名稱
             ============================================= */
 
             var selectedOption =
@@ -2389,6 +2381,10 @@ loadCurrentAlert();
                 ? selectedOption.textContent
                 : '指定群組';
 
+
+            /* =============================================
+               成功
+            ============================================= */
 
             alert(
               '🚨 SOS 已發送！\n\n' +
@@ -2450,9 +2446,9 @@ loadCurrentAlert();
         },
 
 
-        /* ---------------------------------------------
+        /* ---------------------------------------------------
            GPS 失敗
-        --------------------------------------------- */
+        --------------------------------------------------- */
 
         function(error) {
 
@@ -2504,9 +2500,9 @@ loadCurrentAlert();
         },
 
 
-        /* ---------------------------------------------
+        /* ---------------------------------------------------
            GPS 設定
-        --------------------------------------------- */
+        --------------------------------------------------- */
 
         {
           enableHighAccuracy: true,
@@ -2555,113 +2551,190 @@ loadCurrentAlert();
 
   }
 
-/* =========================================================
-   天氣資料測試
-   從 Supabase weather_data 讀取今天的資料
-========================================================= */
 
-async function loadWeather() {
+  /* =========================================================
+     天氣資料
+     從 Supabase weather_data 讀取
+  ========================================================= */
 
-  try {
+  async function loadWeather() {
 
-    if (!supabase) {
-      throw new Error('Supabase 尚未初始化');
+    try {
+
+      if (!supabase) {
+
+        throw new Error(
+          'Supabase 尚未初始化'
+        );
+
+      }
+
+
+      var result =
+        await supabase
+          .from('weather_data')
+          .select('*')
+          .order(
+            'forecast_date',
+            {
+              ascending: true
+            }
+          )
+          .limit(1);
+
+
+      if (result.error) {
+
+        console.error(
+          'weather_data 查詢錯誤：',
+          result.error
+        );
+
+
+        document.getElementById(
+          'weatherStatus'
+        ).textContent =
+          '查詢錯誤：' +
+          result.error.message;
+
+        return;
+
+      }
+
+
+      var rows =
+        result.data || [];
+
+
+      if (!rows.length) {
+
+        document.getElementById(
+          'weatherStatus'
+        ).textContent =
+          '目前沒有天氣資料';
+
+        return;
+
+      }
+
+
+      var weather =
+        rows[0];
+
+
+      document.getElementById(
+        'weatherLocation'
+      ).textContent =
+        weather.city_name ||
+        '未知地區';
+
+
+      document.getElementById(
+        'weatherTemp'
+      ).textContent =
+        weather.temp_max != null
+          ? weather.temp_max + '°C'
+          : '--°C';
+
+
+      document.getElementById(
+        'weatherMax'
+      ).textContent =
+        weather.temp_max != null
+          ? weather.temp_max + '°C'
+          : '--°C';
+
+
+      document.getElementById(
+        'weatherMin'
+      ).textContent =
+        weather.temp_min != null
+          ? weather.temp_min + '°C'
+          : '--°C';
+
+
+      document.getElementById(
+        'weatherRain'
+      ).textContent =
+        weather.rain_probability != null
+          ? weather.rain_probability + '%'
+          : '--%';
+
+
+      document.getElementById(
+        'weatherDescription'
+      ).textContent =
+        '天氣資料已載入';
+
+
+      document.getElementById(
+        'weatherStatus'
+      ).textContent =
+        '資料正常';
+
+
+      document.getElementById(
+        'weatherUpdated'
+      ).textContent =
+        weather.updated_at
+          ? new Date(
+              weather.updated_at
+            ).toLocaleString(
+              'zh-TW'
+            )
+          : '已更新';
+
+
+    } catch (error) {
+
+      console.error(
+        '天氣資料讀取失敗：',
+        error
+      );
+
+
+      document.getElementById(
+        'weatherStatus'
+      ).textContent =
+        '讀取失敗';
+
+      console.error(error);
+
     }
 
-    var result = await supabase
-      .from('weather_data')
-      .select('*')
-      .order('forecast_date', { ascending: true })
-      .limit(1);
-
-    if (result.error) {
-  console.error('weather_data 查詢錯誤：', result.error);
-
-  document.getElementById('weatherStatus').textContent =
-    '查詢錯誤：' + result.error.message;
-
-  return;
-}
-
-    var rows = result.data || [];
-
-    if (!rows.length) {
-
-      document.getElementById('weatherStatus').textContent =
-        '目前沒有天氣資料';
-
-      return;
-    }
-
-    var weather = rows[0];
-
-    document.getElementById('weatherLocation').textContent =
-      weather.city_name || '未知地區';
-
-    document.getElementById('weatherTemp').textContent =
-      weather.temp_max != null
-        ? weather.temp_max + '°C'
-        : '--°C';
-
-    document.getElementById('weatherMax').textContent =
-      weather.temp_max != null
-        ? weather.temp_max + '°C'
-        : '--°C';
-
-    document.getElementById('weatherMin').textContent =
-      weather.temp_min != null
-        ? weather.temp_min + '°C'
-        : '--°C';
-
-    document.getElementById('weatherRain').textContent =
-      weather.rain_probability != null
-        ? weather.rain_probability + '%'
-        : '--%';
-
-    document.getElementById('weatherDescription').textContent =
-      '天氣資料已載入';
-
-    document.getElementById('weatherStatus').textContent =
-      '資料正常';
-
-    document.getElementById('weatherUpdated').textContent =
-      weather.updated_at
-        ? new Date(weather.updated_at).toLocaleString('zh-TW')
-        : '已更新';
-
-  } catch (error) {
-
-    console.error('天氣資料讀取失敗：', error);
-
-    document.getElementById('weatherStatus').textContent =
-      '讀取失敗';
-
-    console.error(error);
   }
-}
 
 
+  /* =========================================================
+     啟動天氣
+  ========================================================= */
 
-/* =========================================================
-   啟動天氣測試
-========================================================= */
+  console.log(
+    '【天氣】開始啟動'
+  );
 
-console.log('【天氣】開始啟動');
 
-setTimeout(function () {
+  setTimeout(
+    function () {
 
-  console.log('【天氣】開始執行 loadWeather');
+      console.log(
+        '【天氣】開始執行 loadWeather'
+      );
 
-  loadWeather();
+      loadWeather();
 
-}, 300);
+    },
+    300
+  );
 
 })();
-  /* =========================================================
+</script>
+
+
+<script>
+
+/* =========================================================
    天氣地點選擇器
-   第 1 階段：
-   點擊地點 → 展開搜尋
-   輸入城市 → 顯示搜尋結果
 ========================================================= */
 
 (function () {
@@ -2671,15 +2744,18 @@ setTimeout(function () {
       'weatherLocationBtn'
     );
 
+
   var locationPanel =
     document.getElementById(
       'weatherLocationPanel'
     );
 
+
   var locationSearch =
     document.getElementById(
       'weatherLocationSearch'
     );
+
 
   var locationResults =
     document.getElementById(
@@ -2691,7 +2767,10 @@ setTimeout(function () {
      點擊目前地點
   ===================================================== */
 
-  if (locationBtn && locationPanel) {
+  if (
+    locationBtn &&
+    locationPanel
+  ) {
 
     locationBtn.onclick =
       function () {
@@ -2699,6 +2778,7 @@ setTimeout(function () {
         locationPanel.classList.toggle(
           'show'
         );
+
 
         if (
           locationPanel.classList.contains(
@@ -2725,7 +2805,6 @@ setTimeout(function () {
 
   /* =====================================================
      搜尋城市
-     使用 OpenStreetMap Nominatim 全球地名搜尋
   ===================================================== */
 
   var searchTimer = null;
@@ -2915,321 +2994,356 @@ setTimeout(function () {
 
   /* =====================================================
      選擇城市
-     ===================================================== */
+  ===================================================== */
 
   function selectWeatherLocation(
-  place
-) {
-
-  var address =
-    place.address ||
-    {};
-
-  var cityName =
-    address.city ||
-    address.town ||
-    address.municipality ||
-    address.county ||
-    address.state ||
-    place.name ||
-    place.display_name;
-
-  var latitude =
-    parseFloat(place.lat);
-
-  var longitude =
-    parseFloat(place.lon);
-
-
-  /* =====================================================
-     更新目前顯示的城市
-  ===================================================== */
-
-  var locationElement =
-    document.getElementById(
-      'weatherLocation'
-    );
-
-  if (locationElement) {
-
-    locationElement.textContent =
-      cityName;
-
-  }
-
-
-  /* =====================================================
-     關閉地點選擇器
-  ===================================================== */
-
-  if (locationPanel) {
-
-    locationPanel.classList.remove(
-      'show'
-    );
-
-  }
-
-  if (locationSearch) {
-
-    locationSearch.value =
-      '';
-
-  }
-
-
-  /* =====================================================
-     顯示載入狀態
-  ===================================================== */
-
-  var statusElement =
-    document.getElementById(
-      'weatherStatus'
-    );
-
-  var descriptionElement =
-    document.getElementById(
-      'weatherDescription'
-    );
-
-  var updatedElement =
-    document.getElementById(
-      'weatherUpdated'
-    );
-
-  if (statusElement) {
-
-    statusElement.textContent =
-      '載入天氣中…';
-
-  }
-
-  if (descriptionElement) {
-
-    descriptionElement.textContent =
-      '正在取得 ' +
-      cityName +
-      ' 的天氣資料…';
-
-  }
-
-  if (updatedElement) {
-
-    updatedElement.textContent =
-      '更新中…';
-
-  }
-
-
-  /* =====================================================
-     清除搜尋結果
-  ===================================================== */
-
-  if (locationResults) {
-
-    locationResults.innerHTML =
-      '<div class="weather-location-empty">' +
-      '已選擇：' +
-      cityName +
-      '</div>';
-
-  }
-
-
-  /* =====================================================
-     檢查經緯度
-  ===================================================== */
-
-  if (
-    !Number.isFinite(latitude) ||
-    !Number.isFinite(longitude)
+    place
   ) {
+
+    var address =
+      place.address ||
+      {};
+
+
+    var cityName =
+      address.city ||
+      address.town ||
+      address.municipality ||
+      address.county ||
+      address.state ||
+      place.name ||
+      place.display_name;
+
+
+    var latitude =
+      parseFloat(
+        place.lat
+      );
+
+
+    var longitude =
+      parseFloat(
+        place.lon
+      );
+
+
+    var locationElement =
+      document.getElementById(
+        'weatherLocation'
+      );
+
+
+    if (locationElement) {
+
+      locationElement.textContent =
+        cityName;
+
+    }
+
+
+    if (locationPanel) {
+
+      locationPanel.classList.remove(
+        'show'
+      );
+
+    }
+
+
+    if (locationSearch) {
+
+      locationSearch.value =
+        '';
+
+    }
+
+
+    var statusElement =
+      document.getElementById(
+        'weatherStatus'
+      );
+
+
+    var descriptionElement =
+      document.getElementById(
+        'weatherDescription'
+      );
+
+
+    var updatedElement =
+      document.getElementById(
+        'weatherUpdated'
+      );
+
 
     if (statusElement) {
 
       statusElement.textContent =
-        '地點資料錯誤';
+        '載入天氣中…';
 
     }
 
-    console.error(
-      '天氣地點沒有有效經緯度：',
-      place
+
+    if (descriptionElement) {
+
+      descriptionElement.textContent =
+        '正在取得 ' +
+        cityName +
+        ' 的天氣資料…';
+
+    }
+
+
+    if (updatedElement) {
+
+      updatedElement.textContent =
+        '更新中…';
+
+    }
+
+
+    if (locationResults) {
+
+      locationResults.innerHTML =
+        '<div class="weather-location-empty">' +
+        '已選擇：' +
+        cityName +
+        '</div>';
+
+    }
+
+
+    if (
+      !Number.isFinite(latitude) ||
+      !Number.isFinite(longitude)
+    ) {
+
+      if (statusElement) {
+
+        statusElement.textContent =
+          '地點資料錯誤';
+
+      }
+
+
+      console.error(
+        '天氣地點沒有有效經緯度：',
+        place
+      );
+
+
+      return;
+
+    }
+
+
+    console.log(
+      '選擇天氣地點：',
+      {
+        name:
+          cityName,
+
+        latitude:
+          latitude,
+
+        longitude:
+          longitude
+      }
     );
 
-    return;
+
+    loadWeatherByLocation(
+      cityName,
+      latitude,
+      longitude
+    );
 
   }
 
-
-  console.log(
-    '選擇天氣地點：',
-    {
-      name:
-        cityName,
-
-      latitude:
-        latitude,
-
-      longitude:
-        longitude
-    }
-  );
-
-
-  /* =====================================================
-     取得這個城市的天氣
-  ===================================================== */
-
-  loadWeatherByLocation(
-    cityName,
-    latitude,
-    longitude
-  );
-
-}
-  
 })();
-/* =========================================================
-   依照經緯度取得天氣
-   全球城市皆可使用
-========================================================= */
+
+
 /* =========================================================
    天氣代碼轉中文
 ========================================================= */
 
-function getWeatherDescription(code) {
+function getWeatherDescription(
+  code
+) {
 
   if (code === 0) {
+
     return {
       text: '晴天',
       icon: '☀️'
     };
+
   }
 
-  if (code === 1 || code === 2) {
+
+  if (
+    code === 1 ||
+    code === 2
+  ) {
+
     return {
       text: '晴時多雲',
       icon: '🌤️'
     };
+
   }
 
+
   if (code === 3) {
+
     return {
       text: '陰天',
       icon: '☁️'
     };
+
   }
+
 
   if (
     code === 45 ||
     code === 48
   ) {
+
     return {
       text: '有霧',
       icon: '🌫️'
     };
+
   }
+
 
   if (
     code === 51 ||
     code === 53 ||
     code === 55
   ) {
+
     return {
       text: '毛毛雨',
       icon: '🌦️'
     };
+
   }
+
 
   if (
     code === 56 ||
     code === 57
   ) {
+
     return {
       text: '凍毛毛雨',
       icon: '🌧️'
     };
+
   }
+
 
   if (
     code === 61 ||
     code === 63 ||
     code === 65
   ) {
+
     return {
       text: '下雨',
       icon: '🌧️'
     };
+
   }
+
 
   if (
     code === 66 ||
     code === 67
   ) {
+
     return {
       text: '凍雨',
       icon: '🌧️'
     };
+
   }
+
 
   if (
     code === 71 ||
     code === 73 ||
     code === 75
   ) {
+
     return {
       text: '下雪',
       icon: '🌨️'
     };
+
   }
 
+
   if (code === 77) {
+
     return {
       text: '雪粒',
       icon: '🌨️'
     };
+
   }
+
 
   if (
     code === 80 ||
     code === 81 ||
     code === 82
   ) {
+
     return {
       text: '陣雨',
       icon: '🌦️'
     };
+
   }
+
 
   if (
     code === 85 ||
     code === 86
   ) {
+
     return {
       text: '陣雪',
       icon: '🌨️'
     };
+
   }
 
-  if (
-    code === 95
-  ) {
+
+  if (code === 95) {
+
     return {
       text: '雷雨',
       icon: '⛈️'
     };
+
   }
+
 
   if (
     code === 96 ||
     code === 99
   ) {
+
     return {
       text: '雷雨伴冰雹',
       icon: '⛈️'
     };
+
   }
+
 
   return {
     text: '天氣狀況未知',
@@ -3237,6 +3351,12 @@ function getWeatherDescription(code) {
   };
 
 }
+
+
+/* =========================================================
+   依照經緯度取得天氣
+========================================================= */
+
 async function loadWeatherByLocation(
   cityName,
   latitude,
@@ -3248,35 +3368,42 @@ async function loadWeatherByLocation(
       'weatherStatus'
     );
 
+
   var tempElement =
     document.getElementById(
       'weatherTemp'
     );
+
 
   var maxElement =
     document.getElementById(
       'weatherMax'
     );
 
+
   var minElement =
     document.getElementById(
       'weatherMin'
     );
+
 
   var rainElement =
     document.getElementById(
       'weatherRain'
     );
 
+
   var descriptionElement =
     document.getElementById(
       'weatherDescription'
     );
 
+
   var updatedElement =
     document.getElementById(
       'weatherUpdated'
     );
+
 
   var iconElement =
     document.getElementById(
@@ -3297,9 +3424,13 @@ async function loadWeatherByLocation(
     var url =
       'https://api.open-meteo.com/v1/forecast' +
       '?latitude=' +
-      encodeURIComponent(latitude) +
+      encodeURIComponent(
+        latitude
+      ) +
       '&longitude=' +
-      encodeURIComponent(longitude) +
+      encodeURIComponent(
+        longitude
+      ) +
       '&current=temperature_2m,weather_code' +
       '&daily=temperature_2m_max,temperature_2m_min,precipitation_probability_max' +
       '&forecast_days=1' +
@@ -3307,7 +3438,9 @@ async function loadWeatherByLocation(
 
 
     var response =
-      await fetch(url);
+      await fetch(
+        url
+      );
 
 
     if (!response.ok) {
@@ -3327,6 +3460,7 @@ async function loadWeatherByLocation(
     var current =
       data.current ||
       {};
+
 
     var daily =
       data.daily ||
@@ -3452,7 +3586,6 @@ async function loadWeatherByLocation(
 
     /* =====================================================
        保存目前選擇的城市
-       下次開啟 Home 可以直接使用
     ===================================================== */
 
     try {
@@ -3491,6 +3624,7 @@ async function loadWeatherByLocation(
 
     }
 
+
     if (descriptionElement) {
 
       descriptionElement.textContent =
@@ -3499,6 +3633,7 @@ async function loadWeatherByLocation(
         ' 的天氣資料';
 
     }
+
 
     if (updatedElement) {
 
@@ -3510,6 +3645,7 @@ async function loadWeatherByLocation(
   }
 
 }
+
 </script>
 
 
