@@ -2374,7 +2374,90 @@ loadCurrentAlert();
 
 
 })();
+/* =========================================================
+   天氣資料測試
+   從 Supabase weather_data 讀取今天的資料
+========================================================= */
 
+async function loadWeather() {
+
+  try {
+
+    if (!supabase) {
+      throw new Error('Supabase 尚未初始化');
+    }
+
+    var result = await supabase
+      .from('weather_data')
+      .select('*')
+      .order('forecast_date', { ascending: true })
+      .limit(1);
+
+    if (result.error) {
+      throw result.error;
+    }
+
+    var rows = result.data || [];
+
+    if (!rows.length) {
+
+      document.getElementById('weatherStatus').textContent =
+        '目前沒有天氣資料';
+
+      return;
+    }
+
+    var weather = rows[0];
+
+    document.getElementById('weatherLocation').textContent =
+      weather.city_name || '未知地區';
+
+    document.getElementById('weatherTemp').textContent =
+      weather.temp_max != null
+        ? weather.temp_max + '°C'
+        : '--°C';
+
+    document.getElementById('weatherMax').textContent =
+      weather.temp_max != null
+        ? weather.temp_max + '°C'
+        : '--°C';
+
+    document.getElementById('weatherMin').textContent =
+      weather.temp_min != null
+        ? weather.temp_min + '°C'
+        : '--°C';
+
+    document.getElementById('weatherRain').textContent =
+      weather.rain_probability != null
+        ? weather.rain_probability + '%'
+        : '--%';
+
+    document.getElementById('weatherDescription').textContent =
+      '天氣資料已載入';
+
+    document.getElementById('weatherStatus').textContent =
+      '資料正常';
+
+    document.getElementById('weatherUpdated').textContent =
+      weather.updated_at
+        ? new Date(weather.updated_at).toLocaleString('zh-TW')
+        : '已更新';
+
+  } catch (error) {
+
+    console.error('天氣資料讀取失敗：', error);
+
+    document.getElementById('weatherStatus').textContent =
+      '讀取失敗';
+
+    console.error(error);
+  }
+}
+
+
+/* 啟動天氣 */
+
+loadWeather();
 </script>
 
 
