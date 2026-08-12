@@ -2864,91 +2864,176 @@ loadWeather();
      ===================================================== */
 
   function selectWeatherLocation(
-    place
-  ) {
+  place
+) {
 
-    var address =
-      place.address ||
-      {};
+  var address =
+    place.address ||
+    {};
 
+  var cityName =
+    address.city ||
+    address.town ||
+    address.municipality ||
+    address.county ||
+    address.state ||
+    place.name ||
+    place.display_name;
 
-    var cityName =
-      address.city ||
-      address.town ||
-      address.municipality ||
-      address.county ||
-      address.state ||
-      place.name ||
-      place.display_name;
+  var latitude =
+    parseFloat(place.lat);
 
-
-    var locationElement =
-      document.getElementById(
-        'weatherLocation'
-      );
-
-
-    if (locationElement) {
-
-      locationElement.textContent =
-        cityName;
-
-    }
+  var longitude =
+    parseFloat(place.lon);
 
 
-    /* 關閉選擇面板 */
+  /* =====================================================
+     更新目前顯示的城市
+  ===================================================== */
 
-    if (locationPanel) {
-
-      locationPanel.classList.remove(
-        'show'
-      );
-
-    }
-
-
-    if (locationSearch) {
-
-      locationSearch.value =
-        '';
-
-    }
-
-
-    if (locationResults) {
-
-      locationResults.innerHTML =
-        '<div class="weather-location-empty">' +
-        '已選擇：' +
-        cityName +
-        '</div>';
-
-    }
-
-
-    console.log(
-      '選擇天氣地點：',
-      {
-        name:
-          cityName,
-
-        latitude:
-          place.lat,
-
-        longitude:
-          place.lon
-      }
+  var locationElement =
+    document.getElementById(
+      'weatherLocation'
     );
 
+  if (locationElement) {
 
-    /*
-     * 下一階段：
-     * 使用 latitude / longitude
-     * 取得這個城市的即時天氣。
-     */
+    locationElement.textContent =
+      cityName;
 
   }
 
+
+  /* =====================================================
+     關閉地點選擇器
+  ===================================================== */
+
+  if (locationPanel) {
+
+    locationPanel.classList.remove(
+      'show'
+    );
+
+  }
+
+  if (locationSearch) {
+
+    locationSearch.value =
+      '';
+
+  }
+
+
+  /* =====================================================
+     顯示載入狀態
+  ===================================================== */
+
+  var statusElement =
+    document.getElementById(
+      'weatherStatus'
+    );
+
+  var descriptionElement =
+    document.getElementById(
+      'weatherDescription'
+    );
+
+  var updatedElement =
+    document.getElementById(
+      'weatherUpdated'
+    );
+
+  if (statusElement) {
+
+    statusElement.textContent =
+      '載入天氣中…';
+
+  }
+
+  if (descriptionElement) {
+
+    descriptionElement.textContent =
+      '正在取得 ' +
+      cityName +
+      ' 的天氣資料…';
+
+  }
+
+  if (updatedElement) {
+
+    updatedElement.textContent =
+      '更新中…';
+
+  }
+
+
+  /* =====================================================
+     清除搜尋結果
+  ===================================================== */
+
+  if (locationResults) {
+
+    locationResults.innerHTML =
+      '<div class="weather-location-empty">' +
+      '已選擇：' +
+      cityName +
+      '</div>';
+
+  }
+
+
+  /* =====================================================
+     檢查經緯度
+  ===================================================== */
+
+  if (
+    !Number.isFinite(latitude) ||
+    !Number.isFinite(longitude)
+  ) {
+
+    if (statusElement) {
+
+      statusElement.textContent =
+        '地點資料錯誤';
+
+    }
+
+    console.error(
+      '天氣地點沒有有效經緯度：',
+      place
+    );
+
+    return;
+
+  }
+
+
+  console.log(
+    '選擇天氣地點：',
+    {
+      name:
+        cityName,
+
+      latitude:
+        latitude,
+
+      longitude:
+        longitude
+    }
+  );
+
+
+  /* =====================================================
+     取得這個城市的天氣
+  ===================================================== */
+
+  loadWeatherByLocation(
+    cityName,
+    latitude,
+    longitude
+  );
+
+}
 })();
 
 </script>
