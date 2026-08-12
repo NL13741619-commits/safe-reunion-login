@@ -1,6 +1,8 @@
 <!DOCTYPE html>
 <html lang="zh-TW">
+
 <head>
+
 <meta charset="UTF-8">
 
 <meta
@@ -24,6 +26,7 @@
 }
 
 body {
+
   font-family:
     -apple-system,
     BlinkMacSystemFont,
@@ -32,6 +35,7 @@ body {
     sans-serif;
 
   background: #f5f5f5;
+
   color: #111;
 
   min-height: 100vh;
@@ -47,31 +51,39 @@ body {
 .header {
 
   background: #06C755;
+
   color: white;
 
   height: 58px;
 
-  padding: 0 14px;
+  padding: 0 10px;
 
   display: flex;
+
   align-items: center;
 
   position: sticky;
+
   top: 0;
 
   z-index: 100;
 }
 
-.home-btn {
+.home-btn,
+.header-btn {
 
   width: 38px;
+
   height: 38px;
 
   display: flex;
+
   align-items: center;
+
   justify-content: center;
 
   color: white;
+
   text-decoration: none;
 
   font-size: 21px;
@@ -81,7 +93,8 @@ body {
   flex-shrink: 0;
 }
 
-.home-btn:active {
+.home-btn:active,
+.header-btn:active {
 
   background:
     rgba(255,255,255,0.18);
@@ -96,17 +109,13 @@ body {
   text-align: center;
 
   font-size: 17px;
+
   font-weight: 700;
-}
-
-.header-right {
-
-  width: 38px;
 }
 
 
 /* =====================================================
-   頁面說明
+   說明
 ===================================================== */
 
 .page-intro {
@@ -126,6 +135,7 @@ body {
 .page-intro-title {
 
   font-size: 16px;
+
   font-weight: 700;
 
   margin-bottom: 5px;
@@ -138,6 +148,60 @@ body {
   line-height: 1.5;
 
   color: #777;
+}
+
+
+/* =====================================================
+   日期篩選
+===================================================== */
+
+.date-row {
+
+  display: flex;
+
+  gap: 8px;
+
+  padding: 0 12px 10px;
+
+  overflow-x: auto;
+
+  scrollbar-width: none;
+}
+
+.date-row::-webkit-scrollbar {
+
+  display: none;
+}
+
+.date-btn {
+
+  flex-shrink: 0;
+
+  border: none;
+
+  background: white;
+
+  color: #666;
+
+  border-radius: 20px;
+
+  padding: 9px 15px;
+
+  font-size: 13px;
+
+  font-weight: 600;
+
+  box-shadow:
+    0 1px 5px rgba(0,0,0,.05);
+
+  cursor: pointer;
+}
+
+.date-btn.active {
+
+  background: #06C755;
+
+  color: white;
 }
 
 
@@ -159,6 +223,7 @@ body {
 }
 
 .filter-row::-webkit-scrollbar {
+
   display: none;
 }
 
@@ -189,12 +254,13 @@ body {
 .filter-btn.active {
 
   background: #06C755;
+
   color: white;
 }
 
 
 /* =====================================================
-   更新狀態
+   狀態
 ===================================================== */
 
 .status-card {
@@ -233,6 +299,7 @@ body {
 .status-dot {
 
   width: 8px;
+
   height: 8px;
 
   border-radius: 50%;
@@ -335,6 +402,7 @@ body {
 .disaster-icon {
 
   width: 44px;
+
   height: 44px;
 
   border-radius: 12px;
@@ -344,6 +412,7 @@ body {
   display: flex;
 
   align-items: center;
+
   justify-content: center;
 
   font-size: 24px;
@@ -397,24 +466,28 @@ body {
 .severity.critical {
 
   background: #ffebee;
+
   color: #c62828;
 }
 
 .severity.high {
 
   background: #fff3e0;
+
   color: #ef6c00;
 }
 
 .severity.medium {
 
   background: #fffde7;
+
   color: #827717;
 }
 
 .severity.low {
 
   background: #e8f5e9;
+
   color: #2e7d32;
 }
 
@@ -528,6 +601,30 @@ body {
 
 
 /* =====================================================
+   日期標籤
+===================================================== */
+
+.period-badge {
+
+  display: inline-block;
+
+  margin-top: 7px;
+
+  padding: 4px 8px;
+
+  border-radius: 6px;
+
+  background: #f1f8f4;
+
+  color: #168c43;
+
+  font-size: 10px;
+
+  font-weight: 700;
+}
+
+
+/* =====================================================
    空資料
 ===================================================== */
 
@@ -595,7 +692,9 @@ body {
   position: fixed;
 
   left: 0;
+
   right: 0;
+
   bottom: 0;
 
   height: 58px;
@@ -678,10 +777,12 @@ body {
 }
 
 .voice-hint.show {
+
   display: block;
 }
 
 </style>
+
 </head>
 
 
@@ -703,16 +804,16 @@ body {
   </a>
 
   <div class="header-title">
-  災害資訊
-</div>
+    災害資訊
+  </div>
 
-<a
-  class="header-btn"
-  href="admin-disaster.html"
-  aria-label="災害管理"
->
-  ⚙️
-</a>
+  <a
+    class="header-btn"
+    href="admin-disaster.html"
+    aria-label="災害管理"
+  >
+    ⚙️
+  </a>
 
 </div>
 
@@ -724,20 +825,71 @@ body {
 <div class="page-intro">
 
   <div class="page-intro-title">
-    🌏 即時災害資訊
+    🌏 災害資訊資料庫
   </div>
 
   <div class="page-intro-text">
-    這裡專門顯示颱風、地震、豪雨及其他災害資訊。
-    資料由安全團聚後台的 disaster_data 提供，
-    與首頁的一般天氣資料分開管理。
+    顯示安全團聚災害資料庫中的即時與歷史災害資訊。
+    可查看今天、昨天、前天及更早的歷史資料。
+    資料與一般天氣資料分開管理。
   </div>
 
 </div>
 
 
 <!-- =====================================================
-     篩選
+     日期篩選
+===================================================== -->
+
+<div class="date-row">
+
+  <button
+    class="date-btn active"
+    data-period="active"
+  >
+    🚨 即時
+  </button>
+
+  <button
+    class="date-btn"
+    data-period="today"
+  >
+    📅 今天
+  </button>
+
+  <button
+    class="date-btn"
+    data-period="yesterday"
+  >
+    📅 昨天
+  </button>
+
+  <button
+    class="date-btn"
+    data-period="beforeYesterday"
+  >
+    📅 前天
+  </button>
+
+  <button
+    class="date-btn"
+    data-period="history"
+  >
+    🗂️ 歷史
+  </button>
+
+  <button
+    class="date-btn"
+    data-period="all"
+  >
+    📚 全部
+  </button>
+
+</div>
+
+
+<!-- =====================================================
+     災害類型
 ===================================================== -->
 
 <div class="filter-row">
@@ -830,7 +982,7 @@ body {
   class="voice-hint"
   id="voiceHint"
 >
-  🎙️ 可以說：「颱風」、「地震」、「豪雨」、「全部」
+  🎙️ 可說：「即時」、「今天」、「昨天」、「前天」、「歷史」、「全部」、「颱風」、「地震」、「豪雨」
 </div>
 
 
@@ -916,6 +1068,8 @@ var allDisasters = [];
 
 var currentFilter = 'all';
 
+var currentPeriod = 'active';
+
 
 /* =====================================================
    DOM
@@ -939,6 +1093,11 @@ var statusDot =
 var refreshBtn =
   document.getElementById(
     'refreshBtn'
+  );
+
+var voiceHint =
+  document.getElementById(
+    'voiceHint'
   );
 
 
@@ -1004,13 +1163,15 @@ function getDisasterIcon(type) {
 
 
 /* =====================================================
-   災害類型名稱
+   災害類型
 ===================================================== */
 
 function getDisasterTypeName(type) {
 
   if (!type) {
-    return '其他災害';
+
+    return '其他';
+
   }
 
   var value =
@@ -1100,7 +1261,9 @@ function getSeverityClass(severity) {
 function getSeverityText(severity) {
 
   if (!severity) {
+
     return '一般';
+
   }
 
   return String(severity);
@@ -1115,7 +1278,9 @@ function getSeverityText(severity) {
 function formatDate(value) {
 
   if (!value) {
+
     return '--';
+
   }
 
   try {
@@ -1134,9 +1299,142 @@ function formatDate(value) {
 
   } catch (e) {
 
-    return value;
+    return String(value);
 
   }
+
+}
+
+
+/* =====================================================
+   日期開始
+===================================================== */
+
+function startOfDay(date) {
+
+  var d =
+    new Date(date);
+
+  d.setHours(
+    0,
+    0,
+    0,
+    0
+  );
+
+  return d;
+
+}
+
+
+/* =====================================================
+   判斷資料是否屬於日期
+===================================================== */
+
+function itemMatchesDate(item, period) {
+
+  var now =
+    new Date();
+
+  var today =
+    startOfDay(now);
+
+  var yesterday =
+    new Date(today);
+
+  yesterday.setDate(
+    yesterday.getDate() - 1
+  );
+
+  var beforeYesterday =
+    new Date(today);
+
+  beforeYesterday.setDate(
+    beforeYesterday.getDate() - 2
+  );
+
+  var itemStart =
+    item.start_at
+      ? new Date(item.start_at)
+      : null;
+
+  var itemEnd =
+    item.end_at
+      ? new Date(item.end_at)
+      : null;
+
+
+  if (period === 'all') {
+
+    return true;
+
+  }
+
+
+  if (!itemStart) {
+
+    return false;
+
+  }
+
+
+  if (period === 'today') {
+
+    return (
+      itemStart >= today &&
+      itemStart < new Date(
+        today.getTime() +
+        24 * 60 * 60 * 1000
+      )
+    );
+
+  }
+
+
+  if (period === 'yesterday') {
+
+    return (
+      itemStart >= yesterday &&
+      itemStart < today
+    );
+
+  }
+
+
+  if (period === 'beforeYesterday') {
+
+    return (
+      itemStart >= beforeYesterday &&
+      itemStart < yesterday
+    );
+
+  }
+
+
+  if (period === 'history') {
+
+    return (
+      itemStart < today
+    );
+
+  }
+
+
+  if (period === 'active') {
+
+    var active =
+      itemStart <= now &&
+      (
+        !itemEnd ||
+        itemEnd >= now
+      );
+
+    return active;
+
+  }
+
+
+  return true;
 
 }
 
@@ -1163,6 +1461,72 @@ function formatNumber(value, unit) {
 
 
 /* =====================================================
+   日期區間文字
+===================================================== */
+
+function getPeriodText(item) {
+
+  if (!item.start_at) {
+
+    return '';
+
+  }
+
+  var start =
+    new Date(item.start_at);
+
+  var today =
+    startOfDay(
+      new Date()
+    );
+
+  var yesterday =
+    new Date(today);
+
+  yesterday.setDate(
+    yesterday.getDate() - 1
+  );
+
+  var beforeYesterday =
+    new Date(today);
+
+  beforeYesterday.setDate(
+    beforeYesterday.getDate() - 2
+  );
+
+
+  if (
+    start >= today
+  ) {
+
+    return '今天';
+
+  }
+
+  if (
+    start >= yesterday &&
+    start < today
+  ) {
+
+    return '昨天';
+
+  }
+
+  if (
+    start >= beforeYesterday &&
+    start < yesterday
+  ) {
+
+    return '前天';
+
+  }
+
+  return '歷史';
+
+}
+
+
+/* =====================================================
    災害卡片
 ===================================================== */
 
@@ -1183,9 +1547,14 @@ function createDisasterCard(item) {
       item.disaster_type
     );
 
+  var periodText =
+    getPeriodText(item);
+
 
   var card =
-    document.createElement('div');
+    document.createElement(
+      'div'
+    );
 
   card.className =
     'disaster-card ' +
@@ -1222,6 +1591,18 @@ function createDisasterCard(item) {
       '災害通知'
     ) +
     '</div>';
+
+
+  if (periodText) {
+
+    html +=
+      '<span class="period-badge">' +
+      escapeHtml(
+        periodText
+      ) +
+      '</span>';
+
+  }
 
 
   html +=
@@ -1304,8 +1685,10 @@ function createDisasterCard(item) {
   }
 
 
-  if (item.pressure !== null &&
-      item.pressure !== undefined) {
+  if (
+    item.pressure !== null &&
+    item.pressure !== undefined
+  ) {
 
     html +=
       infoItem(
@@ -1319,8 +1702,10 @@ function createDisasterCard(item) {
   }
 
 
-  if (item.max_wind_speed !== null &&
-      item.max_wind_speed !== undefined) {
+  if (
+    item.max_wind_speed !== null &&
+    item.max_wind_speed !== undefined
+  ) {
 
     html +=
       infoItem(
@@ -1345,8 +1730,10 @@ function createDisasterCard(item) {
   }
 
 
-  if (item.movement_speed !== null &&
-      item.movement_speed !== undefined) {
+  if (
+    item.movement_speed !== null &&
+    item.movement_speed !== undefined
+  ) {
 
     html +=
       infoItem(
@@ -1357,8 +1744,10 @@ function createDisasterCard(item) {
   }
 
 
-  if (item.magnitude !== null &&
-      item.magnitude !== undefined) {
+  if (
+    item.magnitude !== null &&
+    item.magnitude !== undefined
+  ) {
 
     html +=
       infoItem(
@@ -1369,8 +1758,10 @@ function createDisasterCard(item) {
   }
 
 
-  if (item.depth !== null &&
-      item.depth !== undefined) {
+  if (
+    item.depth !== null &&
+    item.depth !== undefined
+  ) {
 
     html +=
       infoItem(
@@ -1403,8 +1794,10 @@ function createDisasterCard(item) {
   }
 
 
-  if (item.rainfall !== null &&
-      item.rainfall !== undefined) {
+  if (
+    item.rainfall !== null &&
+    item.rainfall !== undefined
+  ) {
 
     html +=
       infoItem(
@@ -1415,8 +1808,10 @@ function createDisasterCard(item) {
   }
 
 
-  if (item.rain_probability !== null &&
-      item.rain_probability !== undefined) {
+  if (
+    item.rain_probability !== null &&
+    item.rain_probability !== undefined
+  ) {
 
     html +=
       infoItem(
@@ -1427,15 +1822,21 @@ function createDisasterCard(item) {
   }
 
 
-  if (item.latitude !== null &&
-      item.longitude !== null) {
+  if (
+    item.latitude !== null &&
+    item.longitude !== null
+  ) {
 
     html +=
       infoItem(
         '座標',
-        Number(item.latitude).toFixed(4) +
+        Number(
+          item.latitude
+        ).toFixed(4) +
         ', ' +
-        Number(item.longitude).toFixed(4)
+        Number(
+          item.longitude
+        ).toFixed(4)
       );
 
   }
@@ -1452,14 +1853,18 @@ function createDisasterCard(item) {
   html +=
     infoItem(
       '開始時間',
-      formatDate(item.start_at)
+      formatDate(
+        item.start_at
+      )
     );
 
 
   html +=
     infoItem(
       '結束時間',
-      formatDate(item.end_at)
+      formatDate(
+        item.end_at
+      )
     );
 
 
@@ -1518,6 +1923,7 @@ function createDisasterCard(item) {
 function infoItem(label, value) {
 
   return (
+
     '<div class="info-item">' +
 
       '<div class="info-label">' +
@@ -1534,6 +1940,7 @@ function infoItem(label, value) {
       '</div>' +
 
     '</div>'
+
   );
 
 }
@@ -1545,12 +1952,37 @@ function infoItem(label, value) {
 
 function escapeHtml(value) {
 
-  return String(value || '')
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#039;');
+  return String(
+    value === null ||
+    value === undefined
+      ? ''
+      : value
+  )
+
+    .replace(
+      /&/g,
+      '&amp;'
+    )
+
+    .replace(
+      /</g,
+      '&lt;'
+    )
+
+    .replace(
+      />/g,
+      '&gt;'
+    )
+
+    .replace(
+      /"/g,
+      '&quot;'
+    )
+
+    .replace(
+      /'/g,
+      '&#039;'
+    );
 
 }
 
@@ -1569,7 +2001,9 @@ function escapeAttribute(value) {
 function renderDisasters() {
 
   if (!list) {
+
     return;
+
   }
 
 
@@ -1579,6 +2013,20 @@ function renderDisasters() {
   var filtered =
     allDisasters.filter(
       function(item) {
+
+        var periodOK =
+          itemMatchesDate(
+            item,
+            currentPeriod
+          );
+
+
+        if (!periodOK) {
+
+          return false;
+
+        }
+
 
         if (
           currentFilter ===
@@ -1603,19 +2051,35 @@ function renderDisasters() {
 
   if (!filtered.length) {
 
+    var periodName =
+      getPeriodName(
+        currentPeriod
+      );
+
+
     list.innerHTML =
+
       '<div class="empty-state">' +
 
         '<div class="empty-icon">' +
-          '✅' +
+          '📭' +
         '</div>' +
 
         '<div class="empty-title">' +
-          '目前沒有災害資料' +
+          '目前沒有資料' +
         '</div>' +
 
         '<div class="empty-text">' +
-          '目前後台沒有符合條件的有效災害資訊。' +
+
+          escapeHtml(
+            periodName +
+            '沒有符合目前篩選條件的災害資料。'
+          ) +
+
+          '<br><br>' +
+
+          '如果你確定資料庫有資料，請確認 Supabase 的 RLS 是否允許讀取。' +
+
         '</div>' +
 
       '</div>';
@@ -1629,11 +2093,57 @@ function renderDisasters() {
     function(item) {
 
       list.appendChild(
-        createDisasterCard(item)
+        createDisasterCard(
+          item
+        )
       );
 
     }
   );
+
+}
+
+
+/* =====================================================
+   日期名稱
+===================================================== */
+
+function getPeriodName(period) {
+
+  if (period === 'active') {
+
+    return '即時';
+
+  }
+
+  if (period === 'today') {
+
+    return '今天';
+
+  }
+
+  if (period === 'yesterday') {
+
+    return '昨天';
+
+  }
+
+  if (
+    period ===
+    'beforeYesterday'
+  ) {
+
+    return '前天';
+
+  }
+
+  if (period === 'history') {
+
+    return '歷史';
+
+  }
+
+  return '全部';
 
 }
 
@@ -1645,7 +2155,9 @@ function renderDisasters() {
 async function loadDisasters() {
 
   if (!list) {
+
     return;
+
   }
 
 
@@ -1656,29 +2168,42 @@ async function loadDisasters() {
 
 
   list.innerHTML =
+
     '<div class="loading">' +
+
     '正在讀取災害資料…' +
+
     '</div>';
 
 
   try {
 
-    var now =
-      new Date().toISOString();
-
+    /*
+     * 重要：
+     *
+     * 這裡不再：
+     *
+     * .eq('is_active', true)
+     *
+     * 也不再：
+     *
+     * .or(
+     *   'end_at.is.null,end_at.gte.' + now
+     * )
+     *
+     * 因為那兩個條件會把歷史資料排除。
+     */
 
     var result =
+
       await supabaseClient
-        .from('disaster_data')
+
+        .from(
+          'disaster_data'
+        )
+
         .select('*')
-        .eq(
-          'is_active',
-          true
-        )
-        .or(
-          'end_at.is.null,end_at.gte.' +
-          now
-        )
+
         .order(
           'start_at',
           {
@@ -1703,11 +2228,9 @@ async function loadDisasters() {
 
     setStatus(
       'ok',
-      allDisasters.length
-        ? '已更新 ' +
-          allDisasters.length +
-          ' 筆災害資料'
-        : '目前無有效災害'
+      '已讀取 ' +
+      allDisasters.length +
+      ' 筆災害資料'
     );
 
 
@@ -1723,6 +2246,7 @@ async function loadDisasters() {
 
 
     list.innerHTML =
+
       '<div class="empty-state">' +
 
         '<div class="empty-icon">' +
@@ -1734,12 +2258,16 @@ async function loadDisasters() {
         '</div>' +
 
         '<div class="empty-text">' +
+
           '請確認 disaster_data 的 RLS 權限設定。' +
+
           '<br><br>' +
+
           escapeHtml(
             error.message ||
             '未知錯誤'
           ) +
+
         '</div>' +
 
       '</div>';
@@ -1759,7 +2287,10 @@ async function loadDisasters() {
    狀態
 ===================================================== */
 
-function setStatus(type, text) {
+function setStatus(
+  type,
+  text
+) {
 
   if (statusText) {
 
@@ -1777,7 +2308,10 @@ function setStatus(type, text) {
     );
 
 
-    if (type === 'loading') {
+    if (
+      type ===
+      'loading'
+    ) {
 
       statusDot.classList.add(
         'loading'
@@ -1786,7 +2320,10 @@ function setStatus(type, text) {
     }
 
 
-    if (type === 'error') {
+    if (
+      type ===
+      'error'
+    ) {
 
       statusDot.classList.add(
         'error'
@@ -1800,7 +2337,56 @@ function setStatus(type, text) {
 
 
 /* =====================================================
-   篩選按鈕
+   日期篩選按鈕
+===================================================== */
+
+document
+  .querySelectorAll(
+    '.date-btn'
+  )
+  .forEach(
+    function(button) {
+
+      button.addEventListener(
+        'click',
+        function() {
+
+          document
+            .querySelectorAll(
+              '.date-btn'
+            )
+            .forEach(
+              function(item) {
+
+                item.classList.remove(
+                  'active'
+                );
+
+              }
+            );
+
+
+          button.classList.add(
+            'active'
+          );
+
+
+          currentPeriod =
+            button.dataset.period ||
+            'active';
+
+
+          renderDisasters();
+
+        }
+      );
+
+    }
+  );
+
+
+/* =====================================================
+   災害類型篩選
 ===================================================== */
 
 document
@@ -1867,24 +2453,22 @@ if (refreshBtn) {
 
 
 /* =====================================================
-   語音操作
+   語音提示
 ===================================================== */
-
-var voiceHint =
-  document.getElementById(
-    'voiceHint'
-  );
-
 
 function showVoiceHint() {
 
   if (!voiceHint) {
+
     return;
+
   }
+
 
   voiceHint.classList.add(
     'show'
   );
+
 
   setTimeout(
     function() {
@@ -1894,71 +2478,45 @@ function showVoiceHint() {
       );
 
     },
-    3500
+    4500
   );
 
 }
 
 
-function handleVoiceCommand(text) {
+/* =====================================================
+   更新日期按鈕
+===================================================== */
 
-  var command =
-    String(text || '')
-      .trim()
-      .toLowerCase();
+function updatePeriodButtons() {
+
+  document
+    .querySelectorAll(
+      '.date-btn'
+    )
+    .forEach(
+      function(button) {
+
+        button.classList.toggle(
+          'active',
+          (
+            button.dataset.period ||
+            'active'
+          ) ===
+          currentPeriod
+        );
+
+      }
+    );
+
+}
 
 
-  if (
-    command.includes('颱風')
-  ) {
+/* =====================================================
+   更新災害類型按鈕
+===================================================== */
 
-    currentFilter =
-      '颱風';
-
-  } else if (
-    command.includes('地震')
-  ) {
-
-    currentFilter =
-      '地震';
-
-  } else if (
-    command.includes('豪雨') ||
-    command.includes('大雨')
-  ) {
-
-    currentFilter =
-      '豪雨';
-
-  } else if (
-    command.includes('其他')
-  ) {
-
-    currentFilter =
-      '其他';
-
-  } else if (
-    command.includes('全部')
-  ) {
-
-    currentFilter =
-      'all';
-
-  } else if (
-    command.includes('更新') ||
-    command.includes('重新整理')
-  ) {
-
-    loadDisasters();
-
-    return;
-
-  } else {
-
-    return;
-
-  }
-
+function updateTypeButtons() {
 
   document
     .querySelectorAll(
@@ -1979,6 +2537,156 @@ function handleVoiceCommand(text) {
       }
     );
 
+}
+
+
+/* =====================================================
+   語音控制
+===================================================== */
+
+function handleVoiceCommand(text) {
+
+  var command =
+    String(text || '')
+      .trim()
+      .toLowerCase();
+
+
+  /*
+   * 日期
+   */
+
+  if (
+    command.includes('前天')
+  ) {
+
+    currentPeriod =
+      'beforeYesterday';
+
+    currentFilter =
+      'all';
+
+  }
+
+  else if (
+    command.includes('昨天')
+  ) {
+
+    currentPeriod =
+      'yesterday';
+
+    currentFilter =
+      'all';
+
+  }
+
+  else if (
+    command.includes('今天')
+  ) {
+
+    currentPeriod =
+      'today';
+
+    currentFilter =
+      'all';
+
+  }
+
+  else if (
+    command.includes('歷史') ||
+    command.includes('历史')
+  ) {
+
+    currentPeriod =
+      'history';
+
+    currentFilter =
+      'all';
+
+  }
+
+  else if (
+    command.includes('全部')
+  ) {
+
+    currentPeriod =
+      'all';
+
+  }
+
+  else if (
+    command.includes('即時') ||
+    command.includes('現在')
+  ) {
+
+    currentPeriod =
+      'active';
+
+  }
+
+
+  /*
+   * 災害類型
+   */
+
+  if (
+    command.includes('颱風')
+  ) {
+
+    currentFilter =
+      '颱風';
+
+  }
+
+  else if (
+    command.includes('地震')
+  ) {
+
+    currentFilter =
+      '地震';
+
+  }
+
+  else if (
+    command.includes('豪雨') ||
+    command.includes('大雨')
+  ) {
+
+    currentFilter =
+      '豪雨';
+
+  }
+
+  else if (
+    command.includes('其他')
+  ) {
+
+    currentFilter =
+      '其他';
+
+  }
+
+
+  /*
+   * 更新
+   */
+
+  if (
+    command.includes('更新') ||
+    command.includes('重新整理') ||
+    command.includes('刷新')
+  ) {
+
+    loadDisasters();
+
+    return;
+
+  }
+
+
+  updatePeriodButtons();
+
+  updateTypeButtons();
 
   renderDisasters();
 
@@ -1990,17 +2698,21 @@ function handleVoiceCommand(text) {
 ===================================================== */
 
 if (
-  'webkitSpeechRecognition' in window
+  'webkitSpeechRecognition'
+  in window
 ) {
 
   var recognition =
     new webkitSpeechRecognition();
 
+
   recognition.lang =
     'zh-TW';
 
+
   recognition.continuous =
     false;
+
 
   recognition.interimResults =
     false;
@@ -2015,7 +2727,9 @@ if (
 
         recognition.start();
 
-      } catch (e) {}
+      }
+
+      catch (e) {}
 
     };
 
@@ -2024,10 +2738,30 @@ if (
     function(event) {
 
       var transcript =
-        event.results[0][0].transcript;
+        event
+          .results[0][0]
+          .transcript;
+
+
+      console.log(
+        '災害語音：',
+        transcript
+      );
+
 
       handleVoiceCommand(
         transcript
+      );
+
+    };
+
+
+  recognition.onerror =
+    function(event) {
+
+      console.log(
+        '語音辨識錯誤：',
+        event.error
       );
 
     };
@@ -2036,13 +2770,16 @@ if (
 
 
 /* =====================================================
-   提示語音
+   語音播放
 ===================================================== */
 
 function speak(text) {
 
   if (
-    !('speechSynthesis' in window)
+    !(
+      'speechSynthesis'
+      in window
+    )
   ) {
 
     return;
@@ -2054,22 +2791,28 @@ function speak(text) {
 
     window.speechSynthesis.cancel();
 
+
     var utterance =
       new SpeechSynthesisUtterance(
         text
       );
 
+
     utterance.lang =
       'zh-TW';
 
+
     utterance.rate =
       1;
+
 
     window.speechSynthesis.speak(
       utterance
     );
 
-  } catch (e) {}
+  }
+
+  catch (e) {}
 
 }
 
@@ -2114,4 +2857,5 @@ setTimeout(
 </script>
 
 </body>
+
 </html>
