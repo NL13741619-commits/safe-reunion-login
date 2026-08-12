@@ -1327,6 +1327,11 @@
 
     /* =====================================================
        取得目前使用者加入的群組
+       
+       ★ 已修正：
+       group_members → chat_groups
+       
+       不再使用 groups
     ====================================================== */
 
     async function loadMySOSGroups() {
@@ -1377,9 +1382,16 @@
       }
 
 
+      /*
+       * ★★★ 重要修正 ★★★
+       *
+       * 通訊錄 contacts.html 使用 chat_groups。
+       * SOS 也必須使用同一張表。
+       */
+
       const groupResult =
         await supabaseClient
-          .from("groups")
+          .from("chat_groups")
           .select("id,name")
           .in(
             "id",
@@ -1387,35 +1399,14 @@
           );
 
 
-      /*
-       * groups 查詢失敗時，
-       * 仍然保留 group_id。
-       */
-
       if (groupResult.error) {
 
-        console.warn(
-          "群組名稱讀取失敗：",
+        console.error(
+          "chat_groups 查詢失敗：",
           groupResult.error
         );
 
-
-        return groupIds.map(
-          function (groupId) {
-
-            return {
-
-              id:
-                groupId,
-
-              name:
-                "群組 " +
-                String(groupId).slice(0, 8)
-
-            };
-
-          }
-        );
+        throw groupResult.error;
 
       }
 
@@ -1438,6 +1429,10 @@
             );
 
 
+          /*
+           * ★ 不再顯示 UUID 前八碼
+           */
+
           return {
 
             id:
@@ -1446,9 +1441,8 @@
             name:
               group &&
               group.name
-                ? group.name
-                : "群組 " +
-                  String(groupId).slice(0, 8)
+                ? String(group.name)
+                : "群組"
 
           };
 
@@ -1465,11 +1459,15 @@
     async function openSOSSelector() {
 
       if (!sosGroupPanel) {
+
         return;
+
       }
 
 
-      sosGroupPanel.classList.add("show");
+      sosGroupPanel.classList.add(
+        "show"
+      );
 
 
       sosGroupSelect.innerHTML =
@@ -1478,6 +1476,14 @@
 
       btnConfirmSos.disabled =
         true;
+
+
+      currentGroupId =
+        null;
+
+
+      currentGroupName =
+        "";
 
 
       try {
@@ -1514,12 +1520,21 @@
           function (group) {
 
             const option =
-              document.createElement("option");
+              document.createElement(
+                "option"
+              );
 
 
             option.value =
               String(group.id);
 
+
+            /*
+             * ★★★ 這裡現在顯示 chat_groups.name
+             *
+             * 例如：
+             * 家人群
+             */
 
             option.textContent =
               group.name;
@@ -1670,6 +1685,14 @@
             "";
 
 
+          currentGroupId =
+            null;
+
+
+          currentGroupName =
+            "";
+
+
           btnConfirmSos.disabled =
             true;
 
@@ -1807,10 +1830,13 @@
 
 
     /* =====================================================
-       建立 SOS 內容
+       建立 SOS 文字內容
+       
+       ★ 已改名
+       避免與 sendSOSMessage 重複
     ====================================================== */
 
-    function createSOSMessage(
+    function createSOSContent(
       displayName
     ) {
 
@@ -1888,9 +1914,12 @@
 
     /* =====================================================
        寫入聊天 messages
+       
+       ★ 已改名
+       避免與 createSOSContent 重複
     ====================================================== */
 
-    async function createSOSMessage(
+    async function sendSOSMessage(
       user,
       displayName,
       message
@@ -1962,6 +1991,32 @@
         return;
 
       }
+
+
+      /*
+       * ★ 確認當下重新取得群組名稱
+       */
+
+      const selectedGroup =
+        currentGroups.find(
+          function (group) {
+
+            return String(group.id) ===
+              String(selectedGroupId);
+
+          }
+        );
+
+
+      currentGroupId =
+        String(selectedGroupId);
+
+
+      currentGroupName =
+        selectedGroup &&
+        selectedGroup.name
+          ? selectedGroup.name
+          : "群組";
 
 
       sosActive =
@@ -2047,10 +2102,12 @@
 
         /* ---------------------------------------------
            SOS 訊息
+           
+           ★ 使用新的 createSOSContent()
         --------------------------------------------- */
 
         const message =
-          createSOSMessage(
+          createSOSContent(
             displayName
           );
 
@@ -2068,9 +2125,11 @@
 
         /* ---------------------------------------------
            發送到指定群組聊天
+           
+           ★ 使用新的 sendSOSMessage()
         --------------------------------------------- */
 
-        await createSOSMessage(
+        await sendSOSMessage(
           user,
           displayName,
           message
@@ -2080,12 +2139,6 @@
         /* ---------------------------------------------
            成功
         --------------------------------------------- */
-
-        currentGroupId =
-          String(
-            selectedGroupId
-          );
-
 
         sosActive =
           true;
@@ -2344,7 +2397,10 @@
 
             } catch (error) {
 
-              /* 使用者取消分享，不顯示錯誤 */
+              /*
+               * 使用者取消分享，
+               * 不顯示錯誤。
+               */
 
             }
 
