@@ -558,7 +558,6 @@
 
   <div class="content">
 
-      <div class="content">
 
     <!-- =====================================================
          天氣
@@ -704,10 +703,7 @@
     </div>
 
 
-    <!-- =====================================================
-         SOS
-    ====================================================== -->
-    <!-- =====================================================
+        <!-- =====================================================
          SOS
     ====================================================== -->
 
@@ -1077,330 +1073,499 @@
   checkAdminButton();
 
 
-  /* =========================================================
-     警訊
-  ========================================================= */
+ /* =========================================================
+   動態警訊
+   從 Supabase alerts 資料表自動讀取
+========================================================= */
 
-  var audioCtx = null;
-  var oscillator = null;
-  var gainNode = null;
-  var isPlaying = false;
-  var stopTimer = null;
-  var sweepTimer = null;
-
-  var ALERT_ID =
-    'alert-20260807';
+var audioCtx = null;
+var oscillator = null;
+var gainNode = null;
+var isPlaying = false;
+var stopTimer = null;
+var sweepTimer = null;
 
 
-  function closeAlert() {
+/* =========================================================
+   停止警笛
+========================================================= */
+
+function stopSiren() {
+
+  if (stopTimer) {
+    clearTimeout(stopTimer);
+    stopTimer = null;
+  }
+
+  if (sweepTimer) {
+    clearInterval(sweepTimer);
+    sweepTimer = null;
+  }
+
+  if (oscillator) {
+
+    try {
+      oscillator.stop();
+    } catch (e) {}
+
+    oscillator = null;
+  }
+
+  isPlaying = false;
+
+  var btn =
+    document.getElementById('btnSiren');
+
+  if (btn) {
+    btn.textContent = '▶ 播放警笛';
+  }
+}
+
+
+/* =========================================================
+   播放警笛
+========================================================= */
+
+function playSiren() {
+
+  if (isPlaying) {
+    stopSiren();
+    return;
+  }
+
+  try {
+
+    audioCtx =
+      new (
+        window.AudioContext ||
+        window.webkitAudioContext
+      )();
+
+  } catch (e) {
+
+    alert('此裝置不支援網頁音效');
+    return;
+  }
+
+
+  function startTone() {
+
+    isPlaying = true;
+
+    var btn =
+      document.getElementById('btnSiren');
+
+    if (btn) {
+      btn.textContent = '■ 停止警笛';
+    }
+
+
+    oscillator =
+      audioCtx.createOscillator();
+
+    gainNode =
+      audioCtx.createGain();
+
+
+    oscillator.type =
+      'sawtooth';
+
+
+    gainNode.gain.setValueAtTime(
+      0.12,
+      audioCtx.currentTime
+    );
+
+
+    oscillator.connect(
+      gainNode
+    );
+
+    gainNode.connect(
+      audioCtx.destination
+    );
+
+
+    var t0 =
+      audioCtx.currentTime;
+
+
+    oscillator.frequency.setValueAtTime(
+      800,
+      t0
+    );
+
+    oscillator.frequency.linearRampToValueAtTime(
+      1200,
+      t0 + 0.5
+    );
+
+    oscillator.frequency.linearRampToValueAtTime(
+      800,
+      t0 + 1
+    );
+
+
+    oscillator.start();
+
+
+    var phase = 0;
+
+
+    sweepTimer =
+      setInterval(
+        function () {
+
+          if (
+            !oscillator ||
+            !audioCtx
+          ) {
+            return;
+          }
+
+
+          phase += 1;
+
+
+          var now =
+            audioCtx.currentTime;
+
+
+          try {
+
+            if (
+              phase % 2 === 1
+            ) {
+
+              oscillator.frequency.cancelScheduledValues(
+                now
+              );
+
+              oscillator.frequency.setValueAtTime(
+                800,
+                now
+              );
+
+              oscillator.frequency.linearRampToValueAtTime(
+                1200,
+                now + 0.5
+              );
+
+            } else {
+
+              oscillator.frequency.cancelScheduledValues(
+                now
+              );
+
+              oscillator.frequency.setValueAtTime(
+                1200,
+                now
+              );
+
+              oscillator.frequency.linearRampToValueAtTime(
+                800,
+                now + 0.5
+              );
+
+            }
+
+          } catch (e) {}
+
+        },
+        500
+      );
+
+
+    stopTimer =
+      setTimeout(
+        function () {
+
+          stopSiren();
+
+        },
+        8000
+      );
+
+  }
+
+
+  if (
+    audioCtx.state ===
+    'suspended'
+  ) {
+
+    audioCtx
+      .resume()
+      .then(startTone)
+      .catch(
+        function () {
+
+          alert(
+            '請再點一次播放警笛（需解除靜音）'
+          );
+
+        }
+      );
+
+  } else {
+
+    startTone();
+
+  }
+
+}
+
+
+/* =========================================================
+   關閉警訊
+========================================================= */
+
+function closeAlert() {
+
+  var banner =
+    document.getElementById(
+      'alertBanner'
+    );
+
+  if (banner) {
+    banner.style.display = 'none';
+  }
+
+  stopSiren();
+}
+
+
+/* =========================================================
+   從 alerts 取得目前有效的警訊
+========================================================= */
+
+async function loadCurrentAlert() {
+
+  if (!supabase) {
+    console.warn(
+      'Supabase 尚未初始化，無法讀取 alerts'
+    );
+    return;
+  }
+
+
+  try {
+
+    var now =
+      new Date().toISOString();
+
+
+    var result =
+      await supabase
+        .from('alerts')
+        .select(
+          'id,title,message,region,start_at,end_at,detail_url,siren_enabled,is_active'
+        )
+        .eq(
+          'is_active',
+          true
+        )
+        .lte(
+          'start_at',
+          now
+        )
+        .gte(
+          'end_at',
+          now
+        )
+        .order(
+          'start_at',
+          {
+            ascending: false
+          }
+        )
+        .limit(1);
+
+
+    if (result.error) {
+
+      console.error(
+        '讀取 alerts 失敗：',
+        result.error
+      );
+
+      return;
+    }
+
+
+    var alerts =
+      result.data || [];
+
 
     var banner =
       document.getElementById(
         'alertBanner'
       );
 
-    if (banner) {
+
+    if (!banner) {
+      return;
+    }
+
+
+    /* 沒有有效警訊 */
+
+    if (!alerts.length) {
 
       banner.style.display =
         'none';
 
+      return;
     }
 
-    try {
 
-      localStorage.setItem(
-        ALERT_ID,
-        'seen'
+    var alertData =
+      alerts[0];
+
+
+    /* =====================================================
+       標題
+    ===================================================== */
+
+    var title =
+      document.getElementById(
+        'alertTitle'
       );
 
-    } catch (e) {}
+    if (title) {
 
-    stopSiren();
-
-  }
-
-
-  function stopSiren() {
-
-    if (stopTimer) {
-
-      clearTimeout(stopTimer);
-
-      stopTimer = null;
-
+      title.textContent =
+        alertData.title ||
+        '警訊通知';
     }
 
-    if (sweepTimer) {
 
-      clearInterval(sweepTimer);
+    /* =====================================================
+       內容
+    ===================================================== */
 
-      sweepTimer = null;
+    var text =
+      document.getElementById(
+        'alertText'
+      );
 
+    if (text) {
+
+      var regionText =
+        alertData.region
+          ? '【' +
+            alertData.region +
+            '】'
+          : '';
+
+
+      text.textContent =
+        regionText +
+        ' ' +
+        (
+          alertData.message ||
+          ''
+        );
     }
 
-    if (oscillator) {
 
-      try {
+    /* =====================================================
+       詳細資訊
+    ===================================================== */
 
-        oscillator.stop();
+    var link =
+      document.getElementById(
+        'alertLink'
+      );
 
-      } catch (e) {}
+    if (link) {
 
-      oscillator = null;
+      if (alertData.detail_url) {
 
+        link.href =
+          alertData.detail_url;
+
+        link.style.display =
+          'inline';
+
+      } else {
+
+        link.style.display =
+          'none';
+      }
     }
 
-    isPlaying = false;
 
-    var btn =
+    /* =====================================================
+       警笛
+    ===================================================== */
+
+    var sirenButton =
       document.getElementById(
         'btnSiren'
       );
 
-    if (btn) {
+    if (sirenButton) {
 
-      btn.textContent =
-        '▶ 播放警笛';
+      if (
+        alertData.siren_enabled
+      ) {
 
-    }
+        sirenButton.style.display =
+          'inline-block';
 
-  }
+        sirenButton.onclick =
+          playSiren;
 
+      } else {
 
-  function playSiren() {
-
-    if (isPlaying) {
-
-      stopSiren();
-
-      return;
-
-    }
-
-    try {
-
-      audioCtx =
-        new (
-          window.AudioContext ||
-          window.webkitAudioContext
-        )();
-
-    } catch (e) {
-
-      alert(
-        '此裝置不支援網頁音效'
-      );
-
-      return;
-
-    }
-
-
-    function startTone() {
-
-      isPlaying = true;
-
-      var btn =
-        document.getElementById(
-          'btnSiren'
-        );
-
-      if (btn) {
-
-        btn.textContent =
-          '■ 停止警笛';
-
-      }
-
-
-      oscillator =
-        audioCtx.createOscillator();
-
-      gainNode =
-        audioCtx.createGain();
-
-      oscillator.type =
-        'sawtooth';
-
-      gainNode.gain.setValueAtTime(
-        0.12,
-        audioCtx.currentTime
-      );
-
-
-      oscillator.connect(
-        gainNode
-      );
-
-      gainNode.connect(
-        audioCtx.destination
-      );
-
-
-      var t0 =
-        audioCtx.currentTime;
-
-
-      oscillator.frequency.setValueAtTime(
-        800,
-        t0
-      );
-
-      oscillator.frequency.linearRampToValueAtTime(
-        1200,
-        t0 + 0.5
-      );
-
-      oscillator.frequency.linearRampToValueAtTime(
-        800,
-        t0 + 1
-      );
-
-
-      oscillator.start();
-
-
-      var phase = 0;
-
-
-      sweepTimer =
-        setInterval(
-          function () {
-
-            if (
-              !oscillator ||
-              !audioCtx
-            ) {
-
-              return;
-
-            }
-
-            phase += 1;
-
-            var now =
-              audioCtx.currentTime;
-
-            try {
-
-              if (
-                phase % 2 === 1
-              ) {
-
-                oscillator.frequency.cancelScheduledValues(
-                  now
-                );
-
-                oscillator.frequency.setValueAtTime(
-                  800,
-                  now
-                );
-
-                oscillator.frequency.linearRampToValueAtTime(
-                  1200,
-                  now + 0.5
-                );
-
-              } else {
-
-                oscillator.frequency.cancelScheduledValues(
-                  now
-                );
-
-                oscillator.frequency.setValueAtTime(
-                  1200,
-                  now
-                );
-
-                oscillator.frequency.linearRampToValueAtTime(
-                  800,
-                  now + 0.5
-                );
-
-              }
-
-            } catch (e) {}
-
-          },
-          500
-        );
-
-
-      stopTimer =
-        setTimeout(
-          function () {
-
-            stopSiren();
-
-          },
-          8000
-        );
-
-    }
-
-
-    if (
-      audioCtx.state ===
-      'suspended'
-    ) {
-
-      audioCtx
-        .resume()
-        .then(startTone)
-        .catch(
-          function () {
-
-            alert(
-              '請再點一次播放警笛（需解除靜音）'
-            );
-
-          }
-        );
-
-    } else {
-
-      startTone();
-
-    }
-
-  }
-
-
-  document.getElementById(
-    'btnSiren'
-  ).onclick =
-    playSiren;
-
-
-  document.getElementById(
-    'btnCloseAlert'
-  ).onclick =
-    closeAlert;
-
-
-  try {
-
-    if (
-      localStorage.getItem(
-        ALERT_ID
-      ) === 'seen'
-    ) {
-
-      var banner =
-        document.getElementById(
-          'alertBanner'
-        );
-
-      if (banner) {
-
-        banner.style.display =
+        sirenButton.style.display =
           'none';
-
       }
-
     }
 
-  } catch (e) {}
+
+    /* =====================================================
+       關閉按鈕
+    ===================================================== */
+
+    var closeButton =
+      document.getElementById(
+        'btnCloseAlert'
+      );
+
+    if (closeButton) {
+
+      closeButton.onclick =
+        closeAlert;
+    }
+
+
+    /* =====================================================
+       顯示警訊
+    ===================================================== */
+
+    banner.style.display =
+      'flex';
+
+
+  } catch (e) {
+
+    console.error(
+      '載入目前警訊失敗：',
+      e
+    );
+
+  }
+
+}
+
+
+/* =========================================================
+   啟動
+========================================================= */
+
+loadCurrentAlert();
 
 
   /* =========================================================
