@@ -1,0 +1,2068 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+<title>災害管理 - 安全團聚</title>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<style>
+*{
+  box-sizing:border-box;
+  margin:0;
+  padding:0;
+}
+
+body{
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+  background:#f5f5f5;
+  color:#222;
+  padding-bottom:30px;
+}
+
+.header{
+  position:sticky;
+  top:0;
+  z-index:100;
+  height:58px;
+  background:#06C755;
+  color:white;
+  display:flex;
+  align-items:center;
+  padding:0 12px;
+}
+
+.back{
+  width:40px;
+  height:40px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  color:white;
+  text-decoration:none;
+  font-size:22px;
+}
+
+.title{
+  flex:1;
+  text-align:center;
+  font-size:18px;
+  font-weight:700;
+}
+
+.spacer{
+  width:40px;
+}
+
+.container{
+  padding:12px;
+  max-width:900px;
+  margin:auto;
+}
+
+.toolbar{
+  display:flex;
+  gap:8px;
+  margin-bottom:12px;
+}
+
+button{
+  border:0;
+  cursor:pointer;
+  font-family:inherit;
+}
+
+.primary{
+  flex:1;
+  background:#06C755;
+  color:white;
+  border-radius:10px;
+  padding:12px;
+  font-weight:700;
+}
+
+.secondary{
+  background:white;
+  color:#555;
+  border-radius:10px;
+  padding:12px 15px;
+  box-shadow:0 1px 5px rgba(0,0,0,.06);
+}
+
+.status{
+  background:white;
+  padding:12px;
+  border-radius:10px;
+  margin-bottom:12px;
+  font-size:13px;
+  color:#777;
+}
+
+.card{
+  background:white;
+  border-radius:14px;
+  padding:15px;
+  margin-bottom:12px;
+  box-shadow:0 2px 8px rgba(0,0,0,.06);
+  border-left:5px solid #999;
+}
+
+.card.active{
+  border-left-color:#06C755;
+}
+
+.card.inactive{
+  opacity:.65;
+  border-left-color:#999;
+}
+
+.card-head{
+  display:flex;
+  gap:10px;
+  align-items:flex-start;
+}
+
+.icon{
+  width:44px;
+  height:44px;
+  border-radius:12px;
+  background:#f1f1f1;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:23px;
+  flex-shrink:0;
+}
+
+.main{
+  flex:1;
+  min-width:0;
+}
+
+.card-title{
+  font-size:16px;
+  font-weight:700;
+}
+
+.meta{
+  color:#888;
+  font-size:12px;
+  margin-top:4px;
+}
+
+.badge{
+  display:inline-block;
+  margin-top:7px;
+  padding:4px 8px;
+  border-radius:6px;
+  font-size:11px;
+  font-weight:700;
+}
+
+.badge.active{
+  background:#e8f5e9;
+  color:#2e7d32;
+}
+
+.badge.inactive{
+  background:#eee;
+  color:#777;
+}
+
+.description{
+  margin-top:10px;
+  color:#555;
+  font-size:13px;
+  line-height:1.55;
+}
+
+.actions{
+  display:flex;
+  gap:7px;
+  margin-top:13px;
+  padding-top:12px;
+  border-top:1px solid #eee;
+}
+
+.action{
+  flex:1;
+  padding:9px 5px;
+  border-radius:8px;
+  font-size:12px;
+  font-weight:700;
+}
+
+.edit{
+  background:#eaf4ff;
+  color:#1565c0;
+}
+
+.toggle{
+  background:#fff8e1;
+  color:#8d6e00;
+}
+
+.delete{
+  background:#ffebee;
+  color:#c62828;
+}
+
+.empty{
+  text-align:center;
+  background:white;
+  padding:40px 20px;
+  border-radius:14px;
+  color:#888;
+}
+
+.modal{
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.5);
+  z-index:500;
+  display:none;
+  overflow-y:auto;
+  padding:20px 12px;
+}
+
+.modal.show{
+  display:block;
+}
+
+.modal-box{
+  max-width:700px;
+  margin:auto;
+  background:white;
+  border-radius:16px;
+  padding:18px;
+}
+
+.modal-title{
+  font-size:18px;
+  font-weight:700;
+  margin-bottom:15px;
+}
+
+.close{
+  float:right;
+  background:#eee;
+  border-radius:50%;
+  width:32px;
+  height:32px;
+  font-size:18px;
+}
+
+.form-group{
+  margin-bottom:12px;
+}
+
+label{
+  display:block;
+  font-size:12px;
+  color:#666;
+  margin-bottom:5px;
+  font-weight:600;
+}
+
+input,
+textarea,
+select{
+  width:100%;
+  border:1px solid #ddd;
+  border-radius:9px;
+  padding:10px;
+  font-size:14px;
+  font-family:inherit;
+  background:white;
+}
+
+textarea{
+  min-height:90px;
+  resize:vertical;
+}
+
+.grid{
+  display:grid;
+  grid-template-columns:repeat(2,1fr);
+  gap:10px;
+}
+
+.section{
+  margin:18px 0 10px;
+  padding-bottom:7px;
+  border-bottom:1px solid #eee;
+  font-size:14px;
+  font-weight:700;
+}
+
+.save{
+  width:100%;
+  background:#06C755;
+  color:white;
+  padding:13px;
+  border-radius:10px;
+  font-size:15px;
+  font-weight:700;
+  margin-top:8px;
+}
+
+.cancel{
+  width:100%;
+  background:#eee;
+  color:#555;
+  padding:12px;
+  border-radius:10px;
+  margin-top:8px;
+  font-weight:700;
+}
+
+@media(max-width:500px){
+  .grid{
+    grid-template-columns:1fr;
+  }
+}
+</style>
+</head>
+
+<body>
+
+<header class="header">
+
+  <a class="back" href="admin.html">←</a>
+
+  <div class="title">
+    災害管理
+  </div>
+
+  <div class="spacer"></div>
+
+</header>
+
+<div class="container">
+
+  <div class="toolbar">
+
+    <button
+      class="primary"
+      onclick="openCreate()"
+    >
+      ＋ 新增災害
+    </button>
+
+    <button
+      class="secondary"
+      onclick="loadDisasters()"
+    >
+      ↻
+    </button>
+
+  </div>
+
+  <div
+    class="status"
+    id="status"
+  >
+    正在讀取災害資料…
+  </div>
+
+  <div id="list"></div>
+
+</div>
+
+
+<!-- ================================
+     MODAL
+================================ -->
+
+<div
+  class="modal"
+  id="modal"
+>
+
+  <div class="modal-box">
+
+    <button
+      class="close"
+      onclick="closeModal()"
+    >
+      ×
+    </button>
+
+    <div
+      class="modal-title"
+      id="modalTitle"
+    >
+      新增災害
+    </div>
+
+
+    <form id="disasterForm">
+
+      <input
+        type="hidden"
+        id="recordId"
+      >
+
+
+      <div class="section">
+        基本資訊
+      </div>
+
+
+      <div class="grid">
+
+        <div class="form-group">
+
+          <label>
+            災害類型
+          </label>
+
+          <select id="disasterType">
+
+            <option value="typhoon">
+              颱風
+            </option>
+
+            <option value="earthquake">
+              地震
+            </option>
+
+            <option value="rain">
+              豪雨
+            </option>
+
+            <option value="tsunami">
+              海嘯
+            </option>
+
+            <option value="heat">
+              高溫
+            </option>
+
+            <option value="wind">
+              強風
+            </option>
+
+            <option value="other">
+              其他
+            </option>
+
+          </select>
+
+        </div>
+
+
+        <div class="form-group">
+
+          <label>
+            嚴重程度
+          </label>
+
+          <select id="severity">
+
+            <option value="critical">
+              極高
+            </option>
+
+            <option value="high">
+              高
+            </option>
+
+            <option value="medium">
+              中
+            </option>
+
+            <option value="low">
+              低
+            </option>
+
+          </select>
+
+        </div>
+
+      </div>
+
+
+      <div class="form-group">
+
+        <label>
+          標題
+        </label>
+
+        <input
+          id="titleInput"
+          required
+          placeholder="例如：第 5 號颱風警報"
+        >
+
+      </div>
+
+
+      <div class="form-group">
+
+        <label>
+          災害說明
+        </label>
+
+        <textarea
+          id="description"
+          placeholder="輸入災害詳細說明"
+        ></textarea>
+
+      </div>
+
+
+      <div class="grid">
+
+        <div class="form-group">
+
+          <label>
+            地區
+          </label>
+
+          <input
+            id="region"
+            placeholder="例如：台北市"
+          >
+
+        </div>
+
+
+        <div class="form-group">
+
+          <label>
+            警報等級
+          </label>
+
+          <input
+            id="alertLevel"
+            placeholder="例如：紅色"
+          >
+
+        </div>
+
+      </div>
+
+
+      <div class="grid">
+
+        <div class="form-group">
+
+          <label>
+            緯度
+          </label>
+
+          <input
+            id="latitude"
+            type="number"
+            step="any"
+          >
+
+        </div>
+
+
+        <div class="form-group">
+
+          <label>
+            經度
+          </label>
+
+          <input
+            id="longitude"
+            type="number"
+            step="any"
+          >
+
+        </div>
+
+      </div>
+
+
+      <div class="grid">
+
+        <div class="form-group">
+
+          <label>
+            開始時間
+          </label>
+
+          <input
+            id="startAt"
+            type="datetime-local"
+          >
+
+        </div>
+
+
+        <div class="form-group">
+
+          <label>
+            結束時間
+          </label>
+
+          <input
+            id="endAt"
+            type="datetime-local"
+          >
+
+        </div>
+
+      </div>
+
+
+      <div class="section">
+        🌀 颱風資訊
+      </div>
+
+
+      <div class="grid">
+
+        <div class="form-group">
+
+          <label>
+            颱風名稱
+          </label>
+
+          <input
+            id="typhoonName"
+          >
+
+        </div>
+
+
+        <div class="form-group">
+
+          <label>
+            颱風狀態
+          </label>
+
+          <input
+            id="typhoonStatus"
+          >
+
+        </div>
+
+
+        <div class="form-group">
+
+          <label>
+            中心氣壓 hPa
+          </label>
+
+          <input
+            id="pressure"
+            type="number"
+          >
+
+        </div>
+
+
+        <div class="form-group">
+
+          <label>
+            最大風速
+          </label>
+
+          <input
+            id="maxWindSpeed"
+            type="number"
+            step="any"
+          >
+
+        </div>
+
+
+        <div class="form-group">
+
+          <label>
+            移動方向
+          </label>
+
+          <input
+            id="movementDirection"
+          >
+
+        </div>
+
+
+        <div class="form-group">
+
+          <label>
+            移動速度
+          </label>
+
+          <input
+            id="movementSpeed"
+            type="number"
+            step="any"
+          >
+
+        </div>
+
+      </div>
+
+
+      <div class="section">
+        🌎 地震資訊
+      </div>
+
+
+      <div class="grid">
+
+        <div class="form-group">
+
+          <label>
+            地震規模
+          </label>
+
+          <input
+            id="magnitude"
+            type="number"
+            step="any"
+          >
+
+        </div>
+
+
+        <div class="form-group">
+
+          <label>
+            深度 km
+          </label>
+
+          <input
+            id="depth"
+            type="number"
+            step="any"
+          >
+
+        </div>
+
+
+        <div class="form-group">
+
+          <label>
+            震央位置
+          </label>
+
+          <input
+            id="earthquakeLocation"
+          >
+
+        </div>
+
+
+        <div class="form-group">
+
+          <label>
+            最大震度
+          </label>
+
+          <input
+            id="intensity"
+          >
+
+        </div>
+
+      </div>
+
+
+      <div class="section">
+        🌧️ 降雨資訊
+      </div>
+
+
+      <div class="grid">
+
+        <div class="form-group">
+
+          <label>
+            累積雨量 mm
+          </label>
+
+          <input
+            id="rainfall"
+            type="number"
+            step="any"
+          >
+
+        </div>
+
+
+        <div class="form-group">
+
+          <label>
+            降雨機率 %
+          </label>
+
+          <input
+            id="rainProbability"
+            type="number"
+            min="0"
+            max="100"
+          >
+
+        </div>
+
+      </div>
+
+
+      <div class="section">
+        📡 資料來源
+      </div>
+
+
+      <div class="form-group">
+
+        <label>
+          資料來源
+        </label>
+
+        <input
+          id="source"
+          placeholder="例如：中央氣象署"
+        >
+
+      </div>
+
+
+      <div class="form-group">
+
+        <label>
+          官方來源網址
+        </label>
+
+        <input
+          id="sourceUrl"
+          type="url"
+          placeholder="https://..."
+        >
+
+      </div>
+
+
+      <button
+        type="submit"
+        class="save"
+      >
+        儲存災害資料
+      </button>
+
+
+      <button
+        type="button"
+        class="cancel"
+        onclick="closeModal()"
+      >
+        取消
+      </button>
+
+    </form>
+
+  </div>
+
+</div>
+
+
+<script>
+
+/* =====================================================
+   SUPABASE
+===================================================== */
+
+const SUPABASE_URL =
+  'https://perfsipperncvjocznhl.supabase.co';
+
+
+/*
+ * 這裡使用你專案原本的 anon /
+ * publishable key。
+ *
+ * 不要放 service_role key。
+ */
+
+const SUPABASE_KEY =
+  'YOUR_SUPABASE_ANON_OR_PUBLISHABLE_KEY';
+
+
+const db =
+  window.supabase.createClient(
+    SUPABASE_URL,
+    SUPABASE_KEY
+  );
+
+
+/* =====================================================
+   STATE
+===================================================== */
+
+let records = [];
+
+
+/* =====================================================
+   工具
+===================================================== */
+
+function escapeHtml(value){
+
+  if(
+    value === null ||
+    value === undefined
+  ){
+
+    return '';
+
+  }
+
+  return String(value)
+
+    .replace(/&/g,'&amp;')
+    .replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;')
+    .replace(/'/g,'&#039;');
+
+}
+
+
+function icon(type){
+
+  const icons = {
+
+    typhoon:'🌀',
+    earthquake:'🌎',
+    rain:'🌧️',
+    tsunami:'🌊',
+    heat:'🔥',
+    wind:'💨',
+    other:'⚠️'
+
+  };
+
+  return icons[type] || '⚠️';
+
+}
+
+
+function typeName(type){
+
+  const names = {
+
+    typhoon:'颱風',
+    earthquake:'地震',
+    rain:'豪雨',
+    tsunami:'海嘯',
+    heat:'高溫',
+    wind:'強風',
+    other:'其他'
+
+  };
+
+  return names[type] || type || '其他';
+
+}
+
+
+function formatDate(value){
+
+  if(!value){
+
+    return '';
+
+  }
+
+  const d =
+    new Date(value);
+
+  if(
+    Number.isNaN(
+      d.getTime()
+    )
+  ){
+
+    return '';
+
+  }
+
+  return d.toLocaleString(
+    'zh-TW'
+  );
+
+}
+
+
+function inputDate(value){
+
+  if(!value){
+
+    return '';
+
+  }
+
+  const d =
+    new Date(value);
+
+  if(
+    Number.isNaN(
+      d.getTime()
+    )
+  ){
+
+    return '';
+
+  }
+
+  const pad =
+    n =>
+    String(n).padStart(2,'0');
+
+  return (
+
+    d.getFullYear() +
+
+    '-' +
+
+    pad(d.getMonth()+1) +
+
+    '-' +
+
+    pad(d.getDate()) +
+
+    'T' +
+
+    pad(d.getHours()) +
+
+    ':' +
+
+    pad(d.getMinutes())
+
+  );
+
+}
+
+
+/* =====================================================
+   讀取
+===================================================== */
+
+async function loadDisasters(){
+
+  const status =
+    document.getElementById(
+      'status'
+    );
+
+  status.textContent =
+    '正在讀取 disaster_data…';
+
+  try{
+
+    const {
+      data,
+      error
+    } =
+      await db
+
+        .from(
+          'disaster_data'
+        )
+
+        .select('*')
+
+        .order(
+          'created_at',
+          {
+            ascending:false
+          }
+        );
+
+
+    if(error){
+
+      throw error;
+
+    }
+
+
+    records =
+      data || [];
+
+
+    status.textContent =
+      `共有 ${records.length} 筆災害資料`;
+
+
+    render();
+
+  }catch(error){
+
+    console.error(error);
+
+    status.textContent =
+      '無法讀取 disaster_data：' +
+      (
+        error.message ||
+        '未知錯誤'
+      );
+
+  }
+
+}
+
+
+/* =====================================================
+   顯示
+===================================================== */
+
+function render(){
+
+  const list =
+    document.getElementById(
+      'list'
+    );
+
+
+  if(!records.length){
+
+    list.innerHTML = `
+
+      <div class="empty">
+
+        <div style="font-size:40px">
+          🛡️
+        </div>
+
+        <div
+          style="
+            margin-top:10px;
+            font-weight:700;
+          "
+        >
+          目前沒有災害資料
+        </div>
+
+        <div
+          style="
+            margin-top:6px;
+            font-size:13px;
+          "
+        >
+          點擊「新增災害」建立第一筆資料。
+        </div>
+
+      </div>
+
+    `;
+
+    return;
+
+  }
+
+
+  list.innerHTML =
+    records
+      .map(record => {
+
+        const active =
+          record.is_active !== false;
+
+
+        return `
+
+          <div
+            class="
+              card
+              ${active
+                ? 'active'
+                : 'inactive'}
+            "
+          >
+
+            <div class="card-head">
+
+              <div class="icon">
+
+                ${icon(
+                  record.disaster_type
+                )}
+
+              </div>
+
+
+              <div class="main">
+
+                <div class="card-title">
+
+                  ${escapeHtml(
+                    record.title ||
+                    '未命名災害'
+                  )}
+
+                </div>
+
+
+                <div class="meta">
+
+                  ${typeName(
+                    record.disaster_type
+                  )}
+
+                  ${
+                    record.region
+                      ? ' · ' +
+                        escapeHtml(
+                          record.region
+                        )
+                      : ''
+                  }
+
+                  ${
+                    record.severity
+                      ? ' · ' +
+                        escapeHtml(
+                          record.severity
+                        )
+                      : ''
+                  }
+
+                </div>
+
+
+                <span
+                  class="
+                    badge
+                    ${active
+                      ? 'active'
+                      : 'inactive'}
+                  "
+                >
+
+                  ${
+                    active
+                      ? '● 啟用中'
+                      : '○ 已停用'
+                  }
+
+                </span>
+
+              </div>
+
+            </div>
+
+
+            ${
+              record.description
+                ? `
+                  <div class="description">
+
+                    ${escapeHtml(
+                      record.description
+                    )}
+
+                  </div>
+                `
+                : ''
+            }
+
+
+            ${
+              record.start_at
+                ? `
+                  <div
+                    class="meta"
+                    style="margin-top:10px"
+                  >
+
+                    發布：
+                    ${formatDate(
+                      record.start_at
+                    )}
+
+                    ${
+                      record.end_at
+                        ? `
+                          <br>
+                          結束：
+                          ${formatDate(
+                            record.end_at
+                          )}
+                        `
+                        : ''
+                    }
+
+                  </div>
+                `
+                : ''
+            }
+
+
+            <div class="actions">
+
+              <button
+                class="action edit"
+                onclick="editRecord('${record.id}')"
+              >
+                ✏️ 編輯
+              </button>
+
+
+              <button
+                class="action toggle"
+                onclick="toggleRecord('${record.id}')"
+              >
+                ${
+                  active
+                    ? '⏸ 停用'
+                    : '▶️ 啟用'
+                }
+              </button>
+
+
+              <button
+                class="action delete"
+                onclick="deleteRecord('${record.id}')"
+              >
+                🗑️ 刪除
+              </button>
+
+            </div>
+
+          </div>
+
+        `;
+
+      })
+      .join('');
+
+}
+
+
+/* =====================================================
+   開啟新增
+===================================================== */
+
+function openCreate(){
+
+  document
+    .getElementById(
+      'disasterForm'
+    )
+    .reset();
+
+
+  document
+    .getElementById(
+      'recordId'
+    )
+    .value = '';
+
+
+  document
+    .getElementById(
+      'modalTitle'
+    )
+    .textContent =
+      '新增災害';
+
+
+  document
+    .getElementById(
+      'modal'
+    )
+    .classList
+    .add('show');
+
+}
+
+
+/* =====================================================
+   編輯
+===================================================== */
+
+function editRecord(id){
+
+  const record =
+    records.find(
+      item =>
+      String(item.id) ===
+      String(id)
+    );
+
+
+  if(!record){
+
+    alert(
+      '找不到這筆資料'
+    );
+
+    return;
+
+  }
+
+
+  document.getElementById(
+    'recordId'
+  ).value =
+    record.id || '';
+
+
+  document.getElementById(
+    'disasterType'
+  ).value =
+    record.disaster_type ||
+    'other';
+
+
+  document.getElementById(
+    'severity'
+  ).value =
+    record.severity ||
+    'medium';
+
+
+  document.getElementById(
+    'titleInput'
+  ).value =
+    record.title ||
+    '';
+
+
+  document.getElementById(
+    'description'
+  ).value =
+    record.description ||
+    '';
+
+
+  document.getElementById(
+    'region'
+  ).value =
+    record.region ||
+    '';
+
+
+  document.getElementById(
+    'alertLevel'
+  ).value =
+    record.alert_level ||
+    '';
+
+
+  document.getElementById(
+    'latitude'
+  ).value =
+    record.latitude ??
+    '';
+
+
+  document.getElementById(
+    'longitude'
+  ).value =
+    record.longitude ??
+    '';
+
+
+  document.getElementById(
+    'startAt'
+  ).value =
+    inputDate(
+      record.start_at
+    );
+
+
+  document.getElementById(
+    'endAt'
+  ).value =
+    inputDate(
+      record.end_at
+    );
+
+
+  document.getElementById(
+    'typhoonName'
+  ).value =
+    record.typhoon_name ||
+    '';
+
+
+  document.getElementById(
+    'typhoonStatus'
+  ).value =
+    record.typhoon_status ||
+    '';
+
+
+  document.getElementById(
+    'pressure'
+  ).value =
+    record.pressure ??
+    '';
+
+
+  document.getElementById(
+    'maxWindSpeed'
+  ).value =
+    record.max_wind_speed ??
+    '';
+
+
+  document.getElementById(
+    'movementDirection'
+  ).value =
+    record.movement_direction ||
+    '';
+
+
+  document.getElementById(
+    'movementSpeed'
+  ).value =
+    record.movement_speed ??
+    '';
+
+
+  document.getElementById(
+    'magnitude'
+  ).value =
+    record.magnitude ??
+    '';
+
+
+  document.getElementById(
+    'depth'
+  ).value =
+    record.depth ??
+    '';
+
+
+  document.getElementById(
+    'earthquakeLocation'
+  ).value =
+    record.earthquake_location ||
+    '';
+
+
+  document.getElementById(
+    'intensity'
+  ).value =
+    record.intensity ||
+    '';
+
+
+  document.getElementById(
+    'rainfall'
+  ).value =
+    record.rainfall ??
+    '';
+
+
+  document.getElementById(
+    'rainProbability'
+  ).value =
+    record.rain_probability ??
+    '';
+
+
+  document.getElementById(
+    'source'
+  ).value =
+    record.source ||
+    '';
+
+
+  document.getElementById(
+    'sourceUrl'
+  ).value =
+    record.source_url ||
+    '';
+
+
+  document.getElementById(
+    'modalTitle'
+  ).textContent =
+    '編輯災害';
+
+
+  document
+    .getElementById(
+      'modal'
+    )
+    .classList
+    .add('show');
+
+}
+
+
+/* =====================================================
+   關閉
+===================================================== */
+
+function closeModal(){
+
+  document
+    .getElementById(
+      'modal'
+    )
+    .classList
+    .remove('show');
+
+}
+
+
+/* =====================================================
+   儲存
+===================================================== */
+
+document
+  .getElementById(
+    'disasterForm'
+  )
+  .addEventListener(
+    'submit',
+    async function(event){
+
+      event.preventDefault();
+
+
+      const id =
+        document.getElementById(
+          'recordId'
+        ).value;
+
+
+      const payload = {
+
+        disaster_type:
+          document.getElementById(
+            'disasterType'
+          ).value,
+
+        title:
+          document.getElementById(
+            'titleInput'
+          ).value.trim(),
+
+        description:
+          document.getElementById(
+            'description'
+          ).value.trim() ||
+          null,
+
+        region:
+          document.getElementById(
+            'region'
+          ).value.trim() ||
+          null,
+
+        severity:
+          document.getElementById(
+            'severity'
+          ).value,
+
+        latitude:
+          numberOrNull(
+            'latitude'
+          ),
+
+        longitude:
+          numberOrNull(
+            'longitude'
+          ),
+
+        start_at:
+          dateOrNull(
+            'startAt'
+          ),
+
+        end_at:
+          dateOrNull(
+            'endAt'
+          ),
+
+        typhoon_name:
+          valueOrNull(
+            'typhoonName'
+          ),
+
+        typhoon_status:
+          valueOrNull(
+            'typhoonStatus'
+          ),
+
+        pressure:
+          numberOrNull(
+            'pressure'
+          ),
+
+        max_wind_speed:
+          numberOrNull(
+            'maxWindSpeed'
+          ),
+
+        movement_direction:
+          valueOrNull(
+            'movementDirection'
+          ),
+
+        movement_speed:
+          numberOrNull(
+            'movementSpeed'
+          ),
+
+        magnitude:
+          numberOrNull(
+            'magnitude'
+          ),
+
+        depth:
+          numberOrNull(
+            'depth'
+          ),
+
+        earthquake_location:
+          valueOrNull(
+            'earthquakeLocation'
+          ),
+
+        intensity:
+          valueOrNull(
+            'intensity'
+          ),
+
+        rainfall:
+          numberOrNull(
+            'rainfall'
+          ),
+
+        rain_probability:
+          numberOrNull(
+            'rainProbability'
+          ),
+
+        alert_level:
+          valueOrNull(
+            'alertLevel'
+          ),
+
+        source:
+          valueOrNull(
+            'source'
+          ),
+
+        source_url:
+          valueOrNull(
+            'sourceUrl'
+          )
+
+      };
+
+
+      try{
+
+        let result;
+
+
+        if(id){
+
+          result =
+            await db
+
+              .from(
+                'disaster_data'
+              )
+
+              .update(
+                payload
+              )
+
+              .eq(
+                'id',
+                id
+              );
+
+        }else{
+
+          payload.is_active =
+            true;
+
+
+          result =
+            await db
+
+              .from(
+                'disaster_data'
+              )
+
+              .insert(
+                payload
+              );
+
+        }
+
+
+        if(result.error){
+
+          throw result.error;
+
+        }
+
+
+        closeModal();
+
+        await loadDisasters();
+
+
+        alert(
+          '災害資料已儲存'
+        );
+
+
+      }catch(error){
+
+        console.error(
+          error
+        );
+
+
+        alert(
+          '儲存失敗：\n' +
+          (
+            error.message ||
+            '未知錯誤'
+          )
+        );
+
+      }
+
+    }
+  );
+
+
+function valueOrNull(id){
+
+  const value =
+    document.getElementById(
+      id
+    ).value.trim();
+
+  return value || null;
+
+}
+
+
+function numberOrNull(id){
+
+  const value =
+    document.getElementById(
+      id
+    ).value;
+
+
+  if(value === ''){
+
+    return null;
+
+  }
+
+
+  const number =
+    Number(value);
+
+
+  return Number.isFinite(
+    number
+  )
+    ? number
+    : null;
+
+}
+
+
+function dateOrNull(id){
+
+  const value =
+    document.getElementById(
+      id
+    ).value;
+
+
+  if(!value){
+
+    return null;
+
+  }
+
+
+  return new Date(
+    value
+  ).toISOString();
+
+}
+
+
+/* =====================================================
+   啟用 / 停用
+===================================================== */
+
+async function toggleRecord(id){
+
+  const record =
+    records.find(
+      item =>
+      String(item.id) ===
+      String(id)
+    );
+
+
+  if(!record){
+
+    return;
+
+  }
+
+
+  const newStatus =
+    record.is_active === false;
+
+
+  try{
+
+    const {
+      error
+    } =
+      await db
+
+        .from(
+          'disaster_data'
+        )
+
+        .update({
+
+          is_active:
+            newStatus
+
+        })
+
+        .eq(
+          'id',
+          id
+        );
+
+
+    if(error){
+
+      throw error;
+
+    }
+
+
+    await loadDisasters();
+
+
+  }catch(error){
+
+    alert(
+      '更新狀態失敗：\n' +
+      (
+        error.message ||
+        '未知錯誤'
+      )
+    );
+
+  }
+
+}
+
+
+/* =====================================================
+   刪除
+===================================================== */
+
+async function deleteRecord(id){
+
+  const record =
+    records.find(
+      item =>
+      String(item.id) ===
+      String(id)
+    );
+
+
+  if(!record){
+
+    return;
+
+  }
+
+
+  const ok =
+    confirm(
+      `確定要刪除「${
+        record.title ||
+        '這筆災害資料'
+      }」嗎？\n\n` +
+      `刪除後資料將無法從前台顯示。`
+    );
+
+
+  if(!ok){
+
+    return;
+
+  }
+
+
+  try{
+
+    const {
+      error
+    } =
+      await db
+
+        .from(
+          'disaster_data'
+        )
+
+        .delete()
+
+        .eq(
+          'id',
+          id
+        );
+
+
+    if(error){
+
+      throw error;
+
+    }
+
+
+    await loadDisasters();
+
+
+  }catch(error){
+
+    alert(
+      '刪除失敗：\n' +
+      (
+        error.message ||
+        '未知錯誤'
+      )
+    );
+
+  }
+
+}
+
+
+/* =====================================================
+   啟動
+===================================================== */
+
+loadDisasters();
+
+</script>
+
+</body>
+</html>
