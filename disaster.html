@@ -1,0 +1,2111 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+
+<meta
+  name="viewport"
+  content="width=device-width,
+           initial-scale=1.0,
+           maximum-scale=1.0,
+           user-scalable=no"
+>
+
+<title>災害資訊 - 安全團聚</title>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<style>
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family:
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    Roboto,
+    sans-serif;
+
+  background: #f5f5f5;
+  color: #111;
+
+  min-height: 100vh;
+
+  padding-bottom: 72px;
+}
+
+
+/* =====================================================
+   頂部
+===================================================== */
+
+.header {
+
+  background: #06C755;
+  color: white;
+
+  height: 58px;
+
+  padding: 0 14px;
+
+  display: flex;
+  align-items: center;
+
+  position: sticky;
+  top: 0;
+
+  z-index: 100;
+}
+
+.home-btn {
+
+  width: 38px;
+  height: 38px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  color: white;
+  text-decoration: none;
+
+  font-size: 21px;
+
+  border-radius: 50%;
+
+  flex-shrink: 0;
+}
+
+.home-btn:active {
+
+  background:
+    rgba(255,255,255,0.18);
+
+  transform: scale(.94);
+}
+
+.header-title {
+
+  flex: 1;
+
+  text-align: center;
+
+  font-size: 17px;
+  font-weight: 700;
+}
+
+.header-right {
+
+  width: 38px;
+}
+
+
+/* =====================================================
+   頁面說明
+===================================================== */
+
+.page-intro {
+
+  background: white;
+
+  margin: 12px;
+
+  padding: 15px;
+
+  border-radius: 14px;
+
+  box-shadow:
+    0 2px 8px rgba(0,0,0,.06);
+}
+
+.page-intro-title {
+
+  font-size: 16px;
+  font-weight: 700;
+
+  margin-bottom: 5px;
+}
+
+.page-intro-text {
+
+  font-size: 12px;
+
+  line-height: 1.5;
+
+  color: #777;
+}
+
+
+/* =====================================================
+   災害類型
+===================================================== */
+
+.filter-row {
+
+  display: flex;
+
+  gap: 8px;
+
+  padding: 0 12px 12px;
+
+  overflow-x: auto;
+
+  scrollbar-width: none;
+}
+
+.filter-row::-webkit-scrollbar {
+  display: none;
+}
+
+.filter-btn {
+
+  flex-shrink: 0;
+
+  border: none;
+
+  background: white;
+
+  color: #666;
+
+  border-radius: 20px;
+
+  padding: 9px 15px;
+
+  font-size: 13px;
+
+  font-weight: 600;
+
+  box-shadow:
+    0 1px 5px rgba(0,0,0,.05);
+
+  cursor: pointer;
+}
+
+.filter-btn.active {
+
+  background: #06C755;
+  color: white;
+}
+
+
+/* =====================================================
+   更新狀態
+===================================================== */
+
+.status-card {
+
+  margin: 0 12px 12px;
+
+  background: #fff;
+
+  border-radius: 12px;
+
+  padding: 11px 13px;
+
+  display: flex;
+
+  align-items: center;
+
+  justify-content: space-between;
+
+  box-shadow:
+    0 1px 6px rgba(0,0,0,.05);
+}
+
+.status-left {
+
+  display: flex;
+
+  align-items: center;
+
+  gap: 7px;
+
+  font-size: 12px;
+
+  color: #777;
+}
+
+.status-dot {
+
+  width: 8px;
+  height: 8px;
+
+  border-radius: 50%;
+
+  background: #06C755;
+}
+
+.status-dot.loading {
+
+  background: #f39c12;
+}
+
+.status-dot.error {
+
+  background: #e53935;
+}
+
+.refresh-btn {
+
+  border: none;
+
+  background: #f1f1f1;
+
+  border-radius: 8px;
+
+  padding: 7px 10px;
+
+  font-size: 12px;
+
+  cursor: pointer;
+}
+
+
+/* =====================================================
+   災害列表
+===================================================== */
+
+#disasterList {
+
+  padding: 0 12px;
+}
+
+
+/* =====================================================
+   災害卡片
+===================================================== */
+
+.disaster-card {
+
+  background: white;
+
+  border-radius: 15px;
+
+  padding: 15px;
+
+  margin-bottom: 12px;
+
+  box-shadow:
+    0 2px 8px rgba(0,0,0,.06);
+
+  border-left: 5px solid #999;
+}
+
+.disaster-card.critical {
+
+  border-left-color: #d32f2f;
+}
+
+.disaster-card.high {
+
+  border-left-color: #f57c00;
+}
+
+.disaster-card.medium {
+
+  border-left-color: #fbc02d;
+}
+
+.disaster-card.low {
+
+  border-left-color: #06C755;
+}
+
+
+/* =====================================================
+   卡片標題
+===================================================== */
+
+.disaster-top {
+
+  display: flex;
+
+  align-items: flex-start;
+
+  gap: 10px;
+
+  margin-bottom: 9px;
+}
+
+.disaster-icon {
+
+  width: 44px;
+  height: 44px;
+
+  border-radius: 12px;
+
+  background: #f3f3f3;
+
+  display: flex;
+
+  align-items: center;
+  justify-content: center;
+
+  font-size: 24px;
+
+  flex-shrink: 0;
+}
+
+.disaster-heading {
+
+  flex: 1;
+}
+
+.disaster-type {
+
+  font-size: 11px;
+
+  color: #888;
+
+  margin-bottom: 3px;
+}
+
+.disaster-title {
+
+  font-size: 16px;
+
+  font-weight: 700;
+
+  line-height: 1.35;
+}
+
+
+/* =====================================================
+   等級
+===================================================== */
+
+.severity {
+
+  display: inline-block;
+
+  padding: 4px 8px;
+
+  border-radius: 6px;
+
+  font-size: 10px;
+
+  font-weight: 700;
+
+  white-space: nowrap;
+}
+
+.severity.critical {
+
+  background: #ffebee;
+  color: #c62828;
+}
+
+.severity.high {
+
+  background: #fff3e0;
+  color: #ef6c00;
+}
+
+.severity.medium {
+
+  background: #fffde7;
+  color: #827717;
+}
+
+.severity.low {
+
+  background: #e8f5e9;
+  color: #2e7d32;
+}
+
+
+/* =====================================================
+   災害內容
+===================================================== */
+
+.disaster-description {
+
+  font-size: 13px;
+
+  color: #555;
+
+  line-height: 1.55;
+
+  margin-bottom: 12px;
+
+  white-space: pre-wrap;
+}
+
+
+/* =====================================================
+   災害資料
+===================================================== */
+
+.disaster-info {
+
+  display: grid;
+
+  grid-template-columns:
+    repeat(2, 1fr);
+
+  gap: 7px;
+
+  margin-bottom: 12px;
+}
+
+.info-item {
+
+  background: #f7f7f7;
+
+  border-radius: 9px;
+
+  padding: 9px;
+}
+
+.info-label {
+
+  font-size: 10px;
+
+  color: #999;
+
+  margin-bottom: 3px;
+}
+
+.info-value {
+
+  font-size: 12px;
+
+  font-weight: 700;
+
+  color: #333;
+}
+
+
+/* =====================================================
+   卡片底部
+===================================================== */
+
+.disaster-footer {
+
+  border-top: 1px solid #eee;
+
+  padding-top: 10px;
+
+  display: flex;
+
+  align-items: center;
+
+  justify-content: space-between;
+
+  gap: 8px;
+}
+
+.source-text {
+
+  font-size: 10px;
+
+  color: #999;
+
+  overflow: hidden;
+
+  text-overflow: ellipsis;
+
+  white-space: nowrap;
+}
+
+.source-btn {
+
+  flex-shrink: 0;
+
+  text-decoration: none;
+
+  color: #06C755;
+
+  font-size: 11px;
+
+  font-weight: 700;
+}
+
+
+/* =====================================================
+   空資料
+===================================================== */
+
+.empty-state {
+
+  background: white;
+
+  border-radius: 14px;
+
+  padding: 35px 20px;
+
+  text-align: center;
+
+  margin-bottom: 16px;
+}
+
+.empty-icon {
+
+  font-size: 42px;
+
+  margin-bottom: 10px;
+}
+
+.empty-title {
+
+  font-size: 16px;
+
+  font-weight: 700;
+
+  margin-bottom: 6px;
+}
+
+.empty-text {
+
+  font-size: 12px;
+
+  color: #999;
+
+  line-height: 1.5;
+}
+
+
+/* =====================================================
+   載入
+===================================================== */
+
+.loading {
+
+  text-align: center;
+
+  padding: 35px 20px;
+
+  color: #999;
+
+  font-size: 13px;
+}
+
+
+/* =====================================================
+   底部
+===================================================== */
+
+.tabbar {
+
+  position: fixed;
+
+  left: 0;
+  right: 0;
+  bottom: 0;
+
+  height: 58px;
+
+  background: white;
+
+  border-top:
+    1px solid #e8e8e8;
+
+  display: flex;
+
+  z-index: 100;
+}
+
+.tab {
+
+  flex: 1;
+
+  display: flex;
+
+  flex-direction: column;
+
+  align-items: center;
+
+  justify-content: center;
+
+  text-decoration: none;
+
+  color: #888;
+
+  font-size: 10px;
+}
+
+.tab .ico {
+
+  font-size: 19px;
+
+  line-height: 1.25;
+}
+
+.tab.on {
+
+  color: #06C755;
+
+  font-weight: 700;
+}
+
+
+/* =====================================================
+   語音提示
+===================================================== */
+
+.voice-hint {
+
+  position: fixed;
+
+  left: 50%;
+
+  bottom: 70px;
+
+  transform:
+    translateX(-50%);
+
+  background:
+    rgba(0,0,0,.82);
+
+  color: white;
+
+  padding: 9px 14px;
+
+  border-radius: 20px;
+
+  font-size: 12px;
+
+  display: none;
+
+  z-index: 200;
+
+  white-space: nowrap;
+}
+
+.voice-hint.show {
+  display: block;
+}
+
+</style>
+</head>
+
+
+<body>
+
+
+<!-- =====================================================
+     頂部
+===================================================== -->
+
+<div class="header">
+
+  <a
+    href="home.html"
+    class="home-btn"
+    aria-label="首頁"
+  >
+    🏠
+  </a>
+
+  <div class="header-title">
+    災害資訊
+  </div>
+
+  <div class="header-right"></div>
+
+</div>
+
+
+<!-- =====================================================
+     說明
+===================================================== -->
+
+<div class="page-intro">
+
+  <div class="page-intro-title">
+    🌏 即時災害資訊
+  </div>
+
+  <div class="page-intro-text">
+    這裡專門顯示颱風、地震、豪雨及其他災害資訊。
+    資料由安全團聚後台的 disaster_data 提供，
+    與首頁的一般天氣資料分開管理。
+  </div>
+
+</div>
+
+
+<!-- =====================================================
+     篩選
+===================================================== -->
+
+<div class="filter-row">
+
+  <button
+    class="filter-btn active"
+    data-type="all"
+  >
+    全部
+  </button>
+
+  <button
+    class="filter-btn"
+    data-type="颱風"
+  >
+    🌀 颱風
+  </button>
+
+  <button
+    class="filter-btn"
+    data-type="地震"
+  >
+    🌎 地震
+  </button>
+
+  <button
+    class="filter-btn"
+    data-type="豪雨"
+  >
+    🌧️ 豪雨
+  </button>
+
+  <button
+    class="filter-btn"
+    data-type="其他"
+  >
+    ⚠️ 其他
+  </button>
+
+</div>
+
+
+<!-- =====================================================
+     狀態
+===================================================== -->
+
+<div class="status-card">
+
+  <div class="status-left">
+
+    <span
+      class="status-dot"
+      id="statusDot"
+    ></span>
+
+    <span id="statusText">
+      載入災害資料…
+    </span>
+
+  </div>
+
+  <button
+    class="refresh-btn"
+    id="refreshBtn"
+  >
+    🔄 更新
+  </button>
+
+</div>
+
+
+<!-- =====================================================
+     災害列表
+===================================================== -->
+
+<div id="disasterList">
+
+  <div class="loading">
+    正在載入災害資料…
+  </div>
+
+</div>
+
+
+<!-- =====================================================
+     語音提示
+===================================================== -->
+
+<div
+  class="voice-hint"
+  id="voiceHint"
+>
+  🎙️ 可以說：「颱風」、「地震」、「豪雨」、「全部」
+</div>
+
+
+<!-- =====================================================
+     底部
+===================================================== -->
+
+<div class="tabbar">
+
+  <a
+    class="tab"
+    href="social.html"
+  >
+    <div class="ico">◎</div>
+    社群
+  </a>
+
+  <a
+    class="tab"
+    href="learning.html"
+  >
+    <div class="ico">🎓</div>
+    學習
+  </a>
+
+  <a
+    class="tab"
+    href="shop.html"
+  >
+    <div class="ico">🛍️</div>
+    購物
+  </a>
+
+  <a
+    class="tab"
+    href="chat.html"
+  >
+    <div class="ico">💬</div>
+    聊天
+  </a>
+
+  <a
+    class="tab"
+    href="me.html"
+  >
+    <div class="ico">👤</div>
+    我
+  </a>
+
+</div>
+
+
+<script>
+
+(function () {
+
+"use strict";
+
+
+/* =====================================================
+   Supabase
+===================================================== */
+
+var SUPABASE_URL =
+  'https://perfsipperncvjocznhl.supabase.co';
+
+var SUPABASE_KEY =
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzIiwicmVmIjoicGVyZnNpcHBlcm5jdmZqb2N6bmhsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODYwMTUyMzAsImV4cCI6MjEwMTU5MTIzMH0.I7vXkV247kAzRJ0RigDZt3Hzn8KJDyMc6o9E3oHJZoY';
+
+
+var supabaseClient =
+  window.supabase.createClient(
+    SUPABASE_URL,
+    SUPABASE_KEY
+  );
+
+
+/* =====================================================
+   狀態
+===================================================== */
+
+var allDisasters = [];
+
+var currentFilter = 'all';
+
+
+/* =====================================================
+   DOM
+===================================================== */
+
+var list =
+  document.getElementById(
+    'disasterList'
+  );
+
+var statusText =
+  document.getElementById(
+    'statusText'
+  );
+
+var statusDot =
+  document.getElementById(
+    'statusDot'
+  );
+
+var refreshBtn =
+  document.getElementById(
+    'refreshBtn'
+  );
+
+
+/* =====================================================
+   災害圖示
+===================================================== */
+
+function getDisasterIcon(type) {
+
+  var text =
+    String(type || '')
+      .toLowerCase();
+
+  if (
+    text.includes('颱風') ||
+    text.includes('typhoon')
+  ) {
+
+    return '🌀';
+
+  }
+
+  if (
+    text.includes('地震') ||
+    text.includes('earthquake')
+  ) {
+
+    return '🌎';
+
+  }
+
+  if (
+    text.includes('豪雨') ||
+    text.includes('雨') ||
+    text.includes('rain')
+  ) {
+
+    return '🌧️';
+
+  }
+
+  if (
+    text.includes('雷') ||
+    text.includes('thunder')
+  ) {
+
+    return '⛈️';
+
+  }
+
+  if (
+    text.includes('火') ||
+    text.includes('fire')
+  ) {
+
+    return '🔥';
+
+  }
+
+  return '⚠️';
+
+}
+
+
+/* =====================================================
+   災害類型名稱
+===================================================== */
+
+function getDisasterTypeName(type) {
+
+  if (!type) {
+    return '其他災害';
+  }
+
+  var value =
+    String(type)
+      .toLowerCase();
+
+  if (
+    value.includes('typhoon') ||
+    value.includes('颱風')
+  ) {
+
+    return '颱風';
+
+  }
+
+  if (
+    value.includes('earthquake') ||
+    value.includes('地震')
+  ) {
+
+    return '地震';
+
+  }
+
+  if (
+    value.includes('rain') ||
+    value.includes('豪雨') ||
+    value.includes('大雨')
+  ) {
+
+    return '豪雨';
+
+  }
+
+  return type;
+
+}
+
+
+/* =====================================================
+   等級
+===================================================== */
+
+function getSeverityClass(severity) {
+
+  var value =
+    String(severity || '')
+      .toLowerCase();
+
+  if (
+    value.includes('極') ||
+    value.includes('critical') ||
+    value.includes('嚴重')
+  ) {
+
+    return 'critical';
+
+  }
+
+  if (
+    value.includes('高') ||
+    value.includes('high')
+  ) {
+
+    return 'high';
+
+  }
+
+  if (
+    value.includes('中') ||
+    value.includes('medium')
+  ) {
+
+    return 'medium';
+
+  }
+
+  return 'low';
+
+}
+
+
+/* =====================================================
+   等級文字
+===================================================== */
+
+function getSeverityText(severity) {
+
+  if (!severity) {
+    return '一般';
+  }
+
+  return String(severity);
+
+}
+
+
+/* =====================================================
+   日期格式
+===================================================== */
+
+function formatDate(value) {
+
+  if (!value) {
+    return '--';
+  }
+
+  try {
+
+    return new Date(value)
+      .toLocaleString(
+        'zh-TW',
+        {
+          year: 'numeric',
+          month: 'numeric',
+          day: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit'
+        }
+      );
+
+  } catch (e) {
+
+    return value;
+
+  }
+
+}
+
+
+/* =====================================================
+   數值
+===================================================== */
+
+function formatNumber(value, unit) {
+
+  if (
+    value === null ||
+    value === undefined ||
+    value === ''
+  ) {
+
+    return '--';
+
+  }
+
+  return value + (unit || '');
+
+}
+
+
+/* =====================================================
+   災害卡片
+===================================================== */
+
+function createDisasterCard(item) {
+
+  var typeName =
+    getDisasterTypeName(
+      item.disaster_type
+    );
+
+  var severityClass =
+    getSeverityClass(
+      item.severity
+    );
+
+  var icon =
+    getDisasterIcon(
+      item.disaster_type
+    );
+
+
+  var card =
+    document.createElement('div');
+
+  card.className =
+    'disaster-card ' +
+    severityClass;
+
+
+  var html = '';
+
+
+  html +=
+    '<div class="disaster-top">';
+
+
+  html +=
+    '<div class="disaster-icon">' +
+    icon +
+    '</div>';
+
+
+  html +=
+    '<div class="disaster-heading">';
+
+
+  html +=
+    '<div class="disaster-type">' +
+    escapeHtml(typeName) +
+    '</div>';
+
+
+  html +=
+    '<div class="disaster-title">' +
+    escapeHtml(
+      item.title ||
+      '災害通知'
+    ) +
+    '</div>';
+
+
+  html +=
+    '</div>';
+
+
+  html +=
+    '<span class="severity ' +
+    severityClass +
+    '">' +
+    escapeHtml(
+      getSeverityText(
+        item.severity
+      )
+    ) +
+    '</span>';
+
+
+  html +=
+    '</div>';
+
+
+  if (item.description) {
+
+    html +=
+      '<div class="disaster-description">' +
+      escapeHtml(
+        item.description
+      ) +
+      '</div>';
+
+  }
+
+
+  html +=
+    '<div class="disaster-info">';
+
+
+  if (item.region) {
+
+    html +=
+      infoItem(
+        '📍 地區',
+        item.region
+      );
+
+  }
+
+
+  if (item.alert_level) {
+
+    html +=
+      infoItem(
+        '🚨 警戒',
+        item.alert_level
+      );
+
+  }
+
+
+  if (item.typhoon_name) {
+
+    html +=
+      infoItem(
+        '🌀 颱風',
+        item.typhoon_name
+      );
+
+  }
+
+
+  if (item.typhoon_status) {
+
+    html +=
+      infoItem(
+        '狀態',
+        item.typhoon_status
+      );
+
+  }
+
+
+  if (item.pressure !== null &&
+      item.pressure !== undefined) {
+
+    html +=
+      infoItem(
+        '氣壓',
+        formatNumber(
+          item.pressure,
+          ' hPa'
+        )
+      );
+
+  }
+
+
+  if (item.max_wind_speed !== null &&
+      item.max_wind_speed !== undefined) {
+
+    html +=
+      infoItem(
+        '最大風速',
+        formatNumber(
+          item.max_wind_speed,
+          ''
+        )
+      );
+
+  }
+
+
+  if (item.movement_direction) {
+
+    html +=
+      infoItem(
+        '移動方向',
+        item.movement_direction
+      );
+
+  }
+
+
+  if (item.movement_speed !== null &&
+      item.movement_speed !== undefined) {
+
+    html +=
+      infoItem(
+        '移動速度',
+        item.movement_speed
+      );
+
+  }
+
+
+  if (item.magnitude !== null &&
+      item.magnitude !== undefined) {
+
+    html +=
+      infoItem(
+        '規模',
+        item.magnitude
+      );
+
+  }
+
+
+  if (item.depth !== null &&
+      item.depth !== undefined) {
+
+    html +=
+      infoItem(
+        '深度',
+        item.depth + ' km'
+      );
+
+  }
+
+
+  if (item.earthquake_location) {
+
+    html +=
+      infoItem(
+        '震央',
+        item.earthquake_location
+      );
+
+  }
+
+
+  if (item.intensity) {
+
+    html +=
+      infoItem(
+        '震度',
+        item.intensity
+      );
+
+  }
+
+
+  if (item.rainfall !== null &&
+      item.rainfall !== undefined) {
+
+    html +=
+      infoItem(
+        '雨量',
+        item.rainfall
+      );
+
+  }
+
+
+  if (item.rain_probability !== null &&
+      item.rain_probability !== undefined) {
+
+    html +=
+      infoItem(
+        '降雨機率',
+        item.rain_probability + '%'
+      );
+
+  }
+
+
+  if (item.latitude !== null &&
+      item.longitude !== null) {
+
+    html +=
+      infoItem(
+        '座標',
+        Number(item.latitude).toFixed(4) +
+        ', ' +
+        Number(item.longitude).toFixed(4)
+      );
+
+  }
+
+
+  html +=
+    '</div>';
+
+
+  html +=
+    '<div class="disaster-info">';
+
+
+  html +=
+    infoItem(
+      '開始時間',
+      formatDate(item.start_at)
+    );
+
+
+  html +=
+    infoItem(
+      '結束時間',
+      formatDate(item.end_at)
+    );
+
+
+  html +=
+    '</div>';
+
+
+  html +=
+    '<div class="disaster-footer">';
+
+
+  html +=
+    '<div class="source-text">' +
+    escapeHtml(
+      item.source ||
+      '安全團聚災害資料庫'
+    ) +
+    '</div>';
+
+
+  if (item.source_url) {
+
+    html +=
+      '<a ' +
+      'class="source-btn" ' +
+      'href="' +
+      escapeAttribute(
+        item.source_url
+      ) +
+      '" ' +
+      'target="_blank" ' +
+      'rel="noopener">' +
+      '查看來源 →' +
+      '</a>';
+
+  }
+
+
+  html +=
+    '</div>';
+
+
+  card.innerHTML =
+    html;
+
+
+  return card;
+
+}
+
+
+/* =====================================================
+   資料項目
+===================================================== */
+
+function infoItem(label, value) {
+
+  return (
+    '<div class="info-item">' +
+
+      '<div class="info-label">' +
+        escapeHtml(label) +
+      '</div>' +
+
+      '<div class="info-value">' +
+        escapeHtml(
+          value === null ||
+          value === undefined
+            ? '--'
+            : String(value)
+        ) +
+      '</div>' +
+
+    '</div>'
+  );
+
+}
+
+
+/* =====================================================
+   HTML 安全處理
+===================================================== */
+
+function escapeHtml(value) {
+
+  return String(value || '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+
+}
+
+
+function escapeAttribute(value) {
+
+  return escapeHtml(value);
+
+}
+
+
+/* =====================================================
+   顯示資料
+===================================================== */
+
+function renderDisasters() {
+
+  if (!list) {
+    return;
+  }
+
+
+  list.innerHTML = '';
+
+
+  var filtered =
+    allDisasters.filter(
+      function(item) {
+
+        if (
+          currentFilter ===
+          'all'
+        ) {
+
+          return true;
+
+        }
+
+
+        return (
+          getDisasterTypeName(
+            item.disaster_type
+          ) ===
+          currentFilter
+        );
+
+      }
+    );
+
+
+  if (!filtered.length) {
+
+    list.innerHTML =
+      '<div class="empty-state">' +
+
+        '<div class="empty-icon">' +
+          '✅' +
+        '</div>' +
+
+        '<div class="empty-title">' +
+          '目前沒有災害資料' +
+        '</div>' +
+
+        '<div class="empty-text">' +
+          '目前後台沒有符合條件的有效災害資訊。' +
+        '</div>' +
+
+      '</div>';
+
+    return;
+
+  }
+
+
+  filtered.forEach(
+    function(item) {
+
+      list.appendChild(
+        createDisasterCard(item)
+      );
+
+    }
+  );
+
+}
+
+
+/* =====================================================
+   讀取 disaster_data
+===================================================== */
+
+async function loadDisasters() {
+
+  if (!list) {
+    return;
+  }
+
+
+  setStatus(
+    'loading',
+    '正在更新災害資料…'
+  );
+
+
+  list.innerHTML =
+    '<div class="loading">' +
+    '正在讀取災害資料…' +
+    '</div>';
+
+
+  try {
+
+    var now =
+      new Date().toISOString();
+
+
+    var result =
+      await supabaseClient
+        .from('disaster_data')
+        .select('*')
+        .eq(
+          'is_active',
+          true
+        )
+        .or(
+          'end_at.is.null,end_at.gte.' +
+          now
+        )
+        .order(
+          'start_at',
+          {
+            ascending: false
+          }
+        );
+
+
+    if (result.error) {
+
+      throw result.error;
+
+    }
+
+
+    allDisasters =
+      result.data || [];
+
+
+    renderDisasters();
+
+
+    setStatus(
+      'ok',
+      allDisasters.length
+        ? '已更新 ' +
+          allDisasters.length +
+          ' 筆災害資料'
+        : '目前無有效災害'
+    );
+
+
+  } catch (error) {
+
+    console.error(
+      'disaster_data 讀取失敗：',
+      error
+    );
+
+
+    allDisasters = [];
+
+
+    list.innerHTML =
+      '<div class="empty-state">' +
+
+        '<div class="empty-icon">' +
+          '⚠️' +
+        '</div>' +
+
+        '<div class="empty-title">' +
+          '災害資料讀取失敗' +
+        '</div>' +
+
+        '<div class="empty-text">' +
+          '請確認 disaster_data 的 RLS 權限設定。' +
+          '<br><br>' +
+          escapeHtml(
+            error.message ||
+            '未知錯誤'
+          ) +
+        '</div>' +
+
+      '</div>';
+
+
+    setStatus(
+      'error',
+      '資料讀取失敗'
+    );
+
+  }
+
+}
+
+
+/* =====================================================
+   狀態
+===================================================== */
+
+function setStatus(type, text) {
+
+  if (statusText) {
+
+    statusText.textContent =
+      text;
+
+  }
+
+
+  if (statusDot) {
+
+    statusDot.classList.remove(
+      'loading',
+      'error'
+    );
+
+
+    if (type === 'loading') {
+
+      statusDot.classList.add(
+        'loading'
+      );
+
+    }
+
+
+    if (type === 'error') {
+
+      statusDot.classList.add(
+        'error'
+      );
+
+    }
+
+  }
+
+}
+
+
+/* =====================================================
+   篩選按鈕
+===================================================== */
+
+document
+  .querySelectorAll(
+    '.filter-btn'
+  )
+  .forEach(
+    function(button) {
+
+      button.addEventListener(
+        'click',
+        function() {
+
+          document
+            .querySelectorAll(
+              '.filter-btn'
+            )
+            .forEach(
+              function(item) {
+
+                item.classList.remove(
+                  'active'
+                );
+
+              }
+            );
+
+
+          button.classList.add(
+            'active'
+          );
+
+
+          currentFilter =
+            button.dataset.type ||
+            'all';
+
+
+          renderDisasters();
+
+        }
+      );
+
+    }
+  );
+
+
+/* =====================================================
+   更新
+===================================================== */
+
+if (refreshBtn) {
+
+  refreshBtn.addEventListener(
+    'click',
+    function() {
+
+      loadDisasters();
+
+    }
+  );
+
+}
+
+
+/* =====================================================
+   語音操作
+===================================================== */
+
+var voiceHint =
+  document.getElementById(
+    'voiceHint'
+  );
+
+
+function showVoiceHint() {
+
+  if (!voiceHint) {
+    return;
+  }
+
+  voiceHint.classList.add(
+    'show'
+  );
+
+  setTimeout(
+    function() {
+
+      voiceHint.classList.remove(
+        'show'
+      );
+
+    },
+    3500
+  );
+
+}
+
+
+function handleVoiceCommand(text) {
+
+  var command =
+    String(text || '')
+      .trim()
+      .toLowerCase();
+
+
+  if (
+    command.includes('颱風')
+  ) {
+
+    currentFilter =
+      '颱風';
+
+  } else if (
+    command.includes('地震')
+  ) {
+
+    currentFilter =
+      '地震';
+
+  } else if (
+    command.includes('豪雨') ||
+    command.includes('大雨')
+  ) {
+
+    currentFilter =
+      '豪雨';
+
+  } else if (
+    command.includes('其他')
+  ) {
+
+    currentFilter =
+      '其他';
+
+  } else if (
+    command.includes('全部')
+  ) {
+
+    currentFilter =
+      'all';
+
+  } else if (
+    command.includes('更新') ||
+    command.includes('重新整理')
+  ) {
+
+    loadDisasters();
+
+    return;
+
+  } else {
+
+    return;
+
+  }
+
+
+  document
+    .querySelectorAll(
+      '.filter-btn'
+    )
+    .forEach(
+      function(button) {
+
+        button.classList.toggle(
+          'active',
+          (
+            button.dataset.type ||
+            'all'
+          ) ===
+          currentFilter
+        );
+
+      }
+    );
+
+
+  renderDisasters();
+
+}
+
+
+/* =====================================================
+   Web Speech
+===================================================== */
+
+if (
+  'webkitSpeechRecognition' in window
+) {
+
+  var recognition =
+    new webkitSpeechRecognition();
+
+  recognition.lang =
+    'zh-TW';
+
+  recognition.continuous =
+    false;
+
+  recognition.interimResults =
+    false;
+
+
+  window.startDisasterVoice =
+    function() {
+
+      try {
+
+        showVoiceHint();
+
+        recognition.start();
+
+      } catch (e) {}
+
+    };
+
+
+  recognition.onresult =
+    function(event) {
+
+      var transcript =
+        event.results[0][0].transcript;
+
+      handleVoiceCommand(
+        transcript
+      );
+
+    };
+
+}
+
+
+/* =====================================================
+   提示語音
+===================================================== */
+
+function speak(text) {
+
+  if (
+    !('speechSynthesis' in window)
+  ) {
+
+    return;
+
+  }
+
+
+  try {
+
+    window.speechSynthesis.cancel();
+
+    var utterance =
+      new SpeechSynthesisUtterance(
+        text
+      );
+
+    utterance.lang =
+      'zh-TW';
+
+    utterance.rate =
+      1;
+
+    window.speechSynthesis.speak(
+      utterance
+    );
+
+  } catch (e) {}
+
+}
+
+
+/* =====================================================
+   啟動
+===================================================== */
+
+loadDisasters();
+
+
+/* =====================================================
+   每 5 分鐘自動更新
+===================================================== */
+
+setInterval(
+  function() {
+
+    loadDisasters();
+
+  },
+  5 * 60 * 1000
+);
+
+
+/* =====================================================
+   首次提示
+===================================================== */
+
+setTimeout(
+  function() {
+
+    showVoiceHint();
+
+  },
+  1500
+);
+
+
+})();
+
+</script>
+
+</body>
+</html>
