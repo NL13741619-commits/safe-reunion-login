@@ -3053,7 +3053,149 @@ setTimeout(function () {
    依照經緯度取得天氣
    全球城市皆可使用
 ========================================================= */
+/* =========================================================
+   天氣代碼轉中文
+========================================================= */
 
+function getWeatherDescription(code) {
+
+  if (code === 0) {
+    return {
+      text: '晴天',
+      icon: '☀️'
+    };
+  }
+
+  if (code === 1 || code === 2) {
+    return {
+      text: '晴時多雲',
+      icon: '🌤️'
+    };
+  }
+
+  if (code === 3) {
+    return {
+      text: '陰天',
+      icon: '☁️'
+    };
+  }
+
+  if (
+    code === 45 ||
+    code === 48
+  ) {
+    return {
+      text: '有霧',
+      icon: '🌫️'
+    };
+  }
+
+  if (
+    code === 51 ||
+    code === 53 ||
+    code === 55
+  ) {
+    return {
+      text: '毛毛雨',
+      icon: '🌦️'
+    };
+  }
+
+  if (
+    code === 56 ||
+    code === 57
+  ) {
+    return {
+      text: '凍毛毛雨',
+      icon: '🌧️'
+    };
+  }
+
+  if (
+    code === 61 ||
+    code === 63 ||
+    code === 65
+  ) {
+    return {
+      text: '下雨',
+      icon: '🌧️'
+    };
+  }
+
+  if (
+    code === 66 ||
+    code === 67
+  ) {
+    return {
+      text: '凍雨',
+      icon: '🌧️'
+    };
+  }
+
+  if (
+    code === 71 ||
+    code === 73 ||
+    code === 75
+  ) {
+    return {
+      text: '下雪',
+      icon: '🌨️'
+    };
+  }
+
+  if (code === 77) {
+    return {
+      text: '雪粒',
+      icon: '🌨️'
+    };
+  }
+
+  if (
+    code === 80 ||
+    code === 81 ||
+    code === 82
+  ) {
+    return {
+      text: '陣雨',
+      icon: '🌦️'
+    };
+  }
+
+  if (
+    code === 85 ||
+    code === 86
+  ) {
+    return {
+      text: '陣雪',
+      icon: '🌨️'
+    };
+  }
+
+  if (
+    code === 95
+  ) {
+    return {
+      text: '雷雨',
+      icon: '⛈️'
+    };
+  }
+
+  if (
+    code === 96 ||
+    code === 99
+  ) {
+    return {
+      text: '雷雨伴冰雹',
+      icon: '⛈️'
+    };
+  }
+
+  return {
+    text: '天氣狀況未知',
+    icon: '🌤️'
+  };
+
+}
 async function loadWeatherByLocation(
   cityName,
   latitude,
