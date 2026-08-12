@@ -1,449 +1,1430 @@
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
-  <meta charset="UTF-8">
+<meta charset="UTF-8">
 
-  <meta
-    name="viewport"
-    content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
-  >
+<meta
+  name="viewport"
+  content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+>
 
-  <title>設定 - 安全團聚</title>
+<title>設定 - 安全團聚</title>
 
-  <style>
+<style>
 
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
 
-    body {
-      font-family:
-        -apple-system,
-        BlinkMacSystemFont,
-        "Segoe UI",
-        Roboto,
-        sans-serif;
+body {
+  font-family:
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    Roboto,
+    sans-serif;
 
-      background: #f5f5f5;
-      color: #111;
-      min-height: 100vh;
-    }
+  background: #f5f5f5;
+  color: #111;
+  min-height: 100vh;
+}
 
-    /* =========================
-       頂部
-    ========================= */
 
-    .header {
+/* =========================
+   頂部
+========================= */
 
-      height: 56px;
+.header {
 
-      background: #fff;
+  height: 56px;
 
-      border-bottom: 1px solid #eee;
+  background: #fff;
 
-      display: flex;
+  border-bottom: 1px solid #eee;
 
-      align-items: center;
+  display: flex;
 
-      justify-content: center;
+  align-items: center;
 
-      position: relative;
+  justify-content: center;
 
-      font-size: 18px;
+  position: relative;
 
-      font-weight: 700;
+  font-size: 18px;
 
-    }
+  font-weight: 700;
 
-    .back {
+}
 
-      position: absolute;
+.back {
 
-      left: 12px;
+  position: absolute;
 
-      top: 50%;
+  left: 12px;
 
-      transform: translateY(-50%);
+  top: 50%;
 
-      width: 42px;
+  transform: translateY(-50%);
 
-      height: 42px;
+  width: 42px;
 
-      border: none;
+  height: 42px;
 
-      background: transparent;
+  border: none;
 
-      font-size: 30px;
+  background: transparent;
 
-      line-height: 42px;
+  font-size: 30px;
 
-      cursor: pointer;
+  line-height: 42px;
 
-      color: #222;
+  cursor: pointer;
 
-    }
+  color: #222;
 
-    /* =========================
-       設定列表
-    ========================= */
+}
 
-    .container {
 
-      padding: 12px;
+/* =========================
+   主內容
+========================= */
 
-      max-width: 600px;
+.container {
 
-      margin: 0 auto;
+  padding: 12px;
 
-    }
+  max-width: 600px;
 
-    .menu-group {
+  margin: 0 auto;
 
-      background: #fff;
+}
 
-      border-radius: 14px;
 
-      overflow: hidden;
+/* =========================
+   選單
+========================= */
 
-      margin-bottom: 14px;
+.menu-group {
 
-      box-shadow:
-        0 2px 8px rgba(0,0,0,0.05);
+  background: #fff;
 
-    }
+  border-radius: 14px;
 
-    .menu-item {
+  overflow: hidden;
 
-      min-height: 64px;
+  margin-bottom: 14px;
 
-      display: flex;
+  box-shadow:
+    0 2px 8px rgba(0,0,0,0.05);
 
-      align-items: center;
+}
 
-      padding: 10px 14px;
+.menu-item {
 
-      border-bottom: 1px solid #f0f0f0;
+  min-height: 64px;
 
-      cursor: pointer;
+  display: flex;
 
-      text-decoration: none;
+  align-items: center;
 
-      color: #111;
+  padding: 10px 14px;
 
-      -webkit-tap-highlight-color: transparent;
+  border-bottom: 1px solid #f0f0f0;
 
-    }
+  cursor: pointer;
 
-    .menu-item:last-child {
+  text-decoration: none;
 
-      border-bottom: none;
+  color: #111;
 
-    }
+  -webkit-tap-highlight-color: transparent;
 
-    .menu-item:active {
+}
 
-      background: #f7f7f7;
+.menu-item:last-child {
 
-    }
+  border-bottom: none;
 
-    .menu-icon {
+}
 
-      width: 42px;
+.menu-item:active {
 
-      height: 42px;
+  background: #f7f7f7;
 
-      border-radius: 12px;
+}
 
-      display: flex;
+.menu-icon {
 
-      align-items: center;
+  width: 42px;
 
-      justify-content: center;
+  height: 42px;
 
-      font-size: 21px;
+  border-radius: 12px;
 
-      margin-right: 12px;
+  display: flex;
 
-      flex-shrink: 0;
+  align-items: center;
 
-    }
+  justify-content: center;
 
-    .menu-text {
+  font-size: 21px;
 
-      flex: 1;
+  margin-right: 12px;
 
-      font-size: 15px;
+  flex-shrink: 0;
 
-      font-weight: 600;
+}
 
-    }
+.menu-text {
 
-    .menu-desc {
+  flex: 1;
 
-      display: block;
+  font-size: 15px;
 
-      margin-top: 3px;
+  font-weight: 600;
 
-      font-size: 12px;
+}
 
-      color: #888;
+.menu-desc {
 
-      font-weight: 400;
+  display: block;
 
-    }
+  margin-top: 3px;
 
-    .menu-arrow {
+  font-size: 12px;
 
-      font-size: 26px;
+  color: #888;
 
-      color: #aaa;
+  font-weight: 400;
 
-      margin-left: 8px;
+}
 
-    }
+.menu-arrow {
 
-    /* =========================
-       刪除帳號
-    ========================= */
+  font-size: 26px;
 
-    .danger {
+  color: #aaa;
 
-      color: #d32f2f;
+  margin-left: 8px;
 
-    }
+}
 
-    .danger-icon {
 
-      background: #ffebee;
+/* =========================
+   設定頁
+========================= */
 
-    }
+.settings-page {
 
-    /* =========================
-       版本
-    ========================= */
+  display: none;
 
-    .version {
+}
 
-      text-align: center;
+.settings-page.active {
 
-      color: #aaa;
+  display: block;
 
-      font-size: 12px;
+}
 
-      padding: 18px 0 30px;
+.settings-card {
 
-    }
+  background: #fff;
 
-  </style>
+  border-radius: 14px;
+
+  padding: 18px;
+
+  margin-bottom: 14px;
+
+  box-shadow:
+    0 2px 8px rgba(0,0,0,0.05);
+
+}
+
+.settings-title {
+
+  font-size: 17px;
+
+  font-weight: 700;
+
+  margin-bottom: 16px;
+
+}
+
+
+/* =========================
+   表單
+========================= */
+
+.form-group {
+
+  margin-bottom: 16px;
+
+}
+
+.form-group label {
+
+  display: block;
+
+  font-size: 14px;
+
+  color: #555;
+
+  margin-bottom: 8px;
+
+}
+
+.form-group input {
+
+  width: 100%;
+
+  padding: 12px;
+
+  border: 1px solid #ddd;
+
+  border-radius: 10px;
+
+  font-size: 16px;
+
+  outline: none;
+
+}
+
+.form-group input:focus {
+
+  border-color: #06C755;
+
+}
+
+
+/* =========================
+   按鈕
+========================= */
+
+.btn {
+
+  display: block;
+
+  width: 100%;
+
+  padding: 12px;
+
+  border-radius: 10px;
+
+  font-size: 15px;
+
+  font-weight: 600;
+
+  border: none;
+
+  cursor: pointer;
+
+  text-align: center;
+
+  text-decoration: none;
+
+}
+
+.btn-primary {
+
+  background: #06C755;
+
+  color: #fff;
+
+}
+
+.btn-outline {
+
+  background: #fff;
+
+  color: #06C755;
+
+  border: 1px solid #06C755;
+
+}
+
+.btn-danger {
+
+  background: #d32f2f;
+
+  color: #fff;
+
+}
+
+
+/* =========================
+   狀態
+========================= */
+
+.status {
+
+  text-align: center;
+
+  color: #777;
+
+  font-size: 13px;
+
+  min-height: 22px;
+
+  margin-top: 12px;
+
+  line-height: 1.5;
+
+}
+
+
+/* =========================
+   分隔線
+========================= */
+
+hr {
+
+  border: 0;
+
+  border-top: 1px solid #eee;
+
+  margin: 20px 0;
+
+}
+
+
+/* =========================
+   返回按鈕
+========================= */
+
+.sub-back {
+
+  margin-bottom: 14px;
+
+}
+
+
+/* =========================
+   版本
+========================= */
+
+.version {
+
+  text-align: center;
+
+  color: #aaa;
+
+  font-size: 12px;
+
+  padding: 18px 0 30px;
+
+}
+
+</style>
 </head>
+
 
 <body>
 
-  <!-- =========================
-       頂部
-  ========================= -->
 
-  <div class="header">
+<!-- =========================
+     標題
+========================= -->
 
-    <button
-      type="button"
-      class="back"
-      onclick="history.back()"
-      aria-label="返回"
-    >
-      ‹
-    </button>
+<div class="header">
 
+  <button
+    type="button"
+    class="back"
+    onclick="goBack()"
+  >
+    ‹
+  </button>
+
+  <span id="pageTitle">
     設定
+  </span>
 
-  </div>
+</div>
 
 
-  <!-- =========================
-       設定內容
-  ========================= -->
+<div class="container">
 
-  <div class="container">
+
+<!-- =====================================================
+     主設定選單
+===================================================== -->
+
+<div
+  id="mainSettings"
+  class="settings-page active"
+>
+
+
+  <div class="menu-group">
 
 
     <!-- 通知 -->
 
-    <div class="menu-group">
+    <div
+      class="menu-item"
+      onclick="openNotificationSettings()"
+    >
 
-      <a
-        class="menu-item"
-        href="me.html?settings=notifications"
+      <div
+        class="menu-icon"
+        style="background:#f3e5f5"
       >
+        🔔
+      </div>
 
-        <div
-          class="menu-icon"
-          style="background:#f3e5f5"
-        >
-          🔔
-        </div>
+      <div class="menu-text">
 
-        <div class="menu-text">
+        通知設定
 
-          通知設定
+        <span class="menu-desc">
+          管理通知與提醒
+        </span>
 
-          <span class="menu-desc">
-            管理通知與提醒
-          </span>
+      </div>
 
-        </div>
-
-        <div class="menu-arrow">
-          ›
-        </div>
-
-      </a>
-
-
-      <!-- 隱私 -->
-
-      <a
-        class="menu-item"
-        href="me.html?settings=privacy"
-      >
-
-        <div
-          class="menu-icon"
-          style="background:#e0f7fa"
-        >
-          🔒
-        </div>
-
-        <div class="menu-text">
-
-          隱私設定
-
-          <span class="menu-desc">
-            管理隱私與資料使用
-          </span>
-
-        </div>
-
-        <div class="menu-arrow">
-          ›
-        </div>
-
-      </a>
-
-
-      <!-- 一般 -->
-
-      <a
-        class="menu-item"
-        href="me.html?settings=general"
-      >
-
-        <div
-          class="menu-icon"
-          style="background:#fce4ec"
-        >
-          ⚙️
-        </div>
-
-        <div class="menu-text">
-
-          一般設定
-
-          <span class="menu-desc">
-            飲水天數、資料匯入與匯出
-          </span>
-
-        </div>
-
-        <div class="menu-arrow">
-          ›
-        </div>
-
-      </a>
+      <div class="menu-arrow">
+        ›
+      </div>
 
     </div>
 
 
-    <!-- =========================
-         帳號
-    ========================= -->
+    <!-- 隱私 -->
 
-    <div class="menu-group">
+    <div
+      class="menu-item"
+      onclick="openPrivacySettings()"
+    >
 
-      <a
-        class="menu-item"
-        href="me.html"
+      <div
+        class="menu-icon"
+        style="background:#e0f7fa"
       >
+        🔒
+      </div>
 
-        <div
-          class="menu-icon"
-          style="background:#e8f5e9"
-        >
-          👤
-        </div>
+      <div class="menu-text">
 
-        <div class="menu-text">
+        隱私設定
 
-          帳號設定
+        <span class="menu-desc">
+          管理隱私與資料使用
+        </span>
 
-          <span class="menu-desc">
-            個人資料與帳號相關功能
-          </span>
+      </div>
 
-        </div>
-
-        <div class="menu-arrow">
-          ›
-        </div>
-
-      </a>
+      <div class="menu-arrow">
+        ›
+      </div>
 
     </div>
 
 
-    <!-- =========================
-         危險操作
-    ========================= -->
+    <!-- 一般 -->
 
-    <div class="menu-group">
+    <div
+      class="menu-item"
+      onclick="openGeneralSettings()"
+    >
 
-      <a
-        class="menu-item danger"
-        href="delete-account.html"
+      <div
+        class="menu-icon"
+        style="background:#fce4ec"
       >
+        ⚙️
+      </div>
 
-        <div
-          class="menu-icon danger-icon"
-        >
-          🗑️
-        </div>
+      <div class="menu-text">
 
-        <div class="menu-text">
+        一般設定
 
-          刪除帳號
+        <span class="menu-desc">
+          飲水天數、資料匯入與匯出
+        </span>
 
-          <span class="menu-desc">
-            永久刪除目前安全團聚帳號
-          </span>
+      </div>
 
-        </div>
+      <div class="menu-arrow">
+        ›
+      </div>
 
-        <div class="menu-arrow">
-          ›
-        </div>
-
-      </a>
-
-    </div>
-
-
-    <div class="version">
-      安全團聚<br>
-      設定中心
     </div>
 
   </div>
+
+
+  <!-- 帳號 -->
+
+  <div class="menu-group">
+
+    <a
+      class="menu-item"
+      href="me.html"
+    >
+
+      <div
+        class="menu-icon"
+        style="background:#e8f5e9"
+      >
+        👤
+      </div>
+
+      <div class="menu-text">
+
+        帳號設定
+
+        <span class="menu-desc">
+          個人資料與帳號相關功能
+        </span>
+
+      </div>
+
+      <div class="menu-arrow">
+        ›
+      </div>
+
+    </a>
+
+  </div>
+
+
+  <!-- 刪除帳號 -->
+
+  <div class="menu-group">
+
+    <a
+      class="menu-item"
+      href="delete-account.html"
+    >
+
+      <div
+        class="menu-icon"
+        style="background:#ffebee"
+      >
+        🗑️
+      </div>
+
+      <div class="menu-text">
+
+        刪除帳號
+
+        <span class="menu-desc">
+          永久刪除目前安全團聚帳號
+        </span>
+
+      </div>
+
+      <div class="menu-arrow">
+        ›
+      </div>
+
+    </a>
+
+  </div>
+
+
+  <div class="version">
+
+    安全團聚<br>
+    設定中心
+
+  </div>
+
+</div>
+
+
+<!-- =====================================================
+     一般設定
+===================================================== -->
+
+<div
+  id="generalSettings"
+  class="settings-page"
+>
+
+
+  <button
+    type="button"
+    class="btn btn-outline sub-back"
+    onclick="showMainSettings()"
+  >
+    ← 返回設定
+  </button>
+
+
+  <div class="settings-card">
+
+    <div class="settings-title">
+      一般設定
+    </div>
+
+
+    <div class="form-group">
+
+      <label>
+        飲水準備天數
+      </label>
+
+      <input
+        id="target-days"
+        type="number"
+        min="1"
+        max="30"
+        value="7"
+      >
+
+    </div>
+
+
+    <button
+      type="button"
+      class="btn btn-primary"
+      onclick="saveTargetDays()"
+    >
+      儲存設定
+    </button>
+
+
+    <div
+      id="generalStatus"
+      class="status"
+    ></div>
+
+
+    <hr>
+
+
+    <!-- 匯出 -->
+
+    <button
+      type="button"
+      class="btn btn-outline"
+      onclick="exportData()"
+    >
+      📤 匯出安全團聚資料
+    </button>
+
+
+    <div style="height:8px"></div>
+
+
+    <!-- 匯入 -->
+
+    <button
+      type="button"
+      class="btn btn-outline"
+      onclick="document.getElementById('import-file').click()"
+    >
+      📥 匯入安全團聚資料
+    </button>
+
+
+    <input
+      id="import-file"
+      type="file"
+      accept=".json"
+      style="display:none"
+      onchange="importData(event)"
+    >
+
+
+    <div style="height:8px"></div>
+
+
+    <!-- 清除本機資料 -->
+
+    <button
+      type="button"
+      class="btn btn-danger"
+      onclick="clearAllLocalData()"
+    >
+      ⚠️ 清除本機資料
+    </button>
+
+
+  </div>
+
+
+  <!-- 刪除帳號 -->
+
+  <div class="settings-card">
+
+    <div class="settings-title">
+      帳號
+    </div>
+
+    <a
+      class="btn btn-danger"
+      href="delete-account.html"
+    >
+      🗑️ 刪除帳號
+    </a>
+
+  </div>
+
+
+</div>
+
+
+<!-- =====================================================
+     通知設定
+===================================================== -->
+
+<div
+  id="notificationSettings"
+  class="settings-page"
+>
+
+  <button
+    type="button"
+    class="btn btn-outline sub-back"
+    onclick="showMainSettings()"
+  >
+    ← 返回設定
+  </button>
+
+  <div class="settings-card">
+
+    <div class="settings-title">
+      通知設定
+    </div>
+
+    <div class="status">
+      通知設定將在下一階段從 me.html 搬移到這裡。
+    </div>
+
+  </div>
+
+</div>
+
+
+<!-- =====================================================
+     隱私設定
+===================================================== -->
+
+<div
+  id="privacySettings"
+  class="settings-page"
+>
+
+  <button
+    type="button"
+    class="btn btn-outline sub-back"
+    onclick="showMainSettings()"
+  >
+    ← 返回設定
+  </button>
+
+  <div class="settings-card">
+
+    <div class="settings-title">
+      隱私設定
+    </div>
+
+    <div class="status">
+      隱私設定將在下一階段從 me.html 搬移到這裡。
+    </div>
+
+  </div>
+
+</div>
+
+
+</div>
+
+
+<script>
+
+/* =========================================================
+   Store
+========================================================= */
+
+function getStore(key) {
+
+  try {
+
+    var value =
+      localStorage.getItem(
+        "safe_reunion_" + key
+      );
+
+    if (!value) {
+      return null;
+    }
+
+    return JSON.parse(value);
+
+  } catch (e) {
+
+    console.error(e);
+
+    return null;
+
+  }
+
+}
+
+
+function setStore(key,value) {
+
+  try {
+
+    localStorage.setItem(
+      "safe_reunion_" + key,
+      JSON.stringify(value)
+    );
+
+  } catch (e) {
+
+    console.error(e);
+
+  }
+
+}
+
+
+/* =========================================================
+   預設設定
+========================================================= */
+
+function getDefaultSettings() {
+
+  return {
+
+    targetDays: 7
+
+  };
+
+}
+
+
+/* =========================================================
+   顯示頁面
+========================================================= */
+
+function hidePages() {
+
+  document
+    .querySelectorAll(".settings-page")
+    .forEach(function(page) {
+
+      page.classList.remove(
+        "active"
+      );
+
+    });
+
+}
+
+
+function showMainSettings() {
+
+  hidePages();
+
+  document
+    .getElementById(
+      "mainSettings"
+    )
+    .classList.add("active");
+
+  document
+    .getElementById(
+      "pageTitle"
+    )
+    .textContent =
+      "設定";
+
+}
+
+
+/* =========================================================
+   一般設定
+========================================================= */
+
+function openGeneralSettings() {
+
+  hidePages();
+
+  var settings =
+    getStore("settings") ||
+    getDefaultSettings();
+
+
+  document
+    .getElementById(
+      "target-days"
+    )
+    .value =
+      settings.targetDays || 7;
+
+
+  document
+    .getElementById(
+      "generalSettings"
+    )
+    .classList.add("active");
+
+
+  document
+    .getElementById(
+      "pageTitle"
+    )
+    .textContent =
+      "一般設定";
+
+}
+
+
+/* =========================================================
+   儲存飲水天數
+========================================================= */
+
+function saveTargetDays() {
+
+  var input =
+    document.getElementById(
+      "target-days"
+    );
+
+
+  var value =
+    Number(input.value) || 7;
+
+
+  value =
+    Math.max(
+      1,
+      Math.min(
+        30,
+        value
+      )
+    );
+
+
+  var settings =
+    getStore("settings") ||
+    getDefaultSettings();
+
+
+  settings.targetDays =
+    value;
+
+
+  setStore(
+    "settings",
+    settings
+  );
+
+
+  document
+    .getElementById(
+      "generalStatus"
+    )
+    .textContent =
+      "設定已儲存";
+
+}
+
+
+/* =========================================================
+   匯出資料
+========================================================= */
+
+function exportData() {
+
+  var data = {
+
+    profile:
+      getStore("profile"),
+
+    family:
+      getStore("family"),
+
+    inventory:
+      getStore("inventory"),
+
+    goBag:
+      getStore("goBag"),
+
+    settings:
+      getStore("settings"),
+
+    waypoints:
+      getStore("waypoints"),
+
+    exportedAt:
+      new Date().toISOString(),
+
+    version:
+      2
+
+  };
+
+
+  var blob =
+    new Blob(
+      [
+        JSON.stringify(
+          data,
+          null,
+          2
+        )
+      ],
+      {
+        type:
+          "application/json"
+      }
+    );
+
+
+  var url =
+    URL.createObjectURL(
+      blob
+    );
+
+
+  var a =
+    document.createElement(
+      "a"
+    );
+
+
+  a.href =
+    url;
+
+
+  a.download =
+    "安全團聚備份_" +
+    new Date()
+      .toISOString()
+      .slice(0,10) +
+    ".json";
+
+
+  a.click();
+
+
+  URL.revokeObjectURL(
+    url
+  );
+
+
+  document
+    .getElementById(
+      "generalStatus"
+    )
+    .textContent =
+      "資料已匯出";
+
+}
+
+
+/* =========================================================
+   匯入資料
+========================================================= */
+
+function importData(event) {
+
+  var file =
+    event.target.files[0];
+
+
+  if (!file) {
+    return;
+  }
+
+
+  var reader =
+    new FileReader();
+
+
+  reader.onload =
+    function(e) {
+
+      try {
+
+        var data =
+          JSON.parse(
+            e.target.result
+          );
+
+
+        if (data.profile)
+          setStore(
+            "profile",
+            data.profile
+          );
+
+
+        if (data.family)
+          setStore(
+            "family",
+            data.family
+          );
+
+
+        if (data.inventory)
+          setStore(
+            "inventory",
+            data.inventory
+          );
+
+
+        if (data.goBag)
+          setStore(
+            "goBag",
+            data.goBag
+          );
+
+
+        if (data.settings)
+          setStore(
+            "settings",
+            data.settings
+          );
+
+
+        if (data.waypoints)
+          setStore(
+            "waypoints",
+            data.waypoints
+          );
+
+
+        document
+          .getElementById(
+            "generalStatus"
+          )
+          .textContent =
+            "匯入成功，頁面即將重新載入";
+
+
+        setTimeout(
+          function() {
+
+            location.reload();
+
+          },
+          800
+        );
+
+
+      } catch (err) {
+
+        alert(
+          "檔案格式錯誤，無法匯入"
+        );
+
+      }
+
+    };
+
+
+  reader.readAsText(
+    file
+  );
+
+}
+
+
+/* =========================================================
+   清除本機資料
+========================================================= */
+
+function clearAllLocalData() {
+
+  if (
+    !confirm(
+      "確定要清除本機所有安全團聚資料嗎？\n\n此操作無法復原。"
+    )
+  ) {
+
+    return;
+
+  }
+
+
+  var prefix =
+    "safe_reunion_";
+
+
+  Object.keys(
+    localStorage
+  )
+  .forEach(
+    function(key) {
+
+      if (
+        key.indexOf(
+          prefix
+        ) === 0
+      ) {
+
+        localStorage.removeItem(
+          key
+        );
+
+      }
+
+    }
+  );
+
+
+  localStorage.removeItem(
+    "weather_city"
+  );
+
+
+  localStorage.removeItem(
+    "last_eq_id"
+  );
+
+
+  alert(
+    "本機資料已清除，頁面將重新載入。"
+  );
+
+
+  location.reload();
+
+}
+
+
+/* =========================================================
+   通知設定
+========================================================= */
+
+function openNotificationSettings() {
+
+  hidePages();
+
+  document
+    .getElementById(
+      "notificationSettings"
+    )
+    .classList.add("active");
+
+  document
+    .getElementById(
+      "pageTitle"
+    )
+    .textContent =
+      "通知設定";
+
+}
+
+
+/* =========================================================
+   隱私設定
+========================================================= */
+
+function openPrivacySettings() {
+
+  hidePages();
+
+  document
+    .getElementById(
+      "privacySettings"
+    )
+    .classList.add("active");
+
+  document
+    .getElementById(
+      "pageTitle"
+    )
+    .textContent =
+      "隱私設定";
+
+}
+
+
+/* =========================================================
+   返回
+========================================================= */
+
+function goBack() {
+
+  if (
+    document
+      .getElementById(
+        "mainSettings"
+      )
+      .classList
+      .contains("active")
+  ) {
+
+    history.back();
+
+    return;
+
+  }
+
+
+  showMainSettings();
+
+}
+
+
+/* =========================================================
+   如果網址帶 settings=general
+   仍然可以直接開一般設定
+========================================================= */
+
+(function() {
+
+  var params =
+    new URLSearchParams(
+      window.location.search
+    );
+
+
+  var setting =
+    params.get(
+      "settings"
+    );
+
+
+  if (
+    setting === "general"
+  ) {
+
+    setTimeout(
+      openGeneralSettings,
+      50
+    );
+
+  }
+
+
+  if (
+    setting === "notifications"
+  ) {
+
+    setTimeout(
+      openNotificationSettings,
+      50
+    );
+
+  }
+
+
+  if (
+    setting === "privacy"
+  ) {
+
+    setTimeout(
+      openPrivacySettings,
+      50
+    );
+
+  }
+
+})();
+
+</script>
 
 </body>
 </html>
