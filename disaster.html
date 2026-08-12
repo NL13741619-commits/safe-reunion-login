@@ -829,8 +829,8 @@ body {
   </div>
 
   <div class="page-intro-text">
-    顯示安全團聚災害資料庫中的即時與歷史災害資訊。
-    可查看今天、昨天、前天及更早的歷史資料。
+    顯示安全團聚災害資料庫中的即時與預報資訊。
+    可查看今天、明天、後天及全部資料。
     資料與一般天氣資料分開管理。
   </div>
 
@@ -845,13 +845,6 @@ body {
 
   <button
     class="date-btn active"
-    data-period="active"
-  >
-    🚨 即時
-  </button>
-
-  <button
-    class="date-btn"
     data-period="today"
   >
     📅 今天
@@ -859,23 +852,16 @@ body {
 
   <button
     class="date-btn"
-    data-period="yesterday"
+    data-period="tomorrow"
   >
-    📅 昨天
+    📅 明天
   </button>
 
   <button
     class="date-btn"
-    data-period="beforeYesterday"
+    data-period="dayAfterTomorrow"
   >
-    📅 前天
-  </button>
-
-  <button
-    class="date-btn"
-    data-period="history"
-  >
-    🗂️ 歷史
+    📅 後天
   </button>
 
   <button
@@ -982,7 +968,7 @@ body {
   class="voice-hint"
   id="voiceHint"
 >
-  🎙️ 可說：「即時」、「今天」、「昨天」、「前天」、「歷史」、「全部」、「颱風」、「地震」、「豪雨」
+  🎙️ 可說：「今天」、「明天」、「後天」、「全部」、「颱風」、「地震」、「豪雨」
 </div>
 
 
@@ -1050,7 +1036,7 @@ var SUPABASE_URL =
   'https://perfsipperncvjocznhl.supabase.co';
 
 var SUPABASE_KEY =
- 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBlcmZzaXBwZXJuY3Zqb2N6bmhsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODYwMTUyMzAsImV4cCI6MjEwMTU5MTIzMH0.I7vXkV247kAzRJ0RigDZt3Hzn8KJDyMc6o9E3oHJZoY';
+  'sb_publishable_qpqAwj49L6HcWqWTnNsTxw_oBEauWBA';
 
 
 var supabaseClient =
@@ -1068,7 +1054,10 @@ var allDisasters = [];
 
 var currentFilter = 'all';
 
-var currentPeriod = 'active';
+/*
+ * 預設直接顯示今天
+ */
+var currentPeriod = 'today';
 
 
 /* =====================================================
@@ -1131,6 +1120,7 @@ function getDisasterIcon(type) {
 
   if (
     text.includes('豪雨') ||
+    text.includes('大雨') ||
     text.includes('雨') ||
     text.includes('rain')
   ) {
@@ -1328,108 +1318,163 @@ function startOfDay(date) {
 
 
 /* =====================================================
-   判斷資料是否屬於日期
+   日期結束
 ===================================================== */
 
-function itemMatchesDate(item, period) {
+function endOfDay(date) {
 
-  var now =
-    new Date();
+  var d =
+    startOfDay(date);
 
-  var today =
-    startOfDay(now);
-
-  var yesterday =
-    new Date(today);
-
-  yesterday.setDate(
-    yesterday.getDate() - 1
+  d.setDate(
+    d.getDate() + 1
   );
 
-  var beforeYesterday =
-    new Date(today);
+  return d;
 
-  beforeYesterday.setDate(
-    beforeYesterday.getDate() - 2
-  );
-
-  var itemStart =
-    item.start_at
-      ? new Date(item.start_at)
-      : null;
-
-  var itemEnd =
-    item.end_at
-      ? new Date(item.end_at)
-      : null;
+}
 
 
-  if (period === 'all') {
+/* =====================================================
+   判斷災害是否與某一天重疊
+===================================================== */
 
-    return true;
+function itemOverlapsDay(
+  item,
+  day
+) {
 
-  }
+  var dayStart =
+    startOfDay(day);
+
+  var dayEnd =
+    endOfDay(day);
 
 
-  if (!itemStart) {
+  /*
+   * 沒有 start_at：
+   * 無法判斷預報日期
+   */
+  if (!item.start_at) {
 
     return false;
 
   }
 
 
-  if (period === 'today') {
+  var itemStart =
+    new Date(
+      item.start_at
+    );
+
+
+  /*
+   * 沒有 end_at：
+   * 只要開始時間落在這一天
+   * 就算屬於這一天
+   */
+  if (!item.end_at) {
 
     return (
-      itemStart >= today &&
-      itemStart < new Date(
-        today.getTime() +
-        24 * 60 * 60 * 1000
-      )
+      itemStart >= dayStart &&
+      itemStart < dayEnd
     );
 
   }
 
 
-  if (period === 'yesterday') {
+  var itemEnd =
+    new Date(
+      item.end_at
+    );
 
-    return (
-      itemStart >= yesterday &&
-      itemStart < today
+
+  /*
+   * 時間區間重疊判斷
+   *
+   * itemStart < dayEnd
+   * &&
+   * itemEnd >= dayStart
+   */
+  return (
+    itemStart < dayEnd &&
+    itemEnd >= dayStart
+  );
+
+}
+
+
+/* =====================================================
+   日期篩選
+===================================================== */
+
+function itemMatchesDate(
+  item,
+  period
+) {
+
+  var today =
+    startOfDay(
+      new Date()
+    );
+
+
+  if (
+    period === 'all'
+  ) {
+
+    return true;
+
+  }
+
+
+  if (
+    period === 'today'
+  ) {
+
+    return itemOverlapsDay(
+      item,
+      today
     );
 
   }
 
 
-  if (period === 'beforeYesterday') {
+  if (
+    period === 'tomorrow'
+  ) {
 
-    return (
-      itemStart >= beforeYesterday &&
-      itemStart < yesterday
+    var tomorrow =
+      new Date(today);
+
+    tomorrow.setDate(
+      tomorrow.getDate() + 1
+    );
+
+    return itemOverlapsDay(
+      item,
+      tomorrow
     );
 
   }
 
 
-  if (period === 'history') {
+  if (
+    period ===
+    'dayAfterTomorrow'
+  ) {
 
-    return (
-      itemStart < today
+    var dayAfterTomorrow =
+      new Date(today);
+
+    dayAfterTomorrow.setDate(
+      dayAfterTomorrow.getDate() + 2
     );
 
-  }
-
-
-  if (period === 'active') {
-
-    var active =
-      itemStart <= now &&
-      (
-        !itemEnd ||
-        itemEnd >= now
-      );
-
-    return active;
+    return itemOverlapsDay(
+      item,
+      dayAfterTomorrow
+    );
 
   }
 
@@ -1443,7 +1488,10 @@ function itemMatchesDate(item, period) {
    數值
 ===================================================== */
 
-function formatNumber(value, unit) {
+function formatNumber(
+  value,
+  unit
+) {
 
   if (
     value === null ||
@@ -1455,13 +1503,15 @@ function formatNumber(value, unit) {
 
   }
 
-  return value + (unit || '');
+  return value + (
+    unit || ''
+  );
 
 }
 
 
 /* =====================================================
-   日期區間文字
+   日期標籤
 ===================================================== */
 
 function getPeriodText(item) {
@@ -1472,56 +1522,66 @@ function getPeriodText(item) {
 
   }
 
-  var start =
-    new Date(item.start_at);
 
   var today =
     startOfDay(
       new Date()
     );
 
-  var yesterday =
+
+  var tomorrow =
     new Date(today);
 
-  yesterday.setDate(
-    yesterday.getDate() - 1
+  tomorrow.setDate(
+    tomorrow.getDate() + 1
   );
 
-  var beforeYesterday =
+
+  var dayAfterTomorrow =
     new Date(today);
 
-  beforeYesterday.setDate(
-    beforeYesterday.getDate() - 2
+  dayAfterTomorrow.setDate(
+    dayAfterTomorrow.getDate() + 2
   );
 
 
   if (
-    start >= today
+    itemOverlapsDay(
+      item,
+      today
+    )
   ) {
 
     return '今天';
 
   }
 
+
   if (
-    start >= yesterday &&
-    start < today
+    itemOverlapsDay(
+      item,
+      tomorrow
+    )
   ) {
 
-    return '昨天';
+    return '明天';
 
   }
 
+
   if (
-    start >= beforeYesterday &&
-    start < yesterday
+    itemOverlapsDay(
+      item,
+      dayAfterTomorrow
+    )
   ) {
 
-    return '前天';
+    return '後天';
 
   }
 
-  return '歷史';
+
+  return '';
 
 }
 
@@ -1710,10 +1770,7 @@ function createDisasterCard(item) {
     html +=
       infoItem(
         '最大風速',
-        formatNumber(
-          item.max_wind_speed,
-          ''
-        )
+        item.max_wind_speed
       );
 
   }
@@ -1816,7 +1873,8 @@ function createDisasterCard(item) {
     html +=
       infoItem(
         '降雨機率',
-        item.rain_probability + '%'
+        item.rain_probability +
+        '%'
       );
 
   }
@@ -1920,7 +1978,10 @@ function createDisasterCard(item) {
    資料項目
 ===================================================== */
 
-function infoItem(label, value) {
+function infoItem(
+  label,
+  value
+) {
 
   return (
 
@@ -2073,12 +2134,8 @@ function renderDisasters() {
 
           escapeHtml(
             periodName +
-            '沒有符合目前篩選條件的災害資料。'
+            '沒有符合目前篩選條件的災害或預報資料。'
           ) +
-
-          '<br><br>' +
-
-          '如果你確定資料庫有資料，請確認 Supabase 的 RLS 是否允許讀取。' +
 
         '</div>' +
 
@@ -2108,38 +2165,32 @@ function renderDisasters() {
    日期名稱
 ===================================================== */
 
-function getPeriodName(period) {
+function getPeriodName(
+  period
+) {
 
-  if (period === 'active') {
-
-    return '即時';
-
-  }
-
-  if (period === 'today') {
+  if (
+    period === 'today'
+  ) {
 
     return '今天';
 
   }
 
-  if (period === 'yesterday') {
+  if (
+    period === 'tomorrow'
+  ) {
 
-    return '昨天';
+    return '明天';
 
   }
 
   if (
     period ===
-    'beforeYesterday'
+    'dayAfterTomorrow'
   ) {
 
-    return '前天';
-
-  }
-
-  if (period === 'history') {
-
-    return '歷史';
+    return '後天';
 
   }
 
@@ -2179,19 +2230,12 @@ async function loadDisasters() {
   try {
 
     /*
-     * 重要：
+     * 讀取全部資料。
      *
-     * 這裡不再：
+     * 不在 Supabase 查詢階段
+     * 限制日期。
      *
-     * .eq('is_active', true)
-     *
-     * 也不再：
-     *
-     * .or(
-     *   'end_at.is.null,end_at.gte.' + now
-     * )
-     *
-     * 因為那兩個條件會把歷史資料排除。
+     * 日期篩選交給前端處理。
      */
 
     var result =
@@ -2207,7 +2251,7 @@ async function loadDisasters() {
         .order(
           'start_at',
           {
-            ascending: false
+            ascending: true
           }
         );
 
@@ -2259,7 +2303,7 @@ async function loadDisasters() {
 
         '<div class="empty-text">' +
 
-          '請確認 disaster_data 的 RLS 權限設定。' +
+          '請確認 Supabase 的資料表與 RLS 權限。' +
 
           '<br><br>' +
 
@@ -2373,7 +2417,7 @@ document
 
           currentPeriod =
             button.dataset.period ||
-            'active';
+            'today';
 
 
           renderDisasters();
@@ -2501,7 +2545,7 @@ function updatePeriodButtons() {
           'active',
           (
             button.dataset.period ||
-            'active'
+            'today'
           ) ===
           currentPeriod
         );
@@ -2544,7 +2588,9 @@ function updateTypeButtons() {
    語音控制
 ===================================================== */
 
-function handleVoiceCommand(text) {
+function handleVoiceCommand(
+  text
+) {
 
   var command =
     String(text || '')
@@ -2557,26 +2603,20 @@ function handleVoiceCommand(text) {
    */
 
   if (
-    command.includes('前天')
+    command.includes('後天')
   ) {
 
     currentPeriod =
-      'beforeYesterday';
-
-    currentFilter =
-      'all';
+      'dayAfterTomorrow';
 
   }
 
   else if (
-    command.includes('昨天')
+    command.includes('明天')
   ) {
 
     currentPeriod =
-      'yesterday';
-
-    currentFilter =
-      'all';
+      'tomorrow';
 
   }
 
@@ -2587,22 +2627,6 @@ function handleVoiceCommand(text) {
     currentPeriod =
       'today';
 
-    currentFilter =
-      'all';
-
-  }
-
-  else if (
-    command.includes('歷史') ||
-    command.includes('历史')
-  ) {
-
-    currentPeriod =
-      'history';
-
-    currentFilter =
-      'all';
-
   }
 
   else if (
@@ -2611,16 +2635,6 @@ function handleVoiceCommand(text) {
 
     currentPeriod =
       'all';
-
-  }
-
-  else if (
-    command.includes('即時') ||
-    command.includes('現在')
-  ) {
-
-    currentPeriod =
-      'active';
 
   }
 
@@ -2663,6 +2677,34 @@ function handleVoiceCommand(text) {
 
     currentFilter =
       '其他';
+
+  }
+
+  else if (
+    command.includes('全部')
+  ) {
+
+    /*
+     * 如果只說「全部」
+     * 保留日期選擇。
+     *
+     * 例如目前是「明天」
+     * 說「全部」不會把日期
+     * 強制改成全部。
+     */
+
+    if (
+      !(
+        command.includes('今天') ||
+        command.includes('明天') ||
+        command.includes('後天')
+      )
+    ) {
+
+      currentFilter =
+        'all';
+
+    }
 
   }
 
