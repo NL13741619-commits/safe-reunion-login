@@ -65,6 +65,36 @@
       transform: scale(0.94);
     }
 
+    /* =====================================================
+   左上角固定首頁入口
+===================================================== */
+
+.home-header-btn {
+  width: 34px;
+  height: 34px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 50%;
+
+  text-decoration: none;
+  color: white;
+
+  font-size: 20px;
+
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+
+  flex-shrink: 0;
+}
+
+.home-header-btn:active {
+  background: rgba(255,255,255,0.18);
+  transform: scale(0.94);
+}
+    
     .alert-banner {
       background: #fdecea;
       border-left: 5px solid #e74c3c;
@@ -574,6 +604,16 @@
 
   <!-- 頂部 -->
 <div class="header">
+
+  <!-- 左上角首頁入口 -->
+  <a
+    class="home-header-btn"
+    href="index.html"
+    aria-label="首頁"
+    title="首頁"
+  >
+    🏠
+  </a>
 
   <h1>安全團聚</h1>
 
