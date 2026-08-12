@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+  >
+
+  <title>設定 - 安全團聚</title>
+
+  <style>
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family:
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        Roboto,
+        sans-serif;
+
+      background: #f5f5f5;
+      color: #111;
+      min-height: 100vh;
+    }
+
+    /* =========================
+       頂部
+    ========================= */
+
+    .header {
+
+      height: 56px;
+
+      background: #fff;
+
+      border-bottom: 1px solid #eee;
+
+      display: flex;
+
+      align-items: center;
+
+      justify-content: center;
+
+      position: relative;
+
+      font-size: 18px;
+
+      font-weight: 700;
+
+    }
+
+    .back {
+
+      position: absolute;
+
+      left: 12px;
+
+      top: 50%;
+
+      transform: translateY(-50%);
+
+      width: 42px;
+
+      height: 42px;
+
+      border: none;
+
+      background: transparent;
+
+      font-size: 30px;
+
+      line-height: 42px;
+
+      cursor: pointer;
+
+      color: #222;
+
+    }
+
+    /* =========================
+       設定列表
+    ========================= */
+
+    .container {
+
+      padding: 12px;
+
+      max-width: 600px;
+
+      margin: 0 auto;
+
+    }
+
+    .menu-group {
+
+      background: #fff;
+
+      border-radius: 14px;
+
+      overflow: hidden;
+
+      margin-bottom: 14px;
+
+      box-shadow:
+        0 2px 8px rgba(0,0,0,0.05);
+
+    }
+
+    .menu-item {
+
+      min-height: 64px;
+
+      display: flex;
+
+      align-items: center;
+
+      padding: 10px 14px;
+
+      border-bottom: 1px solid #f0f0f0;
+
+      cursor: pointer;
+
+      text-decoration: none;
+
+      color: #111;
+
+      -webkit-tap-highlight-color: transparent;
+
+    }
+
+    .menu-item:last-child {
+
+      border-bottom: none;
+
+    }
+
+    .menu-item:active {
+
+      background: #f7f7f7;
+
+    }
+
+    .menu-icon {
+
+      width: 42px;
+
+      height: 42px;
+
+      border-radius: 12px;
+
+      display: flex;
+
+      align-items: center;
+
+      justify-content: center;
+
+      font-size: 21px;
+
+      margin-right: 12px;
+
+      flex-shrink: 0;
+
+    }
+
+    .menu-text {
+
+      flex: 1;
+
+      font-size: 15px;
+
+      font-weight: 600;
+
+    }
+
+    .menu-desc {
+
+      display: block;
+
+      margin-top: 3px;
+
+      font-size: 12px;
+
+      color: #888;
+
+      font-weight: 400;
+
+    }
+
+    .menu-arrow {
+
+      font-size: 26px;
+
+      color: #aaa;
+
+      margin-left: 8px;
+
+    }
+
+    /* =========================
+       刪除帳號
+    ========================= */
+
+    .danger {
+
+      color: #d32f2f;
+
+    }
+
+    .danger-icon {
+
+      background: #ffebee;
+
+    }
+
+    /* =========================
+       版本
+    ========================= */
+
+    .version {
+
+      text-align: center;
+
+      color: #aaa;
+
+      font-size: 12px;
+
+      padding: 18px 0 30px;
+
+    }
+
+  </style>
+</head>
+
+<body>
+
+  <!-- =========================
+       頂部
+  ========================= -->
+
+  <div class="header">
+
+    <button
+      type="button"
+      class="back"
+      onclick="history.back()"
+      aria-label="返回"
+    >
+      ‹
+    </button>
+
+    設定
+
+  </div>
+
+
+  <!-- =========================
+       設定內容
+  ========================= -->
+
+  <div class="container">
+
+
+    <!-- 通知 -->
+
+    <div class="menu-group">
+
+      <a
+        class="menu-item"
+        href="me.html?settings=notifications"
+      >
+
+        <div
+          class="menu-icon"
+          style="background:#f3e5f5"
+        >
+          🔔
+        </div>
+
+        <div class="menu-text">
+
+          通知設定
+
+          <span class="menu-desc">
+            管理通知與提醒
+          </span>
+
+        </div>
+
+        <div class="menu-arrow">
+          ›
+        </div>
+
+      </a>
+
+
+      <!-- 隱私 -->
+
+      <a
+        class="menu-item"
+        href="me.html?settings=privacy"
+      >
+
+        <div
+          class="menu-icon"
+          style="background:#e0f7fa"
+        >
+          🔒
+        </div>
+
+        <div class="menu-text">
+
+          隱私設定
+
+          <span class="menu-desc">
+            管理隱私與資料使用
+          </span>
+
+        </div>
+
+        <div class="menu-arrow">
+          ›
+        </div>
+
+      </a>
+
+
+      <!-- 一般 -->
+
+      <a
+        class="menu-item"
+        href="me.html?settings=general"
+      >
+
+        <div
+          class="menu-icon"
+          style="background:#fce4ec"
+        >
+          ⚙️
+        </div>
+
+        <div class="menu-text">
+
+          一般設定
+
+          <span class="menu-desc">
+            飲水天數、資料匯入與匯出
+          </span>
+
+        </div>
+
+        <div class="menu-arrow">
+          ›
+        </div>
+
+      </a>
+
+    </div>
+
+
+    <!-- =========================
+         帳號
+    ========================= -->
+
+    <div class="menu-group">
+
+      <a
+        class="menu-item"
+        href="me.html"
+      >
+
+        <div
+          class="menu-icon"
+          style="background:#e8f5e9"
+        >
+          👤
+        </div>
+
+        <div class="menu-text">
+
+          帳號設定
+
+          <span class="menu-desc">
+            個人資料與帳號相關功能
+          </span>
+
+        </div>
+
+        <div class="menu-arrow">
+          ›
+        </div>
+
+      </a>
+
+    </div>
+
+
+    <!-- =========================
+         危險操作
+    ========================= -->
+
+    <div class="menu-group">
+
+      <a
+        class="menu-item danger"
+        href="delete-account.html"
+      >
+
+        <div
+          class="menu-icon danger-icon"
+        >
+          🗑️
+        </div>
+
+        <div class="menu-text">
+
+          刪除帳號
+
+          <span class="menu-desc">
+            永久刪除目前安全團聚帳號
+          </span>
+
+        </div>
+
+        <div class="menu-arrow">
+          ›
+        </div>
+
+      </a>
+
+    </div>
+
+
+    <div class="version">
+      安全團聚<br>
+      設定中心
+    </div>
+
+  </div>
+
+</body>
+</html>
