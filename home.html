@@ -2394,8 +2394,13 @@ async function loadWeather() {
       .limit(1);
 
     if (result.error) {
-      throw result.error;
-    }
+  console.error('weather_data 查詢錯誤：', result.error);
+
+  document.getElementById('weatherStatus').textContent =
+    '查詢錯誤：' + result.error.message;
+
+  return;
+}
 
     var rows = result.data || [];
 
