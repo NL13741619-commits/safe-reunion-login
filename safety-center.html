@@ -12,6 +12,8 @@
 
   <title>安全中心 - 安全團聚</title>
 
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
   <style>
 
     * {
@@ -86,6 +88,15 @@
     }
 
 
+    .back-btn:active,
+    .header-action:active {
+
+      background: rgba(255,255,255,0.18);
+      transform: scale(0.94);
+
+    }
+
+
     .header h1 {
 
       font-size: 18px;
@@ -145,20 +156,43 @@
 
       text-align: center;
 
-      margin-bottom: 20px;
+      margin-bottom: 12px;
 
       box-shadow:
         0 4px 12px rgba(229,57,53,0.25);
 
       cursor: pointer;
 
+      user-select: none;
+
       -webkit-tap-highlight-color: transparent;
+
+      transition:
+        transform 0.1s,
+        background 0.2s,
+        opacity 0.2s;
     }
 
 
     .sos-card:active {
 
       transform: scale(0.98);
+
+    }
+
+
+    .sos-card.loading {
+
+      background: #c62828;
+      pointer-events: none;
+
+    }
+
+
+    .sos-card.success {
+
+      background: #b71c1c;
+
     }
 
 
@@ -182,6 +216,274 @@
 
       font-size: 12px;
       opacity: 0.92;
+
+      line-height: 1.5;
+    }
+
+
+    /* =====================================================
+       SOS 群組選擇
+    ====================================================== */
+
+    .sos-group-panel {
+
+      display: none;
+
+      background: white;
+
+      border-radius: 16px;
+
+      padding: 16px;
+
+      margin-bottom: 20px;
+
+      box-shadow:
+        0 2px 8px rgba(0,0,0,0.08);
+    }
+
+
+    .sos-group-panel.show {
+
+      display: block;
+
+    }
+
+
+    .sos-group-title {
+
+      font-size: 16px;
+      font-weight: 700;
+
+      margin-bottom: 6px;
+    }
+
+
+    .sos-group-desc {
+
+      color: #777;
+
+      font-size: 12px;
+
+      line-height: 1.5;
+
+      margin-bottom: 12px;
+    }
+
+
+    .sos-group-select {
+
+      width: 100%;
+
+      height: 44px;
+
+      padding: 0 12px;
+
+      border: 1px solid #ddd;
+
+      border-radius: 10px;
+
+      background: #fff;
+
+      color: #222;
+
+      font-size: 14px;
+
+      outline: none;
+    }
+
+
+    .sos-group-select:focus {
+
+      border-color: #06C755;
+
+    }
+
+
+    .sos-group-actions {
+
+      display: grid;
+
+      grid-template-columns: 1fr 1fr;
+
+      gap: 8px;
+
+      margin-top: 12px;
+    }
+
+
+    .sos-btn {
+
+      border: none;
+
+      border-radius: 10px;
+
+      min-height: 44px;
+
+      padding: 10px;
+
+      font-size: 14px;
+
+      font-weight: 700;
+
+      cursor: pointer;
+
+      -webkit-tap-highlight-color: transparent;
+    }
+
+
+    .sos-btn-cancel {
+
+      background: #f1f1f1;
+
+      color: #333;
+    }
+
+
+    .sos-btn-confirm {
+
+      background: #e53935;
+
+      color: white;
+    }
+
+
+    .sos-btn-confirm:disabled {
+
+      background: #aaa;
+
+      cursor: not-allowed;
+    }
+
+
+    /* =====================================================
+       SOS 狀態
+    ====================================================== */
+
+    .sos-status-card {
+
+      display: none;
+
+      background: white;
+
+      border-radius: 16px;
+
+      padding: 16px;
+
+      margin-bottom: 20px;
+
+      box-shadow:
+        0 2px 8px rgba(0,0,0,0.08);
+    }
+
+
+    .sos-status-card.show {
+
+      display: block;
+
+    }
+
+
+    .sos-status-title {
+
+      font-size: 16px;
+
+      font-weight: 700;
+
+      color: #c62828;
+
+      margin-bottom: 10px;
+    }
+
+
+    .sos-status-text {
+
+      font-size: 13px;
+
+      color: #555;
+
+      line-height: 1.65;
+
+      word-break: break-word;
+    }
+
+
+    .sos-location {
+
+      background: #f7f7f7;
+
+      border-radius: 10px;
+
+      padding: 11px;
+
+      margin-top: 10px;
+
+      font-size: 12px;
+
+      line-height: 1.6;
+
+      color: #444;
+    }
+
+
+    .sos-actions {
+
+      display: grid;
+
+      grid-template-columns: 1fr 1fr;
+
+      gap: 8px;
+
+      margin-top: 12px;
+    }
+
+
+    .sos-action-btn {
+
+      border: none;
+
+      border-radius: 10px;
+
+      min-height: 44px;
+
+      padding: 10px;
+
+      font-size: 14px;
+
+      font-weight: 700;
+
+      cursor: pointer;
+    }
+
+
+    .call-119 {
+
+      background: #e53935;
+
+      color: white;
+    }
+
+
+    .call-110 {
+
+      background: #1565c0;
+
+      color: white;
+    }
+
+
+    .share-sos {
+
+      background: #06C755;
+
+      color: white;
+    }
+
+
+    .close-sos {
+
+      background: #eee;
+
+      color: #333;
     }
 
 
@@ -220,6 +522,13 @@
         0 2px 7px rgba(0,0,0,0.04);
 
       -webkit-tap-highlight-color: transparent;
+    }
+
+
+    .function-item:active {
+
+      transform: scale(0.98);
+
     }
 
 
@@ -420,26 +729,175 @@
   <main class="content">
 
 
-    <!-- SOS -->
+    <!-- ===================================================
+         SOS
+    ==================================================== -->
 
-    <div class="sos-card">
+    <div
+      class="sos-card"
+      id="sosCard"
+      role="button"
+      tabindex="0"
+      aria-label="緊急求助 SOS"
+    >
 
-      <div class="sos-icon">
+      <div
+        class="sos-icon"
+        id="sosIcon"
+      >
         🚨
       </div>
 
-      <div class="sos-title">
+
+      <div
+        class="sos-title"
+        id="sosTitle"
+      >
         緊急求助 SOS
       </div>
 
-      <div class="sos-desc">
-        緊急狀況時快速通知指定家庭或群組
+
+      <div
+        class="sos-desc"
+        id="sosDesc"
+      >
+        點擊後選擇要通知的家庭或群組
       </div>
 
     </div>
 
 
-    <!-- 安全功能 -->
+    <!-- ===================================================
+         SOS 群組選擇
+    ==================================================== -->
+
+    <div
+      class="sos-group-panel"
+      id="sosGroupPanel"
+    >
+
+      <div class="sos-group-title">
+        🚨 選擇 SOS 發送群組
+      </div>
+
+
+      <div class="sos-group-desc">
+        SOS 只會發送到你選擇的群組，不會自動發送給所有群組。
+      </div>
+
+
+      <select
+        id="sosGroupSelect"
+        class="sos-group-select"
+      >
+
+        <option value="">
+          載入群組中…
+        </option>
+
+      </select>
+
+
+      <div class="sos-group-actions">
+
+        <button
+          type="button"
+          class="sos-btn sos-btn-cancel"
+          id="btnCancelSos"
+        >
+          取消
+        </button>
+
+
+        <button
+          type="button"
+          class="sos-btn sos-btn-confirm"
+          id="btnConfirmSos"
+          disabled
+        >
+          🚨 發送 SOS
+        </button>
+
+      </div>
+
+    </div>
+
+
+    <!-- ===================================================
+         SOS 發送結果
+    ==================================================== -->
+
+    <div
+      class="sos-status-card"
+      id="sosStatusCard"
+    >
+
+      <div class="sos-status-title">
+        🚨 SOS 緊急求助已啟動
+      </div>
+
+
+      <div
+        class="sos-status-text"
+        id="sosStatusText"
+      >
+        正在處理……
+      </div>
+
+
+      <div
+        class="sos-location"
+        id="sosLocation"
+      >
+        📍 正在取得目前位置……
+      </div>
+
+
+      <div class="sos-actions">
+
+        <button
+          type="button"
+          class="sos-action-btn call-119"
+          id="call119Btn"
+        >
+          📞 撥打 119
+        </button>
+
+
+        <button
+          type="button"
+          class="sos-action-btn call-110"
+          id="call110Btn"
+        >
+          🚓 撥打 110
+        </button>
+
+
+        <button
+          type="button"
+          class="sos-action-btn share-sos"
+          id="shareSosBtn"
+        >
+          📤 分享 SOS
+        </button>
+
+
+        <button
+          type="button"
+          class="sos-action-btn close-sos"
+          id="closeSosBtn"
+        >
+          ✕ 關閉 SOS
+        </button>
+
+      </div>
+
+    </div>
+
+
+    <!-- ===================================================
+         安全功能
+    ==================================================== -->
 
     <div class="section-title">
       安全功能
@@ -515,7 +973,7 @@
 
       <a
         class="function-item"
-        href="#"
+        href="home.html"
       >
 
         <div class="function-icon">
@@ -530,25 +988,29 @@
 
 
       <a
-  class="function-item"
-  href="https://gis.gov.taipei/"
-  target="_blank"
-  rel="noopener"
->
-  <div class="function-icon">
-    🅿️
-  </div>
+        class="function-item"
+        href="https://gis.gov.taipei/"
+        target="_blank"
+        rel="noopener"
+      >
 
-  <div class="function-label">
-    停車場
-  </div>
-</a>
+        <div class="function-icon">
+          🅿️
+        </div>
+
+        <div class="function-label">
+          停車場
+        </div>
+
+      </a>
 
 
     </div>
 
 
-    <!-- 家庭 -->
+    <!-- ===================================================
+         家庭
+    ==================================================== -->
 
     <div class="group-card">
 
@@ -676,6 +1138,1278 @@
 
 
   </div>
+
+
+  <!-- =====================================================
+       SOS + Supabase
+  ====================================================== -->
+
+  <script>
+
+  (function () {
+
+    "use strict";
+
+
+    /* =====================================================
+       Supabase
+    ====================================================== */
+
+    const SUPABASE_URL =
+      "https://perfsipperncvjocznhl.supabase.co";
+
+
+    const SUPABASE_KEY =
+      "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBlcmZzaXBwZXJuY3Zqb2N6bmhsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODYwMTUyMzAsImV4cCI6MjEwMTU5MTIzMH0.I7vXkV247kAzRJ0RigDZt3Hzn8KJDyMc6o9E3oHJZoY";
+
+
+    let supabaseClient = null;
+
+
+    try {
+
+      if (
+        window.supabase &&
+        window.supabase.createClient
+      ) {
+
+        supabaseClient =
+          window.supabase.createClient(
+            SUPABASE_URL,
+            SUPABASE_KEY
+          );
+
+      }
+
+    } catch (error) {
+
+      console.error(
+        "Supabase 初始化失敗：",
+        error
+      );
+
+    }
+
+
+    /* =====================================================
+       DOM
+    ====================================================== */
+
+    const sosCard =
+      document.getElementById("sosCard");
+
+
+    const sosIcon =
+      document.getElementById("sosIcon");
+
+
+    const sosTitle =
+      document.getElementById("sosTitle");
+
+
+    const sosDesc =
+      document.getElementById("sosDesc");
+
+
+    const sosGroupPanel =
+      document.getElementById("sosGroupPanel");
+
+
+    const sosGroupSelect =
+      document.getElementById("sosGroupSelect");
+
+
+    const btnCancelSos =
+      document.getElementById("btnCancelSos");
+
+
+    const btnConfirmSos =
+      document.getElementById("btnConfirmSos");
+
+
+    const sosStatusCard =
+      document.getElementById("sosStatusCard");
+
+
+    const sosStatusText =
+      document.getElementById("sosStatusText");
+
+
+    const sosLocation =
+      document.getElementById("sosLocation");
+
+
+    const call119Btn =
+      document.getElementById("call119Btn");
+
+
+    const call110Btn =
+      document.getElementById("call110Btn");
+
+
+    const shareSosBtn =
+      document.getElementById("shareSosBtn");
+
+
+    const closeSosBtn =
+      document.getElementById("closeSosBtn");
+
+
+    /* =====================================================
+       SOS 狀態
+    ====================================================== */
+
+    let currentUser = null;
+
+    let currentGroups = [];
+
+    let currentLatitude = null;
+
+    let currentLongitude = null;
+
+    let currentAccuracy = null;
+
+    let currentGroupId = null;
+
+    let currentGroupName = "";
+
+    let sosActive = false;
+
+
+    /* =====================================================
+       取得登入者
+    ====================================================== */
+
+    async function getCurrentUser() {
+
+      if (!supabaseClient) {
+
+        throw new Error(
+          "Supabase 尚未初始化。"
+        );
+
+      }
+
+
+      const result =
+        await supabaseClient.auth.getUser();
+
+
+      if (result.error) {
+
+        throw result.error;
+
+      }
+
+
+      const user =
+        result.data &&
+        result.data.user;
+
+
+      if (!user) {
+
+        throw new Error(
+          "請先登入安全團聚。"
+        );
+
+      }
+
+
+      currentUser =
+        user;
+
+
+      return user;
+
+    }
+
+
+    /* =====================================================
+       取得目前使用者加入的群組
+    ====================================================== */
+
+    async function loadMySOSGroups() {
+
+      const user =
+        await getCurrentUser();
+
+
+      const memberResult =
+        await supabaseClient
+          .from("group_members")
+          .select("group_id")
+          .eq(
+            "user_id",
+            user.id
+          );
+
+
+      if (memberResult.error) {
+
+        throw memberResult.error;
+
+      }
+
+
+      const memberRows =
+        memberResult.data || [];
+
+
+      const groupIds =
+        memberRows
+          .map(function (row) {
+
+            return row.group_id;
+
+          })
+          .filter(function (id) {
+
+            return !!id;
+
+          });
+
+
+      if (!groupIds.length) {
+
+        return [];
+
+      }
+
+
+      const groupResult =
+        await supabaseClient
+          .from("groups")
+          .select("id,name")
+          .in(
+            "id",
+            groupIds
+          );
+
+
+      /*
+       * groups 查詢失敗時，
+       * 仍然保留 group_id。
+       */
+
+      if (groupResult.error) {
+
+        console.warn(
+          "群組名稱讀取失敗：",
+          groupResult.error
+        );
+
+
+        return groupIds.map(
+          function (groupId) {
+
+            return {
+
+              id:
+                groupId,
+
+              name:
+                "群組 " +
+                String(groupId).slice(0, 8)
+
+            };
+
+          }
+        );
+
+      }
+
+
+      const groupRows =
+        groupResult.data || [];
+
+
+      return groupIds.map(
+        function (groupId) {
+
+          const group =
+            groupRows.find(
+              function (item) {
+
+                return String(item.id) ===
+                  String(groupId);
+
+              }
+            );
+
+
+          return {
+
+            id:
+              groupId,
+
+            name:
+              group &&
+              group.name
+                ? group.name
+                : "群組 " +
+                  String(groupId).slice(0, 8)
+
+          };
+
+        }
+      );
+
+    }
+
+
+    /* =====================================================
+       開啟 SOS 群組選擇
+    ====================================================== */
+
+    async function openSOSSelector() {
+
+      if (!sosGroupPanel) {
+        return;
+      }
+
+
+      sosGroupPanel.classList.add("show");
+
+
+      sosGroupSelect.innerHTML =
+        '<option value="">載入群組中…</option>';
+
+
+      btnConfirmSos.disabled =
+        true;
+
+
+      try {
+
+        const groups =
+          await loadMySOSGroups();
+
+
+        currentGroups =
+          groups;
+
+
+        if (!groups.length) {
+
+          sosGroupSelect.innerHTML =
+            '<option value="">你目前沒有加入任何群組</option>';
+
+
+          alert(
+            "你目前沒有加入任何群組，因此無法發送 SOS。"
+          );
+
+
+          return;
+
+        }
+
+
+        sosGroupSelect.innerHTML =
+          '<option value="">請選擇要發送的群組</option>';
+
+
+        groups.forEach(
+          function (group) {
+
+            const option =
+              document.createElement("option");
+
+
+            option.value =
+              String(group.id);
+
+
+            option.textContent =
+              group.name;
+
+
+            sosGroupSelect.appendChild(
+              option
+            );
+
+          }
+        );
+
+
+      } catch (error) {
+
+        console.error(
+          "取得 SOS 群組失敗：",
+          error
+        );
+
+
+        sosGroupSelect.innerHTML =
+          '<option value="">無法取得群組</option>';
+
+
+        alert(
+          "無法取得你的群組。\n\n" +
+          (
+            error &&
+            error.message
+              ? error.message
+              : error
+          )
+        );
+
+      }
+
+    }
+
+
+    /* =====================================================
+       SOS 主按鈕
+    ====================================================== */
+
+    async function handleSOSClick() {
+
+      if (sosActive) {
+
+        return;
+
+      }
+
+
+      await openSOSSelector();
+
+    }
+
+
+    if (sosCard) {
+
+      sosCard.addEventListener(
+        "click",
+        handleSOSClick
+      );
+
+
+      sosCard.addEventListener(
+        "keydown",
+        function (event) {
+
+          if (
+            event.key === "Enter" ||
+            event.key === " "
+          ) {
+
+            event.preventDefault();
+
+            handleSOSClick();
+
+          }
+
+        }
+      );
+
+    }
+
+
+    /* =====================================================
+       選擇群組
+    ====================================================== */
+
+    if (sosGroupSelect) {
+
+      sosGroupSelect.addEventListener(
+        "change",
+        function () {
+
+          const selected =
+            sosGroupSelect.value;
+
+
+          btnConfirmSos.disabled =
+            !selected;
+
+
+          const group =
+            currentGroups.find(
+              function (item) {
+
+                return String(item.id) ===
+                  String(selected);
+
+              }
+            );
+
+
+          currentGroupId =
+            selected || null;
+
+
+          currentGroupName =
+            group
+              ? group.name
+              : "";
+
+        }
+      );
+
+    }
+
+
+    /* =====================================================
+       取消
+    ====================================================== */
+
+    if (btnCancelSos) {
+
+      btnCancelSos.addEventListener(
+        "click",
+        function () {
+
+          sosGroupPanel.classList.remove(
+            "show"
+          );
+
+
+          sosGroupSelect.value =
+            "";
+
+
+          btnConfirmSos.disabled =
+            true;
+
+        }
+      );
+
+    }
+
+
+    /* =====================================================
+       取得 GPS
+    ====================================================== */
+
+    function getGPS() {
+
+      return new Promise(
+        function (resolve, reject) {
+
+          if (!navigator.geolocation) {
+
+            reject(
+              new Error(
+                "此裝置不支援定位功能。"
+              )
+            );
+
+            return;
+
+          }
+
+
+          navigator.geolocation.getCurrentPosition(
+
+            function (position) {
+
+              currentLatitude =
+                position.coords.latitude;
+
+
+              currentLongitude =
+                position.coords.longitude;
+
+
+              currentAccuracy =
+                position.coords.accuracy;
+
+
+              resolve(position);
+
+            },
+
+
+            function (error) {
+
+              let message =
+                "無法取得你的位置。";
+
+
+              if (error.code === 1) {
+
+                message +=
+                  "\n請允許瀏覽器使用定位功能。";
+
+              }
+
+              else if (error.code === 2) {
+
+                message +=
+                  "\n目前無法取得 GPS 位置。";
+
+              }
+
+              else if (error.code === 3) {
+
+                message +=
+                  "\n定位逾時，請再試一次。";
+
+              }
+
+
+              reject(
+                new Error(message)
+              );
+
+            },
+
+
+            {
+
+              enableHighAccuracy:
+                true,
+
+              timeout:
+                15000,
+
+              maximumAge:
+                0
+
+            }
+
+          );
+
+        }
+      );
+
+    }
+
+
+    /* =====================================================
+       取得顯示名稱
+    ====================================================== */
+
+    function getDisplayName(user) {
+
+      const metadata =
+        user &&
+        user.user_metadata
+          ? user.user_metadata
+          : {};
+
+
+      return (
+        metadata.nickname ||
+        metadata.username ||
+        metadata.full_name ||
+        (
+          user &&
+          user.email
+            ? user.email.split("@")[0]
+            : "成員"
+        )
+      );
+
+    }
+
+
+    /* =====================================================
+       建立 SOS 內容
+    ====================================================== */
+
+    function createSOSMessage(
+      displayName
+    ) {
+
+      return (
+        "🚨 SOS 緊急求助！\n" +
+        displayName +
+        " 正在求救。\n" +
+        "📍 緯度：" +
+        currentLatitude.toFixed(6) +
+        "\n" +
+        "📍 經度：" +
+        currentLongitude.toFixed(6) +
+        "\n" +
+        "🎯 定位誤差：約 " +
+        Math.round(
+          currentAccuracy || 0
+        ) +
+        " 公尺"
+      );
+
+    }
+
+
+    /* =====================================================
+       寫入 sos_events
+    ====================================================== */
+
+    async function createSOSEvent(
+      user,
+      displayName,
+      message
+    ) {
+
+      const result =
+        await supabaseClient
+          .from("sos_events")
+          .insert({
+
+            room_id:
+              String(
+                currentGroupId
+              ),
+
+            user_id:
+              user.id,
+
+            display_name:
+              displayName,
+
+            lat:
+              currentLatitude,
+
+            lng:
+              currentLongitude,
+
+            message:
+              message
+
+          })
+          .select()
+          .single();
+
+
+      if (result.error) {
+
+        throw result.error;
+
+      }
+
+
+      return result.data;
+
+    }
+
+
+    /* =====================================================
+       寫入聊天 messages
+    ====================================================== */
+
+    async function createSOSMessage(
+      user,
+      displayName,
+      message
+    ) {
+
+      const result =
+        await supabaseClient
+          .from("messages")
+          .insert({
+
+            room_id:
+              String(
+                currentGroupId
+              ),
+
+            user_id:
+              user.id,
+
+            sender_name:
+              displayName,
+
+            kind:
+              "sos",
+
+            body:
+              message,
+
+            is_all:
+              true
+
+          });
+
+
+      if (result.error) {
+
+        throw result.error;
+
+      }
+
+
+      return result.data;
+
+    }
+
+
+    /* =====================================================
+       確認發送 SOS
+    ====================================================== */
+
+    async function confirmSendSOS() {
+
+      const selectedGroupId =
+        sosGroupSelect.value;
+
+
+      if (!selectedGroupId) {
+
+        alert(
+          "請先選擇要發送 SOS 的群組。"
+        );
+
+        return;
+
+      }
+
+
+      if (sosActive) {
+
+        return;
+
+      }
+
+
+      sosActive =
+        true;
+
+
+      btnConfirmSos.disabled =
+        true;
+
+
+      sosCard.classList.add(
+        "loading"
+      );
+
+
+      sosIcon.textContent =
+        "📍";
+
+
+      sosTitle.textContent =
+        "正在啟動 SOS";
+
+
+      sosDesc.textContent =
+        "正在取得目前位置……";
+
+
+      sosStatusCard.classList.add(
+        "show"
+      );
+
+
+      sosStatusText.textContent =
+        "正在取得登入資訊與 GPS 位置……";
+
+
+      sosLocation.textContent =
+        "📍 正在取得目前位置……";
+
+
+      try {
+
+        /* ---------------------------------------------
+           登入者
+        --------------------------------------------- */
+
+        const user =
+          await getCurrentUser();
+
+
+        /* ---------------------------------------------
+           GPS
+        --------------------------------------------- */
+
+        await getGPS();
+
+
+        sosStatusText.textContent =
+          "📍 位置已取得，正在發送 SOS……";
+
+
+        sosLocation.innerHTML =
+          "📍 緯度：" +
+          currentLatitude.toFixed(6) +
+          "<br>" +
+          "📍 經度：" +
+          currentLongitude.toFixed(6) +
+          "<br>" +
+          "🎯 定位誤差：約 " +
+          Math.round(
+            currentAccuracy || 0
+          ) +
+          " 公尺";
+
+
+        /* ---------------------------------------------
+           使用者名稱
+        --------------------------------------------- */
+
+        const displayName =
+          getDisplayName(user);
+
+
+        /* ---------------------------------------------
+           SOS 訊息
+        --------------------------------------------- */
+
+        const message =
+          createSOSMessage(
+            displayName
+          );
+
+
+        /* ---------------------------------------------
+           記錄 SOS event
+        --------------------------------------------- */
+
+        await createSOSEvent(
+          user,
+          displayName,
+          message
+        );
+
+
+        /* ---------------------------------------------
+           發送到指定群組聊天
+        --------------------------------------------- */
+
+        await createSOSMessage(
+          user,
+          displayName,
+          message
+        );
+
+
+        /* ---------------------------------------------
+           成功
+        --------------------------------------------- */
+
+        currentGroupId =
+          String(
+            selectedGroupId
+          );
+
+
+        sosActive =
+          true;
+
+
+        sosCard.classList.remove(
+          "loading"
+        );
+
+
+        sosCard.classList.add(
+          "success"
+        );
+
+
+        sosIcon.textContent =
+          "🚨";
+
+
+        sosTitle.textContent =
+          "SOS 已發送";
+
+
+        sosDesc.textContent =
+          "群組「" +
+          currentGroupName +
+          "」已收到你的求救訊息";
+
+
+        sosStatusText.innerHTML =
+          "✅ SOS 已成功發送。<br>" +
+          "通知群組：" +
+          currentGroupName +
+          "<br>" +
+          "群組成員可在聊天中看到你的求救訊息與位置。";
+
+
+        sosGroupPanel.classList.remove(
+          "show"
+        );
+
+
+        sosGroupSelect.value =
+          "";
+
+
+        /* ---------------------------------------------
+           震動
+        --------------------------------------------- */
+
+        if (
+          navigator.vibrate
+        ) {
+
+          navigator.vibrate([
+            300,
+            150,
+            300,
+            150,
+            500
+          ]);
+
+        }
+
+
+      } catch (error) {
+
+        console.error(
+          "SOS 發送錯誤：",
+          error
+        );
+
+
+        sosActive =
+          false;
+
+
+        sosCard.classList.remove(
+          "loading"
+        );
+
+
+        sosCard.classList.remove(
+          "success"
+        );
+
+
+        sosIcon.textContent =
+          "🚨";
+
+
+        sosTitle.textContent =
+          "緊急求助 SOS";
+
+
+        sosDesc.textContent =
+          "SOS 發送失敗，請重新操作";
+
+
+        sosStatusText.textContent =
+          "❌ SOS 發送失敗：\n" +
+          (
+            error &&
+            error.message
+              ? error.message
+              : error
+          );
+
+
+        alert(
+          "SOS 發送失敗。\n\n" +
+          (
+            error &&
+            error.message
+              ? error.message
+              : error
+          )
+        );
+
+
+        currentLatitude =
+          null;
+
+        currentLongitude =
+          null;
+
+      }
+
+    }
+
+
+    if (btnConfirmSos) {
+
+      btnConfirmSos.addEventListener(
+        "click",
+        confirmSendSOS
+      );
+
+    }
+
+
+    /* =====================================================
+       119
+    ====================================================== */
+
+    if (call119Btn) {
+
+      call119Btn.addEventListener(
+        "click",
+        function () {
+
+          window.location.href =
+            "tel:119";
+
+        }
+      );
+
+    }
+
+
+    /* =====================================================
+       110
+    ====================================================== */
+
+    if (call110Btn) {
+
+      call110Btn.addEventListener(
+        "click",
+        function () {
+
+          window.location.href =
+            "tel:110";
+
+        }
+      );
+
+    }
+
+
+    /* =====================================================
+       分享 SOS 位置
+    ====================================================== */
+
+    if (shareSosBtn) {
+
+      shareSosBtn.addEventListener(
+        "click",
+        async function () {
+
+          if (
+            currentLatitude === null ||
+            currentLongitude === null
+          ) {
+
+            alert(
+              "目前還沒有取得有效 GPS 位置。"
+            );
+
+            return;
+
+          }
+
+
+          const mapUrl =
+            "https://www.google.com/maps?q=" +
+            currentLatitude +
+            "," +
+            currentLongitude;
+
+
+          const message =
+            "🚨【安全團聚 SOS 緊急求助】\n\n" +
+
+            "我需要協助，請注意我的位置。\n\n" +
+
+            "通知群組：" +
+            (
+              currentGroupName ||
+              "安全團聚群組"
+            ) +
+
+            "\n\n" +
+
+            "📍 緯度：" +
+            currentLatitude.toFixed(6) +
+
+            "\n" +
+
+            "📍 經度：" +
+            currentLongitude.toFixed(6) +
+
+            "\n\n" +
+
+            "🗺️ 地圖位置：\n" +
+            mapUrl;
+
+
+          if (
+            navigator.share
+          ) {
+
+            try {
+
+              await navigator.share({
+
+                title:
+                  "安全團聚 SOS 緊急求助",
+
+                text:
+                  message,
+
+                url:
+                  mapUrl
+
+              });
+
+            } catch (error) {
+
+              /* 使用者取消分享，不顯示錯誤 */
+
+            }
+
+            return;
+
+          }
+
+
+          try {
+
+            await navigator.clipboard.writeText(
+              message
+            );
+
+
+            alert(
+              "SOS 位置資訊已複製，可以貼到 LINE、簡訊或聊天中。"
+            );
+
+          } catch (error) {
+
+            alert(message);
+
+          }
+
+        }
+      );
+
+    }
+
+
+    /* =====================================================
+       關閉 SOS 狀態
+    ====================================================== */
+
+    if (closeSosBtn) {
+
+      closeSosBtn.addEventListener(
+        "click",
+        function () {
+
+          sosStatusCard.classList.remove(
+            "show"
+          );
+
+        }
+      );
+
+    }
+
+
+    /* =====================================================
+       啟動時檢查 Supabase
+    ====================================================== */
+
+    if (!supabaseClient) {
+
+      sosDesc.textContent =
+        "目前無法連線到安全團聚伺服器";
+
+    }
+
+  })();
+
+  </script>
 
 
 </body>
