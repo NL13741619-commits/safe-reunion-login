@@ -2,7 +2,11 @@
 <html lang="zh-TW">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+  >
+
   <title>通訊錄 - 安全團聚</title>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -15,7 +19,13 @@
     }
 
     body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      font-family:
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        Roboto,
+        sans-serif;
+
       background: #f5f5f5;
       color: #111;
       min-height: 100vh;
@@ -47,6 +57,7 @@
       background: transparent;
       font-size: 22px;
       line-height: 1;
+      cursor: pointer;
     }
 
     .search {
@@ -140,6 +151,12 @@
       font-size: 13px;
       font-weight: 600;
       flex-shrink: 0;
+      cursor: pointer;
+    }
+
+    .btn-sm:disabled {
+      opacity: 0.5;
+      cursor: default;
     }
 
     .btn-green {
@@ -166,10 +183,6 @@
       justify-content: flex-end;
     }
 
-    /* =========================
-       數字 Badge
-    ========================= */
-
     .message-badge,
     .friend-badge {
       display: none;
@@ -186,11 +199,6 @@
       flex-shrink: 0;
     }
 
-    .message-badge.show,
-    .friend-badge.show {
-      display: inline-block;
-    }
-
     .menu-name-row {
       display: flex;
       align-items: center;
@@ -198,10 +206,6 @@
       flex: 1;
       min-width: 0;
     }
-
-    /* =========================
-       滑動刪除 / 退群
-    ========================= */
 
     .swipe-row {
       position: relative;
@@ -222,6 +226,7 @@
       font-size: 14px;
       font-weight: 700;
       z-index: 0;
+      cursor: pointer;
     }
 
     .swipe-content {
@@ -240,10 +245,6 @@
     .swipe-content .group-row {
       border-bottom: none;
     }
-
-    /* =========================
-       底部
-    ========================= */
 
     .tabbar {
       position: fixed;
@@ -277,10 +278,6 @@
       font-size: 20px;
       line-height: 1.2;
     }
-
-    /* =========================
-       Bottom Sheet
-    ========================= */
 
     .sheet-mask {
       display: none;
@@ -339,6 +336,7 @@
       padding: 12px;
       font-size: 15px;
       font-weight: 600;
+      cursor: pointer;
     }
   </style>
 </head>
@@ -346,9 +344,17 @@
 <body>
 
   <div class="top">
+
     <div class="top-title">
       通訊錄
-      <button class="top-add" type="button" id="btnMenu">＋</button>
+
+      <button
+        class="top-add"
+        type="button"
+        id="btnMenu"
+      >
+        ＋
+      </button>
     </div>
 
     <input
@@ -358,85 +364,213 @@
       placeholder="搜尋帳號、暱稱"
       autocomplete="off"
     >
+
   </div>
 
-  <div class="status" id="status">載入中…</div>
+
+  <div
+    class="status"
+    id="status"
+  >
+    載入中…
+  </div>
+
 
   <!-- 新的朋友 -->
-  <div class="menu-item" id="btnNewFriend">
-    <div class="icon-box" style="background:#ff9800">＋</div>
 
-    <div class="menu-name-row">
-      <div class="name">新的朋友</div>
+  <div
+    class="menu-item"
+    id="btnNewFriend"
+  >
+
+    <div
+      class="icon-box"
+      style="background:#ff9800"
+    >
+      ＋
     </div>
 
-    <span id="newFriendBadge" class="friend-badge">0</span>
+    <div class="menu-name-row">
+
+      <div class="name">
+        新的朋友
+      </div>
+
+    </div>
+
+    <span
+      id="newFriendBadge"
+      class="friend-badge"
+    >
+      0
+    </span>
+
   </div>
+
 
   <!-- 群組 -->
-  <div class="menu-item" id="btnCreateGroup">
-    <div class="icon-box" style="background:#06C755">群</div>
 
-    <div class="menu-name-row">
-      <div class="name">群組</div>
+  <div
+    class="menu-item"
+    id="btnCreateGroup"
+  >
+
+    <div
+      class="icon-box"
+      style="background:#06C755"
+    >
+      群
     </div>
 
-    <span id="groupMessageBadge" class="message-badge">0</span>
+    <div class="menu-name-row">
+
+      <div class="name">
+        群組
+      </div>
+
+    </div>
+
+    <span
+      id="groupMessageBadge"
+      class="message-badge"
+    >
+      0
+    </span>
+
   </div>
+
 
   <!-- 等待來電 -->
-  <div class="menu-item" id="btnOpenCallWait">
-    <div class="icon-box" style="background:#1e88e5">📞</div>
-    <div class="name">等待來電（保持開啟）</div>
+
+  <div
+    class="menu-item"
+    id="btnOpenCallWait"
+  >
+
+    <div
+      class="icon-box"
+      style="background:#1e88e5"
+    >
+      📞
+    </div>
+
+    <div class="name">
+      等待來電（保持開啟）
+    </div>
+
   </div>
+
 
   <!-- 搜尋結果 -->
-  <div id="searchSection" style="display:none">
-    <div class="section">搜尋結果</div>
+
+  <div
+    id="searchSection"
+    style="display:none"
+  >
+
+    <div class="section">
+      搜尋結果
+    </div>
+
     <div id="searchList"></div>
+
   </div>
 
+
   <!-- 好友 -->
+
   <div class="section-title-row">
-    <span>好友</span>
-    <span id="friendMessageTotalBadge" class="message-badge">0</span>
+
+    <span>
+      好友
+    </span>
+
+    <span
+      id="friendMessageTotalBadge"
+      class="message-badge"
+    >
+      0
+    </span>
+
   </div>
 
   <div id="friendList"></div>
 
+
   <!-- 群組 -->
-  <div class="section">我的群組</div>
+
+  <div class="section">
+    我的群組
+  </div>
+
   <div id="groupList"></div>
 
+
   <!-- 底部 -->
+
   <div class="tabbar">
-    <a class="tab" href="chat.html">
-      <div class="ico">💬</div>
+
+    <a
+      class="tab"
+      href="chat.html"
+    >
+      <div class="ico">
+        💬
+      </div>
       聊天
     </a>
 
-    <a class="tab on" href="contacts.html">
-      <div class="ico">👥</div>
+    <a
+      class="tab on"
+      href="contacts.html"
+    >
+      <div class="ico">
+        👥
+      </div>
       通訊錄
     </a>
 
-    <a class="tab" href="home.html">
-      <div class="ico">🧭</div>
+    <a
+      class="tab"
+      href="home.html"
+    >
+      <div class="ico">
+        🧭
+      </div>
       發現
     </a>
 
-    <a class="tab" href="me.html">
-      <div class="ico">👤</div>
+    <a
+      class="tab"
+      href="me.html"
+    >
+      <div class="ico">
+        👤
+      </div>
       我
     </a>
+
   </div>
 
+
   <!-- 遮罩 -->
-  <div class="sheet-mask" id="mask"></div>
+
+  <div
+    class="sheet-mask"
+    id="mask"
+  ></div>
+
 
   <!-- 加好友 -->
-  <div class="sheet" id="sheetAdd">
-    <h3>加好友</h3>
+
+  <div
+    class="sheet"
+    id="sheetAdd"
+  >
+
+    <h3>
+      加好友
+    </h3>
 
     <input
       id="addKeyword"
@@ -444,6 +578,7 @@
     >
 
     <div class="row-btns">
+
       <button
         type="button"
         style="background:#eee"
@@ -459,12 +594,22 @@
       >
         搜尋
       </button>
+
     </div>
+
   </div>
 
+
   <!-- 建立群組 -->
-  <div class="sheet" id="sheetGroup">
-    <h3>建立群組</h3>
+
+  <div
+    class="sheet"
+    id="sheetGroup"
+  >
+
+    <h3>
+      建立群組
+    </h3>
 
     <input
       id="groupName"
@@ -472,6 +617,7 @@
     >
 
     <div class="row-btns">
+
       <button
         type="button"
         style="background:#eee"
@@ -487,12 +633,22 @@
       >
         建立
       </button>
+
     </div>
+
   </div>
 
+
   <!-- 好友邀請 -->
-  <div class="sheet" id="sheetPending">
-    <h3>好友邀請</h3>
+
+  <div
+    class="sheet"
+    id="sheetPending"
+  >
+
+    <h3>
+      好友邀請
+    </h3>
 
     <div
       id="pendingList"
@@ -503,6 +659,7 @@
       class="row-btns"
       style="margin-top:12px"
     >
+
       <button
         type="button"
         style="background:#eee"
@@ -510,12 +667,19 @@
       >
         關閉
       </button>
+
     </div>
+
   </div>
 
 
 <script>
+
 (function () {
+
+  /* =====================================================
+     Supabase
+  ===================================================== */
 
   var SUPABASE_URL =
     'https://perfsipperncvjocznhl.supabase.co';
@@ -524,34 +688,57 @@
     'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBlcmZzaXBwZXJuY3Zqb2N6bmhsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODYwMTUyMzAsImV4cCI6MjEwMTU5MTIzMH0.I7vXkV247kAzRJ0RigDZt3Hzn8KJDyMc6o9E3oHJZoY';
 
   var supabase = null;
+
   var me = null;
+
   var myProfile = null;
 
   var unreadFriendTotal = 0;
+
   var unreadGroupTotal = 0;
 
+
+  /* =====================================================
+     DOM
+  ===================================================== */
 
   function $(id) {
     return document.getElementById(id);
   }
 
 
+  /* =====================================================
+     基本工具
+  ===================================================== */
+
   function escapeHtml(value) {
-    return String(value == null ? '' : value)
+
+    return String(
+      value == null
+        ? ''
+        : value
+    )
       .replace(/&/g, '&amp;')
       .replace(/</g, '&lt;')
       .replace(/>/g, '&gt;')
       .replace(/"/g, '&quot;')
       .replace(/'/g, '&#039;');
+
   }
 
 
-  function setStatus(t) {
-    $('status').textContent = t;
+  function setStatus(text) {
+
+    $('status').textContent =
+      text || '';
+
   }
 
 
-  function setBadge(id, count) {
+  function setBadge(
+    id,
+    count
+  ) {
 
     var badge = $(id);
 
@@ -559,7 +746,8 @@
       return;
     }
 
-    count = Number(count || 0);
+    count =
+      Number(count || 0);
 
     if (count > 0) {
 
@@ -573,184 +761,265 @@
 
     } else {
 
-      badge.textContent = '0';
+      badge.textContent =
+        '0';
 
       badge.style.display =
         'none';
+
     }
+
   }
 
 
-  /* =========================
-     彈出視窗
-  ========================= */
+  /* =====================================================
+     Bottom Sheet
+  ===================================================== */
 
   function showSheet(id) {
 
-    $('mask').classList.add('show');
+    $('mask')
+      .classList
+      .add('show');
 
-    $('sheetAdd').classList.remove('show');
-    $('sheetGroup').classList.remove('show');
-    $('sheetPending').classList.remove('show');
+    $('sheetAdd')
+      .classList
+      .remove('show');
 
-    $(id).classList.add('show');
+    $('sheetGroup')
+      .classList
+      .remove('show');
+
+    $('sheetPending')
+      .classList
+      .remove('show');
+
+    $(id)
+      .classList
+      .add('show');
+
   }
 
 
   function hideSheets() {
 
-    $('mask').classList.remove('show');
+    $('mask')
+      .classList
+      .remove('show');
 
-    $('sheetAdd').classList.remove('show');
-    $('sheetGroup').classList.remove('show');
-    $('sheetPending').classList.remove('show');
+    $('sheetAdd')
+      .classList
+      .remove('show');
+
+    $('sheetGroup')
+      .classList
+      .remove('show');
+
+    $('sheetPending')
+      .classList
+      .remove('show');
+
   }
 
 
-  /* =========================
-     私聊房間 ID
-  ========================= */
+  /* =====================================================
+     私聊 Room ID
+  ===================================================== */
 
-  function dmRoomId(a, b) {
+  function dmRoomId(
+    a,
+    b
+  ) {
 
-    var x = String(a);
-    var y = String(b);
+    var x =
+      String(a);
+
+    var y =
+      String(b);
 
     return 'dm_' +
-      (x < y
-        ? x + '_' + y
-        : y + '_' + x);
+      (
+        x < y
+          ? x + '_' + y
+          : y + '_' + x
+      );
+
   }
 
 
-  /* =========================
-     未讀訊息
-     
-     使用 localStorage 記錄最後讀取時間。
-     不需要修改資料表。
-  ========================= */
+  /* =====================================================
+     已讀
+  ===================================================== */
 
-  function getReadKey(type, id) {
+  function getReadKey(
+    type,
+    id
+  ) {
 
     return 'contacts_read_' +
       type +
       '_' +
       String(id);
+
   }
 
 
-  function getLastRead(type, id) {
+  function getLastRead(
+    type,
+    id
+  ) {
 
-    var value =
+    return (
       localStorage.getItem(
-        getReadKey(type, id)
-      );
+        getReadKey(
+          type,
+          id
+        )
+      )
+    ||
+      '1970-01-01T00:00:00.000Z'
+    );
 
-    return value || '1970-01-01T00:00:00.000Z';
   }
 
 
-  function setLastRead(type, id, time) {
+  function setLastRead(
+    type,
+    id,
+    time
+  ) {
 
     if (!id) {
       return;
     }
 
     localStorage.setItem(
-      getReadKey(type, id),
-      time || new Date().toISOString()
+      getReadKey(
+        type,
+        id
+      ),
+      time ||
+      new Date().toISOString()
     );
+
   }
 
 
-  function countUnreadRows(rows) {
-
-    return (rows || []).length;
-  }
-
-
-  /* =========================
+  /* =====================================================
      頭像
-  ========================= */
+  ===================================================== */
 
   function avatarHtml(p) {
 
-    if (p && p.avatar_url) {
+    if (
+      p &&
+      p.avatar_url
+    ) {
 
-      return '<img class="avatar" src="' +
-        String(p.avatar_url)
-          .replace(/"/g, '') +
-        '" alt="">';
+      return (
+        '<img class="avatar" src="' +
+        String(
+          p.avatar_url
+        ).replace(/"/g, '') +
+        '" alt="">'
+      );
+
     }
 
-    var n =
-      (p &&
-       (p.nickname || p.username))
-        ? (p.nickname || p.username)
+    var name =
+      p &&
+      (
+        p.nickname ||
+        p.username
+      )
+        ? (
+            p.nickname ||
+            p.username
+          )
         : '?';
 
-    return '<div class="avatar">' +
+    return (
+      '<div class="avatar">' +
       escapeHtml(
-        String(n).slice(0, 1)
+        String(name).slice(0, 1)
       ) +
-      '</div>';
+      '</div>'
+    );
+
   }
 
 
-  /* =========================
+  /* =====================================================
      聊天 / 語音 / 視訊
-  ========================= */
+  ===================================================== */
 
-  function goChat(uid, displayName) {
+  function goChat(
+    uid,
+    displayName
+  ) {
 
-    /*
-     * 點進好友聊天前，
-     * 把目前好友訊息標記成已讀。
-     */
     setLastRead(
       'friend',
-      dmRoomId(me.id, uid)
+      dmRoomId(
+        me.id,
+        uid
+      )
     );
 
     location.href =
       'room.html?id=' +
       encodeURIComponent(
-        dmRoomId(me.id, uid)
+        dmRoomId(
+          me.id,
+          uid
+        )
       ) +
       '&name=' +
       encodeURIComponent(
-        displayName || '好友'
+        displayName ||
+        '好友'
       );
+
   }
 
 
-  function goVideo(uid, displayName) {
+  function goVideo(
+    uid,
+    displayName
+  ) {
 
     location.href =
       'call.html?mode=video&to=' +
       encodeURIComponent(uid) +
       '&name=' +
       encodeURIComponent(
-        displayName || '視訊'
+        displayName ||
+        '視訊'
       );
+
   }
 
 
-  function goAudio(uid, displayName) {
+  function goAudio(
+    uid,
+    displayName
+  ) {
 
     location.href =
       'call.html?mode=audio&to=' +
       encodeURIComponent(uid) +
       '&name=' +
       encodeURIComponent(
-        displayName || '語音'
+        displayName ||
+        '語音'
       );
+
   }
 
 
-  /* =========================
+  /* =====================================================
      個人資料
-  ========================= */
+  ===================================================== */
 
   async function ensureProfile() {
 
@@ -758,7 +1027,10 @@
       await supabase
         .from('profiles')
         .select('*')
-        .eq('id', me.id)
+        .eq(
+          'id',
+          me.id
+        )
         .maybeSingle();
 
     if (res.error) {
@@ -767,47 +1039,72 @@
         'profiles：' +
         res.error.message
       );
+
     }
 
     if (res.data) {
 
-      myProfile = res.data;
+      myProfile =
+        res.data;
 
       return;
+
     }
 
+
     var nick =
-      (me.user_metadata &&
-       (me.user_metadata.nickname ||
-        me.user_metadata.username)) ||
-      (me.email
-        ? me.email.split('@')[0]
-        : 'user');
+      (
+        me.user_metadata &&
+        (
+          me.user_metadata.nickname ||
+          me.user_metadata.username
+        )
+      )
+      ||
+      (
+        me.email
+          ? me.email.split('@')[0]
+          : 'user'
+      );
+
 
     var username =
       String(
-        (me.user_metadata &&
-         me.user_metadata.username) ||
+        (
+          me.user_metadata &&
+          me.user_metadata.username
+        )
+        ||
         nick
       )
-      .toLowerCase()
-      .replace(/\s+/g, '_')
-      .slice(0, 24);
+        .toLowerCase()
+        .replace(/\s+/g, '_')
+        .slice(0, 24);
+
 
     var ins =
       await supabase
         .from('profiles')
         .insert({
-          id: me.id,
-          username: username,
-          nickname: nick
+          id:
+            me.id,
+
+          username:
+            username,
+
+          nickname:
+            nick
         })
         .select()
         .maybeSingle();
 
+
     if (
       ins.error &&
-      String(ins.error.message)
+      String(
+        ins.error.message
+      )
+        .toLowerCase()
         .indexOf('duplicate') < 0
     ) {
 
@@ -815,26 +1112,40 @@
         '建立 profile：' +
         ins.error.message
       );
+
     }
 
+
     myProfile =
-      ins.data || {
-        id: me.id,
-        username: username,
-        nickname: nick
+      ins.data ||
+      {
+        id:
+          me.id,
+
+        username:
+          username,
+
+        nickname:
+          nick
       };
+
   }
 
 
-  /* =========================
-     滑動操作
-  ========================= */
+  /* =====================================================
+     滑動刪除
+  ===================================================== */
 
-  function enableSwipe(content) {
+  function enableSwipe(
+    content
+  ) {
 
     var startX = 0;
+
     var startY = 0;
+
     var moved = false;
+
 
     content.addEventListener(
       'touchstart',
@@ -881,6 +1192,7 @@
           e.touches[0].clientY -
           startY;
 
+
         if (
           Math.abs(dx) <
           Math.abs(dy)
@@ -888,25 +1200,28 @@
           return;
         }
 
+
         if (
           Math.abs(dx) < 10
         ) {
           return;
         }
 
+
         moved = true;
+
 
         if (dx < 0) {
 
-          content.classList.add(
-            'swiped'
-          );
+          content
+            .classList
+            .add('swiped');
 
         } else {
 
-          content.classList.remove(
-            'swiped'
-          );
+          content
+            .classList
+            .remove('swiped');
 
         }
 
@@ -930,32 +1245,39 @@
         passive: true
       }
     );
+
   }
 
 
-  /* =========================
-     好友未讀訊息
-     
-     messages
-     conversation_id
-     sender_id
-     created_at
-  ========================= */
+  /* =====================================================
+     好友未讀
+  ===================================================== */
 
-  async function getFriendUnreadCount(uid) {
+  async function getFriendUnreadCount(
+    uid
+  ) {
 
-    if (!uid || !me) {
+    if (
+      !uid ||
+      !me
+    ) {
       return 0;
     }
 
+
     var conversationId =
-      dmRoomId(me.id, uid);
+      dmRoomId(
+        me.id,
+        uid
+      );
+
 
     var lastRead =
       getLastRead(
         'friend',
         conversationId
       );
+
 
     var res =
       await supabase
@@ -980,6 +1302,7 @@
           lastRead
         );
 
+
     if (res.error) {
 
       console.log(
@@ -988,18 +1311,25 @@
       );
 
       return 0;
+
     }
+
 
     return Number(
       res.count || 0
     );
+
   }
 
 
-  async function loadFriendUnreadMap(ids) {
+  async function loadFriendUnreadMap(
+    ids
+  ) {
 
     var map = {};
+
     var total = 0;
+
 
     for (
       var i = 0;
@@ -1007,43 +1337,69 @@
       i++
     ) {
 
-      var uid = ids[i];
+      var uid =
+        ids[i];
+
 
       var count =
         await getFriendUnreadCount(
           uid
         );
 
-      map[uid] = count;
 
-      total += count;
+      map[uid] =
+        count;
+
+
+      total +=
+        count;
+
     }
 
-    unreadFriendTotal = total;
+
+    unreadFriendTotal =
+      total;
+
 
     setBadge(
       'friendMessageTotalBadge',
       total
     );
 
+
     return map;
+
   }
 
 
-  /* =========================
+  /* =====================================================
      好友列表
-  ========================= */
+     
+     這裡會自動用 UID 去重。
+  ===================================================== */
 
   async function loadFriends() {
 
+    if (
+      !supabase ||
+      !me
+    ) {
+      return;
+    }
+
+
     var box =
       $('friendList');
+
 
     var result =
       await supabase
         .from('friendships')
         .select('*')
-        .eq('status', 'accepted')
+        .eq(
+          'status',
+          'accepted'
+        )
         .or(
           'user_id.eq.' +
           me.id +
@@ -1051,11 +1407,14 @@
           me.id
         );
 
+
     var rows =
-      result.data;
+      result.data || [];
+
 
     var error =
       result.error;
+
 
     if (error) {
 
@@ -1066,14 +1425,31 @@
         escapeHtml(
           error.message
         ) +
-        '</div></div>';
+        '</div>' +
+        '</div>';
 
       return;
+
     }
 
-    var ids = [];
 
-    (rows || []).forEach(
+    /*
+     * 用 object 去重
+     *
+     * 即使 friendships 暫時有：
+     *
+     * A → B
+     * A → B
+     * B → A
+     * B → A
+     *
+     * 畫面也只顯示 B 一次。
+     */
+
+    var friendMap = {};
+
+
+    rows.forEach(
       function (r) {
 
         var other =
@@ -1081,16 +1457,31 @@
             ? r.friend_id
             : r.user_id;
 
+
         if (
-          ids.indexOf(other) < 0
+          other &&
+          other !== me.id
         ) {
-          ids.push(other);
+
+          friendMap[
+            String(other)
+          ] = true;
+
         }
 
       }
     );
 
-    box.innerHTML = '';
+
+    var ids =
+      Object.keys(
+        friendMap
+      );
+
+
+    box.innerHTML =
+      '';
+
 
     if (!ids.length) {
 
@@ -1099,31 +1490,46 @@
         0
       );
 
+
       box.innerHTML =
         '<div class="person">' +
         '<div class="name" style="color:#888">' +
         '尚無好友，點「＋」搜尋帳號加好友' +
-        '</div></div>';
+        '</div>' +
+        '</div>';
 
       return;
+
     }
+
 
     var profileResult =
       await supabase
         .from('profiles')
         .select('*')
-        .in('id', ids);
+        .in(
+          'id',
+          ids
+        );
+
 
     var profiles =
       profileResult.data || [];
 
+
     var profileMap = {};
+
 
     profiles.forEach(
       function (p) {
-        profileMap[p.id] = p;
+
+        profileMap[
+          p.id
+        ] = p;
+
       }
     );
+
 
     var unreadMap =
       await loadFriendUnreadMap(
@@ -1135,17 +1541,24 @@
       function (uid) {
 
         var p =
-          profileMap[uid] || {
-            id: uid,
+          profileMap[uid] ||
+          {
+            id:
+              uid,
+
             nickname:
               uid.slice(0, 8),
-            username: ''
+
+            username:
+              ''
           };
+
 
         var display =
           p.nickname ||
           p.username ||
           '使用者';
+
 
         var unread =
           unreadMap[uid] || 0;
@@ -1156,6 +1569,7 @@
             'div'
           );
 
+
         swipeRow.className =
           'swipe-row';
 
@@ -1165,14 +1579,18 @@
             'button'
           );
 
+
         deleteBtn.type =
           'button';
+
 
         deleteBtn.className =
           'swipe-delete';
 
+
         deleteBtn.textContent =
           '刪除';
+
 
         deleteBtn.onclick =
           async function () {
@@ -1190,6 +1608,7 @@
             'div'
           );
 
+
         content.className =
           'swipe-content';
 
@@ -1199,36 +1618,44 @@
             'div'
           );
 
+
         person.className =
           'person';
 
 
         var badgeHtml =
           unread > 0
-            ? '<span class="message-badge show">' +
+            ?
+              '<span class="message-badge" style="display:inline-block">' +
               (
                 unread > 99
                   ? '99+'
                   : String(unread)
               ) +
               '</span>'
-            : '<span class="message-badge">0</span>';
+            :
+              '<span class="message-badge">0</span>';
 
 
         person.innerHTML =
           avatarHtml(p) +
 
           '<div class="name">' +
-          escapeHtml(display) +
+
+          escapeHtml(
+            display
+          ) +
 
           (
             p.username
-              ? '<div class="sub">@' +
+              ?
+                '<div class="sub">@' +
                 escapeHtml(
                   p.username
                 ) +
                 '</div>'
-              : ''
+              :
+                ''
           ) +
 
           '</div>' +
@@ -1295,17 +1722,21 @@
           person
         );
 
+
         swipeRow.appendChild(
           deleteBtn
         );
+
 
         swipeRow.appendChild(
           content
         );
 
+
         box.appendChild(
           swipeRow
         );
+
 
         enableSwipe(
           content
@@ -1313,65 +1744,128 @@
 
       }
     );
+
   }
 
 
-  async function deleteFriend(uid, name) {
-
-  if (!me || !uid) {
-    return;
-  }
-
-  if (!confirm('確定要刪除好友「' + name + '」嗎？')) {
-    return;
-  }
-
-  try {
-
-    // 刪除「我 → 對方」
-    var r1 = await supabase
-      .from('friendships')
-      .delete()
-      .eq('user_id', me.id)
-      .eq('friend_id', uid);
-
-    if (r1.error) {
-      throw r1.error;
-    }
-
-    // 刪除「對方 → 我」
-    var r2 = await supabase
-      .from('friendships')
-      .delete()
-      .eq('user_id', uid)
-      .eq('friend_id', me.id);
-
-    if (r2.error) {
-      throw r2.error;
-    }
-
-    await loadFriends();
-
-    setStatus('已刪除好友「' + name + '」');
-
-  } catch (e) {
-
-    setStatus(
-      '刪除好友失敗：' +
-      (e.message || e)
-    );
-  }
-}
-
-
-  /* =========================
-     群組未讀訊息
+  /* =====================================================
+     刪除好友
      
-     group_messages
-     group_id
-     sender_id
-     created_at
-  ========================= */
+     重要：
+     RLS 目前是：
+     
+     DELETE：
+     auth.uid() = user_id
+     
+     所以「我 → 對方」這筆
+     我可以刪。
+
+     「對方 → 我」這筆
+     我沒有 DELETE 權限。
+
+     因此這裡不再假裝一定能刪兩邊。
+  ===================================================== */
+
+  async function deleteFriend(
+    uid,
+    name
+  ) {
+
+    if (
+      !me ||
+      !uid
+    ) {
+      return;
+    }
+
+
+    if (
+      !confirm(
+        '確定要刪除好友「' +
+        name +
+        '」嗎？'
+      )
+    ) {
+      return;
+    }
+
+
+    try {
+
+      /*
+       * 先刪除我自己建立的關係：
+       *
+       * user_id = me.id
+       * friend_id = uid
+       */
+
+      var result =
+        await supabase
+          .from('friendships')
+          .delete()
+          .eq(
+            'user_id',
+            me.id
+          )
+          .eq(
+            'friend_id',
+            uid
+          );
+
+
+      if (result.error) {
+
+        throw result.error;
+
+      }
+
+
+      /*
+       * 注意：
+       *
+       * 對方 → 我
+       *
+       * 依照你目前 RLS：
+       *
+       * auth.uid() = user_id
+       *
+       * 我沒有權限直接 DELETE。
+       *
+       * 所以這裡不再做第二次 DELETE，
+       * 避免讓前端誤判。
+       */
+
+
+      await loadFriends();
+
+
+      setStatus(
+        '已刪除好友「' +
+        name +
+        '」'
+      );
+
+
+    } catch (e) {
+
+      setStatus(
+        '刪除好友失敗：' +
+        (
+          e &&
+          e.message
+            ? e.message
+            : e
+        )
+      );
+
+    }
+
+  }
+
+
+  /* =====================================================
+     群組未讀
+  ===================================================== */
 
   async function getGroupUnreadCount(
     groupId
@@ -1384,11 +1878,13 @@
       return 0;
     }
 
+
     var lastRead =
       getLastRead(
         'group',
         groupId
       );
+
 
     var res =
       await supabase
@@ -1413,6 +1909,7 @@
           lastRead
         );
 
+
     if (res.error) {
 
       console.log(
@@ -1421,11 +1918,14 @@
       );
 
       return 0;
+
     }
+
 
     return Number(
       res.count || 0
     );
+
   }
 
 
@@ -1434,7 +1934,9 @@
   ) {
 
     var map = {};
+
     var total = 0;
+
 
     for (
       var i = 0;
@@ -1442,37 +1944,50 @@
       i++
     ) {
 
-      var gid = gids[i];
+      var gid =
+        gids[i];
+
 
       var count =
         await getGroupUnreadCount(
           gid
         );
 
-      map[gid] = count;
 
-      total += count;
+      map[gid] =
+        count;
+
+
+      total +=
+        count;
+
     }
 
-    unreadGroupTotal = total;
+
+    unreadGroupTotal =
+      total;
+
 
     setBadge(
       'groupMessageBadge',
       total
     );
 
+
     return map;
+
   }
 
 
-  /* =========================
+  /* =====================================================
      群組列表
-  ========================= */
+  ===================================================== */
 
   async function loadGroups() {
 
     var box =
       $('groupList');
+
 
     try {
 
@@ -1487,13 +2002,18 @@
             me.id
           );
 
+
       var mems =
         memberResult.data || [];
+
 
       var error =
         memberResult.error;
 
-      box.innerHTML = '';
+
+      box.innerHTML =
+        '';
+
 
       if (error) {
 
@@ -1504,17 +2024,23 @@
           escapeHtml(
             error.message
           ) +
-          '</div></div>';
+          '</div>' +
+          '</div>';
 
         return;
+
       }
+
 
       var gids =
         mems.map(
           function (m) {
+
             return m.group_id;
+
           }
         );
+
 
       if (!gids.length) {
 
@@ -1523,14 +2049,18 @@
           0
         );
 
+
         box.innerHTML =
           '<div class="person">' +
           '<div class="name" style="color:#888">' +
           '尚無群組' +
-          '</div></div>';
+          '</div>' +
+          '</div>';
 
         return;
+
       }
+
 
       var groupResult =
         await supabase
@@ -1541,8 +2071,10 @@
             gids
           );
 
+
       var groups =
         groupResult.data || [];
+
 
       var unreadMap =
         await loadGroupUnreadMap(
@@ -1556,13 +2088,21 @@
           var memberInfo =
             mems.find(
               function (m) {
-                return m.group_id === g.id;
+
+                return (
+                  m.group_id ===
+                  g.id
+                );
+
               }
             );
 
+
           var isGroupOwner =
             memberInfo &&
-            memberInfo.role === 'owner';
+            memberInfo.role ===
+            'owner';
+
 
           var unread =
             unreadMap[g.id] || 0;
@@ -1573,6 +2113,7 @@
               'div'
             );
 
+
           swipeRow.className =
             'swipe-row';
 
@@ -1581,6 +2122,7 @@
             document.createElement(
               'div'
             );
+
 
           content.className =
             'swipe-content';
@@ -1591,20 +2133,23 @@
               'div'
             );
 
+
           group.className =
             'group-row';
 
 
           var badgeHtml =
             unread > 0
-              ? '<span class="message-badge show">' +
+              ?
+                '<span class="message-badge" style="display:inline-block">' +
                 (
                   unread > 99
                     ? '99+'
                     : String(unread)
                 ) +
                 '</span>'
-              : '<span class="message-badge">0</span>';
+              :
+                '<span class="message-badge">0</span>';
 
 
           group.innerHTML =
@@ -1614,7 +2159,8 @@
 
             '<div class="name">' +
             escapeHtml(
-              g.name || '群組'
+              g.name ||
+              '群組'
             ) +
             '</div>' +
 
@@ -1625,18 +2171,18 @@
             '</button>';
 
 
-          group.querySelector(
-            'button'
-          ).onclick =
+          group
+            .querySelector(
+              'button'
+            )
+            .onclick =
             function () {
 
-              /*
-               * 進入群組前標記已讀
-               */
               setLastRead(
                 'group',
                 g.id
               );
+
 
               location.href =
                 'room.html?id=' +
@@ -1660,6 +2206,7 @@
           /*
            * 群主不能退群
            */
+
           if (
             !isGroupOwner
           ) {
@@ -1669,14 +2216,18 @@
                 'button'
               );
 
+
             leaveBtn.type =
               'button';
+
 
             leaveBtn.className =
               'swipe-delete';
 
+
             leaveBtn.textContent =
               '退群';
+
 
             leaveBtn.onclick =
               async function () {
@@ -1689,15 +2240,18 @@
 
               };
 
+
             swipeRow.appendChild(
               leaveBtn
             );
+
           }
 
 
           swipeRow.appendChild(
             content
           );
+
 
           box.appendChild(
             swipeRow
@@ -1717,16 +2271,28 @@
         }
       );
 
+
     } catch (e) {
 
       box.innerHTML =
         '<div class="person">' +
         '<div class="name" style="color:#888">' +
-        '群組載入異常' +
-        '</div></div>';
+        '群組載入異常：' +
+        escapeHtml(
+          e.message ||
+          e
+        ) +
+        '</div>' +
+        '</div>';
+
     }
+
   }
 
+
+  /* =====================================================
+     退群
+  ===================================================== */
 
   async function leaveGroup(
     groupId,
@@ -1740,6 +2306,7 @@
       return;
     }
 
+
     if (
       !confirm(
         '確定要退出「' +
@@ -1749,6 +2316,7 @@
     ) {
       return;
     }
+
 
     var res =
       await supabase
@@ -1763,6 +2331,7 @@
           me.id
         );
 
+
     if (res.error) {
 
       setStatus(
@@ -1771,7 +2340,9 @@
       );
 
       return;
+
     }
+
 
     localStorage.removeItem(
       getReadKey(
@@ -1780,19 +2351,22 @@
       )
     );
 
+
     await loadGroups();
+
 
     setStatus(
       '已退出「' +
       groupName +
       '」'
     );
+
   }
 
 
-  /* =========================
+  /* =====================================================
      好友邀請數量
-  ========================= */
+  ===================================================== */
 
   async function loadPendingCount() {
 
@@ -1802,6 +2376,7 @@
     ) {
       return;
     }
+
 
     try {
 
@@ -1824,6 +2399,7 @@
             'pending'
           );
 
+
       if (res.error) {
 
         console.log(
@@ -1832,12 +2408,15 @@
         );
 
         return;
+
       }
+
 
       setBadge(
         'newFriendBadge',
         res.count || 0
       );
+
 
     } catch (e) {
 
@@ -1845,13 +2424,359 @@
         '好友邀請數量錯誤：',
         e
       );
+
     }
+
   }
 
 
-  /* =========================
+  /* =====================================================
+     接受好友邀請
+     
+     ★ 這是這次修正最重要的部分 ★
+     
+     只保留一個 onclick。
+  ===================================================== */
+
+  async function acceptFriendRequest(
+    requestRow,
+    acceptButton,
+    ignoreButton
+  ) {
+
+    if (
+      !requestRow ||
+      !requestRow.id ||
+      !requestRow.user_id
+    ) {
+      return;
+    }
+
+
+    acceptButton.disabled =
+      true;
+
+    ignoreButton.disabled =
+      true;
+
+
+    try {
+
+      /*
+       * requestRow 是：
+       *
+       * 對方 → 我
+       *
+       * user_id = 對方
+       * friend_id = 我
+       * status = pending
+       *
+       * 把它直接變成 accepted。
+       */
+
+      var updateResult =
+        await supabase
+          .from('friendships')
+          .update({
+            status:
+              'accepted'
+          })
+          .eq(
+            'id',
+            requestRow.id
+          )
+          .eq(
+            'friend_id',
+            me.id
+          );
+
+
+      if (
+        updateResult.error
+      ) {
+
+        throw updateResult.error;
+
+      }
+
+
+      /*
+       * 接著確認：
+       *
+       * 我 → 對方
+       *
+       * 是否已存在。
+       */
+
+      var checkResult =
+        await supabase
+          .from('friendships')
+          .select(
+            'id,status'
+          )
+          .eq(
+            'user_id',
+            me.id
+          )
+          .eq(
+            'friend_id',
+            requestRow.user_id
+          )
+          .limit(10);
+
+
+      if (
+        checkResult.error
+      ) {
+
+        throw checkResult.error;
+
+      }
+
+
+      var reverseRows =
+        checkResult.data || [];
+
+
+      /*
+       * 如果完全不存在：
+       * 建立一筆 accepted。
+       */
+
+      if (
+        reverseRows.length === 0
+      ) {
+
+        var insertResult =
+          await supabase
+            .from('friendships')
+            .insert({
+              user_id:
+                me.id,
+
+              friend_id:
+                requestRow.user_id,
+
+              status:
+                'accepted'
+            });
+
+
+        if (
+          insertResult.error
+        ) {
+
+          throw insertResult.error;
+
+        }
+
+      } else {
+
+        /*
+         * 已經有反向關係：
+         * 不再 INSERT。
+         *
+         * 只把現有資料確保成 accepted。
+         */
+
+        var first =
+          reverseRows[0];
+
+
+        var fixResult =
+          await supabase
+            .from('friendships')
+            .update({
+              status:
+                'accepted'
+            })
+            .eq(
+              'id',
+              first.id
+            )
+            .eq(
+              'user_id',
+              me.id
+            );
+
+
+        if (
+          fixResult.error
+        ) {
+
+          throw fixResult.error;
+
+        }
+
+
+        /*
+         * 如果之前已經意外產生多筆
+         * 我 → 對方，
+         * 嘗試把多餘的刪掉。
+         *
+         * 這些資料 user_id = me.id，
+         * 符合你目前 DELETE RLS。
+         */
+
+        for (
+          var i = 1;
+          i < reverseRows.length;
+          i++
+        ) {
+
+          await supabase
+            .from('friendships')
+            .delete()
+            .eq(
+              'id',
+              reverseRows[i].id
+            )
+            .eq(
+              'user_id',
+              me.id
+            );
+
+        }
+
+      }
+
+
+      await loadPendingCount();
+
+      await loadPending();
+
+      await loadFriends();
+
+
+      setStatus(
+        '已接受好友'
+      );
+
+
+    } catch (e) {
+
+      acceptButton.disabled =
+        false;
+
+      ignoreButton.disabled =
+        false;
+
+
+      setStatus(
+        '接受好友失敗：' +
+        (
+          e &&
+          e.message
+            ? e.message
+            : e
+        )
+      );
+
+    }
+
+  }
+
+
+  /* =====================================================
+     忽略好友邀請
+  ===================================================== */
+
+  async function ignoreFriendRequest(
+    requestRow,
+    acceptButton,
+    ignoreButton
+  ) {
+
+    if (
+      !requestRow ||
+      !requestRow.id
+    ) {
+      return;
+    }
+
+
+    acceptButton.disabled =
+      true;
+
+    ignoreButton.disabled =
+      true;
+
+
+    try {
+
+      /*
+       * 注意：
+       *
+       * 目前你的 DELETE RLS 是：
+       *
+       * auth.uid() = user_id
+       *
+       * 但 pending 的 user_id 是對方。
+       *
+       * 因此前端直接 DELETE 這筆，
+       * 很可能會被 RLS 擋掉。
+       *
+       * 所以這裡先嘗試 DELETE。
+       *
+       * 如果失敗，會明確顯示 RLS 錯誤。
+       */
+
+      var deleteResult =
+        await supabase
+          .from('friendships')
+          .delete()
+          .eq(
+            'id',
+            requestRow.id
+          );
+
+
+      if (
+        deleteResult.error
+      ) {
+
+        throw deleteResult.error;
+
+      }
+
+
+      await loadPendingCount();
+
+      await loadPending();
+
+
+      setStatus(
+        '已忽略好友邀請'
+      );
+
+
+    } catch (e) {
+
+      acceptButton.disabled =
+        false;
+
+      ignoreButton.disabled =
+        false;
+
+
+      setStatus(
+        '忽略失敗：' +
+        (
+          e &&
+          e.message
+            ? e.message
+            : e
+        )
+      );
+
+    }
+
+  }
+
+
+  /* =====================================================
      好友邀請列表
-  ========================= */
+  ===================================================== */
 
   async function loadPending() {
 
@@ -1868,16 +2793,22 @@
           'pending'
         );
 
+
     var rows =
-      result.data;
+      result.data || [];
+
 
     var error =
       result.error;
 
+
     var box =
       $('pendingList');
 
-    box.innerHTML = '';
+
+    box.innerHTML =
+      '';
+
 
     if (error) {
 
@@ -1889,11 +2820,13 @@
         ) +
         '</div>';
 
+
       return;
+
     }
 
+
     if (
-      !rows ||
       !rows.length
     ) {
 
@@ -1902,17 +2835,70 @@
         '沒有待處理邀請' +
         '</div>';
 
+
       await loadPendingCount();
 
       return;
+
     }
 
-    var ids =
-      rows.map(
-        function (r) {
-          return r.user_id;
+
+    /*
+     * 避免同一個人重複顯示邀請。
+     */
+
+    var pendingMap = {};
+
+
+    rows.forEach(
+      function (r) {
+
+        var uid =
+          String(
+            r.user_id
+          );
+
+
+        /*
+         * 如果同一個人有多筆 pending，
+         * 只顯示第一筆。
+         */
+
+        if (
+          !pendingMap[uid]
+        ) {
+
+          pendingMap[uid] =
+            r;
+
+        }
+
+      }
+    );
+
+
+    var uniqueRows =
+      Object.keys(
+        pendingMap
+      )
+      .map(
+        function (key) {
+
+          return pendingMap[key];
+
         }
       );
+
+
+    var ids =
+      uniqueRows.map(
+        function (r) {
+
+          return r.user_id;
+
+        }
+      );
+
 
     var profileResult =
       await supabase
@@ -1923,31 +2909,41 @@
           ids
         );
 
+
     var profiles =
       profileResult.data || [];
 
+
     var map = {};
+
 
     profiles.forEach(
       function (p) {
-        map[p.id] = p;
+
+        map[p.id] =
+          p;
+
       }
     );
 
 
-    rows.forEach(
+    uniqueRows.forEach(
       function (r) {
 
         var p =
-          map[r.user_id] || {};
+          map[r.user_id] ||
+          {};
+
 
         var div =
           document.createElement(
             'div'
           );
 
+
         div.className =
           'person';
+
 
         div.innerHTML =
           avatarHtml(p) +
@@ -1985,210 +2981,47 @@
           );
 
 
+        var acceptButton =
+          btns[0];
+
+
+        var ignoreButton =
+          btns[1];
+
+
         /*
-         * 接受
+         * ★ 接受
+         *
+         * 只有這一個 onclick。
          */
 
-        btns[0].onclick =
+        acceptButton.onclick =
           async function () {
 
-            btns[0].disabled =
-              true;
-
-            btns[1].disabled =
-              true;
-
-            /* =========================
-   接受好友
-========================= */
-
-btns[0].onclick =
-  async function () {
-
-    btns[0].disabled = true;
-    btns[1].disabled = true;
-
-    try {
-
-      /*
-       * 先把對方送來的 pending
-       * 直接改成 accepted
-       */
-      var updateResult =
-        await supabase
-          .from('friendships')
-          .update({
-            status: 'accepted'
-          })
-          .eq('id', r.id);
-
-      if (updateResult.error) {
-        throw updateResult.error;
-      }
-
-      /*
-       * 檢查反向關係是否已存在
-       */
-      var checkResult =
-        await supabase
-          .from('friendships')
-          .select('id,status')
-          .eq('user_id', me.id)
-          .eq('friend_id', r.user_id)
-          .maybeSingle();
-
-      if (checkResult.error) {
-        throw checkResult.error;
-      }
-
-      /*
-       * 不存在才建立反向好友
-       */
-      if (!checkResult.data) {
-
-        var insertResult =
-          await supabase
-            .from('friendships')
-            .insert({
-              user_id: me.id,
-              friend_id: r.user_id,
-              status: 'accepted'
-            });
-
-        if (insertResult.error) {
-          throw insertResult.error;
-        }
-
-      } else {
-
-        /*
-         * 已存在就只確保狀態為 accepted
-         */
-        var fixResult =
-          await supabase
-            .from('friendships')
-            .update({
-              status: 'accepted'
-            })
-            .eq('id', checkResult.data.id);
-
-        if (fixResult.error) {
-          throw fixResult.error;
-        }
-      }
-
-      await loadPendingCount();
-      await loadPending();
-      await loadFriends();
-
-      setStatus('已接受好友');
-
-    } catch (e) {
-
-      btns[0].disabled = false;
-      btns[1].disabled = false;
-
-      setStatus(
-        '接受好友失敗：' +
-        (e.message || e)
-      );
-    }
-  };
-
-
-            var upsertResult =
-              await supabase
-                .from('friendships')
-                .upsert(
-                  {
-                    user_id:
-                      me.id,
-
-                    friend_id:
-                      r.user_id,
-
-                    status:
-                      'accepted'
-                  },
-                  {
-                    onConflict:
-                      'user_id,friend_id'
-                  }
-                );
-
-
-            if (
-              upsertResult.error
-            ) {
-
-              setStatus(
-                '好友建立失敗：' +
-                upsertResult.error.message
-              );
-
-              return;
-            }
-
-
-            await loadPending();
-
-            await loadPendingCount();
-
-            await loadFriends();
-
-            setStatus(
-              '已接受好友'
+            await acceptFriendRequest(
+              r,
+              acceptButton,
+              ignoreButton
             );
+
           };
 
 
         /*
-         * 忽略
+         * ★ 忽略
+         *
+         * 只有這一個 onclick。
          */
 
-        btns[1].onclick =
+        ignoreButton.onclick =
           async function () {
 
-            btns[0].disabled =
-              true;
-
-            btns[1].disabled =
-              true;
-
-            var deleteResult =
-              await supabase
-                .from('friendships')
-                .delete()
-                .eq(
-                  'id',
-                  r.id
-                );
-
-            if (
-              deleteResult.error
-            ) {
-
-              setStatus(
-                '忽略失敗：' +
-                deleteResult.error.message
-              );
-
-              btns[0].disabled =
-                false;
-
-              btns[1].disabled =
-                false;
-
-              return;
-            }
-
-            await loadPending();
-
-            await loadPendingCount();
-
-            setStatus(
-              '已忽略好友邀請'
+            await ignoreFriendRequest(
+              r,
+              acceptButton,
+              ignoreButton
             );
+
           };
 
 
@@ -2198,27 +3031,42 @@ btns[0].onclick =
 
       }
     );
+
+
   }
 
 
-  /* =========================
+  /* =====================================================
      搜尋使用者
-  ========================= */
+  ===================================================== */
 
-  async function searchPeople(keyword) {
+  async function searchPeople(
+    keyword
+  ) {
 
     keyword =
-      (keyword || '')
-        .trim()
-        .replace(/^@/, '');
+      (
+        keyword ||
+        ''
+      )
+      .trim()
+      .replace(
+        /^@/,
+        ''
+      );
+
 
     if (!keyword) {
 
-      $('searchSection').style.display =
+      $('searchSection')
+        .style
+        .display =
         'none';
 
       return;
+
     }
+
 
     setStatus(
       '搜尋中…'
@@ -2253,6 +3101,7 @@ btns[0].onclick =
 
     var map = {};
 
+
     (r1.data || [])
       .concat(
         r2.data || []
@@ -2264,7 +3113,8 @@ btns[0].onclick =
             p.id !== me.id
           ) {
 
-            map[p.id] = p;
+            map[p.id] =
+              p;
 
           }
 
@@ -2276,7 +3126,9 @@ btns[0].onclick =
       Object.keys(map)
         .map(
           function (k) {
+
             return map[k];
+
           }
         );
 
@@ -2284,25 +3136,36 @@ btns[0].onclick =
     var box =
       $('searchList');
 
-    box.innerHTML = '';
 
-    $('searchSection').style.display =
+    box.innerHTML =
+      '';
+
+
+    $('searchSection')
+      .style
+      .display =
       'block';
 
 
-    if (!list.length) {
+    if (
+      !list.length
+    ) {
 
       box.innerHTML =
         '<div class="person">' +
         '<div class="name" style="color:#888">' +
         '找不到使用者' +
-        '</div></div>';
+        '</div>' +
+        '</div>';
+
 
       setStatus(
         '搜尋完成'
       );
 
+
       return;
+
     }
 
 
@@ -2313,6 +3176,7 @@ btns[0].onclick =
           document.createElement(
             'div'
           );
+
 
         div.className =
           'person';
@@ -2330,7 +3194,8 @@ btns[0].onclick =
 
           '<div class="sub">@' +
           escapeHtml(
-            p.username || ''
+            p.username ||
+            ''
           ) +
           '</div>' +
 
@@ -2341,65 +3206,191 @@ btns[0].onclick =
           '</button>';
 
 
-        div.querySelector(
-          'button'
-        ).onclick =
-          async function () {
+        var btn =
+          div.querySelector(
+            'button'
+          );
 
-            var btn =
-              div.querySelector(
-                'button'
-              );
+
+        btn.onclick =
+          async function () {
 
             btn.disabled =
               true;
 
 
-            var res =
-              await supabase
-                .from('friendships')
-                .insert({
-                  user_id:
-                    me.id,
+            try {
 
-                  friend_id:
-                    p.id,
+              /*
+               * 先查雙向關係。
+               *
+               * 避免已經是好友、
+               * 已送邀請，
+               * 卻再次 INSERT。
+               */
 
-                  status:
-                    'pending'
-                });
+              var existing =
+                await supabase
+                  .from('friendships')
+                  .select(
+                    'id,user_id,friend_id,status'
+                  )
+                  .or(
+                    'and(user_id.eq.' +
+                    me.id +
+                    ',friend_id.eq.' +
+                    p.id +
+                    '),' +
+                    'and(user_id.eq.' +
+                    p.id +
+                    ',friend_id.eq.' +
+                    me.id +
+                    ')'
+                  );
 
 
-            if (res.error) {
+              if (
+                existing.error
+              ) {
+
+                throw existing.error;
+
+              }
+
+
+              var existingRows =
+                existing.data || [];
+
+
+              var alreadyAccepted =
+                existingRows.some(
+                  function (r) {
+
+                    return (
+                      r.status ===
+                      'accepted'
+                    );
+
+                  }
+                );
+
+
+              if (
+                alreadyAccepted
+              ) {
+
+                btn.disabled =
+                  false;
+
+                setStatus(
+                  '你們已經是好友'
+                );
+
+                return;
+
+              }
+
+
+              var alreadyPending =
+                existingRows.some(
+                  function (r) {
+
+                    return (
+                      r.status ===
+                      'pending'
+                    );
+
+                  }
+                );
+
+
+              if (
+                alreadyPending
+              ) {
+
+                btn.disabled =
+                  false;
+
+                setStatus(
+                  '已送過好友邀請'
+                );
+
+                return;
+
+              }
+
+
+              var res =
+                await supabase
+                  .from('friendships')
+                  .insert({
+                    user_id:
+                      me.id,
+
+                    friend_id:
+                      p.id,
+
+                    status:
+                      'pending'
+                  });
+
+
+              if (
+                res.error
+              ) {
+
+                throw res.error;
+
+              }
+
+
+              btn.textContent =
+                '已送出';
+
+
+              setStatus(
+                '已送出好友邀請'
+              );
+
+
+            } catch (e) {
 
               btn.disabled =
                 false;
 
-              setStatus(
+
+              var msg =
                 String(
-                  res.error.message
-                )
-                .toLowerCase()
-                .indexOf(
-                  'duplicate'
-                ) >= 0
+                  e &&
+                  e.message
+                    ? e.message
+                    : e
+                );
 
-                  ? '已送過邀請或已是好友'
 
-                  : '失敗：' +
-                    res.error.message
-              );
+              if (
+                msg
+                  .toLowerCase()
+                  .indexOf(
+                    'duplicate'
+                  ) >= 0
+              ) {
 
-              return;
+                setStatus(
+                  '已送過邀請或已是好友'
+                );
+
+              } else {
+
+                setStatus(
+                  '失敗：' +
+                  msg
+                );
+
+              }
+
             }
 
-
-            btn.textContent =
-              '已送出';
-
-            setStatus(
-              '已送出好友邀請'
-            );
           };
 
 
@@ -2416,12 +3407,13 @@ btns[0].onclick =
       list.length +
       ' 人'
     );
+
   }
 
 
-  /* =========================
+  /* =====================================================
      建立群組
-  ========================= */
+  ===================================================== */
 
   async function createGroup() {
 
@@ -2430,6 +3422,7 @@ btns[0].onclick =
         .value
         .trim();
 
+
     if (!name) {
 
       setStatus(
@@ -2437,7 +3430,9 @@ btns[0].onclick =
       );
 
       return;
+
     }
+
 
     if (!supabase) {
 
@@ -2446,7 +3441,9 @@ btns[0].onclick =
       );
 
       return;
+
     }
+
 
     if (!me) {
 
@@ -2455,6 +3452,7 @@ btns[0].onclick =
       );
 
       return;
+
     }
 
 
@@ -2480,6 +3478,7 @@ btns[0].onclick =
       );
 
       return;
+
     }
 
 
@@ -2506,6 +3505,7 @@ btns[0].onclick =
       );
 
       return;
+
     }
 
 
@@ -2521,12 +3521,13 @@ btns[0].onclick =
       encodeURIComponent(
         name
       );
+
   }
 
 
-  /* =========================
+  /* =====================================================
      啟動
-  ========================= */
+  ===================================================== */
 
   async function boot() {
 
@@ -2545,6 +3546,7 @@ btns[0].onclick =
       );
 
       return;
+
     }
 
 
@@ -2585,7 +3587,9 @@ btns[0].onclick =
           600
         );
 
+
         return;
+
       }
 
 
@@ -2597,12 +3601,14 @@ btns[0].onclick =
         '載入個人資料…'
       );
 
+
       await ensureProfile();
 
 
       setStatus(
         '檢查好友邀請…'
       );
+
 
       await loadPendingCount();
 
@@ -2611,12 +3617,14 @@ btns[0].onclick =
         '載入好友…'
       );
 
+
       await loadFriends();
 
 
       setStatus(
         '載入群組…'
       );
+
 
       await loadGroups();
 
@@ -2643,13 +3651,15 @@ btns[0].onclick =
             : e
         )
       );
+
     }
+
   }
 
 
-  /* =========================
+  /* =====================================================
      按鈕
-  ========================= */
+  ===================================================== */
 
   $('btnMenu').onclick =
     function () {
@@ -2716,17 +3726,22 @@ btns[0].onclick =
   $('btnDoSearch').onclick =
     function () {
 
-      hideSheets();
-
       var k =
         $('addKeyword')
           .value
           .trim();
 
+
+      hideSheets();
+
+
       $('searchInput').value =
         k;
 
-      searchPeople(k);
+
+      searchPeople(
+        k
+      );
 
     };
 
@@ -2739,11 +3754,13 @@ btns[0].onclick =
     };
 
 
-  /* =========================
+  /* =====================================================
      即時搜尋
-  ========================= */
+  ===================================================== */
 
-  var searchTimer = null;
+  var searchTimer =
+    null;
+
 
   $('searchInput')
     .addEventListener(
@@ -2754,15 +3771,19 @@ btns[0].onclick =
           searchTimer
         );
 
-        var v =
+
+        var value =
           $('searchInput')
             .value;
+
 
         searchTimer =
           setTimeout(
             function () {
 
-              searchPeople(v);
+              searchPeople(
+                value
+              );
 
             },
             350
@@ -2772,9 +3793,9 @@ btns[0].onclick =
     );
 
 
-  /* =========================
-     回到通訊錄時重新整理數字
-  ========================= */
+  /* =====================================================
+     回到通訊錄重新整理
+  ===================================================== */
 
   document.addEventListener(
     'visibilitychange',
@@ -2820,14 +3841,17 @@ btns[0].onclick =
   );
 
 
-  /* =========================
+  /* =====================================================
      啟動網站
-  ========================= */
+  ===================================================== */
 
   boot();
 
+
 })();
+
 </script>
+
 
 <script src="call-notify.js"></script>
 
