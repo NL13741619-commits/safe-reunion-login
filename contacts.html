@@ -1316,62 +1316,52 @@
   }
 
 
-  async function deleteFriend(
-    uid,
-    name
-  ) {
+  async function deleteFriend(uid, name) {
 
-    if (
-      !me ||
-      !uid
-    ) {
-      return;
+  if (!me || !uid) {
+    return;
+  }
+
+  if (!confirm('確定要刪除好友「' + name + '」嗎？')) {
+    return;
+  }
+
+  try {
+
+    // 刪除自己 → 對方
+    var r1 = await supabase
+      .from('friendships')
+      .delete()
+      .eq('user_id', me.id)
+      .eq('friend_id', uid);
+
+    if (r1.error) {
+      throw r1.error;
     }
 
-    if (
-      !confirm(
-        '確定要刪除好友「' +
-        name +
-        '」嗎？'
-      )
-    ) {
-      return;
-    }
+    // 刪除對方 → 自己
+    var r2 = await supabase
+      .from('friendships')
+      .delete()
+      .eq('user_id', uid)
+      .eq('friend_id', me.id);
 
-    var res =
-      await supabase
-        .from('friendships')
-        .delete()
-        .or(
-          'and(user_id.eq.' +
-          me.id +
-          ',friend_id.eq.' +
-          uid +
-          '),and(user_id.eq.' +
-          uid +
-          ',friend_id.eq.' +
-          me.id +
-          ')'
-        );
-
-    if (res.error) {
-
-      setStatus(
-        '刪除好友失敗：' +
-        res.error.message
-      );
-
-      return;
+    if (r2.error) {
+      throw r2.error;
     }
 
     await loadFriends();
 
+    setStatus('已刪除好友「' + name + '」');
+
+  } catch (e) {
+
     setStatus(
-      '已刪除好友「' +
-      name +
-      '」'
+      '刪除好友失敗：' +
+      (e.message || e)
     );
   }
+}
 
 
   /* =========================
@@ -2008,35 +1998,102 @@
             btns[1].disabled =
               true;
 
-            var updateResult =
-              await supabase
-                .from('friendships')
-                .update({
-                  status:
-                    'accepted'
-                })
-                .eq(
-                  'id',
-                  r.id
-                );
+            /* =========================
+   接受好友
+========================= */
 
-            if (
-              updateResult.error
-            ) {
+btns[0].onclick =
+  async function () {
 
-              setStatus(
-                '接受失敗：' +
-                updateResult.error.message
-              );
+    btns[0].disabled = true;
+    btns[1].disabled = true;
 
-              btns[0].disabled =
-                false;
+    try {
 
-              btns[1].disabled =
-                false;
+      /*
+       * 先把對方送來的 pending
+       * 直接改成 accepted
+       */
+      var updateResult =
+        await supabase
+          .from('friendships')
+          .update({
+            status: 'accepted'
+          })
+          .eq('id', r.id);
 
-              return;
-            }
+      if (updateResult.error) {
+        throw updateResult.error;
+      }
+
+      /*
+       * 檢查反向關係是否已存在
+       */
+      var checkResult =
+        await supabase
+          .from('friendships')
+          .select('id,status')
+          .eq('user_id', me.id)
+          .eq('friend_id', r.user_id)
+          .maybeSingle();
+
+      if (checkResult.error) {
+        throw checkResult.error;
+      }
+
+      /*
+       * 不存在才建立反向好友
+       */
+      if (!checkResult.data) {
+
+        var insertResult =
+          await supabase
+            .from('friendships')
+            .insert({
+              user_id: me.id,
+              friend_id: r.user_id,
+              status: 'accepted'
+            });
+
+        if (insertResult.error) {
+          throw insertResult.error;
+        }
+
+      } else {
+
+        /*
+         * 已存在就只確保狀態為 accepted
+         */
+        var fixResult =
+          await supabase
+            .from('friendships')
+            .update({
+              status: 'accepted'
+            })
+            .eq('id', checkResult.data.id);
+
+        if (fixResult.error) {
+          throw fixResult.error;
+        }
+      }
+
+      await loadPendingCount();
+      await loadPending();
+      await loadFriends();
+
+      setStatus('已接受好友');
+
+    } catch (e) {
+
+      btns[0].disabled = false;
+      btns[1].disabled = false;
+
+      setStatus(
+        '接受好友失敗：' +
+        (e.message || e)
+      );
+    }
+  };
 
 
             var upsertResult =
