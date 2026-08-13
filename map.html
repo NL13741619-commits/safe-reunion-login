@@ -4413,47 +4413,29 @@ async function uploadLocation() {
    25. 成員定位
    ========================================================= */
 
+let peerChannel = null;
+
 async function loadPeers() {
 
-  if (
-    !roomId
-  ) {
-
+  if (!roomId) {
     return;
-
   }
-
 
   try {
 
     const result =
       await sb
-        .from(
-          "location_shares"
-        )
+        .from("location_shares")
         .select("*")
-        .eq(
-          "room_id",
-          roomId
-        )
+        .eq("room_id", roomId)
         .gte(
-
           "updated_at",
-
           new Date(
-            Date.now()
-            -
-            30 *
-            60 *
-            1000
+            Date.now() - 30 * 60 * 1000
           ).toISOString()
-
         );
 
-
-    if (
-      result.error
-    ) {
+    if (result.error) {
 
       console.error(
         "成員定位錯誤：",
@@ -4461,30 +4443,23 @@ async function loadPeers() {
       );
 
       return;
-
     }
 
-
     const rows =
-      result.data ||
-      [];
-
+      result.data || [];
 
     /*
-     * 清除舊成員標記
+     * 清除舊成員 Marker
+     *
+     * 注意：
+     * 不碰測速照相 Marker。
      */
-
-    Object.keys(
-      peerMarkers
-    ).forEach(
-      function (
-        key
-      ) {
+    Object.keys(peerMarkers).forEach(
+      function (key) {
 
         if (
-          map.hasLayer(
-            peerMarkers[key]
-          )
+          peerMarkers[key] &&
+          map.hasLayer(peerMarkers[key])
         ) {
 
           map.removeLayer(
@@ -4496,121 +4471,204 @@ async function loadPeers() {
       }
     );
 
+    peerMarkers = {};
 
-    peerMarkers =
-      {};
-
-
-    let count =
-      0;
-
+    let count = 0;
 
     rows.forEach(
-      function (
-        row
-      ) {
+      function (row) {
 
+        /*
+         * 自己不重複顯示
+         */
         if (
-          me
-          &&
-          row.user_id
-          ===
-          me.id
+          me &&
+          row.user_id === me.id
         ) {
 
           return;
-
         }
 
-
         if (
-          row.lat == null
-          ||
+          row.lat == null ||
           row.lng == null
         ) {
 
           return;
+        }
+
+        const lat =
+          Number(row.lat);
+
+        const lng =
+          Number(row.lng);
+
+        if (
+          !Number.isFinite(lat) ||
+          !Number.isFinite(lng)
+        ) {
+
+          return;
+        }
+
+        /*
+         * 取得固定成員顏色＋形狀
+         */
+        let identifier = null;
+
+        if (
+          window.GroupLocationIdentifiers
+        ) {
+
+          identifier =
+            window
+              .GroupLocationIdentifiers
+              .createMemberIdentifier(
+                row
+              );
 
         }
 
+        /*
+         * 如果後台沒有識別資料，
+         * 暫時使用藍色圓形。
+         *
+         * 這只是成員 Marker，
+         * 不會碰測速照相 Marker。
+         */
+        let marker;
 
-        count++;
+        if (
+          identifier
+        ) {
 
+          const html =
+            window
+              .GroupLocationIdentifiers
+              .createMemberMarkerSVG(
+                identifier,
+                row.display_name ||
+                "成員"
+              );
+
+          marker =
+            L.marker(
+              [
+                lat,
+                lng
+              ],
+              {
+                icon:
+                  L.divIcon({
+
+                    className:
+                      "group-member-leaflet-icon",
+
+                    html:
+                      html,
+
+                    iconSize:
+                      [
+                        36,
+                        36
+                      ],
+
+                    iconAnchor:
+                      [
+                        18,
+                        18
+                      ],
+
+                    popupAnchor:
+                      [
+                        0,
+                        -18
+                      ]
+
+                  })
+              }
+            );
+
+        }
+        else {
+
+          marker =
+            L.circleMarker(
+              [
+                lat,
+                lng
+              ],
+              {
+
+                radius:
+                  8,
+
+                color:
+                  "#1565c0",
+
+                fillColor:
+                  "#1565c0",
+
+                fillOpacity:
+                  0.9,
+
+                weight:
+                  2
+
+              }
+            );
+
+        }
+
+        marker
+          .addTo(map)
+          .bindPopup(
+            escapeHtml(
+              row.display_name ||
+              "成員"
+            )
+          );
 
         peerMarkers[
           row.user_id
         ] =
+          marker;
 
-          L.circleMarker(
-
-            [
-              row.lat,
-              row.lng
-            ],
-
-            {
-
-              radius:
-                7,
-
-              color:
-                "#1e88e5",
-
-              fillColor:
-                "#1e88e5",
-
-              fillOpacity:
-                .9
-
-            }
-
-          )
-
-          .addTo(
-            map
-          )
-
-          .bindPopup(
-
-            row.display_name
-            ||
-            "成員"
-
-          );
+        count++;
 
       }
     );
 
+    const statusEl =
+      document.getElementById(
+        "partStatus"
+      );
 
-    document.getElementById(
-      "partStatus"
-    ).textContent =
+    if (statusEl) {
 
-      "目前分享定位人數："
-      +
-      (
-        count
+      statusEl.textContent =
+        "目前分享定位人數："
         +
         (
-          shareOn
-          &&
-          myLat != null
-            ? 1
-            : 0
+          count +
+          (
+            shareOn &&
+            myLat != null
+              ? 1
+              : 0
+          )
         )
-      )
-      +
-      "（含行程點 "
-      +
-      waypoints.length
-      +
-      " 個）";
+        +
+        "（含行程點 "
+        +
+        waypoints.length
+        +
+        " 個）";
+
+    }
 
   }
-
-  catch (
-    error
-  ) {
+  catch (error) {
 
     console.error(
       "成員定位例外：",
@@ -4622,6 +4680,128 @@ async function loadPeers() {
 }
 
 
+/* =========================================================
+   成員定位即時更新
+   ========================================================= */
+
+function startPeerRealtime() {
+
+  if (
+    !roomId ||
+    !sb
+  ) {
+
+    return;
+  }
+
+  /*
+   * 避免重複建立
+   */
+  if (peerChannel) {
+
+    return;
+  }
+
+  peerChannel =
+    sb
+      .channel(
+        "location-shares-" +
+        roomId
+      )
+
+      .on(
+
+        "postgres_changes",
+
+        {
+
+          event:
+            "*",
+
+          schema:
+            "public",
+
+          table:
+            "location_shares",
+
+          filter:
+            "room_id=eq." +
+            roomId
+
+        },
+
+        function () {
+
+          /*
+           * 有任何成員位置變化，
+           * 立即重新抓一次整個群組。
+           */
+          loadPeers();
+
+        }
+
+      )
+
+      .subscribe(
+
+        function (status) {
+
+          console.log(
+            "成員定位 Realtime：",
+            status
+          );
+
+        }
+
+      );
+
+}
+
+
+/* =========================================================
+   成員定位輪詢備援
+   ========================================================= */
+
+function startPeerPolling() {
+
+  if (
+    peerTimer
+  ) {
+
+    clearInterval(
+      peerTimer
+    );
+
+  }
+
+  /*
+   * 第一次立即載入
+   */
+  loadPeers();
+
+  /*
+   * 每 3 秒同步一次。
+   *
+   * 即使 Realtime 沒有正常工作，
+   * 成員仍然可以出現。
+   */
+  peerTimer =
+    setInterval(
+      function () {
+
+        if (
+          roomId
+        ) {
+
+          loadPeers();
+
+        }
+
+      },
+      3000
+    );
+
+}
 /* =========================================================
    26. 集合點圖示
    ========================================================= */
@@ -6015,6 +6195,7 @@ bootAuth();
      通話通知
      ========================================================= -->
 
+<script src="group-location-identifiers.js"></script>
 <script src="call-notify.js"></script>
 
 </body>
