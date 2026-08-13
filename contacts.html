@@ -1375,7 +1375,8 @@
   /* =====================================================
      好友列表
      
-     這裡會自動用 UID 去重。
+     ★ 核心規則：必須雙向 accepted 才算好友
+     一方刪除後，雙方列表都會消失
   ===================================================== */
 
   async function loadFriends() {
@@ -1434,37 +1435,33 @@
 
 
     /*
-     * 用 object 去重
-     *
-     * 即使 friendships 暫時有：
-     *
-     * A → B
-     * A → B
-     * B → A
-     * B → A
-     *
-     * 畫面也只顯示 B 一次。
+     * 建立雙向檢查
+     * mySide[uid]  = 我 → 對方 是否存在
+     * theirSide[uid] = 對方 → 我 是否存在
      */
 
-    var friendMap = {};
+    var mySide = {};
+
+    var theirSide = {};
 
 
     rows.forEach(
       function (r) {
 
-        var other =
-          r.user_id === me.id
-            ? r.friend_id
-            : r.user_id;
-
-
         if (
-          other &&
-          other !== me.id
+          r.user_id === me.id
         ) {
 
-          friendMap[
-            String(other)
+          mySide[
+            String(r.friend_id)
+          ] = true;
+
+        } else if (
+          r.friend_id === me.id
+        ) {
+
+          theirSide[
+            String(r.user_id)
           ] = true;
 
         }
@@ -1473,9 +1470,26 @@
     );
 
 
-    var ids =
-      Object.keys(
-        friendMap
+    /*
+     * 只有雙向都 accepted 才納入好友
+     */
+
+    var ids = [];
+
+
+    Object.keys(mySide)
+      .forEach(
+        function (uid) {
+
+          if (
+            theirSide[uid]
+          ) {
+
+            ids.push(uid);
+
+          }
+
+        }
       );
 
 
@@ -1751,19 +1765,12 @@
   /* =====================================================
      刪除好友
      
-     重要：
-     RLS 目前是：
+     規則：刪除 → 雙方都不是好友
      
-     DELETE：
-     auth.uid() = user_id
-     
-     所以「我 → 對方」這筆
-     我可以刪。
-
-     「對方 → 我」這筆
-     我沒有 DELETE 權限。
-
-     因此這裡不再假裝一定能刪兩邊。
+     實作：
+     1. 只刪「我 → 對方」這筆（符合目前 RLS）
+     2. loadFriends 會用「雙向 accepted」判斷
+        → 刪除後雙方列表都會立刻消失
   ===================================================== */
 
   async function deleteFriend(
@@ -1783,7 +1790,7 @@
       !confirm(
         '確定要刪除好友「' +
         name +
-        '」嗎？'
+        '」嗎？\n刪除後雙方都不會再看到對方。'
       )
     ) {
       return;
@@ -1791,13 +1798,6 @@
 
 
     try {
-
-      /*
-       * 先刪除我自己建立的關係：
-       *
-       * user_id = me.id
-       * friend_id = uid
-       */
 
       var result =
         await supabase
@@ -1818,22 +1818,6 @@
         throw result.error;
 
       }
-
-
-      /*
-       * 注意：
-       *
-       * 對方 → 我
-       *
-       * 依照你目前 RLS：
-       *
-       * auth.uid() = user_id
-       *
-       * 我沒有權限直接 DELETE。
-       *
-       * 所以這裡不再做第二次 DELETE，
-       * 避免讓前端誤判。
-       */
 
 
       await loadFriends();
@@ -2205,6 +2189,7 @@
 
           /*
            * 群主不能退群
+           * 退群後必須重新走群主審核
            */
 
           if (
@@ -2311,7 +2296,7 @@
       !confirm(
         '確定要退出「' +
         groupName +
-        '」嗎？'
+        '」嗎？\n退出後若要再加入，必須重新申請並經群主審核。'
       )
     ) {
       return;
@@ -2432,10 +2417,6 @@
 
   /* =====================================================
      接受好友邀請
-     
-     ★ 這是這次修正最重要的部分 ★
-     
-     只保留一個 onclick。
   ===================================================== */
 
   async function acceptFriendRequest(
@@ -2463,15 +2444,7 @@
     try {
 
       /*
-       * requestRow 是：
-       *
-       * 對方 → 我
-       *
-       * user_id = 對方
-       * friend_id = 我
-       * status = pending
-       *
-       * 把它直接變成 accepted。
+       * 把「對方 → 我」的 pending 改成 accepted
        */
 
       var updateResult =
@@ -2501,11 +2474,7 @@
 
 
       /*
-       * 接著確認：
-       *
-       * 我 → 對方
-       *
-       * 是否已存在。
+       * 確保「我 → 對方」也存在且是 accepted
        */
 
       var checkResult =
@@ -2538,11 +2507,6 @@
         checkResult.data || [];
 
 
-      /*
-       * 如果完全不存在：
-       * 建立一筆 accepted。
-       */
-
       if (
         reverseRows.length === 0
       ) {
@@ -2571,13 +2535,6 @@
         }
 
       } else {
-
-        /*
-         * 已經有反向關係：
-         * 不再 INSERT。
-         *
-         * 只把現有資料確保成 accepted。
-         */
 
         var first =
           reverseRows[0];
@@ -2610,12 +2567,7 @@
 
 
         /*
-         * 如果之前已經意外產生多筆
-         * 我 → 對方，
-         * 嘗試把多餘的刪掉。
-         *
-         * 這些資料 user_id = me.id，
-         * 符合你目前 DELETE RLS。
+         * 清掉多餘的「我 → 對方」資料
          */
 
         for (
@@ -2679,6 +2631,9 @@
 
   /* =====================================================
      忽略好友邀請
+     
+     改為 UPDATE status = 'rejected'
+     （避免 RLS 擋 DELETE）
   ===================================================== */
 
   async function ignoreFriendRequest(
@@ -2704,38 +2659,28 @@
 
     try {
 
-      /*
-       * 注意：
-       *
-       * 目前你的 DELETE RLS 是：
-       *
-       * auth.uid() = user_id
-       *
-       * 但 pending 的 user_id 是對方。
-       *
-       * 因此前端直接 DELETE 這筆，
-       * 很可能會被 RLS 擋掉。
-       *
-       * 所以這裡先嘗試 DELETE。
-       *
-       * 如果失敗，會明確顯示 RLS 錯誤。
-       */
-
-      var deleteResult =
+      var updateResult =
         await supabase
           .from('friendships')
-          .delete()
+          .update({
+            status:
+              'rejected'
+          })
           .eq(
             'id',
             requestRow.id
+          )
+          .eq(
+            'friend_id',
+            me.id
           );
 
 
       if (
-        deleteResult.error
+        updateResult.error
       ) {
 
-        throw deleteResult.error;
+        throw updateResult.error;
 
       }
 
@@ -2844,7 +2789,7 @@
 
 
     /*
-     * 避免同一個人重複顯示邀請。
+     * 避免同一個人重複顯示邀請
      */
 
     var pendingMap = {};
@@ -2858,11 +2803,6 @@
             r.user_id
           );
 
-
-        /*
-         * 如果同一個人有多筆 pending，
-         * 只顯示第一筆。
-         */
 
         if (
           !pendingMap[uid]
@@ -2989,12 +2929,6 @@
           btns[1];
 
 
-        /*
-         * ★ 接受
-         *
-         * 只有這一個 onclick。
-         */
-
         acceptButton.onclick =
           async function () {
 
@@ -3006,12 +2940,6 @@
 
           };
 
-
-        /*
-         * ★ 忽略
-         *
-         * 只有這一個 onclick。
-         */
 
         ignoreButton.onclick =
           async function () {
@@ -3220,14 +3148,6 @@
 
 
             try {
-
-              /*
-               * 先查雙向關係。
-               *
-               * 避免已經是好友、
-               * 已送邀請，
-               * 卻再次 INSERT。
-               */
 
               var existing =
                 await supabase
