@@ -1328,7 +1328,7 @@
 
   try {
 
-    // 刪除自己 → 對方
+    // 刪除「我 → 對方」
     var r1 = await supabase
       .from('friendships')
       .delete()
@@ -1339,7 +1339,7 @@
       throw r1.error;
     }
 
-    // 刪除對方 → 自己
+    // 刪除「對方 → 我」
     var r2 = await supabase
       .from('friendships')
       .delete()
