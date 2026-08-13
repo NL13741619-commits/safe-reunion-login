@@ -1,6 +1,8 @@
 <!DOCTYPE html>
 <html lang="zh-TW">
+
 <head>
+
 <meta charset="UTF-8">
 
 <meta
@@ -10,7 +12,11 @@
 
 <title>導航測速・安全團聚</title>
 
-<!-- Leaflet -->
+
+<!-- =========================================================
+     Leaflet
+     ========================================================= -->
+
 <link
   rel="stylesheet"
   href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
@@ -20,10 +26,21 @@
   src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js">
 </script>
 
-<!-- Supabase -->
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<!-- =========================================================
+     Supabase
+     ========================================================= -->
+
+<script
+  src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2">
+</script>
+
 
 <style>
+
+/* =========================================================
+   基本
+   ========================================================= */
 
 * {
   box-sizing: border-box;
@@ -31,10 +48,13 @@
   padding: 0;
 }
 
+
 html,
 body {
+
   width: 100%;
   height: 100%;
+
   overflow: hidden;
 
   font-family:
@@ -53,7 +73,9 @@ body {
    ========================================================= */
 
 #map {
+
   position: fixed;
+
   inset: 0;
 
   width: 100%;
@@ -64,10 +86,11 @@ body {
 
 
 /* =========================================================
-   上方綠色控制列
+   上方控制列
    ========================================================= */
 
 .header {
+
   position: fixed;
 
   top: 0;
@@ -77,16 +100,16 @@ body {
   min-height: 58px;
 
   background: #06C755;
+
   color: white;
 
   display: flex;
+
   align-items: center;
 
-  gap: 7px;
+  gap: 6px;
 
-  padding:
-    8px 8px
-    8px 8px;
+  padding: 8px;
 
   z-index: 2000;
 
@@ -96,10 +119,12 @@ body {
 
 
 .back {
+
   width: 34px;
   height: 38px;
 
   display: flex;
+
   align-items: center;
   justify-content: center;
 
@@ -114,6 +139,7 @@ body {
 
 
 .header-info {
+
   flex: 1;
 
   min-width: 0;
@@ -123,6 +149,7 @@ body {
 
 
 .header-title {
+
   font-size: 15px;
 
   font-weight: 800;
@@ -136,6 +163,7 @@ body {
 
 
 .header-sub {
+
   margin-top: 3px;
 
   font-size: 10px;
@@ -151,10 +179,11 @@ body {
 
 
 /* =========================================================
-   上方功能按鈕
+   上方按鈕
    ========================================================= */
 
 .top-btn {
+
   border: none;
 
   min-width: 40px;
@@ -176,23 +205,31 @@ body {
     0 2px 7px rgba(0,0,0,.15);
 
   flex-shrink: 0;
+
+  cursor: pointer;
 }
 
 
 .top-btn.nav {
+
   background: #1677ff;
+
   color: white;
 }
 
 
 .top-btn.stop {
+
   background: #d93025;
+
   color: white;
 }
 
 
 .top-btn.silent {
+
   background: #333;
+
   color: white;
 }
 
@@ -202,6 +239,7 @@ body {
    ========================================================= */
 
 .sos-top {
+
   border: none;
 
   width: 43px;
@@ -221,25 +259,32 @@ body {
     0 2px 8px rgba(0,0,0,.22);
 
   flex-shrink: 0;
+
+  cursor: pointer;
 }
 
 
 /* =========================================================
-   Leaflet 縮放按鈕
+   Leaflet 縮放控制
+   不遮住上方按鈕
    ========================================================= */
 
 .leaflet-top.leaflet-left {
+
   top: 66px;
+
   left: 8px;
 }
 
 
 .leaflet-control-zoom {
+
   margin-top: 0 !important;
 }
 
 
 .leaflet-control-zoom a {
+
   width: 38px !important;
   height: 38px !important;
 
@@ -254,6 +299,7 @@ body {
    ========================================================= */
 
 .speed-box {
+
   position: fixed;
 
   top: 68px;
@@ -280,11 +326,13 @@ body {
 
 
 .speed-box.show {
+
   display: block;
 }
 
 
 .speed-box.danger {
+
   background: #ffe1e1;
 
   color: #8b0000;
@@ -292,6 +340,7 @@ body {
 
 
 .speed-title {
+
   font-weight: 900;
 
   font-size: 13px;
@@ -299,6 +348,7 @@ body {
 
 
 .speed-info {
+
   margin-top: 3px;
 
   line-height: 1.4;
@@ -306,6 +356,7 @@ body {
 
 
 .speed-address {
+
   margin-top: 2px;
 
   color: #666;
@@ -321,10 +372,11 @@ body {
 
 
 /* =========================================================
-   速度資訊
+   導航資訊
    ========================================================= */
 
 .navigation-info {
+
   position: fixed;
 
   left: 10px;
@@ -341,13 +393,16 @@ body {
 
 
 .navigation-info.show {
+
   display: flex;
 }
 
 
 .speed-current,
 .navigation-direction {
-  background: rgba(255,255,255,.95);
+
+  background:
+    rgba(255,255,255,.95);
 
   border-radius: 14px;
 
@@ -363,6 +418,7 @@ body {
 
 
 .info-label {
+
   font-size: 10px;
 
   color: #666;
@@ -370,6 +426,7 @@ body {
 
 
 .info-value {
+
   margin-top: 2px;
 
   font-size: 21px;
@@ -379,10 +436,11 @@ body {
 
 
 /* =========================================================
-   一般底部面板
+   一般面板
    ========================================================= */
 
 .panel {
+
   position: fixed;
 
   left: 0;
@@ -412,12 +470,14 @@ body {
 
 
 .panel.hidden {
+
   transform:
     translateY(110%);
 }
 
 
 .panel-handle {
+
   width: 42px;
   height: 4px;
 
@@ -436,6 +496,7 @@ body {
    ========================================================= */
 
 .row {
+
   display: flex;
 
   gap: 7px;
@@ -449,6 +510,7 @@ body {
 
 
 .status {
+
   flex: 1;
 
   min-width: 120px;
@@ -460,6 +522,7 @@ body {
 
 
 .btn {
+
   border: none;
 
   border-radius: 10px;
@@ -475,24 +538,31 @@ body {
 
 
 .btn-green {
+
   background: #06C755;
+
   color: white;
 }
 
 
 .btn-red {
+
   background: #e53935;
+
   color: white;
 }
 
 
 .btn-orange {
+
   background: #fb8c00;
+
   color: white;
 }
 
 
 .btn-outline {
+
   background: white;
 
   border: 1px solid #ddd;
@@ -506,6 +576,7 @@ body {
    ========================================================= */
 
 .list-title {
+
   font-size: 12px;
 
   color: #888;
@@ -517,6 +588,7 @@ body {
 
 input,
 select {
+
   width: 100%;
 
   padding: 9px 10px;
@@ -535,6 +607,7 @@ select {
 
 
 .wp-item {
+
   display: flex;
 
   gap: 8px;
@@ -551,6 +624,7 @@ select {
 
 
 .num {
+
   width: 25px;
   height: 25px;
 
@@ -572,6 +646,7 @@ select {
 
 
 .marker-num {
+
   background: #06C755;
 
   color: white;
@@ -599,6 +674,7 @@ select {
    ========================================================= */
 
 .sos-banner {
+
   position: fixed;
 
   top: 62px;
@@ -630,21 +706,24 @@ select {
 
 
 .sos-banner.show {
+
   display: block;
 }
 
 
 /* =========================================================
-   導航模式下隱藏一般面板
+   導航模式
    ========================================================= */
 
 body.navigation-mode .panel {
+
   transform:
     translateY(110%);
 }
 
 
 body.navigation-mode .navigation-info {
+
   display: flex;
 }
 
@@ -654,6 +733,7 @@ body.navigation-mode .navigation-info {
    ========================================================= */
 
 #searchResults {
+
   display: none;
 
   border:
@@ -676,21 +756,30 @@ body.navigation-mode .navigation-info {
 @media (max-width: 390px) {
 
   .header {
+
     gap: 4px;
+
     padding-left: 5px;
     padding-right: 5px;
   }
 
+
   .header-title {
+
     font-size: 13px;
   }
 
+
   .header-sub {
+
     font-size: 9px;
   }
 
+
   .top-btn {
+
     min-width: 36px;
+
     height: 36px;
 
     padding: 0 6px;
@@ -698,25 +787,33 @@ body.navigation-mode .navigation-info {
     font-size: 11px;
   }
 
+
   .sos-top {
+
     width: 39px;
+
     height: 36px;
 
     font-size: 12px;
   }
 
+
   .speed-box {
+
     left: 52px;
+
     right: 52px;
   }
 
 }
 
 </style>
+
 </head>
 
 
 <body>
+
 
 <!-- =======================================================
      地圖
@@ -739,6 +836,7 @@ body.navigation-mode .navigation-info {
     ‹
   </a>
 
+
   <div class="header-info">
 
     <div
@@ -747,6 +845,7 @@ body.navigation-mode .navigation-info {
     >
       集合地圖
     </div>
+
 
     <div
       class="header-sub"
@@ -820,23 +919,23 @@ body.navigation-mode .navigation-info {
     📷 前方測速提醒
   </div>
 
+
   <div
     class="speed-info"
     id="speedInfo"
-  >
-  </div>
+  ></div>
+
 
   <div
     class="speed-address"
     id="speedAddress"
-  >
-  </div>
+  ></div>
 
 </div>
 
 
 <!-- =======================================================
-     導航模式速度
+     導航速度資訊
      ======================================================= -->
 
 <div
@@ -850,12 +949,14 @@ body.navigation-mode .navigation-info {
       目前速度
     </div>
 
+
     <div
       class="info-value"
       id="currentSpeed"
     >
       0
     </div>
+
 
     <div class="info-label">
       km/h
@@ -870,12 +971,14 @@ body.navigation-mode .navigation-info {
       行進方向
     </div>
 
+
     <div
       class="info-value"
       id="currentHeading"
     >
       --
     </div>
+
 
     <div class="info-label">
       °
@@ -898,6 +1001,8 @@ body.navigation-mode .navigation-info {
   <div class="panel-handle"></div>
 
 
+  <!-- 定位 -->
+
   <div class="row">
 
     <div
@@ -918,6 +1023,8 @@ body.navigation-mode .navigation-info {
 
   </div>
 
+
+  <!-- 成員 -->
 
   <div
     class="status"
@@ -975,8 +1082,7 @@ body.navigation-mode .navigation-info {
 
   <div
     id="searchResults"
-  >
-  </div>
+  ></div>
 
 
   <div class="row">
@@ -1008,8 +1114,7 @@ body.navigation-mode .navigation-info {
   </div>
 
 
-  <div id="wpList">
-  </div>
+  <div id="wpList"></div>
 
 </div>
 
@@ -1030,7 +1135,7 @@ const SUPABASE_URL =
 
 
 const SUPABASE_KEY =
-'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBlcmZzaXBwZXJuY3Zqb2N6bmhsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODYwMTUyMzAsImV4cCI6MjEwMTU5MTIzMH0.I7vXkV247kAzRJ0RigDZt3Hzn8KJDyMc6o9E3oHJZoY';
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBlcmZzaXBwZXJuY3Zqb2N6bmhsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODYwMTUyMzAsImV4cCI6MjEwMTU5MTIzMH0.I7vXkV247kAzRJ0RigDZt3Hzn8KJDyMc6o9E3oHJZoY";
 
 
 const CAMERA_TABLE =
@@ -1084,11 +1189,15 @@ document.getElementById(
     ? (
         "room.html?id="
         +
-        encodeURIComponent(roomId)
+        encodeURIComponent(
+          roomId
+        )
         +
         "&name="
         +
-        encodeURIComponent(roomName)
+        encodeURIComponent(
+          roomName
+        )
       )
 
     : "chat.html";
@@ -1099,13 +1208,13 @@ document.getElementById(
    ========================================================= */
 
 const map =
-  L.map("map", {
-
-    zoomControl: true,
-
-    attributionControl: true
-
-  }).setView(
+  L.map(
+    "map",
+    {
+      zoomControl: true,
+      attributionControl: true
+    }
+  ).setView(
     [23.97, 121.0],
     8
   );
@@ -1114,12 +1223,9 @@ const map =
 L.tileLayer(
   "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
   {
-
     maxZoom: 19,
-
     attribution:
       "&copy; OpenStreetMap contributors"
-
   }
 ).addTo(map);
 
@@ -1129,11 +1235,15 @@ L.tileLayer(
    ========================================================= */
 
 const titleEl =
-  document.getElementById("title");
+  document.getElementById(
+    "title"
+  );
 
 
 const subEl =
-  document.getElementById("sub");
+  document.getElementById(
+    "sub"
+  );
 
 
 const navigationBtn =
@@ -1203,7 +1313,7 @@ const sosBanner =
 
 
 /* =========================================================
-   5. 全域變數
+   5. 全域狀態
    ========================================================= */
 
 let me = null;
@@ -1246,6 +1356,12 @@ let peerMarkers = {};
 
 let currentSpeed = 0;
 
+let camerasLoaded = false;
+
+let sosChannel = null;
+
+let peerTimer = null;
+
 
 /* =========================================================
    6. 工具
@@ -1263,6 +1379,10 @@ function number(value) {
 }
 
 
+/* =========================================================
+   距離
+   ========================================================= */
+
 function distanceMeters(
   lat1,
   lng1,
@@ -1275,31 +1395,49 @@ function distanceMeters(
 
 
   const p1 =
-    lat1 * Math.PI / 180;
+    lat1 *
+    Math.PI /
+    180;
 
 
   const p2 =
-    lat2 * Math.PI / 180;
+    lat2 *
+    Math.PI /
+    180;
 
 
   const dp =
-    (lat2 - lat1)
-    * Math.PI / 180;
+    (
+      lat2 -
+      lat1
+    )
+    *
+    Math.PI /
+    180;
 
 
   const dl =
-    (lng2 - lng1)
-    * Math.PI / 180;
+    (
+      lng2 -
+      lng1
+    )
+    *
+    Math.PI /
+    180;
 
 
   const a =
-    Math.sin(dp / 2) ** 2
+    Math.sin(
+      dp / 2
+    ) ** 2
     +
     Math.cos(p1)
     *
     Math.cos(p2)
     *
-    Math.sin(dl / 2) ** 2;
+    Math.sin(
+      dl / 2
+    ) ** 2;
 
 
   return (
@@ -1307,12 +1445,18 @@ function distanceMeters(
     R *
     Math.atan2(
       Math.sqrt(a),
-      Math.sqrt(1 - a)
+      Math.sqrt(
+        1 - a
+      )
     )
   );
 
 }
 
+
+/* =========================================================
+   方位角
+   ========================================================= */
 
 function bearingDegrees(
   lat1,
@@ -1322,16 +1466,25 @@ function bearingDegrees(
 ) {
 
   const p1 =
-    lat1 * Math.PI / 180;
+    lat1 *
+    Math.PI /
+    180;
 
 
   const p2 =
-    lat2 * Math.PI / 180;
+    lat2 *
+    Math.PI /
+    180;
 
 
   const dl =
-    (lng2 - lng1)
-    * Math.PI / 180;
+    (
+      lng2 -
+      lng1
+    )
+    *
+    Math.PI /
+    180;
 
 
   const y =
@@ -1354,15 +1507,26 @@ function bearingDegrees(
 
   return (
     (
-      Math.atan2(y, x)
-      * 180 / Math.PI
-      + 360
+      Math.atan2(
+        y,
+        x
+      )
+      *
+      180 /
+      Math.PI
+      +
+      360
     )
-    % 360
+    %
+    360
   );
 
 }
 
+
+/* =========================================================
+   方向差
+   ========================================================= */
 
 function angleDifference(
   a,
@@ -1371,14 +1535,24 @@ function angleDifference(
 
   return Math.abs(
     (
-      (a - b + 540)
-      % 360
+      (
+        a -
+        b +
+        540
+      )
+      %
+      360
     )
-    - 180
+    -
+    180
   );
 
 }
 
+
+/* =========================================================
+   距離格式
+   ========================================================= */
 
 function formatDistance(
   meters
@@ -1389,22 +1563,31 @@ function formatDistance(
   ) {
 
     return (
-      Math.round(meters)
-      + " m"
+      Math.round(
+        meters
+      )
+      +
+      " m"
     );
 
   }
 
 
   return (
-    (meters / 1000)
-      .toFixed(1)
+    (
+      meters /
+      1000
+    ).toFixed(1)
     +
     " km"
   );
 
 }
 
+
+/* =========================================================
+   GPS 錯誤
+   ========================================================= */
 
 function geoErrorText(
   error
@@ -1454,7 +1637,7 @@ function geoErrorText(
 
 
 /* =========================================================
-   7. 方向判斷
+   7. 測速方向
    ========================================================= */
 
 function directMatchesHeading(
@@ -1464,7 +1647,8 @@ function directMatchesHeading(
 
   const text =
     String(
-      direct || ""
+      direct ||
+      ""
     );
 
 
@@ -1573,16 +1757,29 @@ async function bootAuth() {
     listenSos();
 
 
-    setInterval(
-      loadPeers,
-      8000
-    );
+    if (
+      peerTimer
+    ) {
+
+      clearInterval(
+        peerTimer
+      );
+
+    }
+
+
+    peerTimer =
+      setInterval(
+        loadPeers,
+        8000
+      );
 
   }
 
   catch (error) {
 
     console.error(
+      "登入初始化錯誤：",
       error
     );
 
@@ -1596,6 +1793,15 @@ async function bootAuth() {
    ========================================================= */
 
 async function loadCameras() {
+
+  if (
+    camerasLoaded
+  ) {
+
+    return;
+
+  }
+
 
   try {
 
@@ -1614,7 +1820,7 @@ async function loadCameras() {
     ) {
 
       console.error(
-        "測速資料錯誤",
+        "測速資料錯誤：",
         result.error
       );
 
@@ -1627,75 +1833,91 @@ async function loadCameras() {
 
 
     cameras =
-      (result.data || [])
+      (
+        result.data ||
+        []
+      )
 
-        .map(
-          function (row, index) {
+      .map(
+        function (
+          row,
+          index
+        ) {
 
-            return {
+          return {
 
-              id:
-                index,
+            id:
+              index,
 
-              city:
-                String(
-                  row.CityName || ""
-                ),
+            city:
+              String(
+                row.CityName ||
+                ""
+              ),
 
-              region:
-                String(
-                  row.RegionName || ""
-                ),
+            region:
+              String(
+                row.RegionName ||
+                ""
+              ),
 
-              address:
-                String(
-                  row.Address || ""
-                ),
+            address:
+              String(
+                row.Address ||
+                ""
+              ),
 
-              latitude:
-                number(
-                  row.Latitude
-                ),
+            latitude:
+              number(
+                row.Latitude
+              ),
 
-              longitude:
-                number(
-                  row.Longitude
-                ),
+            longitude:
+              number(
+                row.Longitude
+              ),
 
-              direct:
-                String(
-                  row.direct || ""
-                ),
+            direct:
+              String(
+                row.direct ||
+                ""
+              ),
 
-              speedLimit:
-                number(
-                  row.limit
-                )
-
-            };
-
-          }
-        )
-
-        .filter(
-          function (camera) {
-
-            return (
-
-              Number.isFinite(
-                camera.latitude
+            speedLimit:
+              number(
+                row.limit
               )
 
-              &&
+          };
 
-              Number.isFinite(
-                camera.longitude
-              )
+        }
+      )
 
-            );
+      .filter(
+        function (
+          camera
+        ) {
 
-          }
-        );
+          return (
+
+            Number.isFinite(
+              camera.latitude
+            )
+
+            &&
+
+            Number.isFinite(
+              camera.longitude
+            )
+
+          );
+
+        }
+      );
+
+
+    camerasLoaded =
+      true;
 
 
     drawCameraMarkers();
@@ -1711,6 +1933,7 @@ async function loadCameras() {
   catch (error) {
 
     console.error(
+      "測速資料載入例外：",
       error
     );
 
@@ -1720,27 +1943,40 @@ async function loadCameras() {
 
 
 /* =========================================================
-   10. 測速點
+   10. 畫測速點
    ========================================================= */
 
 function drawCameraMarkers() {
 
   cameraMarkers.forEach(
-    function (marker) {
+    function (
+      marker
+    ) {
 
-      map.removeLayer(
-        marker
-      );
+      if (
+        map.hasLayer(
+          marker
+        )
+      ) {
+
+        map.removeLayer(
+          marker
+        );
+
+      }
 
     }
   );
 
 
-  cameraMarkers = [];
+  cameraMarkers =
+    [];
 
 
   cameras.forEach(
-    function (camera) {
+    function (
+      camera
+    ) {
 
       const marker =
         L.circleMarker(
@@ -1752,11 +1988,14 @@ function drawCameraMarkers() {
 
           {
 
-            radius: 5,
+            radius:
+              5,
 
-            weight: 1,
+            weight:
+              1,
 
-            fillOpacity: .8
+            fillOpacity:
+              .8
 
           }
 
@@ -1779,7 +2018,8 @@ function drawCameraMarkers() {
         +
         (
           camera.speedLimit
-          ?? "--"
+          ??
+          "--"
         )
         +
         " km/h"
@@ -1811,7 +2051,7 @@ function drawCameraMarkers() {
 
 
 /* =========================================================
-   11. 找前方測速點
+   11. 找前方測速
    ========================================================= */
 
 function findNearestRelevantCamera(
@@ -1841,14 +2081,24 @@ function findNearestRelevantCamera(
       );
 
 
+    /*
+     * 只找前方 2 公里
+     */
+
     if (
-      distance > 2000
+      distance >
+      2000
     ) {
 
       continue;
 
     }
 
+
+    /*
+     * 如果資料有方向，
+     * 先判斷道路方向。
+     */
 
     if (
       !directMatchesHeading(
@@ -1861,6 +2111,10 @@ function findNearestRelevantCamera(
 
     }
 
+
+    /*
+     * 再判斷照相機是否在前方。
+     */
 
     if (
       Number.isFinite(
@@ -1884,7 +2138,9 @@ function findNearestRelevantCamera(
         angleDifference(
           heading,
           toCamera
-        ) > 70
+        )
+        >
+        70
       ) {
 
         continue;
@@ -1955,6 +2211,7 @@ function showCameraWarning(
 
 
   const overSpeed =
+
     Number.isFinite(
       limit
     )
@@ -1975,6 +2232,7 @@ function showCameraWarning(
 
 
   speedTitle.textContent =
+
     overSpeed
 
       ? "⚠️ 前方測速＋目前超速"
@@ -1993,7 +2251,8 @@ function showCameraWarning(
     "｜速限 "
     +
     (
-      limit ?? "--"
+      limit ??
+      "--"
     )
     +
     " km/h｜目前 "
@@ -2018,26 +2277,37 @@ function showCameraWarning(
     camera.address;
 
 
+  /*
+   * 700 公尺內才開始語音提醒
+   */
+
   if (
-    distance <= 700
+    distance <=
+    700
   ) {
 
     const now =
       Date.now();
 
 
-    if (
+    const shouldSpeak =
 
       lastWarningCameraId
-      !== camera.id
+      !==
+      camera.id
 
       ||
 
-      now -
-      lastWarningTime
-      >
-      30000
+      (
+        now -
+        lastWarningTime
+        >
+        30000
+      );
 
+
+    if (
+      shouldSpeak
     ) {
 
       speakCameraWarning(
@@ -2122,17 +2392,35 @@ function speakCameraWarning(
 
 }
 
+
 /* =========================================================
-   14. GPS 速度
+   14. 計算 GPS 速度
    ========================================================= */
 
 function getSpeed(
   position
 ) {
 
-  const gpsSpeed =
-    position.coords.speed;
+  if (
+    !position ||
+    !position.coords
+  ) {
 
+    return 0;
+
+  }
+
+
+  const gpsSpeed =
+    Number(
+      position.coords.speed
+    );
+
+
+  /*
+   * GPS 有直接速度，
+   * 優先使用。
+   */
 
   if (
     Number.isFinite(
@@ -2143,11 +2431,17 @@ function getSpeed(
   ) {
 
     return (
-      gpsSpeed * 3.6
+      gpsSpeed *
+      3.6
     );
 
   }
 
+
+  /*
+   * 沒有 GPS speed，
+   * 才使用兩點距離計算。
+   */
 
   if (
     !lastPosition
@@ -2160,8 +2454,7 @@ function getSpeed(
 
   const dt =
     (
-      position.timestamp
-      -
+      position.timestamp -
       lastPosition.timestamp
     )
     /
@@ -2190,44 +2483,205 @@ function getSpeed(
 
 
   return (
-    d / dt
-  ) * 3.6;
+    d /
+    dt
+  )
+  *
+  3.6;
 
 }
 
 
 /* =========================================================
-   15. GPS
+   15. GPS 位置處理
    ========================================================= */
 
 function onPosition(
   position
 ) {
 
-  myLat =
-    position.coords.latitude;
+  if (
+    !position ||
+    !position.coords
+  ) {
+
+    return;
+
+  }
 
 
-  myLng =
-    position.coords.longitude;
+  const coords =
+    position.coords;
 
 
-  const accuracy =
-    position.coords.accuracy;
-
-
-  currentSpeed =
-    Math.max(
-      0,
-      getSpeed(
-        position
-      )
+  const lat =
+    Number(
+      coords.latitude
     );
 
 
-  let heading =
-    position.coords.heading;
+  const lng =
+    Number(
+      coords.longitude
+    );
 
+
+  const accuracy =
+    Number(
+      coords.accuracy
+    );
+
+
+  if (
+    !Number.isFinite(lat)
+    ||
+    !Number.isFinite(lng)
+  ) {
+
+    return;
+
+  }
+
+
+  /*
+   * GPS 精度太差時，
+   * 不更新位置。
+   */
+
+  if (
+    Number.isFinite(
+      accuracy
+    )
+    &&
+    accuracy >
+    300
+  ) {
+
+    subEl.textContent =
+      "GPS 訊號較弱 ±"
+      +
+      Math.round(
+        accuracy
+      )
+      +
+      "m";
+
+    return;
+
+  }
+
+
+  /* -------------------------------------------------------
+     速度
+     ------------------------------------------------------- */
+
+  let calculatedSpeed =
+    getSpeed(
+      position
+    );
+
+
+  if (
+    !Number.isFinite(
+      calculatedSpeed
+    )
+    ||
+    calculatedSpeed <
+    0
+  ) {
+
+    calculatedSpeed =
+      0;
+
+  }
+
+
+  /*
+   * GPS 直接速度
+   */
+
+  const gpsSpeed =
+    Number(
+      coords.speed
+    );
+
+
+  if (
+    Number.isFinite(
+      gpsSpeed
+    )
+    &&
+    gpsSpeed >= 0
+  ) {
+
+    calculatedSpeed =
+      gpsSpeed *
+      3.6;
+
+  }
+
+
+  /*
+   * 防止 GPS 跳點
+   */
+
+  if (
+    calculatedSpeed >
+    200
+  ) {
+
+    calculatedSpeed =
+      currentSpeed;
+
+  }
+
+
+  /*
+   * 速度平滑
+   */
+
+  if (
+    Number.isFinite(
+      currentSpeed
+    )
+    &&
+    currentSpeed >
+    0
+  ) {
+
+    currentSpeed =
+
+      currentSpeed *
+      0.7
+
+      +
+
+      calculatedSpeed *
+      0.3;
+
+  }
+  else {
+
+    currentSpeed =
+      calculatedSpeed;
+
+  }
+
+
+  /* -------------------------------------------------------
+     方向
+     ------------------------------------------------------- */
+
+  let heading =
+    Number(
+      coords.heading
+    );
+
+
+  /*
+   * GPS 沒有 heading，
+   * 使用移動座標計算。
+   */
 
   if (
     !Number.isFinite(
@@ -2243,14 +2697,14 @@ function onPosition(
         lastPosition.coords.latitude,
         lastPosition.coords.longitude,
 
-        myLat,
-        myLng
+        lat,
+        lng
 
       );
 
 
     if (
-      moved >= 3
+      moved >= 8
     ) {
 
       heading =
@@ -2259,8 +2713,8 @@ function onPosition(
           lastPosition.coords.latitude,
           lastPosition.coords.longitude,
 
-          myLat,
-          myLng
+          lat,
+          lng
 
         );
 
@@ -2269,23 +2723,51 @@ function onPosition(
   }
 
 
+  /*
+   * 低速不要相信 GPS heading。
+   */
+
   if (
     Number.isFinite(
       heading
     )
+    &&
+    currentSpeed >= 5
   ) {
 
     lastHeading =
       heading;
 
   }
-  else {
+
+
+  if (
+    !Number.isFinite(
+      heading
+    )
+  ) {
 
     heading =
       lastHeading;
 
   }
 
+
+  /* -------------------------------------------------------
+     保存位置
+     ------------------------------------------------------- */
+
+  myLat =
+    lat;
+
+
+  myLng =
+    lng;
+
+
+  /* -------------------------------------------------------
+     顯示速度
+     ------------------------------------------------------- */
 
   currentSpeedEl.textContent =
     Math.round(
@@ -2306,23 +2788,31 @@ function onPosition(
       : "--";
 
 
+  /* -------------------------------------------------------
+     GPS 狀態
+     ------------------------------------------------------- */
+
   const now =
     new Date();
 
 
   subEl.textContent =
 
-    "GPS "
+    "GPS ±"
     +
-    "±"
-    +
-    Math.round(
-      accuracy
+    (
+      Number.isFinite(
+        accuracy
+      )
+
+        ? Math.round(
+            accuracy
+          )
+
+        : "--"
     )
     +
-    "m"
-    +
-    "｜"
+    "m｜"
     +
     now.getHours()
     +
@@ -2330,12 +2820,15 @@ function onPosition(
     +
     String(
       now.getMinutes()
-    ).padStart(2, "0");
+    ).padStart(
+      2,
+      "0"
+    );
 
 
-  /* =======================================================
-     我的標記
-     ======================================================= */
+  /* -------------------------------------------------------
+     我的定位標記
+     ------------------------------------------------------- */
 
   if (
     !myMarker
@@ -2351,13 +2844,17 @@ function onPosition(
 
         {
 
-          radius: 8,
+          radius:
+            8,
 
-          color: "#06C755",
+          color:
+            "#06C755",
 
-          fillColor: "#06C755",
+          fillColor:
+            "#06C755",
 
-          fillOpacity: .95
+          fillOpacity:
+            .95
 
         }
 
@@ -2378,81 +2875,97 @@ function onPosition(
   }
 
 
-  /* =======================================================
-     GPS 誤差
-     ======================================================= */
+  /* -------------------------------------------------------
+     GPS 精度圈
+     ------------------------------------------------------- */
 
   if (
-    !accuracyCircle
+    Number.isFinite(
+      accuracy
+    )
   ) {
 
-    accuracyCircle =
-      L.circle(
+    if (
+      !accuracyCircle
+    ) {
 
-        [
-          myLat,
-          myLng
-        ],
+      accuracyCircle =
+        L.circle(
 
-        {
+          [
+            myLat,
+            myLng
+          ],
 
-          radius:
-            accuracy,
+          {
 
-          weight: 1,
+            radius:
+              accuracy,
 
-          fillOpacity: .06
+            weight:
+              1,
 
-        }
+            fillOpacity:
+              .06
 
-      ).addTo(map);
+          }
+
+        ).addTo(map);
+
+    }
+    else {
+
+      accuracyCircle.setLatLng([
+        myLat,
+        myLng
+      ]);
+
+      accuracyCircle.setRadius(
+        accuracy
+      );
+
+    }
 
   }
-  else {
-
-    accuracyCircle.setLatLng([
-      myLat,
-      myLng
-    ]);
-
-    accuracyCircle.setRadius(
-      accuracy
-    );
-
-  }
 
 
-  /* =======================================================
-     導航模式自動跟隨
-     ======================================================= */
+  /* -------------------------------------------------------
+     導航模式跟隨
+     ------------------------------------------------------- */
 
   if (
     navigationOn
   ) {
 
     map.setView(
+
       [
         myLat,
         myLng
       ],
+
       Math.max(
         map.getZoom(),
         15
       ),
+
       {
-        animate: true
+        animate:
+          true
       }
+
     );
 
   }
 
 
-  /* =======================================================
-     測速
-     ======================================================= */
+  /* -------------------------------------------------------
+     測速判斷
+     ------------------------------------------------------- */
 
   if (
-    navigationOn
+    navigationOn &&
+    camerasLoaded
   ) {
 
     const result =
@@ -2472,12 +2985,26 @@ function onPosition(
   }
 
 
-  /* =======================================================
+  /* -------------------------------------------------------
      上傳位置
-     ======================================================= */
+     ------------------------------------------------------- */
 
-  uploadLocation();
+  if (
+    me &&
+    (
+      shareOn ||
+      navigationOn
+    )
+  ) {
 
+    uploadLocation();
+
+  }
+
+
+  /*
+   * 保存最後位置
+   */
 
   lastPosition =
     position;
@@ -2505,9 +3032,11 @@ function startGPS() {
 
 
   if (
-    location.protocol !== "https:"
+    location.protocol !==
+      "https:"
     &&
-    location.hostname !== "localhost"
+    location.hostname !==
+      "localhost"
   ) {
 
     alert(
@@ -2533,10 +3062,13 @@ function startGPS() {
 
       onPosition,
 
-      function (error) {
+      function (
+        error
+      ) {
 
         subEl.textContent =
-          "GPS：" +
+          "GPS："
+          +
           geoErrorText(
             error
           );
@@ -2619,7 +3151,9 @@ async function startNavigation() {
     startGPS();
 
 
-  if (!ok) {
+  if (
+    !ok
+  ) {
 
     return;
 
@@ -2628,13 +3162,7 @@ async function startNavigation() {
 
   navigationOn =
     true;
-  if (
-  voiceOn
-) {
 
-  unlockSpeech();
-
-}
 
   document.body.classList.add(
     "navigation-mode"
@@ -2659,22 +3187,44 @@ async function startNavigation() {
     "導航啟動中…";
 
 
+  /*
+   * 先載入測速資料
+   */
+
   await loadCameras();
+
+
+  /*
+   * 使用者主動點擊導航，
+   * 解鎖手機語音。
+   */
+
+  if (
+    voiceOn
+  ) {
+
+    unlockSpeech();
+
+  }
 
 
   map.invalidateSize();
 
 
   if (
-    myLat !== null
+    myLat !== null &&
+    myLng !== null
   ) {
 
     map.setView(
+
       [
         myLat,
         myLng
       ],
+
       16
+
     );
 
   }
@@ -2692,7 +3242,18 @@ function stopNavigation() {
     false;
 
 
-  stopGPS();
+  /*
+   * 如果一般定位沒有開啟，
+   * 才真正停止 GPS。
+   */
+
+  if (
+    !shareOn
+  ) {
+
+    stopGPS();
+
+  }
 
 
   document.body.classList.remove(
@@ -2741,7 +3302,9 @@ function stopNavigation() {
 
 
   subEl.textContent =
-    "導航已停止";
+    shareOn
+      ? "定位：開啟"
+      : "導航已停止";
 
 
   map.invalidateSize();
@@ -2750,7 +3313,7 @@ function stopNavigation() {
 
 
 /* =========================================================
-   20. 開始／停止導航按鈕
+   20. 導航按鈕
    ========================================================= */
 
 navigationBtn.onclick =
@@ -2773,17 +3336,16 @@ navigationBtn.onclick =
 
 
 /* =========================================================
-   21. 語音系統＋聲音選擇
+   21. 語音
    ========================================================= */
 
-let speechReady = false;
+let speechReady =
+  false;
 
-let selectedVoice = null;
 
+let selectedVoice =
+  null;
 
-/* ---------------------------------------------------------
-   讀取已儲存的聲音
-   --------------------------------------------------------- */
 
 const savedVoiceName =
   localStorage.getItem(
@@ -2791,14 +3353,18 @@ const savedVoiceName =
   );
 
 
-/* ---------------------------------------------------------
-   取得手機可用聲音
-   --------------------------------------------------------- */
+/* =========================================================
+   取得聲音
+   ========================================================= */
 
 function getAvailableVoices() {
 
   if (
-    !("speechSynthesis" in window)
+    !(
+      "speechSynthesis"
+      in
+      window
+    )
   ) {
 
     return [];
@@ -2813,9 +3379,9 @@ function getAvailableVoices() {
 }
 
 
-/* ---------------------------------------------------------
-   選擇最佳中文聲音
-   --------------------------------------------------------- */
+/* =========================================================
+   選擇預設中文聲音
+   ========================================================= */
 
 function chooseDefaultVoice() {
 
@@ -2833,8 +3399,7 @@ function chooseDefaultVoice() {
 
 
   /*
-   * 如果使用者之前已經選過聲音
-   * 優先使用之前的選擇
+   * 優先使用之前選擇
    */
 
   if (
@@ -2843,7 +3408,9 @@ function chooseDefaultVoice() {
 
     const saved =
       voices.find(
-        function (voice) {
+        function (
+          voice
+        ) {
 
           return (
             voice.name
@@ -2867,16 +3434,18 @@ function chooseDefaultVoice() {
 
 
   /*
-   * 優先台灣中文
+   * 台灣中文
    */
 
   let voice =
     voices.find(
-      function (voice) {
+      function (
+        voice
+      ) {
 
         return (
           voice.lang
-          .toLowerCase()
+            .toLowerCase()
           ===
           "zh-tw"
         );
@@ -2886,7 +3455,7 @@ function chooseDefaultVoice() {
 
 
   /*
-   * 再找其他中文
+   * 其他中文
    */
 
   if (
@@ -2895,7 +3464,9 @@ function chooseDefaultVoice() {
 
     voice =
       voices.find(
-        function (voice) {
+        function (
+          voice
+        ) {
 
           return (
             voice.lang
@@ -2912,7 +3483,7 @@ function chooseDefaultVoice() {
 
 
   /*
-   * 最後使用系統第一個聲音
+   * 最後使用系統聲音
    */
 
   if (
@@ -2930,14 +3501,18 @@ function chooseDefaultVoice() {
 }
 
 
-/* ---------------------------------------------------------
+/* =========================================================
    初始化語音
-   --------------------------------------------------------- */
+   ========================================================= */
 
 function initSpeech() {
 
   if (
-    !("speechSynthesis" in window)
+    !(
+      "speechSynthesis"
+      in
+      window
+    )
   ) {
 
     console.warn(
@@ -2972,12 +3547,6 @@ function initSpeech() {
 
       }
 
-
-      console.log(
-        "可用語音：",
-        voices
-      );
-
     }
 
   }
@@ -2985,11 +3554,6 @@ function initSpeech() {
 
   refreshVoices();
 
-
-  /*
-   * iPhone / Safari
-   * 語音清單可能延遲載入
-   */
 
   window
     .speechSynthesis
@@ -2999,9 +3563,9 @@ function initSpeech() {
 }
 
 
-/* ---------------------------------------------------------
+/* =========================================================
    播放語音
-   --------------------------------------------------------- */
+   ========================================================= */
 
 function speak(
   text
@@ -3017,7 +3581,11 @@ function speak(
 
 
   if (
-    !("speechSynthesis" in window)
+    !(
+      "speechSynthesis"
+      in
+      window
+    )
   ) {
 
     return;
@@ -3037,11 +3605,6 @@ function speak(
   const voices =
     getAvailableVoices();
 
-
-  /*
-   * 如果聲音還沒準備好
-   * 再重新找一次
-   */
 
   if (
     !selectedVoice
@@ -3067,10 +3630,6 @@ function speak(
         text
       );
 
-
-    /*
-     * 使用使用者選擇的聲音
-     */
 
     if (
       selectedVoice
@@ -3104,7 +3663,9 @@ function speak(
 
 
     utterance.onerror =
-      function (event) {
+      function (
+        event
+      ) {
 
         console.error(
           "語音播放錯誤：",
@@ -3122,7 +3683,9 @@ function speak(
 
   }
 
-  catch (error) {
+  catch (
+    error
+  ) {
 
     console.error(
       "語音錯誤：",
@@ -3134,14 +3697,18 @@ function speak(
 }
 
 
-/* ---------------------------------------------------------
-   iPhone / Safari 語音啟動
-   --------------------------------------------------------- */
+/* =========================================================
+   iPhone / Safari 語音解鎖
+   ========================================================= */
 
 function unlockSpeech() {
 
   if (
-    !("speechSynthesis" in window)
+    !(
+      "speechSynthesis"
+      in
+      window
+    )
   ) {
 
     return;
@@ -3197,7 +3764,9 @@ function unlockSpeech() {
 
   }
 
-  catch (error) {
+  catch (
+    error
+  ) {
 
     console.error(
       "語音初始化失敗：",
@@ -3209,9 +3778,9 @@ function unlockSpeech() {
 }
 
 
-/* ---------------------------------------------------------
-   建立聲音選擇器
-   --------------------------------------------------------- */
+/* =========================================================
+   語音選擇
+   ========================================================= */
 
 function showVoiceSelector() {
 
@@ -3232,18 +3801,17 @@ function showVoiceSelector() {
   }
 
 
-  /*
-   * 只顯示中文優先，
-   * 但如果沒有中文就顯示全部。
-   */
-
-  let chineseVoices =
+  const chineseVoices =
     voices.filter(
-      function (voice) {
+      function (
+        voice
+      ) {
 
         return voice.lang
           .toLowerCase()
-          .startsWith("zh");
+          .startsWith(
+            "zh"
+          );
 
       }
     );
@@ -3260,12 +3828,16 @@ function showVoiceSelector() {
 
 
   list.forEach(
-    function (voice, index) {
+    function (
+      voice,
+      index
+    ) {
 
       message +=
 
         (
-          index + 1
+          index +
+          1
         )
         +
         ". "
@@ -3277,6 +3849,7 @@ function showVoiceSelector() {
         voice.lang
         +
         "）";
+
 
       if (
         selectedVoice
@@ -3301,14 +3874,17 @@ function showVoiceSelector() {
 
   const answer =
     prompt(
+
       message
       +
       "\n請輸入編號："
+
     );
 
 
   if (
-    answer === null
+    answer ===
+    null
   ) {
 
     return;
@@ -3324,11 +3900,15 @@ function showVoiceSelector() {
 
 
   if (
-    !Number.isInteger(index)
+    !Number.isInteger(
+      index
+    )
     ||
-    index < 1
+    index <
+    1
     ||
-    index > list.length
+    index >
+    list.length
   ) {
 
     alert(
@@ -3342,7 +3922,8 @@ function showVoiceSelector() {
 
   selectedVoice =
     list[
-      index - 1
+      index -
+      1
     ];
 
 
@@ -3352,10 +3933,6 @@ function showVoiceSelector() {
   );
 
 
-  /*
-   * 立即測試新聲音
-   */
-
   speak(
     "這是新的導航語音"
   );
@@ -3363,17 +3940,12 @@ function showVoiceSelector() {
 }
 
 
-/* ---------------------------------------------------------
+/* =========================================================
    語音按鈕
-   --------------------------------------------------------- */
+   ========================================================= */
 
 voiceBtn.onclick =
   function () {
-
-    /*
-     * 如果長按／一般點擊，
-     * 這裡先切換開關。
-     */
 
     voiceOn =
       !voiceOn;
@@ -3386,15 +3958,11 @@ voiceBtn.onclick =
       voiceBtn.textContent =
         "🔊";
 
+
       voiceBtn.classList.remove(
         "silent"
       );
 
-
-      /*
-       * 使用者主動點擊，
-       * 可以解鎖 iPhone 語音。
-       */
 
       unlockSpeech();
 
@@ -3403,6 +3971,7 @@ voiceBtn.onclick =
 
       voiceBtn.textContent =
         "🔇";
+
 
       voiceBtn.classList.add(
         "silent"
@@ -3424,13 +3993,15 @@ voiceBtn.onclick =
   };
 
 
-/* ---------------------------------------------------------
-   長按／右鍵／雙擊選擇聲音
-   --------------------------------------------------------- */
+/* =========================================================
+   語音雙擊
+   ========================================================= */
 
 voiceBtn.addEventListener(
   "dblclick",
-  function (event) {
+  function (
+    event
+  ) {
 
     event.preventDefault();
 
@@ -3440,11 +4011,12 @@ voiceBtn.addEventListener(
 );
 
 
-/* ---------------------------------------------------------
-   語音按鈕長按
-   --------------------------------------------------------- */
+/* =========================================================
+   語音長按
+   ========================================================= */
 
-let voicePressTimer = null;
+let voicePressTimer =
+  null;
 
 
 voiceBtn.addEventListener(
@@ -3492,11 +4064,12 @@ voiceBtn.addEventListener(
 );
 
 
-/* ---------------------------------------------------------
-   初始化
-   --------------------------------------------------------- */
+/* =========================================================
+   初始化語音
+   ========================================================= */
 
 initSpeech();
+
 
 /* =========================================================
    22. 開啟一般定位
@@ -3533,25 +4106,47 @@ function startShare() {
     "定位：開啟中…";
 
 
-  startGPS();
+  const gpsStarted =
+    startGPS();
+
+
+  if (
+    !gpsStarted
+  ) {
+
+    shareOn =
+      false;
+
+    return;
+
+  }
 
 
   navigator.geolocation.getCurrentPosition(
 
-    function (position) {
+    function (
+      position
+    ) {
 
       onPosition(
         position
       );
 
 
-      map.setView(
-        [
-          myLat,
-          myLng
-        ],
-        15
-      );
+      if (
+        myLat !== null &&
+        myLng !== null
+      ) {
+
+        map.setView(
+          [
+            myLat,
+            myLng
+          ],
+          15
+        );
+
+      }
 
 
       shareStatus.textContent =
@@ -3559,10 +4154,21 @@ function startShare() {
 
     },
 
-    function (error) {
+    function (
+      error
+    ) {
 
       shareOn =
         false;
+
+
+      if (
+        !navigationOn
+      ) {
+
+        stopGPS();
+
+      }
 
 
       btnShare.textContent =
@@ -3571,6 +4177,10 @@ function startShare() {
 
       btnShare.className =
         "btn btn-green";
+
+
+      shareStatus.textContent =
+        "定位：關閉";
 
 
       alert(
@@ -3599,6 +4209,10 @@ function startShare() {
   );
 
 
+  /*
+   * 定時同步位置
+   */
+
   if (
     !uploadTimer
   ) {
@@ -3608,7 +4222,14 @@ function startShare() {
 
         function () {
 
-          uploadLocation();
+          if (
+            shareOn ||
+            navigationOn
+          ) {
+
+            uploadLocation();
+
+          }
 
         },
 
@@ -3630,6 +4251,11 @@ function stopShare() {
   shareOn =
     false;
 
+
+  /*
+   * 如果目前沒有導航，
+   * 才停止 GPS。
+   */
 
   if (
     !navigationOn
@@ -3653,7 +4279,9 @@ function stopShare() {
 
 
   subEl.textContent =
-    "定位已關閉";
+    navigationOn
+      ? "導航中"
+      : "定位已關閉";
 
 }
 
@@ -3678,7 +4306,7 @@ btnShare.onclick =
 
 
 /* =========================================================
-   24. Supabase 上傳位置
+   24. 上傳位置
    ========================================================= */
 
 async function uploadLocation() {
@@ -3687,6 +4315,19 @@ async function uploadLocation() {
     !me
     ||
     myLat === null
+    ||
+    myLng === null
+  ) {
+
+    return;
+
+  }
+
+
+  if (
+    !shareOn
+    &&
+    !navigationOn
   ) {
 
     return;
@@ -3696,41 +4337,70 @@ async function uploadLocation() {
 
   try {
 
-    await sb
-      .from("location_shares")
-      .upsert({
+    const result =
+      await sb
+        .from(
+          "location_shares"
+        )
+        .upsert(
 
-        user_id:
-          me.id,
+          {
 
-        room_id:
-          roomId,
+            user_id:
+              me.id,
 
-        lat:
-          myLat,
+            room_id:
+              roomId,
 
-        lng:
-          myLng,
+            lat:
+              myLat,
 
-        display_name:
-          (
-            me.email
-            ||
-            "user"
-          )
-          .split("@")[0],
+            lng:
+              myLng,
 
-        updated_at:
-          new Date()
-            .toISOString()
+            display_name:
+              (
+                me.email
+                ||
+                "user"
+              )
+              .split(
+                "@"
+              )[0],
 
-      });
+            updated_at:
+              new Date()
+                .toISOString()
+
+          },
+
+          {
+            onConflict:
+              "user_id,room_id"
+          }
+
+        );
+
+
+    if (
+      result.error
+    ) {
+
+      console.error(
+        "位置上傳錯誤：",
+        result.error
+      );
+
+    }
 
   }
 
-  catch (error) {
+  catch (
+    error
+  ) {
 
     console.error(
+      "位置上傳例外：",
       error
     );
 
@@ -3781,20 +4451,47 @@ async function loadPeers() {
         );
 
 
+    if (
+      result.error
+    ) {
+
+      console.error(
+        "成員定位錯誤：",
+        result.error
+      );
+
+      return;
+
+    }
+
+
     const rows =
-      result.data
-      ||
+      result.data ||
       [];
 
+
+    /*
+     * 清除舊成員標記
+     */
 
     Object.keys(
       peerMarkers
     ).forEach(
-      function (key) {
+      function (
+        key
+      ) {
 
-        map.removeLayer(
-          peerMarkers[key]
-        );
+        if (
+          map.hasLayer(
+            peerMarkers[key]
+          )
+        ) {
+
+          map.removeLayer(
+            peerMarkers[key]
+          );
+
+        }
 
       }
     );
@@ -3809,7 +4506,9 @@ async function loadPeers() {
 
 
     rows.forEach(
-      function (row) {
+      function (
+        row
+      ) {
 
         if (
           me
@@ -3851,19 +4550,25 @@ async function loadPeers() {
 
             {
 
-              radius: 7,
+              radius:
+                7,
 
-              color: "#1e88e5",
+              color:
+                "#1e88e5",
 
-              fillColor: "#1e88e5",
+              fillColor:
+                "#1e88e5",
 
-              fillOpacity: .9
+              fillOpacity:
+                .9
 
             }
 
           )
 
-          .addTo(map)
+          .addTo(
+            map
+          )
 
           .bindPopup(
 
@@ -3903,9 +4608,12 @@ async function loadPeers() {
 
   }
 
-  catch (error) {
+  catch (
+    error
+  ) {
 
     console.error(
+      "成員定位例外：",
       error
     );
 
@@ -3924,7 +4632,8 @@ function numIcon(
 
   return L.divIcon({
 
-    className: "",
+    className:
+      "",
 
     html:
       '<div class="marker-num">'
@@ -3934,10 +4643,16 @@ function numIcon(
       "</div>",
 
     iconSize:
-      [28, 28],
+      [
+        28,
+        28
+      ],
 
     iconAnchor:
-      [14, 14]
+      [
+        14,
+        14
+      ]
 
   });
 
@@ -3983,6 +4698,7 @@ async function loadWaypoints() {
   ) {
 
     console.error(
+      "集合點載入錯誤：",
       result.error
     );
 
@@ -3992,8 +4708,7 @@ async function loadWaypoints() {
 
 
   waypoints =
-    result.data
-    ||
+    result.data ||
     [];
 
 
@@ -4008,14 +4723,28 @@ async function loadWaypoints() {
 
 function renderWaypoints() {
 
+  /*
+   * 清除舊標記
+   */
+
   Object.keys(
     wpMarkers
   ).forEach(
-    function (key) {
+    function (
+      key
+    ) {
 
-      map.removeLayer(
-        wpMarkers[key]
-      );
+      if (
+        map.hasLayer(
+          wpMarkers[key]
+        )
+      ) {
+
+        map.removeLayer(
+          wpMarkers[key]
+        );
+
+      }
 
     }
   );
@@ -4040,7 +4769,12 @@ function renderWaypoints() {
   ) {
 
     box.innerHTML =
-      '<div style="color:#888;font-size:12px;padding:8px 0">尚未設定行程點</div>';
+
+      '<div style="color:#888;font-size:12px;padding:8px 0">'
+      +
+      "尚未設定行程點"
+      +
+      "</div>";
 
     return;
 
@@ -4048,7 +4782,9 @@ function renderWaypoints() {
 
 
   waypoints.forEach(
-    function (w) {
+    function (
+      w
+    ) {
 
       const marker =
         L.marker(
@@ -4066,7 +4802,9 @@ function renderWaypoints() {
           }
 
         )
-        .addTo(map);
+        .addTo(
+          map
+        );
 
 
       const timeStr =
@@ -4074,7 +4812,9 @@ function renderWaypoints() {
 
           ? new Date(
               w.meet_at
-            ).toLocaleString()
+            ).toLocaleString(
+              "zh-TW"
+            )
 
           : "時間未定";
 
@@ -4087,13 +4827,17 @@ function renderWaypoints() {
         +
         " "
         +
-        w.title
+        escapeHtml(
+          w.title
+        )
         +
         "</b>"
         +
         "<br>"
         +
-        timeStr
+        escapeHtml(
+          timeStr
+        )
 
       );
 
@@ -4118,7 +4862,9 @@ function renderWaypoints() {
 
         '<div class="num">'
         +
-        w.seq
+        escapeHtml(
+          w.seq
+        )
         +
         "</div>"
         +
@@ -4128,14 +4874,18 @@ function renderWaypoints() {
 
         '<div style="font-weight:600">'
         +
-        w.title
+        escapeHtml(
+          w.title
+        )
         +
         "</div>"
         +
 
         '<div style="color:#888;margin-top:2px">'
         +
-        timeStr
+        escapeHtml(
+          timeStr
+        )
         +
         "</div>"
         +
@@ -4143,11 +4893,17 @@ function renderWaypoints() {
         "</div>"
         +
 
-        '<button type="button" class="btn btn-outline">刪</button>';
+        '<button type="button" class="btn btn-outline">'
+        +
+        "刪"
+        +
+        "</button>";
 
 
       div
-        .querySelector("button")
+        .querySelector(
+          "button"
+        )
         .onclick =
         function () {
 
@@ -4163,6 +4919,42 @@ function renderWaypoints() {
       );
 
     }
+  );
+
+}
+
+
+/* =========================================================
+   HTML 安全
+   ========================================================= */
+
+function escapeHtml(
+  value
+) {
+
+  return String(
+    value ??
+    ""
+  )
+  .replace(
+    /&/g,
+    "&amp;"
+  )
+  .replace(
+    /</g,
+    "&lt;"
+  )
+  .replace(
+    />/g,
+    "&gt;"
+  )
+  .replace(
+    /"/g,
+    "&quot;"
+  )
+  .replace(
+    /'/g,
+    "&#039;"
   );
 
 }
@@ -4190,48 +4982,105 @@ async function addWaypoint(
   }
 
 
-  const title =
+  if (
+    !Number.isFinite(
+      lat
+    )
+    ||
+    !Number.isFinite(
+      lng
+    )
+  ) {
+
+    alert(
+      "集合點座標無效"
+    );
+
+    return;
+
+  }
+
+
+  const titleInput =
     document.getElementById(
       "wpTitle"
-    )
-    .value
-    .trim()
+    );
+
+
+  const timeInput =
+    document.getElementById(
+      "wpTime"
+    );
+
+
+  const title =
+    titleInput.value.trim()
     ||
     (
       "集合點 "
       +
       (
-        waypoints.length
-        + 1
+        waypoints.length +
+        1
       )
     );
 
 
   const t =
-    document.getElementById(
-      "wpTime"
-    )
-    .value;
+    timeInput.value;
 
 
-  const meetAt =
+  let meetAt =
+    null;
+
+
+  if (
     t
+  ) {
 
-      ? new Date(
-          t
-        ).toISOString()
+    const date =
+      new Date(
+        t
+      );
 
-      : null;
+
+    if (
+      !Number.isNaN(
+        date.getTime()
+      )
+    ) {
+
+      meetAt =
+        date.toISOString();
+
+    }
+
+  }
 
 
   const seq =
     waypoints.length
 
       ? (
-          waypoints[
-            waypoints.length - 1
-          ].seq
-          + 1
+          Math.max(
+            ...waypoints.map(
+              function (
+                w
+              ) {
+
+                return (
+                  Number(
+                    w.seq
+                  )
+                  ||
+                  0
+                );
+
+              }
+            )
+          )
+          +
+          1
         )
 
       : 1;
@@ -4242,30 +5091,34 @@ async function addWaypoint(
       .from(
         "meetup_waypoints"
       )
-      .insert({
+      .insert(
 
-        room_id:
-          roomId,
+        {
 
-        seq:
-          seq,
+          room_id:
+            roomId,
 
-        title:
-          title,
+          seq:
+            seq,
 
-        lat:
-          lat,
+          title:
+            title,
 
-        lng:
-          lng,
+          lat:
+            lat,
 
-        meet_at:
-          meetAt,
+          lng:
+            lng,
 
-        created_by:
-          me.id
+          meet_at:
+            meetAt,
 
-      })
+          created_by:
+            me.id
+
+        }
+
+      )
       .select()
       .single();
 
@@ -4285,13 +5138,18 @@ async function addWaypoint(
   }
 
 
-  document.getElementById(
-    "wpTitle"
-  ).value =
+  titleInput.value =
+    "";
+
+
+  timeInput.value =
     "";
 
 
   await loadWaypoints();
+
+
+  await loadPeers();
 
 }
 
@@ -4346,6 +5204,9 @@ async function deleteWp(
 
   await loadWaypoints();
 
+
+  await loadPeers();
+
 }
 
 
@@ -4390,7 +5251,11 @@ async function searchPlace() {
 
   box.innerHTML =
 
-    '<div style="padding:10px;color:#888;font-size:12px">搜尋中…</div>';
+    '<div style="padding:10px;color:#888;font-size:12px">'
+    +
+    "搜尋中…"
+    +
+    "</div>";
 
 
   try {
@@ -4424,6 +5289,19 @@ async function searchPlace() {
       );
 
 
+    if (
+      !response.ok
+    ) {
+
+      throw new Error(
+        "搜尋服務 HTTP "
+        +
+        response.status
+      );
+
+    }
+
+
     const arr =
       await response.json();
 
@@ -4433,12 +5311,18 @@ async function searchPlace() {
 
 
     if (
+      !Array.isArray(arr)
+      ||
       !arr.length
     ) {
 
       box.innerHTML =
 
-        '<div style="padding:10px;color:#888;font-size:12px">找不到地點</div>';
+        '<div style="padding:10px;color:#888;font-size:12px">'
+        +
+        "找不到地點"
+        +
+        "</div>";
 
       return;
 
@@ -4446,7 +5330,9 @@ async function searchPlace() {
 
 
     arr.forEach(
-      function (item) {
+      function (
+        item
+      ) {
 
         const div =
           document.createElement(
@@ -4484,13 +5370,34 @@ async function searchPlace() {
               );
 
 
+            if (
+              !Number.isFinite(
+                lat
+              )
+              ||
+              !Number.isFinite(
+                lng
+              )
+            ) {
+
+              alert(
+                "搜尋結果座標無效"
+              );
+
+              return;
+
+            }
+
+
             const title =
               (
                 item.display_name
                 ||
                 q
               )
-              .split(",")[0];
+              .split(
+                ","
+              )[0];
 
 
             const titleInput =
@@ -4527,17 +5434,24 @@ async function searchPlace() {
 
               {
 
-                radius: 6,
+                radius:
+                  6,
 
-                color: "#1565c0",
+                color:
+                  "#1565c0",
 
-                fillColor: "#1565c0",
+                fillColor:
+                  "#1565c0",
 
-                fillOpacity: .8
+                fillOpacity:
+                  .8
 
               }
 
-            ).addTo(map);
+            )
+            .addTo(
+              map
+            );
 
 
             box.style.display =
@@ -4561,16 +5475,23 @@ async function searchPlace() {
 
   }
 
-  catch (error) {
+  catch (
+    error
+  ) {
 
     console.error(
+      "地址搜尋錯誤：",
       error
     );
 
 
     box.innerHTML =
 
-      '<div style="padding:10px;color:#c62828;font-size:12px">搜尋失敗，請稍後再試</div>';
+      '<div style="padding:10px;color:#c62828;font-size:12px">'
+      +
+      "搜尋失敗，請稍後再試"
+      +
+      "</div>";
 
   }
 
@@ -4587,10 +5508,13 @@ document.getElementById(
   "searchInput"
 ).addEventListener(
   "keydown",
-  function (event) {
+  function (
+    event
+  ) {
 
     if (
-      event.key === "Enter"
+      event.key ===
+      "Enter"
     ) {
 
       searchPlace();
@@ -4612,6 +5536,8 @@ document.getElementById(
 
     if (
       myLat === null
+      ||
+      myLng === null
     ) {
 
       alert(
@@ -4687,32 +5613,38 @@ async function sendSOS() {
       .from(
         "sos_events"
       )
-      .insert({
+      .insert(
 
-        room_id:
-          roomId,
+        {
 
-        user_id:
-          me.id,
+          room_id:
+            roomId,
 
-        display_name:
-          (
-            me.email
-            ||
-            "user"
-          )
-          .split("@")[0],
+          user_id:
+            me.id,
 
-        lat:
-          myLat,
+          display_name:
+            (
+              me.email
+              ||
+              "user"
+            )
+            .split(
+              "@"
+            )[0],
 
-        lng:
-          myLng,
+          lat:
+            myLat,
 
-        message:
-          "遇到危險或迷路，需要協助"
+          lng:
+            myLng,
 
-      });
+          message:
+            "遇到危險或迷路，需要協助"
+
+        }
+
+      );
 
 
   if (
@@ -4730,8 +5662,13 @@ async function sendSOS() {
   }
 
 
+  /*
+   * 顯示自己的 SOS
+   */
+
   if (
-    myLat !== null
+    myLat !== null &&
+    myLng !== null
   ) {
 
     L.circleMarker(
@@ -4743,18 +5680,24 @@ async function sendSOS() {
 
       {
 
-        radius: 12,
+        radius:
+          12,
 
-        color: "#c62828",
+        color:
+          "#c62828",
 
-        fillColor: "#c62828",
+        fillColor:
+          "#c62828",
 
-        fillOpacity: .5
+        fillOpacity:
+          .5
 
       }
 
     )
-    .addTo(map)
+    .addTo(
+      map
+    )
     .bindPopup(
       "🚨 SOS"
     )
@@ -4763,8 +5706,48 @@ async function sendSOS() {
   }
 
 
+  showSosBanner(
+    "🚨 SOS 已發送給群組",
+    5000
+  );
+
+
+  if (
+    navigator.vibrate
+  ) {
+
+    navigator.vibrate(
+      [
+        200,
+        100,
+        200,
+        100,
+        400
+      ]
+    );
+
+  }
+
+}
+
+
+document.getElementById(
+  "btnSosTop"
+).onclick =
+  sendSOS;
+
+
+/* =========================================================
+   SOS Banner
+   ========================================================= */
+
+function showSosBanner(
+  text,
+  duration
+) {
+
   sosBanner.textContent =
-    "🚨 SOS 已發送給群組";
+    text;
 
 
   sosBanner.classList.add(
@@ -4780,31 +5763,11 @@ async function sendSOS() {
       );
 
     },
+    duration ||
     5000
   );
 
-
-  if (
-    navigator.vibrate
-  ) {
-
-    navigator.vibrate([
-      200,
-      100,
-      200,
-      100,
-      400
-    ]);
-
-  }
-
 }
-
-
-document.getElementById(
-  "btnSosTop"
-).onclick =
-  sendSOS;
 
 
 /* =========================================================
@@ -4813,142 +5776,176 @@ document.getElementById(
 
 function listenSos() {
 
-  sb
-    .channel(
-      "sos-" + roomId
-    )
+  if (
+    sosChannel
+  ) {
 
-    .on(
+    return;
 
-      "postgres_changes",
-
-      {
-
-        event:
-          "INSERT",
-
-        schema:
-          "public",
-
-        table:
-          "sos_events",
-
-        filter:
-          "room_id=eq."
-          +
-          roomId
-
-      },
-
-      function (payload) {
-
-        const row =
-          payload.new;
+  }
 
 
-        if (
-          !row
+  sosChannel =
+    sb
+      .channel(
+        "sos-" +
+        roomId
+      )
+
+
+      .on(
+
+        "postgres_changes",
+
+        {
+
+          event:
+            "INSERT",
+
+          schema:
+            "public",
+
+          table:
+            "sos_events",
+
+          filter:
+            "room_id=eq."
+            +
+            roomId
+
+        },
+
+        function (
+          payload
         ) {
 
-          return;
-
-        }
-
-
-        sosBanner.textContent =
-
-          "🚨 SOS "
-          +
-          (
-            row.display_name
-            ||
-            "成員"
-          )
-          +
-          "："
-          +
-          (
-            row.message
-            ||
-            "需要協助"
-          );
+          const row =
+            payload.new;
 
 
-        sosBanner.classList.add(
-          "show"
-        );
+          if (
+            !row
+          ) {
+
+            return;
+
+          }
 
 
-        if (
-          row.lat != null
-          &&
-          row.lng != null
-        ) {
+          /*
+           * 顯示 SOS
+           */
 
-          L.circleMarker(
+          showSosBanner(
 
-            [
-              row.lat,
-              row.lng
-            ],
-
-            {
-
-              radius: 12,
-
-              color: "#c62828",
-
-              fillColor: "#c62828",
-
-              fillOpacity: .5
-
-            }
-
-          )
-          .addTo(map)
-          .bindPopup(
             "🚨 SOS "
             +
             (
               row.display_name
               ||
-              ""
+              "成員"
             )
-          )
-          .openPopup();
+            +
+            "："
+            +
+            (
+              row.message
+              ||
+              "需要協助"
+            ),
 
-        }
+            8000
 
-
-        if (
-          navigator.vibrate
-        ) {
-
-          navigator.vibrate([
-            300,
-            150,
-            300
-          ]);
-
-        }
+          );
 
 
-        setTimeout(
-          function () {
+          /*
+           * 地圖顯示 SOS 位置
+           */
 
-            sosBanner.classList.remove(
-              "show"
+          if (
+            row.lat != null
+            &&
+            row.lng != null
+          ) {
+
+            L.circleMarker(
+
+              [
+                row.lat,
+                row.lng
+              ],
+
+              {
+
+                radius:
+                  12,
+
+                color:
+                  "#c62828",
+
+                fillColor:
+                  "#c62828",
+
+                fillOpacity:
+                  .5
+
+              }
+
+            )
+            .addTo(
+              map
+            )
+            .bindPopup(
+
+              "🚨 SOS "
+              +
+              (
+                row.display_name
+                ||
+                ""
+              )
+
+            )
+            .openPopup();
+
+          }
+
+
+          /*
+           * 震動
+           */
+
+          if (
+            navigator.vibrate
+          ) {
+
+            navigator.vibrate(
+              [
+                300,
+                150,
+                300
+              ]
             );
 
-          },
-          8000
-        );
+          }
 
-      }
+        }
 
-    )
+      )
 
-    .subscribe();
+      .subscribe(
+        function (
+          status
+        ) {
+
+          console.log(
+            "SOS Realtime：",
+            status
+          );
+
+        }
+      );
 
 }
 
@@ -4963,11 +5960,36 @@ window.addEventListener(
 
     stopGPS();
 
+
+    if (
+      peerTimer
+    ) {
+
+      clearInterval(
+        peerTimer
+      );
+
+    }
+
+
+    if (
+      sosChannel
+    ) {
+
+      sb.removeChannel(
+        sosChannel
+      );
+
+    }
+
+
     if (
       window.speechSynthesis
     ) {
 
-      window.speechSynthesis.cancel();
+      window
+        .speechSynthesis
+        .cancel();
 
     }
 
@@ -4985,10 +6007,16 @@ bootAuth();
 
 
 })();
+
 </script>
 
+
+<!-- =========================================================
+     通話通知
+     ========================================================= -->
 
 <script src="call-notify.js"></script>
 
 </body>
+
 </html>
