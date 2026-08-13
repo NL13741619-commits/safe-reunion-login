@@ -771,12 +771,6 @@ input[type="file"] {
       成員
     </button>
 
-    <button
-  type="button"
-  onclick="leaveGroup()"
->
-  退出群組
-</button>
         
   </div>
 
@@ -1004,7 +998,22 @@ input[type="file"] {
       overflow:auto;
       padding:0 12px;">
   </div>
-
+      
+<button
+  type="button"
+  onclick="leaveGroup()"
+  style="
+    width:calc(100% - 24px);
+    margin:10px 12px;
+    border:none;
+    background:#e53935;
+    color:#fff;
+    border-radius:8px;
+    padding:10px 16px;
+    font-size:14px;
+    font-weight:600;">
+  🚪 退群
+</button>
 
   <div
     style="
