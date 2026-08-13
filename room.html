@@ -771,6 +771,13 @@ input[type="file"] {
       成員
     </button>
 
+    <button
+  type="button"
+  onclick="leaveGroup()"
+>
+  退出群組
+</button>
+        
   </div>
 
 </div>
@@ -4397,40 +4404,81 @@ async function loadMembersAndFriends() {
         '</div>';
 
 
-      var btn =
-        document.createElement(
-          'button'
-        );
+      var btnBox =
+  document.createElement(
+    'div'
+  );
+
+btnBox.style.cssText =
+  'display:flex;' +
+  'gap:6px;';
 
 
-      btn.textContent =
-        '邀請';
+var inviteBtn =
+  document.createElement(
+    'button'
+  );
+
+inviteBtn.textContent =
+  '邀請';
+
+inviteBtn.style.cssText =
+  'border:none;' +
+  'background:#06C755;' +
+  'color:#fff;' +
+  'border-radius:8px;' +
+  'padding:6px 12px;' +
+  'font-size:13px;';
+
+inviteBtn.onclick =
+  function () {
+
+    inviteMember(
+      p.id,
+      name
+    );
+
+  };
 
 
-      btn.style.cssText =
-        'border:none;' +
-        'background:#06C755;' +
-        'color:#fff;' +
-        'border-radius:8px;' +
-        'padding:6px 12px;' +
-        'font-size:13px;';
+var deleteBtn =
+  document.createElement(
+    'button'
+  );
+
+deleteBtn.textContent =
+  '刪除好友';
+
+deleteBtn.style.cssText =
+  'border:none;' +
+  'background:#e53935;' +
+  'color:#fff;' +
+  'border-radius:8px;' +
+  'padding:6px 12px;' +
+  'font-size:13px;';
+
+deleteBtn.onclick =
+  function () {
+
+    deleteFriend(
+      p.id,
+      name
+    );
+
+  };
 
 
-      btn.onclick =
-        function () {
+btnBox.appendChild(
+  inviteBtn
+);
 
-          inviteMember(
-            p.id,
-            name
-          );
+btnBox.appendChild(
+  deleteBtn
+);
 
-        };
-
-
-      div.appendChild(
-        btn
-      );
-
+div.appendChild(
+  btnBox
+);
 
       invBox.appendChild(
         div
@@ -4553,7 +4601,127 @@ async function removeMember(
   loadMembersAndFriends();
 
 }
+async function deleteFriend(
+  uid,
+  name
+) {
 
+  if (
+    !myUser ||
+    !uid
+  ) {
+
+    return;
+
+  }
+
+  if (
+    !confirm(
+      '確定要刪除好友「' +
+      name +
+      '」嗎？'
+    )
+  ) {
+
+    return;
+
+  }
+
+  var res =
+    await supabase
+      .from('friendships')
+      .delete()
+      .or(
+        'and(user_id.eq.' +
+        myUser.id +
+        ',friend_id.eq.' +
+        uid +
+        '),and(user_id.eq.' +
+        uid +
+        ',friend_id.eq.' +
+        myUser.id +
+        ')'
+      );
+
+  if (res.error) {
+
+    alert(
+      '刪除好友失敗：' +
+      res.error.message
+    );
+
+    return;
+
+  }
+
+  alert(
+    '已刪除好友「' +
+    name +
+    '」'
+  );
+
+  loadMembersAndFriends();
+
+}
+      
+async function leaveGroup() {
+
+  if (!myUser || !roomId) {
+    return;
+  }
+
+  if (isOwner) {
+
+    alert(
+      '群主不能直接退出群組，請先轉讓群主或刪除群組。'
+    );
+
+    return;
+
+  }
+
+  if (
+    !confirm(
+      '確定要退出這個群組嗎？退出後將無法再看到群組內容。'
+    )
+  ) {
+
+    return;
+
+  }
+
+  var res =
+    await supabase
+      .from('group_members')
+      .delete()
+      .eq(
+        'group_id',
+        roomId
+      )
+      .eq(
+        'user_id',
+        myUser.id
+      );
+
+  if (res.error) {
+
+    alert(
+      '退出群組失敗：' +
+      res.error.message
+    );
+
+    return;
+
+  }
+
+  alert(
+    '已退出群組'
+  );
+
+  location.href =
+    'room.html';
+
+}
 
 /* =====================================================
    PLUS
