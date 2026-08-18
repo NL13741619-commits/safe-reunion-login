@@ -1265,74 +1265,79 @@ function parseOfficialCSV(text) {
 
 /*
  * ==================================================
- * 台灣座標自動判斷
- * ==================================================
- *
- * 正常：
- * 經度 = 118 ~ 123.5
- * 緯度 = 20 ~ 26.5
- *
- * 有些官方中文 CSV 會把兩者實際值反過來：
- * 經度欄 = 24.x
- * 緯度欄 = 120.x
- *
- * 如果偵測到這種情況，就自動交換。
+ * 台灣座標檢查與自動修正
  * ==================================================
  */
 
-var longitudeLooksCorrect =
-  longitude >= 118 &&
-  longitude <= 123.5;
+var originalLongitude =
+  longitude;
 
-var latitudeLooksCorrect =
+var originalLatitude =
+  latitude;
+
+
+/*
+ * 正常台灣座標：
+ *
+ * 經度：118 ~ 123.5
+ * 緯度：20 ~ 26.5
+ */
+
+var normalTaiwanCoordinate =
+  longitude >= 118 &&
+  longitude <= 123.5 &&
   latitude >= 20 &&
   latitude <= 26.5;
 
 
 /*
- * 情況一：
- * 經度、緯度正常
+ * 經緯度顛倒：
+ *
+ * CSV 經度欄 = 24.x
+ * CSV 緯度欄 = 120.x
+ *
+ * 自動交換
  */
 
-if (
-  longitudeLooksCorrect &&
-  latitudeLooksCorrect
-) {
-
-  /*
-   * 不需要處理
-   */
-
-}
-
-
-/*
- * 情況二：
- * 經緯度反過來
- */
-
-else if (
+var reversedTaiwanCoordinate =
   longitude >= 20 &&
   longitude <= 26.5 &&
   latitude >= 118 &&
-  latitude <= 123.5
+  latitude <= 123.5;
+
+
+/*
+ * 情況一：正常
+ */
+
+if (
+  normalTaiwanCoordinate
 ) {
 
-  var temp =
-    longitude;
-
-  longitude =
-    latitude;
-
-  latitude =
-    temp;
+  // 不需要處理
 
 }
 
 
 /*
- * 情況三：
- * 兩個都不是合理的台灣座標
+ * 情況二：經緯度顛倒
+ */
+
+else if (
+  reversedTaiwanCoordinate
+) {
+
+  longitude =
+    originalLatitude;
+
+  latitude =
+    originalLongitude;
+
+}
+
+
+/*
+ * 情況三：座標不合理
  */
 
 else {
@@ -1343,15 +1348,23 @@ else {
     (j + 1) +
     " 行座標超出臺灣合理範圍。\n\n" +
 
-    "目前讀取：\n" +
+    "CSV 原始座標：\n" +
 
     "經度：" +
-    longitude +
+    originalLongitude +
 
     "\n" +
 
     "緯度：" +
-    latitude
+    originalLatitude +
+
+    "\n\n" +
+
+    "台灣合理範圍：\n" +
+
+    "經度：約 118 ~ 123.5\n" +
+
+    "緯度：約 20 ~ 26.5"
 
   );
 
