@@ -9,6 +9,127 @@
 >
 
 <title>設定 - 安全團聚</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2">
+/* =========================================================
+   開發者：臨時帳號
+========================================================= */
+
+var SUPABASE_URL = "https://perfsipperncvjocznhl.supabase.co";
+var SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBlcmZzaXBwZXJuY3Zqb2N6bmhsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODYwMTUyMzAsImV4cCI6MjEwMTU5MTIzMH0.I7vXkV247kAzRJ0RigDZt3Hzn8KJDyMc6o9E3oHJZoY";
+
+var DEVELOPER_EMAILS = [
+  "tomlin530@yahoo.com.tw",
+  "n_950143@hotmail.com"
+];
+
+var sbSettings = null;
+var meSettings = null;
+
+try {
+  sbSettings = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+} catch (e) {
+  console.error(e);
+}
+
+function isDeveloperSettings(user) {
+  if (!user) return false;
+  var email = (user.email || "").toLowerCase();
+  if (email && DEVELOPER_EMAILS.indexOf(email) !== -1) return true;
+  var meta = user.user_metadata || {};
+  if (meta.is_developer === true || meta.role === "admin") return true;
+  return false;
+}
+
+function openTempUserSettings() {
+  hidePages();
+  document.getElementById("tempUserSettings").classList.add("active");
+  document.getElementById("pageTitle").textContent = "臨時帳號";
+}
+
+async function initDeveloperMenu() {
+  var group = document.getElementById("developerMenuGroup");
+  if (!group || !sbSettings) return;
+
+  try {
+    var sessionRes = await sbSettings.auth.getSession();
+    var session = sessionRes.data && sessionRes.data.session;
+    meSettings = session && session.user ? session.user : null;
+
+    if (isDeveloperSettings(meSettings)) {
+      group.style.display = "block";
+    } else {
+      group.style.display = "none";
+    }
+  } catch (e) {
+    group.style.display = "none";
+  }
+}
+
+document.addEventListener("DOMContentLoaded", function () {
+  initDeveloperMenu();
+
+  var btn = document.getElementById("btnCreateTempUser");
+  var resultEl = document.getElementById("tempUserResult");
+
+  if (btn) {
+    btn.onclick = async function () {
+      if (!isDeveloperSettings(meSettings)) {
+        alert("僅開發者可使用");
+        return;
+      }
+
+      var displayName = (document.getElementById("tempDisplayName").value || "").trim();
+      var loginId = (document.getElementById("tempLoginId").value || "").trim().toLowerCase().replace(/[^a-z0-9_]/g, "");
+      var password = document.getElementById("tempPassword").value || "";
+
+      if (!loginId || loginId.length < 3) {
+        alert("登入帳號至少 3 個英數字");
+        return;
+      }
+      if (!password || password.length < 6) {
+        alert("密碼至少 6 碼");
+        return;
+      }
+
+      resultEl.style.display = "block";
+      resultEl.style.color = "#666";
+      resultEl.textContent = "建立中…";
+
+      try {
+        var res = await sbSettings.functions.invoke("create-temp-user", {
+          body: {
+            login_id: loginId,
+            password: password,
+            display_name: displayName || loginId
+          }
+        });
+
+        if (res.error) throw new Error(res.error.message || "建立失敗");
+        if (res.data && res.data.error) throw new Error(res.data.error);
+
+        var loginEmail = (res.data && res.data.email) ? res.data.email : (loginId + "@temp.safereunion.local");
+
+        resultEl.style.color = "#166534";
+        resultEl.textContent =
+          "建立成功！請把以下資料給同學：\n\n" +
+          "登入 Email：\n" + loginEmail + "\n\n" +
+          "密碼：\n" + password + "\n\n" +
+          "暱稱：" + (displayName || loginId);
+
+        document.getElementById("tempPassword").value = "";
+      } catch (e) {
+        resultEl.style.color = "#b91c1c";
+        resultEl.textContent =
+          "失敗：" + (e.message || e) +
+          "\n\n請確認已部署 Edge Function：create-temp-user，且白名單包含你的 Email。";
+      }
+    };
+  }
+});
+
+
+</script>
+
 
 <style>
 
@@ -417,6 +538,43 @@ hr {
 
 }
 
+
+.developer-only { display: none; }
+.temp-form-card input {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  margin-top: 6px;
+  margin-bottom: 10px;
+  font-size: 15px;
+}
+.temp-form-card label {
+  font-size: 13px;
+  color: #555;
+  font-weight: 600;
+}
+.btn-create-temp {
+  width: 100%;
+  border: 0;
+  border-radius: 10px;
+  padding: 14px;
+  background: #06C755;
+  color: #fff;
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.temp-result {
+  margin-top: 12px;
+  padding: 12px;
+  border-radius: 10px;
+  background: #f1f5f9;
+  font-size: 13px;
+  white-space: pre-wrap;
+  display: none;
+}
+
 </style>
 </head>
 
@@ -587,6 +745,41 @@ hr {
       </div>
 
     </a>
+
+  </div>
+
+
+  <!-- 開發者：臨時帳號（僅開發者可見） -->
+
+  <div class="menu-group developer-only" id="developerMenuGroup">
+
+    <div
+      class="menu-item"
+      onclick="openTempUserSettings()"
+    >
+
+      <div
+        class="menu-icon"
+        style="background:#fff3e0"
+      >
+        🛠️
+      </div>
+
+      <div class="menu-text">
+
+        建立臨時帳號
+
+        <span class="menu-desc">
+          開發者專用・免驗證給同學使用
+        </span>
+
+      </div>
+
+      <div class="menu-arrow">
+        ›
+      </div>
+
+    </div>
 
   </div>
 
@@ -832,6 +1025,46 @@ hr {
 
 </div>
 
+
+</div>
+
+
+
+<!-- =====================================================
+     開發者：臨時帳號
+===================================================== -->
+
+<div
+  id="tempUserSettings"
+  class="settings-page"
+>
+
+  <div class="settings-card temp-form-card">
+
+    <div class="settings-title">
+      建立臨時帳號
+    </div>
+
+    <p style="font-size:13px;color:#666;margin:8px 0 14px;line-height:1.5">
+      僅開發者可用。可為來不及註冊的同學建立暱稱與密碼，免信箱驗證。
+    </p>
+
+    <label>暱稱（顯示名稱）</label>
+    <input id="tempDisplayName" placeholder="例如：同學A" />
+
+    <label>登入帳號（英數字）</label>
+    <input id="tempLoginId" placeholder="例如：classmate01" autocomplete="off" />
+
+    <label>密碼（至少 6 碼）</label>
+    <input id="tempPassword" type="password" placeholder="臨時密碼" autocomplete="new-password" />
+
+    <button type="button" class="btn-create-temp" id="btnCreateTempUser">
+      建立臨時帳號
+    </button>
+
+    <div class="temp-result" id="tempUserResult"></div>
+
+  </div>
 
 </div>
 
@@ -1423,6 +1656,125 @@ function goBack() {
   }
 
 })();
+
+
+/* =========================================================
+   開發者：臨時帳號
+========================================================= */
+
+var SUPABASE_URL = "https://perfsipperncvjocznhl.supabase.co";
+var SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBlcmZzaXBwZXJuY3Zqb2N6bmhsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODYwMTUyMzAsImV4cCI6MjEwMTU5MTIzMH0.I7vXkV247kAzRJ0RigDZt3Hzn8KJDyMc6o9E3oHJZoY";
+
+var DEVELOPER_EMAILS = [
+  "tomlin530@yahoo.com.tw",
+  "n_950143@hotmail.com"
+];
+
+var sbSettings = null;
+var meSettings = null;
+
+try {
+  sbSettings = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+} catch (e) {
+  console.error(e);
+}
+
+function isDeveloperSettings(user) {
+  if (!user) return false;
+  var email = (user.email || "").toLowerCase();
+  if (email && DEVELOPER_EMAILS.indexOf(email) !== -1) return true;
+  var meta = user.user_metadata || {};
+  if (meta.is_developer === true || meta.role === "admin") return true;
+  return false;
+}
+
+function openTempUserSettings() {
+  hidePages();
+  document.getElementById("tempUserSettings").classList.add("active");
+  document.getElementById("pageTitle").textContent = "臨時帳號";
+}
+
+async function initDeveloperMenu() {
+  var group = document.getElementById("developerMenuGroup");
+  if (!group || !sbSettings) return;
+
+  try {
+    var sessionRes = await sbSettings.auth.getSession();
+    var session = sessionRes.data && sessionRes.data.session;
+    meSettings = session && session.user ? session.user : null;
+
+    if (isDeveloperSettings(meSettings)) {
+      group.style.display = "block";
+    } else {
+      group.style.display = "none";
+    }
+  } catch (e) {
+    group.style.display = "none";
+  }
+}
+
+document.addEventListener("DOMContentLoaded", function () {
+  initDeveloperMenu();
+
+  var btn = document.getElementById("btnCreateTempUser");
+  var resultEl = document.getElementById("tempUserResult");
+
+  if (btn) {
+    btn.onclick = async function () {
+      if (!isDeveloperSettings(meSettings)) {
+        alert("僅開發者可使用");
+        return;
+      }
+
+      var displayName = (document.getElementById("tempDisplayName").value || "").trim();
+      var loginId = (document.getElementById("tempLoginId").value || "").trim().toLowerCase().replace(/[^a-z0-9_]/g, "");
+      var password = document.getElementById("tempPassword").value || "";
+
+      if (!loginId || loginId.length < 3) {
+        alert("登入帳號至少 3 個英數字");
+        return;
+      }
+      if (!password || password.length < 6) {
+        alert("密碼至少 6 碼");
+        return;
+      }
+
+      resultEl.style.display = "block";
+      resultEl.style.color = "#666";
+      resultEl.textContent = "建立中…";
+
+      try {
+        var res = await sbSettings.functions.invoke("create-temp-user", {
+          body: {
+            login_id: loginId,
+            password: password,
+            display_name: displayName || loginId
+          }
+        });
+
+        if (res.error) throw new Error(res.error.message || "建立失敗");
+        if (res.data && res.data.error) throw new Error(res.data.error);
+
+        var loginEmail = (res.data && res.data.email) ? res.data.email : (loginId + "@temp.safereunion.local");
+
+        resultEl.style.color = "#166534";
+        resultEl.textContent =
+          "建立成功！請把以下資料給同學：\n\n" +
+          "登入 Email：\n" + loginEmail + "\n\n" +
+          "密碼：\n" + password + "\n\n" +
+          "暱稱：" + (displayName || loginId);
+
+        document.getElementById("tempPassword").value = "";
+      } catch (e) {
+        resultEl.style.color = "#b91c1c";
+        resultEl.textContent =
+          "失敗：" + (e.message || e) +
+          "\n\n請確認已部署 Edge Function：create-temp-user，且白名單包含你的 Email。";
+      }
+    };
+  }
+});
+
 
 </script>
 
