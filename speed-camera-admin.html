@@ -1186,11 +1186,184 @@ function parseTaipeiTech(
 
   var rows = [];
 
+  /*
+    台北科技執法官方 CSV：
+
+    第 1 行：
+    編號、名稱、取締路段、座標-X、座標-Y、啟用日期、取締項目
+
+    第 2 行：
+    中文欄位說明
+
+    第 3 行開始：
+    真正資料
+
+    所以從 i = 2 開始讀取。
+  */
+
   for (
-    var i = 1;
+    var i = 2;
     i < lines.length;
     i++
   ) {
+
+    var values =
+      parseCSVLine(
+        lines[i],
+        separator
+      );
+
+    /*
+      台北官方格式：
+
+      座標-X = 經度 Longitude
+      座標-Y = 緯度 Latitude
+    */
+
+    var longitude =
+      numberValue(
+        getValue(
+          values,
+          index,
+          ["座標-X"]
+        )
+      );
+
+    var latitude =
+      numberValue(
+        getValue(
+          values,
+          index,
+          ["座標-Y"]
+        )
+      );
+
+    /*
+      如果整行都是空白，直接跳過
+    */
+
+    var hasData =
+      values.some(function(value) {
+        return String(value || "").trim() !== "";
+      });
+
+    if (!hasData) {
+      continue;
+    }
+
+    /*
+      真正資料的座標必須有效
+    */
+
+    if (
+      longitude === null ||
+      latitude === null
+    ) {
+
+      throw new Error(
+        "台北科技執法第 " +
+        (i + 1) +
+        " 行座標無效。\n\n" +
+        "座標-X 應為經度，座標-Y 應為緯度。\n" +
+        "目前讀取到：\n" +
+        "座標-X = " +
+        getValue(
+          values,
+          index,
+          ["座標-X"]
+        ) +
+        "\n" +
+        "座標-Y = " +
+        getValue(
+          values,
+          index,
+          ["座標-Y"]
+        )
+      );
+    }
+
+    /*
+      檢查台灣座標合理範圍
+      經度約 119～123
+      緯度約 21～26
+    */
+
+    if (
+      longitude < 119 ||
+      longitude > 123 ||
+      latitude < 21 ||
+      latitude > 26
+    ) {
+
+      throw new Error(
+        "台北科技執法第 " +
+        (i + 1) +
+        " 行座標超出臺灣合理範圍。\n\n" +
+        "經度：" +
+        longitude +
+        "\n" +
+        "緯度：" +
+        latitude
+      );
+    }
+
+    rows.push({
+
+      city_name:
+        "台北市",
+
+      enforcement_type:
+        getValue(
+          values,
+          index,
+          ["名稱"]
+        ) || null,
+
+      location:
+        getValue(
+          values,
+          index,
+          ["取締路段"]
+        ) || null,
+
+      violation_types:
+        getValue(
+          values,
+          index,
+          ["取締項目"]
+        ) || null,
+
+      longitude:
+        longitude,
+
+      latitude:
+        latitude,
+
+      activation_date:
+        getValue(
+          values,
+          index,
+          ["啟用日期"]
+        ) || null,
+
+      source_name:
+        "台北市政府",
+
+      source_format:
+        "taipei_tech"
+
+    });
+  }
+
+  if (!rows.length) {
+
+    throw new Error(
+      "台北科技執法 CSV 沒有讀取到任何有效資料。"
+    );
+  }
+
+  return rows;
+}
 
     var values =
       parseCSVLine(
