@@ -2,7 +2,9 @@
 <html lang="zh-TW">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="screen-orientation" content="portrait">
+  <meta name="apple-mobile-web-app-capable" content="yes">
   <title>安全團聚</title>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -14,29 +16,50 @@
       padding: 0;
     }
 
+    html, body {
+      width: 100%;
+      overflow-x: hidden;
+    }
+
     body {
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
       background: #f5f5f5;
       min-height: 100vh;
-      padding-bottom: 70px;
+      min-height: 100dvh;
+      padding-top: calc(56px + env(safe-area-inset-top, 0px));
+      padding-bottom: calc(58px + env(safe-area-inset-bottom, 0px));
       color: #111;
     }
 
+    /* 頂部綠條固定（含首頁房子） */
     .header {
       background: #06C755;
       color: white;
       padding: 14px 16px;
+      padding-top: calc(14px + env(safe-area-inset-top, 0px));
       display: flex;
       justify-content: space-between;
       align-items: center;
-      position: sticky;
+      position: fixed;
       top: 0;
-      z-index: 100;
+      left: 0;
+      right: 0;
+      z-index: 2000;
+      height: auto;
+      min-height: calc(56px + env(safe-area-inset-top, 0px));
+      box-sizing: border-box;
     }
 
+    /* 標題絕對置中 */
     .header h1 {
       font-size: 18px;
       font-weight: 700;
+      position: absolute;
+      left: 50%;
+      transform: translateX(-50%);
+      margin: 0;
+      pointer-events: none;
+      white-space: nowrap;
     }
 
     .header-right {
@@ -44,6 +67,7 @@
       align-items: center;
       gap: 14px;
       font-size: 20px;
+      margin-left: auto;
     }
 
     .header-action {
@@ -351,11 +375,32 @@
       left: 0;
       right: 0;
       bottom: 0;
-      height: 58px;
+      height: calc(58px + env(safe-area-inset-bottom, 0px));
+      padding-bottom: env(safe-area-inset-bottom, 0px);
       background: #fff;
       border-top: 1px solid #e8e8e8;
       display: flex;
-      z-index: 30;
+      z-index: 2000;
+      box-sizing: border-box;
+    }
+
+    /* 盡量鎖定直向（CSS 輔助） */
+    @media screen and (orientation: landscape) {
+      body::before {
+        content: "請直向使用安全團聚";
+        position: fixed;
+        inset: 0;
+        z-index: 99999;
+        background: #06C755;
+        color: #fff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 18px;
+        font-weight: 700;
+        text-align: center;
+        padding: 24px;
+      }
     }
 
     .tab {
@@ -3695,7 +3740,23 @@ function showComingSoon(event, name) {
 </script>
 
 
-<script src="call-notify.js"></script>
+<script src="call-notify.js">
+/* 鎖定直向螢幕 */
+(function lockPortrait() {
+  try {
+    if (screen.orientation && screen.orientation.lock) {
+      screen.orientation.lock("portrait").catch(function () {});
+    } else if (screen.lockOrientation) {
+      screen.lockOrientation("portrait");
+    } else if (screen.mozLockOrientation) {
+      screen.mozLockOrientation("portrait");
+    } else if (screen.msLockOrientation) {
+      screen.msLockOrientation("portrait");
+    }
+  } catch (e) {}
+})();
+
+</script>
 
 </body>
 </html>
