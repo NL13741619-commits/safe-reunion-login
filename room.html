@@ -2528,9 +2528,13 @@ function playNotify() {
 
 
     if (
-      sound &&
-      sound.checked
+      !sound ||
+      !sound.checked
     ) {
+
+      /* 仍允許震動 */
+
+    } else {
 
       var AudioCtx =
         window.AudioContext ||
@@ -2543,35 +2547,47 @@ function playNotify() {
           new AudioCtx();
 
 
-        var o =
-          ctx.createOscillator();
+        function tone(freq, when, dur, vol) {
+
+          var o =
+            ctx.createOscillator();
+
+          var g =
+            ctx.createGain();
+
+          o.type =
+            'sine';
+
+          o.frequency.value =
+            freq;
+
+          g.gain.value =
+            vol || 0.09;
+
+          o.connect(g);
+
+          g.connect(
+            ctx.destination
+          );
+
+          o.start(
+            ctx.currentTime +
+            when
+          );
+
+          o.stop(
+            ctx.currentTime +
+            when +
+            dur
+          );
+
+        }
 
 
-        var g =
-          ctx.createGain();
+        /* 訊息提示：兩短音 */
+        tone(880, 0, 0.12, 0.1);
 
-
-        o.frequency.value =
-          880;
-
-
-        g.gain.value =
-          0.06;
-
-
-        o.connect(g);
-
-        g.connect(
-          ctx.destination
-        );
-
-
-        o.start();
-
-        o.stop(
-          ctx.currentTime +
-          0.12
-        );
+        tone(1175, 0.14, 0.14, 0.1);
 
       }
 
@@ -2591,7 +2607,7 @@ function playNotify() {
     ) {
 
       navigator.vibrate(
-        120
+        [80, 40, 80]
       );
 
     }
@@ -2601,9 +2617,6 @@ function playNotify() {
 }
 
 
-/* =====================================================
-   RENDER MESSAGES
-===================================================== */
 
 function renderMessages() {
 
@@ -3873,8 +3886,12 @@ function updateMeetingBanner(active, count) {
 
   if (active) {
     banner.classList.add('show');
+    var starter =
+      meetingStarterName
+        ? (meetingStarterName + ' 發起群組通話')
+        : '會議進行中';
     text.textContent =
-      '會議進行中' +
+      starter +
       (count ? '（' + count + ' 人）' : '');
     var inLocal = false;
     try {
@@ -3889,9 +3906,75 @@ function updateMeetingBanner(active, count) {
     }
   } else {
     banner.classList.remove('show');
+    meetingStarterName = '';
+    try { stopGroupMeetingRing(); } catch (e) {}
     try {
       localStorage.removeItem(meetingFlagKey());
     } catch (e) {}
+  }
+}
+
+
+var groupRingTimer = null;
+var groupAudioCtx = null;
+var lastMeetingRingAt = 0;
+var meetingStarterName = '';
+
+function ensureGroupAudio() {
+  try {
+    if (!groupAudioCtx) {
+      groupAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    }
+    if (groupAudioCtx.state === 'suspended') groupAudioCtx.resume();
+    return groupAudioCtx;
+  } catch (e) {
+    return null;
+  }
+}
+
+function groupBeep(freq, dur) {
+  try {
+    var ctx = ensureGroupAudio();
+    if (!ctx) return;
+    var o = ctx.createOscillator();
+    var g = ctx.createGain();
+    o.frequency.value = freq;
+    g.gain.value = 0.08;
+    o.connect(g);
+    g.connect(ctx.destination);
+    o.start();
+    o.stop(ctx.currentTime + (dur || 0.2));
+  } catch (e) {}
+}
+
+function startGroupMeetingRing() {
+  // 避免短時間重複狂響
+  var now = Date.now();
+  if (now - lastMeetingRingAt < 8000) return;
+  lastMeetingRingAt = now;
+
+  stopGroupMeetingRing();
+  if (navigator.vibrate) {
+    try { navigator.vibrate([300, 200, 300, 200]); } catch (e) {}
+  }
+  groupRingTimer = setInterval(function () {
+    groupBeep(880, 0.25);
+    setTimeout(function () { groupBeep(980, 0.25); }, 300);
+    if (navigator.vibrate) {
+      try { navigator.vibrate(200); } catch (e) {}
+    }
+  }, 1500);
+
+  // 20 秒後自動停鈴（橫幅仍保留，可手動進入）
+  setTimeout(function () {
+    stopGroupMeetingRing();
+  }, 20000);
+}
+
+function stopGroupMeetingRing() {
+  if (groupRingTimer) {
+    clearInterval(groupRingTimer);
+    groupRingTimer = null;
   }
 }
 
@@ -3944,13 +4027,40 @@ async function startMeetingWatch() {
       .on('presence', { event: 'sync' }, refreshFromPresence)
       .on('presence', { event: 'join' }, refreshFromPresence)
       .on('presence', { event: 'leave' }, refreshFromPresence)
+      .on('broadcast', { event: 'meeting_start' }, function (payload) {
+        var p = payload && payload.payload ? payload.payload : payload;
+        if (p && p.starter_name) meetingStarterName = p.starter_name;
+        // 自己發起的不響鈴
+        if (p && myUser && p.starter_id === myUser.id) {
+          updateMeetingBanner(true, 1);
+          return;
+        }
+        updateMeetingBanner(true, 1);
+        startGroupMeetingRing();
+        try { playNotify(); } catch (e) {}
+        setStatus(
+          (meetingStarterName || '成員') +
+          ' 發起群組通話，可點「進入」加入'
+        );
+      })
       .on('broadcast', { event: 'meeting_alive' }, function (payload) {
-        // 會議頁定期廣播：即使 presence 偶發延遲，橫幅仍維持
         var p = payload && payload.payload ? payload.payload : payload;
         var n = p && p.count != null ? p.count : 1;
+        if (p && p.starter_name && !meetingStarterName) {
+          meetingStarterName = p.starter_name;
+        }
+        var was = meetingActive;
         updateMeetingBanner(true, n);
+        // 從無到有：晚到者也響一次
+        if (!was) {
+          if (!(p && myUser && p.starter_id === myUser.id)) {
+            startGroupMeetingRing();
+          }
+        }
       })
       .on('broadcast', { event: 'meeting_end' }, function () {
+        meetingStarterName = '';
+        stopGroupMeetingRing();
         updateMeetingBanner(false, 0);
       });
 
@@ -3974,6 +4084,7 @@ async function startMeetingWatch() {
 
 function openGroupMeeting(opts) {
   opts = opts || {};
+  try { stopGroupMeetingRing(); } catch (e) {}
   try {
     localStorage.setItem(meetingFlagKey(), '1');
   } catch (e) {}
@@ -5965,6 +6076,24 @@ function boot() {
 
 
 boot();
+
+/* 解鎖 iOS 提示音（需使用者先點過畫面） */
+document.body.addEventListener('click', function () {
+  try {
+    var AC = window.AudioContext || window.webkitAudioContext;
+    if (!AC) return;
+    var ctx = new AC();
+    if (ctx.state === 'suspended') ctx.resume();
+    var o = ctx.createOscillator();
+    var g = ctx.createGain();
+    g.gain.value = 0.0001;
+    o.connect(g);
+    g.connect(ctx.destination);
+    o.start();
+    o.stop(ctx.currentTime + 0.01);
+  } catch (e) {}
+}, { once: true });
+
 
 
 })();
