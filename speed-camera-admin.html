@@ -634,6 +634,7 @@ function parseOfficialCSV(text) {
     throw new Error(
       "CSV 資料不足。"
     );
+
   }
 
   var headerInfo =
@@ -651,7 +652,7 @@ function parseOfficialCSV(text) {
 
   /*
    * ==================================================
-   * 格式一：原本官方固定測速 CSV
+   * 格式一：官方固定測速 CSV
    *
    * CityName
    * RegionName
@@ -739,7 +740,7 @@ function parseOfficialCSV(text) {
 
   /*
    * ==================================================
-   * 如果兩種格式都不是
+   * 格式都不是
    * ==================================================
    */
 
@@ -777,7 +778,7 @@ function parseOfficialCSV(text) {
   if (isOfficialFormat) {
 
     /*
-     * 官方 CSV 通常：
+     * 官方格式通常：
      *
      * 第 1 行：英文欄位
      * 第 2 行：中文說明
@@ -819,6 +820,10 @@ function parseOfficialCSV(text) {
       }
 
 
+      /*
+       * 經度
+       */
+
       var longitude =
         numberValue(
           getValue(
@@ -828,6 +833,10 @@ function parseOfficialCSV(text) {
           )
         );
 
+
+      /*
+       * 緯度
+       */
 
       var latitude =
         numberValue(
@@ -839,6 +848,10 @@ function parseOfficialCSV(text) {
         );
 
 
+      /*
+       * 速限
+       */
+
       var speedLimit =
         numberValue(
           getValue(
@@ -849,6 +862,10 @@ function parseOfficialCSV(text) {
         );
 
 
+      /*
+       * 檢查座標
+       */
+
       if (
         longitude === null ||
         latitude === null
@@ -856,14 +873,34 @@ function parseOfficialCSV(text) {
 
         throw new Error(
 
-          "第 " +
+          "官方固定測速 CSV 第 " +
           (i + 1) +
-          " 行經緯度不是有效數字。"
+          " 行經緯度不是有效數字。\n\n" +
+
+          "經度：" +
+          getValue(
+            values,
+            index,
+            ["Longitude"]
+          ) +
+
+          "\n" +
+
+          "緯度：" +
+          getValue(
+            values,
+            index,
+            ["Latitude"]
+          )
 
         );
 
       }
 
+
+      /*
+       * 檢查速限
+       */
 
       if (
         speedLimit !== null &&
@@ -874,20 +911,27 @@ function parseOfficialCSV(text) {
 
         throw new Error(
 
-          "第 " +
+          "官方固定測速 CSV 第 " +
           (i + 1) +
-          " 行速限不是整數。"
+          " 行速限不是整數。\n\n" +
+
+          "目前讀取到：" +
+          getValue(
+            values,
+            index,
+            ["limit"]
+          )
 
         );
 
       }
 
 
-      rows.push({
+      /*
+       * 建立統一資料格式
+       */
 
-        /*
-         * 官方 CSV 沒有編號
-         */
+      rows.push({
 
         camera_no:
           null,
@@ -959,7 +1003,7 @@ function parseOfficialCSV(text) {
   if (isChineseFormat) {
 
     /*
-     * 中文格式通常：
+     * 中文格式：
      *
      * 第 1 行：欄位名稱
      * 第 2 行開始：資料
@@ -1000,6 +1044,10 @@ function parseOfficialCSV(text) {
       }
 
 
+      /*
+       * 編號
+       */
+
       var cameraNo =
         getValue(
           chineseValues,
@@ -1007,6 +1055,10 @@ function parseOfficialCSV(text) {
           ["編號"]
         );
 
+
+      /*
+       * 轄區分局
+       */
 
       var deptNm =
         getValue(
@@ -1016,6 +1068,10 @@ function parseOfficialCSV(text) {
         );
 
 
+      /*
+       * 行政區
+       */
+
       var regionName =
         getValue(
           chineseValues,
@@ -1023,6 +1079,10 @@ function parseOfficialCSV(text) {
           ["行政區"]
         );
 
+
+      /*
+       * 取締地點
+       */
 
       var address =
         getValue(
@@ -1032,6 +1092,10 @@ function parseOfficialCSV(text) {
         );
 
 
+      /*
+       * 取締行向
+       */
+
       var direct =
         getValue(
           chineseValues,
@@ -1039,6 +1103,10 @@ function parseOfficialCSV(text) {
           ["取締行向"]
         );
 
+
+      /*
+       * 速限
+       */
 
       var speedLimit =
         numberValue(
@@ -1050,6 +1118,10 @@ function parseOfficialCSV(text) {
         );
 
 
+      /*
+       * 經度
+       */
+
       var longitude =
         numberValue(
           getValue(
@@ -1059,6 +1131,10 @@ function parseOfficialCSV(text) {
           )
         );
 
+
+      /*
+       * 緯度
+       */
 
       var latitude =
         numberValue(
@@ -1107,7 +1183,7 @@ function parseOfficialCSV(text) {
 
 
       /*
-       * 檢查台灣座標範圍
+       * 台灣合理座標範圍
        */
 
       if (
@@ -1121,7 +1197,7 @@ function parseOfficialCSV(text) {
 
           "中文固定測速 CSV 第 " +
           (j + 1) +
-          " 行座標超出合理範圍。\n\n" +
+          " 行座標超出臺灣合理範圍。\n\n" +
 
           "經度：" +
           longitude +
@@ -1137,9 +1213,54 @@ function parseOfficialCSV(text) {
 
 
       /*
-       * 建立統一格式
+       * 速限如果有值，必須是整數
+       */
+
+      if (
+        speedLimit !== null &&
+        !Number.isInteger(
+          speedLimit
+        )
+      ) {
+
+        throw new Error(
+
+          "中文固定測速 CSV 第 " +
+          (j + 1) +
+          " 行速限不是整數。\n\n" +
+
+          "目前讀取到：" +
+          getValue(
+            chineseValues,
+            index,
+            ["速限Speed"]
+          )
+
+        );
+
+      }
+
+
+      /*
+       * ==================================================
+       * 中文 → 英文資料庫欄位
+       * ==================================================
        *
-       * 中文 → 資料庫英文欄位
+       * 編號       → camera_no
+       * 轄區分局   → DeptNm
+       * 行政區     → RegionName
+       * 取締地點   → Address
+       * 取締行向   → direct
+       * 速限Speed  → limit
+       * 經度       → Longitude
+       * 緯度       → Latitude
+       *
+       * 中文格式沒有：
+       *
+       * CityName
+       * BranchNm
+       *
+       * 所以先存 NULL。
        */
 
       rows.push({
