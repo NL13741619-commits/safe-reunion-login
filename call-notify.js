@@ -25,20 +25,31 @@
       var o = ctx.createOscillator();
       var g = ctx.createGain();
       o.frequency.value = freq;
-      g.gain.value = 0.08;
+      g.gain.value = 0.12;
       o.connect(g); g.connect(ctx.destination);
       o.start();
       o.stop(ctx.currentTime + (dur || 0.2));
     } catch (e) {}
   }
-  function startRing() {
+  function startRing(kind) {
     stopRing();
-    if (navigator.vibrate) navigator.vibrate([300, 200, 300]);
+    if (navigator.vibrate) {
+      try { navigator.vibrate([300, 200, 300, 200]); } catch (e) {}
+    }
+    // 語音：較低雙音；視訊：較高三連音
     ringTimer = setInterval(function () {
-      beep(880, 0.25);
-      setTimeout(function () { beep(980, 0.25); }, 300);
-      if (navigator.vibrate) navigator.vibrate(200);
-    }, 1500);
+      if (kind === 'audio') {
+        beep(520, 0.22);
+        setTimeout(function () { beep(620, 0.22); }, 280);
+      } else {
+        beep(880, 0.18);
+        setTimeout(function () { beep(1040, 0.18); }, 220);
+        setTimeout(function () { beep(1200, 0.18); }, 440);
+      }
+      if (navigator.vibrate) {
+        try { navigator.vibrate(200); } catch (e) {}
+      }
+    }, 1600);
   }
   function stopRing() {
     if (ringTimer) { clearInterval(ringTimer); ringTimer = null; }
@@ -93,10 +104,11 @@
     if (shownId === row.id) return;
     ensureUI();
     shownId = row.id;
-    var mode = row.mode === 'audio' ? '語音' : '視訊';
+    var isAudio = row.mode === 'audio';
+    var mode = isAudio ? '語音' : '視訊';
     document.getElementById('globalIncomingSub').textContent = mode + '通話邀請';
     document.getElementById('globalIncoming').classList.add('show');
-    startRing();
+    startRing(isAudio ? 'audio' : 'video');
   }
 
   async function check() {
