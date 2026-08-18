@@ -303,6 +303,10 @@ button:disabled {
       </button>
         <!-- 移動式／雷達測速 -->
 
+<!-- =========================
+     移動式／雷達測速
+========================= -->
+
 <div class="card">
 
   <h2 class="section-title">
@@ -314,8 +318,9 @@ button:disabled {
   </p>
 
   <p class="small">
-    此資料與固定測速照相、科技執法完全分開管理。
-    不會因為更新固定測速 CSV 而被刪除。
+    系統會自動辨識 CSV 欄位。
+    支援縣市、行政區、測速類型、地址、
+    行向、速限、經度、緯度等資料。
   </p>
 
   <input
@@ -323,6 +328,149 @@ button:disabled {
     id="radarCsvFile"
     accept=".csv,text/csv"
   >
+
+  <!-- 縣市 -->
+
+  <div
+    style="
+      margin-top:15px;
+    "
+  >
+
+    <label
+      for="radarCitySelect"
+      style="
+        display:block;
+        font-weight:bold;
+        margin-bottom:6px;
+      "
+    >
+      縣市
+    </label>
+
+    <select
+      id="radarCitySelect"
+      disabled
+      style="
+        width:100%;
+        padding:13px;
+        border:1px solid #cbd5e1;
+        border-radius:10px;
+        font-size:16px;
+        background:white;
+      "
+    >
+      <option value="">
+        請先預覽 CSV
+      </option>
+    </select>
+
+  </div>
+
+
+  <!-- 行政區 -->
+
+  <div
+    style="
+      margin-top:15px;
+    "
+  >
+
+    <label
+      for="radarDistrictSelect"
+      style="
+        display:block;
+        font-weight:bold;
+        margin-bottom:6px;
+      "
+    >
+      行政區
+    </label>
+
+    <select
+      id="radarDistrictSelect"
+      disabled
+      style="
+        width:100%;
+        padding:13px;
+        border:1px solid #cbd5e1;
+        border-radius:10px;
+        font-size:16px;
+        background:white;
+      "
+    >
+      <option value="">
+        請先選擇縣市
+      </option>
+    </select>
+
+  </div>
+
+
+  <!-- 資料來源 -->
+
+  <div
+    style="
+      margin-top:15px;
+    "
+  >
+
+    <label
+      for="radarSourceName"
+      style="
+        display:block;
+        font-weight:bold;
+        margin-bottom:6px;
+      "
+    >
+      資料來源
+    </label>
+
+    <input
+      type="text"
+      id="radarSourceName"
+      placeholder="例如：警政署、台北市政府"
+      style="
+        width:100%;
+        padding:13px;
+        border:1px solid #cbd5e1;
+        border-radius:10px;
+        font-size:16px;
+      "
+    >
+
+  </div>
+
+
+  <button
+    id="radarPreviewBtn"
+    style="
+      background:#0891b2;
+      color:white;
+    "
+  >
+    預覽移動式／雷達測速 CSV
+  </button>
+
+
+  <div
+    id="radarPreview"
+    class="status hidden"
+  ></div>
+
+
+  <button
+    id="radarUpdateBtn"
+    disabled
+    style="
+      background:#0f766e;
+      color:white;
+    "
+  >
+    確認新增／更新雷達測速資料
+  </button>
+
+</div>
 
   <button
     id="radarPreviewBtn"
