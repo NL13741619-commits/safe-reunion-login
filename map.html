@@ -73,15 +73,14 @@ body {
    ========================================================= */
 
 #map {
-
   position: fixed;
-
   inset: 0;
-
-  width: 100%;
-  height: 100%;
-
   z-index: 1;
+  background: #dfe7ef;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+  -webkit-tap-highlight-color: transparent;
 }
 
 
@@ -932,6 +931,162 @@ body.navigation-mode .navigation-info {
   background: transparent !important;
   border: none !important;
 }
+
+/* 長按大頭針 */
+.pin-marker {
+  background: transparent !important;
+  border: none !important;
+}
+.pin-emoji {
+  font-size: 32px;
+  line-height: 1;
+  filter: drop-shadow(0 2px 3px rgba(0,0,0,.35));
+  transform: translateY(-6px);
+}
+
+
+/* 抵達紀錄與出發提醒 */
+.arrival-fab {
+  position: fixed;
+  right: 12px;
+  bottom: 32vh;
+  z-index: 1800;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  border: none;
+  background: #fff;
+  box-shadow: 0 3px 12px rgba(0,0,0,.25);
+  font-size: 24px;
+  cursor: pointer;
+}
+.arrival-panel {
+  display: none;
+  position: fixed;
+  right: 12px;
+  bottom: calc(32vh + 56px);
+  z-index: 1800;
+  width: min(280px, 85vw);
+  max-height: 40vh;
+  overflow-y: auto;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0,0,0,.22);
+  padding: 12px;
+  font-size: 13px;
+}
+.arrival-panel.show { display: block; }
+.arrival-panel h4 {
+  margin: 0 0 8px;
+  font-size: 14px;
+}
+.arrival-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 6px 0;
+  border-bottom: 1px solid #eee;
+}
+.depart-banner {
+  display: none;
+  position: fixed;
+  top: 70px;
+  left: 12px;
+  right: 12px;
+  z-index: 1850;
+  background: #fff3e0;
+  border: 1px solid #ff9800;
+  border-radius: 12px;
+  padding: 10px 12px;
+  font-size: 13px;
+  box-shadow: 0 3px 12px rgba(0,0,0,.15);
+}
+.depart-banner.show { display: block; }
+
+
+.pin-choice-mask {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 3000;
+  background: rgba(0,0,0,.35);
+  align-items: flex-end;
+  justify-content: center;
+}
+.pin-choice-mask.show {
+  display: flex;
+}
+.pin-choice-box {
+  width: 100%;
+  max-width: 420px;
+  background: #fff;
+  border-radius: 16px 16px 0 0;
+  padding: 16px;
+  box-shadow: 0 -4px 24px rgba(0,0,0,.2);
+}
+.pin-choice-box h3 {
+  margin: 0 0 6px;
+  font-size: 16px;
+}
+.pin-choice-box p {
+  margin: 0 0 12px;
+  font-size: 12px;
+  color: #666;
+}
+.pin-choice-box .btn {
+  margin-top: 8px;
+}
+.pin-choice-yellow {
+  background: #f9a825 !important;
+  color: #111 !important;
+}
+.pin-choice-red {
+  background: #e53935 !important;
+  color: #fff !important;
+}
+
+
+.admin-fab {
+  position: fixed;
+  left: 12px;
+  bottom: 32vh;
+  z-index: 1800;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: none;
+  background: #fff;
+  box-shadow: 0 3px 12px rgba(0,0,0,.25);
+  font-size: 20px;
+  cursor: pointer;
+  display: none;
+}
+.admin-panel {
+  display: none;
+  position: fixed;
+  left: 12px;
+  right: 12px;
+  bottom: 12px;
+  z-index: 3000;
+  max-height: 70vh;
+  overflow-y: auto;
+  background: #fff;
+  border-radius: 14px;
+  box-shadow: 0 6px 28px rgba(0,0,0,.25);
+  padding: 14px;
+}
+.admin-panel.show { display: block; }
+.admin-panel h3 { margin: 0 0 8px; font-size: 16px; }
+.admin-panel label { display: block; font-size: 12px; color: #555; margin-top: 8px; }
+.admin-panel input {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  margin-top: 4px;
+  font-size: 14px;
+}
+
 </style>
 
 </head>
@@ -945,6 +1100,57 @@ body.navigation-mode .navigation-info {
      ======================================================= -->
 
 <div id="map"></div>
+
+<button type="button" class="admin-fab" id="adminFab" title="開發者設定">⚙️</button>
+<div class="admin-panel" id="adminPanel">
+  <h3>⚙️ 開發者・臨時帳號</h3>
+  <p style="font-size:12px;color:#666;margin:0 0 8px">
+    僅開發者可見。可建立臨時帳號給來不及註冊的同學（免信箱驗證）。
+  </p>
+  <label>暱稱（顯示名稱）</label>
+  <input id="tempDisplayName" placeholder="例如：同學A" />
+  <label>登入帳號（英文/數字，會變成登入用 email）</label>
+  <input id="tempLoginId" placeholder="例如：classmate01" />
+  <label>密碼（至少 6 碼）</label>
+  <input id="tempPassword" type="password" placeholder="臨時密碼" />
+  <button type="button" class="btn btn-green" id="btnCreateTempUser" style="width:100%;margin-top:12px">
+    建立臨時帳號
+  </button>
+  <div id="tempUserResult" style="margin-top:10px;font-size:12px;white-space:pre-wrap;color:#333"></div>
+  <button type="button" class="btn btn-outline" id="btnCloseAdmin" style="width:100%;margin-top:8px">關閉</button>
+</div>
+
+
+<div class="pin-choice-mask" id="pinChoiceMask">
+  <div class="pin-choice-box">
+    <h3>📍 放置大頭針</h3>
+    <p>請選擇這個位置的用途（顏色不同）</p>
+    <button type="button" class="btn pin-choice-yellow" id="btnPinPrivate" style="width:100%">
+      🟡 個人定位（只有自己看得到）
+    </button>
+    <button type="button" class="btn pin-choice-red" id="btnPinGroup" style="width:100%">
+      🔴 集體集合點（所有人看得到）
+    </button>
+    <button type="button" class="btn btn-outline" id="btnPinCancel" style="width:100%">
+      取消
+    </button>
+  </div>
+</div>
+
+
+<!-- 抵達人員 -->
+<button type="button" class="arrival-fab" id="arrivalFab" title="誰已抵達">👤</button>
+<div class="arrival-panel" id="arrivalPanel">
+  <h4>抵達順序紀錄</h4>
+  <div id="arrivalList"><div style="color:#888">尚無紀錄</div></div>
+  <button type="button" class="btn btn-outline" id="btnClearArrivalLocal" style="width:100%;margin-top:8px;font-size:12px">
+    清除本機紀錄
+  </button>
+</div>
+
+<!-- 下一站出發提醒 -->
+<div class="depart-banner" id="departBanner"></div>
+
 
 
 <!-- =======================================================
@@ -1182,17 +1388,22 @@ body.navigation-mode .navigation-info {
 
   <div class="list-title">
     地圖模式
-    <span id="searchCountLabel" style="float:right;font-size:12px;color:#666;font-weight:normal">
-      搜尋：0 / 10000
+    <span id="searchCountLabel" style="float:right;font-size:12px;color:#666;font-weight:normal;display:none">
     </span>
   </div>
 
   <div class="row" style="margin-bottom:12px;">
     <button type="button" class="btn btn-green" id="btnModeTaiwan" style="flex:1">
-      台灣
+      地圖
     </button>
-    <button type="button" class="btn btn-outline" id="btnModeAmap" style="flex:1">
+    <button type="button" class="btn btn-outline" id="btnModeGoogle" style="flex:1">
       Google
+    </button>
+  </div>
+
+  <div class="row" style="margin-bottom:10px;">
+    <button type="button" class="btn btn-outline" id="btnSatellite" style="flex:1">
+      衛星圖
     </button>
   </div>
 
@@ -1362,39 +1573,55 @@ const map =
   );
 
 
-/* 台灣專用底圖（使用較穩定的來源） */
+/* 主底圖：Carto（較穩定，減少整片灰色） */
 const taiwanLayer = L.tileLayer(
-  "https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png",
+  "https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}",
+  {
+    maxZoom: 19,
+    attribution: "Tiles &copy; Esri"
+  }
+);
+
+/* 備用底圖 */
+const taiwanLayerBackup = L.tileLayer(
+  "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
   {
     maxZoom: 19,
     attribution: "&copy; OpenStreetMap contributors"
   }
 );
 
-/* 備用台灣底圖 */
-const taiwanLayerBackup = L.tileLayer(
-  "https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png",
-  {
-    maxZoom: 19,
-    attribution: "&copy; OpenStreetMap, &copy; CartoDB"
-  }
-);
+/* 已停用的舊圖層佔位（避免舊程式碼報錯） */
+const amapLayer = taiwanLayerBackup;
 
-/* 高德底圖 */
-const amapLayer = L.tileLayer(
-  "https://webrd0{s}.is.autonavi.com/appmaptile?lang=zh_cn&size=1&scale=1&style=8&x={x}&y={y}&z={z}",
-  {
-    subdomains: ["1", "2", "3", "4"],
-    maxZoom: 18,
-    attribution: "© 高德地圖"
-  }
-);
-
-// 預設用台灣模式
+// 預設顯示底圖
 taiwanLayer.addTo(map);
 
+// 若主圖磚載入失敗，自動切備用
+let _tileFailCount = 0;
+taiwanLayer.on("tileerror", function () {
+  _tileFailCount++;
+  if (_tileFailCount >= 3 && map.hasLayer(taiwanLayer)) {
+    console.warn("主底圖載入失敗，改用備用圖層");
+    map.removeLayer(taiwanLayer);
+    if (!map.hasLayer(taiwanLayerBackup)) {
+      taiwanLayerBackup.addTo(map);
+    }
+  }
+});
+
+/* 衛星圖（Esri World Imagery，免費） */
+const satelliteLayer = L.tileLayer(
+  "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
+  {
+    maxZoom: 19,
+    attribution: "Tiles &copy; Esri"
+  }
+);
+
+let satelliteOn = false;
+
 /* 地圖模式設定 */
-const AMAP_KEY = "";   // ← 之後填入你的高德 Web服務 Key
 let currentMapMode = "taiwan";
 
 // 防止地圖灰色：載入後強制重算尺寸
@@ -1525,9 +1752,20 @@ let lastWarningTime = 0;
 
 let waypoints = [];
 
+let privatePins = [];
+let privatePinMarkers = {};
+let longPressTimer = null;
+let longPressLatLng = null;
+let tempPinMarker = null;
+
+
 let wpMarkers = {};
 
 let peerMarkers = {};
+
+let routeLines = {};   // key: user_id or "me" → L.polyline
+let routeUpdateTimer = null;
+
 
 let currentSpeed = 0;
 
@@ -3068,6 +3306,9 @@ function onPosition(
     ]);
 
     // 更新箭頭方向
+
+    scheduleRouteUpdate();
+
     const icon = L.divIcon({
       className: "my-location-arrow",
       html: arrowHtml,
@@ -4843,6 +5084,10 @@ async function loadPeers() {
       }
     );
 
+    // 供路線圖使用
+    window._lastPeerRows = rows;
+    scheduleRouteUpdate();
+
     const statusEl =
       document.getElementById(
         "partStatus"
@@ -5097,6 +5342,7 @@ async function loadWaypoints() {
 
 
   renderWaypoints();
+  scheduleRouteUpdate();
 
 }
 
@@ -5170,6 +5416,11 @@ function renderWaypoints() {
       w
     ) {
 
+      const isOwner =
+        me &&
+        w.created_by &&
+        String(w.created_by) === String(me.id);
+
       const marker =
         L.marker(
 
@@ -5180,15 +5431,38 @@ function renderWaypoints() {
 
           {
             icon:
-              numIcon(
-                w.seq
-              )
+              (typeof createColoredPinIcon === "function"
+                ? createColoredPinIcon("#e53935", "集合")
+                : numIcon(w.seq)),
+            draggable: !!isOwner   // 只有放大頭針的人能移動
           }
 
         )
         .addTo(
           map
         );
+
+      // 擁有者可拖曳更新位置（大家都會看到）
+      if (isOwner) {
+        marker.on("dragend", async function (e) {
+          const pos = e.target.getLatLng();
+          const result = await sb
+            .from("meetup_waypoints")
+            .update({ lat: pos.lat, lng: pos.lng })
+            .eq("id", w.id);
+
+          if (result.error) {
+            alert("移動集合點失敗：" + result.error.message);
+            // 還原位置
+            marker.setLatLng([w.lat, w.lng]);
+            return;
+          }
+
+          w.lat = pos.lat;
+          w.lng = pos.lng;
+          await loadWaypoints();
+        });
+      }
 
 
       const timeStr =
@@ -5203,9 +5477,14 @@ function renderWaypoints() {
           : "時間未定";
 
 
+      const ownerHint =
+        (me && w.created_by && String(w.created_by) === String(me.id))
+          ? '<br><span style="font-size:11px;color:#888">可拖曳移動位置（僅建立者）</span>'
+          : '';
+
       marker.bindPopup(
 
-        "<b>#"
+        "<b>📍 #"
         +
         w.seq
         +
@@ -5222,6 +5501,8 @@ function renderWaypoints() {
         escapeHtml(
           timeStr
         )
+        +
+        ownerHint
 
       );
 
@@ -5507,18 +5788,13 @@ async function addWaypoint(
       .single();
 
 
-  if (
-    result.error
-  ) {
-
+  if (result.error) {
     alert(
-      "新增失敗："
-      +
-      result.error.message
+      "集體集合點新增失敗：" +
+      result.error.message +
+      "\n（若權限不足請檢查 Supabase meetup_waypoints 的 RLS）"
     );
-
-    return;
-
+    throw new Error(result.error.message);
   }
 
 
@@ -5635,7 +5911,7 @@ async function deleteWp(
    31. 搜尋地址（台灣 Nominatim / Google Edge Function）
    ========================================================= */
 
-const GOOGLE_SEARCH_LIMIT = 9000;   // 達到此次數自動切回台灣模式
+const GOOGLE_SEARCH_LIMIT = 8000;   // 達到此次數自動切回台灣模式
 
 function getSearchCountKey() {
   const now = new Date();
@@ -5657,12 +5933,20 @@ function increaseSearchCount() {
 function updateSearchCountLabel() {
   const el = document.getElementById("searchCountLabel");
   if (!el) return;
-  const count = getSearchCount();
-  el.textContent = "搜尋：" + count + " / 10000";
-  if (count >= GOOGLE_SEARCH_LIMIT) {
-    el.style.color = "#c62828";
+
+  // 只有 Google 模式才顯示使用次數；台灣／百度不顯示
+  if (typeof currentMapMode !== "undefined" && currentMapMode === "google") {
+    const count = getSearchCount();
+    el.style.display = "";
+    el.textContent = "Google：" + count + " / 10000";
+    if (count >= GOOGLE_SEARCH_LIMIT) {
+      el.style.color = "#c62828";
+    } else {
+      el.style.color = "#666";
+    }
   } else {
-    el.style.color = "#666";
+    el.style.display = "none";
+    el.textContent = "";
   }
 }
 
@@ -5685,51 +5969,105 @@ async function searchPlace() {
     let results = [];
 
     // 如果已經達到上限，強制使用台灣模式
-    if (currentMapMode === "amap" && getSearchCount() >= GOOGLE_SEARCH_LIMIT) {
-      alert("本月 Google 搜尋已達 9000 次上限，已自動切換回台灣地圖。");
+    if (currentMapMode === "google" && getSearchCount() >= GOOGLE_SEARCH_LIMIT) {
+      alert("本月 Google 搜尋已達 8000 次上限，已自動切換回地圖模式。");
       switchMapMode("taiwan");
     }
 
     if (currentMapMode === "taiwan") {
-      // ===== 台灣模式：Nominatim =====
-      const viewbox = "118.0,21.5,122.5,25.5";
-      let query = q;
-      if (!/台灣|臺灣|台|臺/.test(q)) {
-        query = q + " 台灣";
-      }
+      // ===== 地圖模式：常用地標 + Nominatim =====
+      const landmarks = {
+        "台北車站": { name: "台北車站（臺北車站）", lat: 25.0478, lng: 121.5170 },
+        "臺北車站": { name: "台北車站（臺北車站）", lat: 25.0478, lng: 121.5170 },
+        "台北火車站": { name: "台北車站（臺北車站）", lat: 25.0478, lng: 121.5170 },
+        "台北火車站": { name: "台北車站（臺北車站）", lat: 25.0478, lng: 121.5170 },
+        "桃園機場": { name: "桃園國際機場（TPE）", lat: 25.0797, lng: 121.2342 },
+        "桃園國際機場": { name: "桃園國際機場（TPE）", lat: 25.0797, lng: 121.2342 },
+        "機場": { name: "桃園國際機場（TPE）", lat: 25.0797, lng: 121.2342 },
+        "TPE": { name: "桃園國際機場（TPE）", lat: 25.0797, lng: 121.2342 },
+        "松山機場": { name: "台北松山機場（TSA）", lat: 25.0697, lng: 121.5519 },
+        "台北松山機場": { name: "台北松山機場（TSA）", lat: 25.0697, lng: 121.5519 },
+        "高鐵台北": { name: "高鐵台北站", lat: 25.0477, lng: 121.5172 },
+        "高鐵桃園": { name: "高鐵桃園站", lat: 25.0132, lng: 121.2150 },
+        "高鐵台中": { name: "高鐵台中站", lat: 24.1125, lng: 120.6160 },
+        "高鐵左營": { name: "高鐵左營站", lat: 22.6874, lng: 120.3075 },
+        "台北101": { name: "台北101", lat: 25.0340, lng: 121.5645 },
+        "101": { name: "台北101", lat: 25.0340, lng: 121.5645 },
+        "淡水": { name: "淡水捷運站", lat: 25.1682, lng: 121.4455 },
+        "九份": { name: "九份", lat: 25.1095, lng: 121.8443 },
+        "墾丁": { name: "墾丁", lat: 21.9483, lng: 120.7790 },
+        "花蓮車站": { name: "花蓮車站", lat: 23.9929, lng: 121.6013 },
+        "花蓮火車站": { name: "花蓮車站", lat: 23.9929, lng: 121.6013 },
+        "台中車站": { name: "台中車站", lat: 24.1369, lng: 120.6867 },
+        "高雄車站": { name: "高雄車站", lat: 22.6398, lng: 120.3022 },
+        "西門町": { name: "西門町", lat: 25.0421, lng: 121.5080 },
+        "士林夜市": { name: "士林夜市", lat: 25.0889, lng: 121.5240 },
+        "故宮": { name: "國立故宮博物院", lat: 25.1023, lng: 121.5485 },
+        "故宮博物院": { name: "國立故宮博物院", lat: 25.1023, lng: 121.5485 },
+        "圓山": { name: "圓山捷運站", lat: 25.0714, lng: 121.5201 },
+        "台北市政府": { name: "台北市政府", lat: 25.0375, lng: 121.5645 },
+        "總統府": { name: "中華民國總統府", lat: 25.0400, lng: 121.5119 }
+      };
 
-      const url =
-        "https://nominatim.openstreetmap.org/search" +
-        "?format=json" +
-        "&q=" + encodeURIComponent(query) +
-        "&limit=10" +
-        "&countrycodes=tw" +
-        "&viewbox=" + viewbox +
-        "&bounded=0" +
-        "&accept-language=zh-TW" +
-        "&addressdetails=1" +
-        "&dedupe=1";
-
-      const response = await fetch(url, {
-        headers: {
-          "Accept": "application/json",
-          "User-Agent": "SafeReunionMap/1.0 (https://nl13741619-commits.github.io/safe-reunion-login/; contact=local-app)"
+      const qNorm = q.replace(/\s+/g, "").toLowerCase();
+      let hit = null;
+      Object.keys(landmarks).forEach(function (key) {
+        if (hit) return;
+        const k = key.replace(/\s+/g, "").toLowerCase();
+        if (qNorm === k || qNorm.indexOf(k) !== -1 || k.indexOf(qNorm) !== -1) {
+          hit = landmarks[key];
         }
       });
 
-      if (!response.ok) throw new Error("搜尋服務 HTTP " + response.status);
+      if (hit) {
+        results = [{ name: hit.name, lat: hit.lat, lng: hit.lng }];
+      } else {
+        const viewbox = "118.0,21.5,122.5,25.5";
+        const queries = [];
+        queries.push(q);
+        if (!/台灣|臺灣/.test(q)) {
+          queries.push(q + " 台灣");
+          queries.push(q + " Taiwan");
+        }
 
-      const arr = await response.json();
-
-      results = (arr || []).map(function(item) {
-        return {
-          name: item.display_name,
-          lat: parseFloat(item.lat),
-          lng: parseFloat(item.lon)
+        const headers = {
+          "Accept": "application/json",
+          "User-Agent": "SafeReunionMap/1.0 (https://nl13741619-commits.github.io/safe-reunion-login/; contact=local-app)"
         };
-      });
 
-    } else {
+        let arr = [];
+        for (let qi = 0; qi < queries.length; qi++) {
+          const url =
+            "https://nominatim.openstreetmap.org/search" +
+            "?format=json" +
+            "&q=" + encodeURIComponent(queries[qi]) +
+            "&limit=8" +
+            "&countrycodes=tw" +
+            "&viewbox=" + viewbox +
+            "&bounded=0" +
+            "&accept-language=zh-TW" +
+            "&addressdetails=1" +
+            "&dedupe=1";
+
+          const response = await fetch(url, { headers: headers });
+          if (!response.ok) continue;
+          const part = await response.json();
+          if (part && part.length) {
+            arr = part;
+            break;
+          }
+        }
+
+        results = (arr || []).map(function(item) {
+          return {
+            name: item.display_name,
+            lat: parseFloat(item.lat),
+            lng: parseFloat(item.lon)
+          };
+        });
+      }
+
+    } else if (currentMapMode === "google") {
       // ===== Google 模式：呼叫 Supabase Edge Function =====
       const { data, error } = await sb.functions.invoke("geocode", {
         body: { address: q }
@@ -5745,11 +6083,10 @@ async function searchPlace() {
 
       results = (data && data.results) ? data.results : [];
 
-      // 成功搜尋才計次
       const count = increaseSearchCount();
       if (count >= GOOGLE_SEARCH_LIMIT) {
         setTimeout(function() {
-          alert("本月 Google 搜尋已達 9000 次，已自動切換回台灣地圖。");
+          alert("本月 Google 搜尋已達 8000 次，已自動切換回地圖模式。");
           switchMapMode("taiwan");
         }, 500);
       }
@@ -5815,51 +6152,68 @@ document.getElementById("searchInput").addEventListener("keydown", function (eve
 
 
 /* =========================================================
-   地圖模式切換
+   地圖模式切換（台灣 / Google / 高德）
    ========================================================= */
+
+function setModeButtonActive(activeId) {
+  ["btnModeTaiwan", "btnModeGoogle"].forEach(function (id) {
+    const btn = document.getElementById(id);
+    if (!btn) return;
+    if (id === activeId) {
+      btn.classList.add("btn-green");
+      btn.classList.remove("btn-outline");
+    } else {
+      btn.classList.add("btn-outline");
+      btn.classList.remove("btn-green");
+    }
+  });
+}
 
 function switchMapMode(mode) {
 
-  // 如果已經超過 Google 上限，不允許切到 Google
-  if (mode === "amap" && getSearchCount() >= GOOGLE_SEARCH_LIMIT) {
-    alert("本月 Google 搜尋已達上限，請使用台灣模式。");
-    mode = "taiwan";
-  }
-
-  currentMapMode = mode;
-
-  const btnTaiwan = document.getElementById("btnModeTaiwan");
-  const btnAmap = document.getElementById("btnModeAmap");
-
-  // 先清掉所有底圖
-  if (map.hasLayer(amapLayer)) map.removeLayer(amapLayer);
-  if (map.hasLayer(taiwanLayer)) map.removeLayer(taiwanLayer);
-  if (typeof taiwanLayerBackup !== "undefined" && map.hasLayer(taiwanLayerBackup)) {
-    map.removeLayer(taiwanLayerBackup);
-  }
-
-  if (mode === "taiwan") {
-    taiwanLayer.addTo(map);
-    if (btnTaiwan) {
-      btnTaiwan.classList.add("btn-green");
-      btnTaiwan.classList.remove("btn-outline");
+  try {
+    if (mode === "google" && typeof getSearchCount === "function" && typeof GOOGLE_SEARCH_LIMIT !== "undefined" && getSearchCount() >= GOOGLE_SEARCH_LIMIT) {
+      alert("本月 Google 搜尋已達上限，請改用「地圖」模式。");
+      mode = "taiwan";
     }
-    if (btnAmap) {
-      btnAmap.classList.add("btn-outline");
-      btnAmap.classList.remove("btn-green");
+  } catch (e) {
+    mode = mode || "taiwan";
+  }
+
+  currentMapMode = mode || "taiwan";
+
+  // 清掉可替換的底圖（不要讓地圖沒有任何圖層）
+  try {
+    if (typeof taiwanLayer !== "undefined" && map.hasLayer(taiwanLayer)) map.removeLayer(taiwanLayer);
+    if (typeof taiwanLayerBackup !== "undefined" && map.hasLayer(taiwanLayerBackup)) map.removeLayer(taiwanLayerBackup);
+    if (typeof amapLayer !== "undefined" && amapLayer !== taiwanLayer && amapLayer !== taiwanLayerBackup && map.hasLayer(amapLayer)) {
+      map.removeLayer(amapLayer);
+    }
+    if (typeof satelliteLayer !== "undefined" && map.hasLayer(satelliteLayer)) map.removeLayer(satelliteLayer);
+  } catch (e) {}
+
+  // 衛星優先
+  if (typeof satelliteOn !== "undefined" && satelliteOn && typeof satelliteLayer !== "undefined") {
+    satelliteLayer.addTo(map);
+    const btn = document.getElementById("btnSatellite");
+    if (btn) {
+      btn.classList.add("btn-green");
+      btn.classList.remove("btn-outline");
+      btn.textContent = "衛星圖（開）";
     }
   } else {
-    // Google 模式暫時仍使用 OSM 底圖（或之後可換成 Google 圖磚）
-    // 這裡先繼續用 taiwanLayer，重點在搜尋改用 Google
+    // 一定要有一層底圖
     taiwanLayer.addTo(map);
-    if (btnAmap) {
-      btnAmap.classList.add("btn-green");
-      btnAmap.classList.remove("btn-outline");
-    }
-    if (btnTaiwan) {
-      btnTaiwan.classList.add("btn-outline");
-      btnTaiwan.classList.remove("btn-green");
-    }
+  }
+
+  if (currentMapMode === "google") {
+    setModeButtonActive("btnModeGoogle");
+  } else {
+    setModeButtonActive("btnModeTaiwan");
+  }
+
+  if (typeof updateSearchCountLabel === "function") {
+    try { updateSearchCountLabel(); } catch (e) {}
   }
 
   setTimeout(function () {
@@ -5868,25 +6222,21 @@ function switchMapMode(mode) {
 }
 
 var btnModeTaiwan = document.getElementById("btnModeTaiwan");
-var btnModeAmap = document.getElementById("btnModeAmap");
+var btnModeGoogle = document.getElementById("btnModeGoogle");
 
 if (btnModeTaiwan) {
-  btnModeTaiwan.onclick = function () {
-    switchMapMode("taiwan");
-  };
+  btnModeTaiwan.onclick = function () { switchMapMode("taiwan"); };
+}
+if (btnModeGoogle) {
+  btnModeGoogle.onclick = function () { switchMapMode("google"); };
 }
 
-if (btnModeAmap) {
-  btnModeAmap.onclick = function () {
-    switchMapMode("amap");
-  };
-}
-
-// 預設台灣模式 + 更新次數顯示
 setTimeout(function () {
   switchMapMode("taiwan");
-  updateSearchCountLabel();
+  if (typeof updateSearchCountLabel === "function") updateSearchCountLabel();
 }, 200);
+
+
 
 
 /* =========================================================
@@ -5940,6 +6290,860 @@ document.getElementById(
     );
 
   };
+
+
+/* =========================================================
+   行走路線圖
+   自己：實線
+   其他人：虛線
+   目標：目前第一個集合點
+   ========================================================= */
+
+function clearAllRouteLines() {
+  Object.keys(routeLines).forEach(function (key) {
+    if (map.hasLayer(routeLines[key])) {
+      map.removeLayer(routeLines[key]);
+    }
+  });
+  routeLines = {};
+}
+
+function getActiveMeetingPoint() {
+  if (!waypoints || !waypoints.length) return null;
+  // 取第一個（seq 最小）集合點
+  return waypoints[0];
+}
+
+async function fetchRouteCoords(fromLat, fromLng, toLat, toLng) {
+  // OSRM 公開服務（步行）
+  const url =
+    "https://router.project-osrm.org/route/v1/foot/" +
+    fromLng + "," + fromLat + ";" +
+    toLng + "," + toLat +
+    "?overview=full&geometries=geojson";
+
+  try {
+    const res = await fetch(url);
+    if (!res.ok) return null;
+    const data = await res.json();
+    if (!data.routes || !data.routes.length) return null;
+
+    const coords = data.routes[0].geometry.coordinates.map(function (c) {
+      return [c[1], c[0]]; // geojson 是 [lng,lat] → leaflet [lat,lng]
+    });
+
+    const summary = {
+      distance: data.routes[0].distance, // meters
+      duration: data.routes[0].duration  // seconds
+    };
+
+    return { coords: coords, summary: summary };
+  } catch (e) {
+    console.error("路線取得失敗：", e);
+    return null;
+  }
+}
+
+function drawRouteLine(key, coords, isSelf, color) {
+  if (routeLines[key] && map.hasLayer(routeLines[key])) {
+    map.removeLayer(routeLines[key]);
+  }
+
+  if (!coords || coords.length < 2) return;
+
+  const line = L.polyline(coords, {
+    color: color || (isSelf ? "#1565c0" : "#7e57c2"),
+    weight: isSelf ? 5 : 4,
+    opacity: isSelf ? 0.9 : 0.7,
+    dashArray: isSelf ? null : "10, 10",  // 自己實線，其他人虛線
+    lineJoin: "round"
+  }).addTo(map);
+
+  routeLines[key] = line;
+}
+
+async function updateAllRoutes() {
+  const target = getActiveMeetingPoint();
+  if (!target || !Number.isFinite(target.lat) || !Number.isFinite(target.lng)) {
+    clearAllRouteLines();
+    return;
+  }
+
+  // 1. 自己的路線（實線）
+  if (myLat != null && myLng != null) {
+    const mine = await fetchRouteCoords(myLat, myLng, target.lat, target.lng);
+    if (mine) {
+      drawRouteLine("me", mine.coords, true, "#1565c0");
+    }
+  }
+
+  // 2. 其他家人的路線（虛線）
+  // peerMarkers 的 key 是 user_id，需要座標
+  // 從最近一次 loadPeers 的資料比較難拿，改從 DOM / 全域暫存
+  if (window._lastPeerRows && Array.isArray(window._lastPeerRows)) {
+    for (let i = 0; i < window._lastPeerRows.length; i++) {
+      const row = window._lastPeerRows[i];
+      if (!row || !row.user_id) continue;
+      if (me && String(row.user_id) === String(me.id)) continue;
+
+      const lat = Number(row.lat);
+      const lng = Number(row.lng);
+      if (!Number.isFinite(lat) || !Number.isFinite(lng)) continue;
+
+      // 用成員顏色（若有）
+      let color = "#7e57c2";
+      if (window.GroupLocationIdentifiers && row.color_id) {
+        try {
+          const ident = window.GroupLocationIdentifiers.createMemberIdentifier(row);
+          if (ident && ident.color) color = ident.color;
+        } catch (e) {}
+      }
+
+      const route = await fetchRouteCoords(lat, lng, target.lat, target.lng);
+      if (route) {
+        drawRouteLine("peer_" + row.user_id, route.coords, false, color);
+      }
+    }
+  }
+}
+
+function scheduleRouteUpdate() {
+  if (routeUpdateTimer) clearTimeout(routeUpdateTimer);
+  routeUpdateTimer = setTimeout(function () {
+    updateAllRoutes();
+  }, 1200);
+}
+
+
+
+
+/* =========================================================
+   開發者設定：臨時帳號（免驗證）
+   ========================================================= */
+
+// 把你的登入 email 加進這個清單（小寫）
+const DEVELOPER_EMAILS = [
+  "nl13741619@gmail.com",
+  "lingyihao@gmail.com"
+];
+
+function isDeveloper() {
+  if (!me) return false;
+  const email = (me.email || "").toLowerCase();
+  if (email && DEVELOPER_EMAILS.indexOf(email) !== -1) return true;
+  // 也可依 user id 判斷
+  const meta = me.user_metadata || {};
+  if (meta.is_developer === true || meta.role === "admin") return true;
+  return false;
+}
+
+function refreshAdminFab() {
+  const fab = document.getElementById("adminFab");
+  if (!fab) return;
+  fab.style.display = isDeveloper() ? "block" : "none";
+}
+
+setTimeout(function () {
+  const fab = document.getElementById("adminFab");
+  const panel = document.getElementById("adminPanel");
+  const btnClose = document.getElementById("btnCloseAdmin");
+  const btnCreate = document.getElementById("btnCreateTempUser");
+  const resultEl = document.getElementById("tempUserResult");
+
+  if (fab && panel) {
+    fab.onclick = function () {
+      panel.classList.toggle("show");
+    };
+  }
+  if (btnClose && panel) {
+    btnClose.onclick = function () {
+      panel.classList.remove("show");
+    };
+  }
+
+  if (btnCreate) {
+    btnCreate.onclick = async function () {
+      if (!isDeveloper()) {
+        alert("僅開發者可使用");
+        return;
+      }
+
+      const displayName = (document.getElementById("tempDisplayName").value || "").trim();
+      const loginId = (document.getElementById("tempLoginId").value || "").trim().toLowerCase().replace(/[^a-z0-9_]/g, "");
+      const password = document.getElementById("tempPassword").value || "";
+
+      if (!loginId || loginId.length < 3) {
+        alert("登入帳號至少 3 個英數字");
+        return;
+      }
+      if (!password || password.length < 6) {
+        alert("密碼至少 6 碼");
+        return;
+      }
+
+      resultEl.style.color = "#666";
+      resultEl.textContent = "建立中…";
+
+      try {
+        const { data, error } = await sb.functions.invoke("create-temp-user", {
+          body: {
+            login_id: loginId,
+            password: password,
+            display_name: displayName || loginId
+          }
+        });
+
+        if (error) throw new Error(error.message || "建立失敗");
+        if (data && data.error) throw new Error(data.error);
+
+        const loginEmail = (data && data.email) ? data.email : (loginId + "@temp.safereunion.local");
+
+        resultEl.style.color = "#166534";
+        resultEl.textContent =
+          "建立成功！請把下面資料給同學：\n\n" +
+          "登入 Email：\n" + loginEmail + "\n\n" +
+          "密碼：\n" + password + "\n\n" +
+          "暱稱：" + (displayName || loginId);
+
+        document.getElementById("tempPassword").value = "";
+      } catch (e) {
+        resultEl.style.color = "#b91c1c";
+        resultEl.textContent = "失敗：" + (e.message || e) +
+          "\n\n請確認已部署 Edge Function：create-temp-user";
+      }
+    };
+  }
+
+  // 登入狀態變更後顯示齒輪
+  setInterval(refreshAdminFab, 2000);
+  refreshAdminFab();
+}, 1200);
+
+
+/* =========================================================
+   抵達紀錄 + 下一站出發提醒
+   ========================================================= */
+
+let arrivalHistory = [];  // {waypointId, name, time, order}
+let currentFocusWaypointId = null;
+let nextDepartArrow = null;
+let arrivalCheckTimer = null;
+
+function arrivalStorageKey() {
+  const uid = (me && me.id) ? me.id : "guest";
+  return "arrival_history_" + roomId + "_" + uid;
+}
+
+function loadArrivalHistory() {
+  try {
+    const raw = localStorage.getItem(arrivalStorageKey());
+    arrivalHistory = raw ? JSON.parse(raw) : [];
+    if (!Array.isArray(arrivalHistory)) arrivalHistory = [];
+  } catch (e) {
+    arrivalHistory = [];
+  }
+}
+
+function saveArrivalHistory() {
+  try {
+    localStorage.setItem(arrivalStorageKey(), JSON.stringify(arrivalHistory));
+  } catch (e) {}
+}
+
+function renderArrivalList() {
+  const box = document.getElementById("arrivalList");
+  if (!box) return;
+
+  if (!arrivalHistory.length) {
+    box.innerHTML = '<div style="color:#888">尚無紀錄</div>';
+    return;
+  }
+
+  // 依時間排序
+  const sorted = arrivalHistory.slice().sort(function (a, b) {
+    return new Date(a.time) - new Date(b.time);
+  });
+
+  box.innerHTML = sorted.map(function (item, idx) {
+    const t = new Date(item.time).toLocaleString("zh-TW");
+    return (
+      '<div class="arrival-item">' +
+        '<div><b>#' + (idx + 1) + '</b> ' + escapeHtml(item.name || "我") +
+        '<div style="font-size:11px;color:#888">' + escapeHtml(item.place || "") + '</div></div>' +
+        '<div style="font-size:11px;color:#666">' + escapeHtml(t) + '</div>' +
+      '</div>'
+    );
+  }).join("");
+}
+
+function markArrivedAtWaypoint(w) {
+  if (!w || !w.id) return;
+  // 同一集合點只記一次
+  const exists = arrivalHistory.some(function (h) {
+    return String(h.waypointId) === String(w.id);
+  });
+  if (exists) return;
+
+  arrivalHistory.push({
+    waypointId: w.id,
+    name: (me && (me.user_metadata && me.user_metadata.full_name)) || "我",
+    place: w.title || ("集合點 #" + w.seq),
+    time: new Date().toISOString()
+  });
+  saveArrivalHistory();
+  renderArrivalList();
+}
+
+function distanceMeters(lat1, lng1, lat2, lng2) {
+  const R = 6371000;
+  const toRad = Math.PI / 180;
+  const dLat = (lat2 - lat1) * toRad;
+  const dLng = (lng2 - lng1) * toRad;
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(lat1 * toRad) * Math.cos(lat2 * toRad) *
+    Math.sin(dLng / 2) * Math.sin(dLng / 2);
+  return 2 * R * Math.asin(Math.sqrt(a));
+}
+
+function checkArrivalByDistance() {
+  if (myLat == null || myLng == null) return;
+  if (!waypoints || !waypoints.length) return;
+
+  // 檢查是否接近任一集合點（80 公尺內）
+  waypoints.forEach(function (w) {
+    const d = distanceMeters(myLat, myLng, w.lat, w.lng);
+    if (d <= 80) {
+      markArrivedAtWaypoint(w);
+    }
+  });
+
+  updateDepartBanner();
+}
+
+function getNextWaypointAfterArrived() {
+  if (!waypoints || waypoints.length < 2) return null;
+  // 找「已抵達的最後一個」的下一個
+  const arrivedIds = {};
+  arrivalHistory.forEach(function (h) {
+    arrivedIds[String(h.waypointId)] = true;
+  });
+
+  for (let i = 0; i < waypoints.length - 1; i++) {
+    if (arrivedIds[String(waypoints[i].id)]) {
+      const next = waypoints[i + 1];
+      if (!arrivedIds[String(next.id)]) {
+        return { current: waypoints[i], next: next };
+      }
+    }
+  }
+  // 若第一個都還沒抵達，不顯示下一站
+  return null;
+}
+
+function updateDepartBanner() {
+  const banner = document.getElementById("departBanner");
+  if (!banner) return;
+
+  const pair = getNextWaypointAfterArrived();
+  if (!pair) {
+    banner.classList.remove("show");
+    if (nextDepartArrow && map.hasLayer(nextDepartArrow)) {
+      map.removeLayer(nextDepartArrow);
+      nextDepartArrow = null;
+    }
+    return;
+  }
+
+  const next = pair.next;
+  const arriveStr = next.meet_at
+    ? new Date(next.meet_at).toLocaleString("zh-TW")
+    : "時間未定（發起人尚未設定）";
+
+  // 出發時間：若有 meet_at，提前 0 顯示為「請依發起人時間出發」
+  // 簡化：顯示下一站預計到達時間，並提醒出發
+  banner.innerHTML =
+    '<b>➡️ 前往下一集合點</b><br>' +
+    escapeHtml(next.title || ("集合點 #" + next.seq)) + '<br>' +
+    '<span style="color:#e65100">預計到達：' + escapeHtml(arriveStr) + '</span><br>' +
+    '<span style="font-size:11px;color:#666">請依發起人設定時間出發（地圖箭頭指向下一站）</span>';
+
+  banner.classList.add("show");
+
+  // 地圖箭頭：從目前位置指向下一站（簡化用 polyline 箭頭感）
+  if (myLat != null && myLng != null) {
+    if (nextDepartArrow && map.hasLayer(nextDepartArrow)) {
+      map.removeLayer(nextDepartArrow);
+    }
+    nextDepartArrow = L.polyline(
+      [[myLat, myLng], [next.lat, next.lng]],
+      {
+        color: "#ff9800",
+        weight: 4,
+        opacity: 0.85,
+        dashArray: "1, 8"
+      }
+    ).addTo(map);
+  }
+}
+
+// FAB 開關
+setTimeout(function () {
+  const fab = document.getElementById("arrivalFab");
+  const panel = document.getElementById("arrivalPanel");
+  const clearBtn = document.getElementById("btnClearArrivalLocal");
+
+  if (fab && panel) {
+    fab.onclick = function () {
+      panel.classList.toggle("show");
+      renderArrivalList();
+    };
+  }
+  if (clearBtn) {
+    clearBtn.onclick = function () {
+      if (!confirm("確定清除本機抵達紀錄？（不影響其他人）")) return;
+      arrivalHistory = [];
+      saveArrivalHistory();
+      renderArrivalList();
+      updateDepartBanner();
+    };
+  }
+
+  loadArrivalHistory();
+  renderArrivalList();
+
+  // 定期檢查是否抵達
+  if (arrivalCheckTimer) clearInterval(arrivalCheckTimer);
+  arrivalCheckTimer = setInterval(checkArrivalByDistance, 5000);
+}, 1000);
+
+
+
+function setSatellite(on) {
+  satelliteOn = !!on;
+  const btn = document.getElementById("btnSatellite");
+
+  if (satelliteOn) {
+    // 關掉一般底圖，開衛星
+    if (map.hasLayer(taiwanLayer)) map.removeLayer(taiwanLayer);
+    if (map.hasLayer(amapLayer)) map.removeLayer(amapLayer);
+    if (typeof taiwanLayerBackup !== "undefined" && map.hasLayer(taiwanLayerBackup)) {
+      map.removeLayer(taiwanLayerBackup);
+    }
+    if (!map.hasLayer(satelliteLayer)) {
+      satelliteLayer.addTo(map);
+    }
+    if (btn) {
+      btn.classList.add("btn-green");
+      btn.classList.remove("btn-outline");
+      btn.textContent = "衛星圖（開）";
+    }
+  } else {
+    if (map.hasLayer(satelliteLayer)) map.removeLayer(satelliteLayer);
+    if (btn) {
+      btn.classList.add("btn-outline");
+      btn.classList.remove("btn-green");
+      btn.textContent = "衛星圖";
+    }
+    // 恢復目前模式底圖
+    if (typeof switchMapMode === "function") {
+      switchMapMode(currentMapMode || "taiwan");
+    }
+  }
+
+  setTimeout(function () {
+    try { map.invalidateSize(); } catch (e) {}
+  }, 100);
+}
+
+setTimeout(function () {
+  const btnSat = document.getElementById("btnSatellite");
+  if (btnSat) {
+    btnSat.onclick = function () {
+      setSatellite(!satelliteOn);
+    };
+  }
+}, 300);
+
+
+/* =========================================================
+   長按地圖 → 大頭針定位
+   私人：黃色（只有自己看得到）
+   大家集合點：紅色（全部人看得到）
+   ========================================================= */
+
+function createPinIcon(color) {
+  // color: "yellow" | "red"
+  const emoji = color === "red" ? "📍" : "📍";
+  const filter =
+    color === "red"
+      ? "drop-shadow(0 0 0 #e53935) drop-shadow(0 2px 3px rgba(0,0,0,.4))"
+      : "drop-shadow(0 0 0 #f9a825) drop-shadow(0 2px 3px rgba(0,0,0,.4)) hue-rotate(5deg) saturate(2.2) brightness(1.15)";
+
+  return L.divIcon({
+    className: "pin-marker",
+    html:
+      '<div class="pin-emoji" style="filter:' + filter + '">' +
+      emoji +
+      "</div>",
+    iconSize: [36, 42],
+    iconAnchor: [18, 40],
+    popupAnchor: [0, -36]
+  });
+}
+
+function createColoredPinIcon(hexColor, label) {
+  // SVG pin for clearer color difference
+  const svg =
+    '<svg xmlns="http://www.w3.org/2000/svg" width="36" height="42" viewBox="0 0 36 42">' +
+    '<path d="M18 0C10.3 0 4 6.3 4 14c0 10.5 14 28 14 28s14-17.5 14-28C32 6.3 25.7 0 18 0z" fill="' + hexColor + '" stroke="#fff" stroke-width="2"/>' +
+    '<circle cx="18" cy="14" r="5" fill="#fff"/>' +
+    "</svg>";
+
+  return L.divIcon({
+    className: "pin-marker",
+    html: '<div style="width:36px;height:42px;filter:drop-shadow(0 2px 3px rgba(0,0,0,.4))">' + svg + "</div>",
+    iconSize: [36, 42],
+    iconAnchor: [18, 40],
+    popupAnchor: [0, -36]
+  });
+}
+
+function getPrivatePinsStorageKey() {
+  const uid = (me && me.id) ? me.id : "guest";
+  return "private_pins_" + roomId + "_" + uid;
+}
+
+function loadPrivatePinsFromStorage() {
+  try {
+    const raw = localStorage.getItem(getPrivatePinsStorageKey());
+    if (!raw) return [];
+    const arr = JSON.parse(raw);
+    return Array.isArray(arr) ? arr : [];
+  } catch (e) {
+    return [];
+  }
+}
+
+function savePrivatePinsToStorage() {
+  try {
+    const data = privatePins.map(function (p) {
+      return { id: p.id, lat: p.lat, lng: p.lng, title: p.title || "" };
+    });
+    localStorage.setItem(getPrivatePinsStorageKey(), JSON.stringify(data));
+  } catch (e) {}
+}
+
+function clearTempPin() {
+  if (tempPinMarker && map.hasLayer(tempPinMarker)) {
+    map.removeLayer(tempPinMarker);
+  }
+  tempPinMarker = null;
+  longPressLatLng = null;
+}
+
+function renderPrivatePins() {
+  // clear old
+  Object.keys(privatePinMarkers).forEach(function (key) {
+    if (map.hasLayer(privatePinMarkers[key])) {
+      map.removeLayer(privatePinMarkers[key]);
+    }
+  });
+  privatePinMarkers = {};
+
+  privatePins.forEach(function (p) {
+    const marker = L.marker([p.lat, p.lng], {
+      icon: createColoredPinIcon("#f9a825", "私人"),
+      draggable: true   // 私人大頭針只有自己看得到，可直接拖曳移動
+    }).addTo(map);
+
+    const popupHtml =
+      "<b>📍 私人定位點</b><br>" +
+      (p.title ? escapeHtml(p.title) + "<br>" : "") +
+      '<div style="font-size:11px;color:#888;margin:4px 0">長按或拖曳可移動位置</div>' +
+      '<button type="button" class="btn btn-outline" style="margin-top:6px;width:100%" data-pin-id="' +
+      p.id +
+      '">移除大頭針</button>';
+
+    marker.bindPopup(popupHtml);
+
+    marker.on("popupopen", function () {
+      const btn = document.querySelector('button[data-pin-id="' + p.id + '"]');
+      if (btn) {
+        btn.onclick = function () {
+          removePrivatePin(p.id);
+        };
+      }
+    });
+
+    // 拖曳結束 → 更新位置
+    marker.on("dragend", function (e) {
+      const pos = e.target.getLatLng();
+      p.lat = pos.lat;
+      p.lng = pos.lng;
+      // 同步陣列裡的資料
+      const found = privatePins.find(function (x) { return x.id === p.id; });
+      if (found) {
+        found.lat = pos.lat;
+        found.lng = pos.lng;
+      }
+      savePrivatePinsToStorage();
+    });
+
+    privatePinMarkers[p.id] = marker;
+  });
+}
+
+function removePrivatePin(id) {
+  privatePins = privatePins.filter(function (p) {
+    return p.id !== id;
+  });
+  savePrivatePinsToStorage();
+  renderPrivatePins();
+}
+
+function addPrivatePin(lat, lng) {
+  const id = "p_" + Date.now() + "_" + Math.floor(Math.random() * 10000);
+  privatePins.push({
+    id: id,
+    lat: lat,
+    lng: lng,
+    title: "私人定位"
+  });
+  savePrivatePinsToStorage();
+  renderPrivatePins();
+}
+
+async function addGroupPinAsWaypoint(lat, lng) {
+  // 集體集合點 = 紅色，寫入 meetup_waypoints，同群組的人都能看到
+  if (!me || !me.id) {
+    alert("請先登入後才能設定「集體集合點」（紅色）。\n黃色個人針不需登入。");
+    return;
+  }
+
+  if (!roomId) {
+    alert("缺少群組 roomId，無法建立集體集合點");
+    return;
+  }
+
+  if (!Number.isFinite(lat) || !Number.isFinite(lng)) {
+    alert("座標無效");
+    return;
+  }
+
+  const title = "集體集合點 " + (waypoints.length + 1);
+  const seq = waypoints.length
+    ? (Math.max.apply(null, waypoints.map(function (w) { return Number(w.seq) || 0; })) + 1)
+    : 1;
+
+  // 立刻放紅針
+  const tempRed = L.marker([lat, lng], {
+    icon: createColoredPinIcon("#e53935", "集合")
+  }).addTo(map);
+  tempRed.bindPopup("<b>📍 集體集合點</b><br>" + escapeHtml(title));
+
+  try {
+    const payload = {
+      room_id: roomId,
+      seq: seq,
+      title: title,
+      lat: lat,
+      lng: lng,
+      meet_at: null,
+      created_by: me.id
+    };
+
+    console.log("建立集體集合點", payload);
+
+    let result = await sb
+      .from("meetup_waypoints")
+      .insert(payload)
+      .select();
+
+    // 若 select 被 RLS 擋，再試一次只 insert
+    if (result.error) {
+      console.warn("insert+select 失敗，改試純 insert", result.error);
+      result = await sb.from("meetup_waypoints").insert(payload);
+    }
+
+    if (result.error) {
+      console.error("集體集合點失敗", result.error);
+      if (map.hasLayer(tempRed)) map.removeLayer(tempRed);
+      alert(
+        "無法建立紅色集體大頭針\n\n" +
+        result.error.message +
+        "\n\n請到 Supabase → meetup_waypoints → RLS\n" +
+        "新增 INSERT 政策：允許 authenticated 新增\n" +
+        "USING / WITH CHECK 可先設 true 測試"
+      );
+      return;
+    }
+
+    // 成功：重載集合點（正式紅針）
+    await loadWaypoints();
+    if (map.hasLayer(tempRed)) map.removeLayer(tempRed);
+
+    alert("已建立紅色集體集合點，群組成員都能看到。");
+
+  } catch (e) {
+    console.error(e);
+    if (map.hasLayer(tempRed)) map.removeLayer(tempRed);
+    alert("集體集合點建立例外：" + (e.message || e));
+  }
+}
+
+let pendingPinLatLng = null;
+
+function hidePinChoice() {
+  const mask = document.getElementById("pinChoiceMask");
+  if (mask) mask.classList.remove("show");
+}
+
+function showPinChoiceDialog(lat, lng) {
+  pendingPinLatLng = { lat: lat, lng: lng };
+  const mask = document.getElementById("pinChoiceMask");
+  if (mask) mask.classList.add("show");
+}
+
+function placeTempPin(latlng) {
+  clearTempPin();
+  longPressLatLng = latlng;
+
+  tempPinMarker = L.marker([latlng.lat, latlng.lng], {
+    icon: createColoredPinIcon("#90caf9", "暫定")
+  }).addTo(map);
+
+  showPinChoiceDialog(latlng.lat, latlng.lng);
+}
+
+// 綁定選擇按鈕
+setTimeout(function () {
+  const btnPrivate = document.getElementById("btnPinPrivate");
+  const btnGroup = document.getElementById("btnPinGroup");
+  const btnCancel = document.getElementById("btnPinCancel");
+
+  if (btnPrivate) {
+    btnPrivate.onclick = function () {
+      if (!pendingPinLatLng) return;
+      const lat = pendingPinLatLng.lat;
+      const lng = pendingPinLatLng.lng;
+      hidePinChoice();
+      clearTempPin();
+      addPrivatePin(lat, lng); // 黃色個人
+      pendingPinLatLng = null;
+    };
+  }
+
+  if (btnGroup) {
+    btnGroup.onclick = function () {
+      if (!pendingPinLatLng) return;
+      const lat = pendingPinLatLng.lat;
+      const lng = pendingPinLatLng.lng;
+      hidePinChoice();
+      clearTempPin();
+      addGroupPinAsWaypoint(lat, lng); // 紅色集體
+      pendingPinLatLng = null;
+    };
+  }
+
+  if (btnCancel) {
+    btnCancel.onclick = function () {
+      hidePinChoice();
+      clearTempPin();
+      pendingPinLatLng = null;
+    };
+  }
+}, 500);
+
+
+/* --- 長按偵測（手機 + 電腦）— 關閉系統複製／全選，改放大頭針 --- */
+
+let longPressStartPos = null;
+
+function cancelLongPress() {
+  if (longPressTimer) {
+    clearTimeout(longPressTimer);
+    longPressTimer = null;
+  }
+  longPressStartPos = null;
+}
+
+function latLngFromTouch(touch) {
+  const rect = map.getContainer().getBoundingClientRect();
+  const x = touch.clientX - rect.left;
+  const y = touch.clientY - rect.top;
+  return map.containerPointToLatLng([x, y]);
+}
+
+// 電腦右鍵
+map.getContainer().addEventListener("contextmenu", function (e) {
+  e.preventDefault();
+  e.stopPropagation();
+  const rect = map.getContainer().getBoundingClientRect();
+  const latlng = map.containerPointToLatLng([e.clientX - rect.left, e.clientY - rect.top]);
+  placeTempPin(latlng);
+  return false;
+}, { passive: false });
+
+// 手機長按
+map.getContainer().addEventListener("touchstart", function (e) {
+  if (!e.touches || e.touches.length !== 1) {
+    cancelLongPress();
+    return;
+  }
+  // 不要在按鈕／面板上觸發
+  if (e.target && e.target.closest && (e.target.closest(".panel") || e.target.closest(".header") || e.target.closest("button"))) {
+    return;
+  }
+
+  const t = e.touches[0];
+  longPressStartPos = {
+    x: t.clientX,
+    y: t.clientY,
+    latlng: latLngFromTouch(t)
+  };
+
+  longPressTimer = setTimeout(function () {
+    if (!longPressStartPos) return;
+    // 觸發時禁止系統選取／複製選單
+    try {
+      if (window.getSelection) window.getSelection().removeAllRanges();
+    } catch (err) {}
+    placeTempPin(longPressStartPos.latlng);
+    cancelLongPress();
+  }, 550);
+}, { passive: true });
+
+map.getContainer().addEventListener("touchmove", function (e) {
+  if (!longPressTimer || !longPressStartPos || !e.touches || !e.touches.length) return;
+  const t = e.touches[0];
+  const dx = t.clientX - longPressStartPos.x;
+  const dy = t.clientY - longPressStartPos.y;
+  if (Math.abs(dx) > 10 || Math.abs(dy) > 10) {
+    cancelLongPress();
+  }
+}, { passive: true });
+
+map.getContainer().addEventListener("touchend", cancelLongPress, { passive: true });
+map.getContainer().addEventListener("touchcancel", cancelLongPress, { passive: true });
+
+// 禁止地圖上的選取開始
+map.getContainer().addEventListener("selectstart", function (e) {
+  e.preventDefault();
+  return false;
+}, { passive: false });
+
+
+// 登入後載入私人大頭針
+function initPrivatePins() {
+  privatePins = loadPrivatePinsFromStorage();
+  renderPrivatePins();
+}
+
+// 延遲一點等 me 可能已就緒
+setTimeout(initPrivatePins, 800);
+
+
 
 
 /* =========================================================
