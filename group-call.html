@@ -183,7 +183,7 @@ body.chat-open .hint{display:none}
 <script>
 (function () {
   var SUPABASE_URL = "https://perfsipperncvjocznhl.supabase.co";
-  var SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBlcmZzaXBwZXJuY3Zqb2N6bmhsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODYwMTUyMzAsImV4cCI6MjEwMTU5MTIzMH0.I7vXkV247kAzRJ0RigDZt3Hzn8KJDyMc6o9E3oHJZoY";
+  var SUPABASE_KEY = "sb_publishable_qpqAwj49L6HcWqWTnNsTxw_oBEauWBA";
   var MAX_VIDEO = 8;
 
   var params = new URLSearchParams(location.search);
@@ -370,9 +370,14 @@ body.chat-open .hint{display:none}
   async function ensureMedia() {
     if (textOnly) return null;
     if (myStream) return myStream;
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      throw new Error("此瀏覽器不支援麥克風");
+    }
+    document.getElementById("roomSub").textContent = "請求麥克風權限…";
     myStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
     myStream.getAudioTracks().forEach(function (t) { t.enabled = false; });
     micOn = false; setMicUi();
+    document.getElementById("roomSub").textContent = "麥克風已就緒（預設靜音）";
     return myStream;
   }
 
@@ -479,10 +484,19 @@ body.chat-open .hint{display:none}
   }
 
   async function joinRoom() {
-    var session = await sb.auth.getSession();
+    document.getElementById("roomSub").textContent = "檢查登入…";
+    var session;
+    try {
+      session = await sb.auth.getSession();
+    } catch (e) {
+      document.getElementById("roomSub").textContent = "登入檢查失敗";
+      alert("無法檢查登入：" + (e.message || e));
+      return;
+    }
     me = session.data && session.data.session && session.data.session.user;
     if (!me) {
-      alert("請先登入");
+      document.getElementById("roomSub").textContent = "尚未登入";
+      alert("請先登入再進入群組通話");
       location.href = "login.html";
       return;
     }
@@ -507,13 +521,32 @@ body.chat-open .hint{display:none}
       .on("presence", { event: "join" }, function () { applyPresenceState(channel.presenceState()); })
       .on("presence", { event: "leave" }, function () { applyPresenceState(channel.presenceState()); });
 
+    document.getElementById("roomSub").textContent = "連線會議頻道…";
     await channel.subscribe(async function (status) {
+      console.log("group-call channel:", status);
       if (status === "SUBSCRIBED") {
         try { localStorage.setItem("safe_reunion_in_meeting_" + String(roomId), "1"); } catch (e) {}
-        await trackPresence();
-        startMeetingAliveBroadcast();
-        document.getElementById("roomSub").textContent = textOnly ? "已以打字加入" : "已進入通話房間";
+        try { await trackPresence(); } catch (e) { console.warn(e); }
+        try { startMeetingAliveBroadcast(); } catch (e) { console.warn(e); }
+        try {
+          await channel.send({
+            type: "broadcast",
+            event: "meeting_start",
+            payload: {
+              room_id: String(roomId),
+              starter_id: me.id,
+              starter_name: myName,
+              mode: mode,
+              at: Date.now()
+            }
+          });
+        } catch (e) { console.warn(e); }
+        document.getElementById("roomSub").textContent = textOnly ? "已以打字加入" : "已進入會議（可開麥／視訊）";
         updateTop(); renderGrid(); renderMemberList();
+      } else if (status === "CHANNEL_ERROR") {
+        document.getElementById("roomSub").textContent = "會議頻道連線失敗";
+      } else if (status === "TIMED_OUT") {
+        document.getElementById("roomSub").textContent = "會議頻道逾時";
       }
     });
 
@@ -549,7 +582,12 @@ body.chat-open .hint{display:none}
         await channel.send({
           type: "broadcast",
           event: "meeting_alive",
-          payload: { room_id: String(roomId), count: Math.max(1, n), at: Date.now() }
+          payload: {
+            room_id: String(roomId),
+            count: Math.max(1, n),
+            starter_name: myName,
+            at: Date.now()
+          }
         });
       } catch (e) {}
     }
@@ -620,7 +658,11 @@ body.chat-open .hint{display:none}
   };
 
   updateTop(); setMicUi(); setCamUi(); renderChat();
-  joinRoom();
+  console.log("group-call boot", { mode: mode, roomId: roomId, roomName: roomName, textOnly: textOnly });
+  joinRoom().catch(function (e) {
+    console.error(e);
+    document.getElementById("roomSub").textContent = "啟動失敗：" + (e.message || e);
+  });
 })();
 </script>
 </body>
