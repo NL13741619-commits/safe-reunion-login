@@ -713,6 +713,62 @@ input[type="file"] {
   font-size: 14px;
 }
 
+
+/* 會議進行中橫幅（僅群組） */
+.meeting-banner {
+  display: none;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  background: #e8f5e9;
+  border-bottom: 1px solid #c8e6c9;
+  padding: 8px 12px;
+  font-size: 13px;
+  color: #1b5e20;
+  position: sticky;
+  top: 52px;
+  z-index: 90;
+}
+.meeting-banner.show {
+  display: flex;
+}
+.meeting-banner .mb-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 700;
+  min-width: 0;
+}
+.meeting-banner .mb-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #06C755;
+  box-shadow: 0 0 6px #06C755;
+  flex-shrink: 0;
+}
+.meeting-banner .mb-btns {
+  display: flex;
+  gap: 6px;
+  flex-shrink: 0;
+}
+.meeting-banner button {
+  border: 0;
+  border-radius: 999px;
+  padding: 6px 14px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  background: #06C755;
+  color: #fff;
+}
+.meeting-banner button.secondary {
+  background: #1565c0;
+}
+.meeting-banner button.exit {
+  background: #e53935;
+}
+
 </style>
 
 </head>
@@ -774,6 +830,18 @@ input[type="file"] {
         
   </div>
 
+</div>
+
+
+<div class="meeting-banner" id="meetingBanner">
+  <div class="mb-left">
+    <span class="mb-dot"></span>
+    <span id="meetingBannerText">會議進行中</span>
+  </div>
+  <div class="mb-btns">
+    <button type="button" class="secondary" id="btnMeetingText">打字</button>
+    <button type="button" id="btnMeetingJoin">進入</button>
+  </div>
 </div>
 
 
@@ -3738,33 +3806,219 @@ function goCall(
   var to =
     peerIdFromRoom();
 
+  var url;
 
-  var url =
-    'call.html?mode=' +
-    encodeURIComponent(
-      mode
-    ) +
-    '&name=' +
-    encodeURIComponent(
-      roomName
-    );
+  /*
+    群組 → group-call.html
+    私訊 1 對 1 → call.html（測通版，不改）
+  */
+  if (isGroup) {
 
+    url =
+      'group-call.html?mode=' +
+      encodeURIComponent(mode) +
+      '&name=' +
+      encodeURIComponent(roomName) +
+      '&room_id=' +
+      encodeURIComponent(String(roomId)) +
+      '&id=' +
+      encodeURIComponent(String(roomId));
 
-  if (to) {
+  } else {
 
-    url +=
-      '&to=' +
-      encodeURIComponent(
-        to
-      );
+    url =
+      'call.html?mode=' +
+      encodeURIComponent(mode) +
+      '&name=' +
+      encodeURIComponent(roomName);
+
+    if (to) {
+
+      url +=
+        '&to=' +
+        encodeURIComponent(to);
+
+    }
 
   }
-
 
   location.href =
     url;
 
 }
+
+
+/* =====================================================
+   群組會議進行中橫幅
+===================================================== */
+
+var meetingChannel = null;
+var meetingActive = false;
+
+function meetingFlagKey() {
+  return 'safe_reunion_in_meeting_' + String(roomId || '');
+}
+
+function updateMeetingBanner(active, count) {
+  meetingActive = !!active;
+  var banner = document.getElementById('meetingBanner');
+  var btn = document.getElementById('btnMeetingJoin');
+  var text = document.getElementById('meetingBannerText');
+  if (!banner || !btn || !text) return;
+
+  if (!isGroup) {
+    banner.classList.remove('show');
+    return;
+  }
+
+  if (active) {
+    banner.classList.add('show');
+    text.textContent =
+      '會議進行中' +
+      (count ? '（' + count + ' 人）' : '');
+    var inLocal = false;
+    try {
+      inLocal = localStorage.getItem(meetingFlagKey()) === '1';
+    } catch (e) {}
+    if (inLocal) {
+      btn.textContent = '退出';
+      btn.classList.add('exit');
+    } else {
+      btn.textContent = '進入';
+      btn.classList.remove('exit');
+    }
+  } else {
+    banner.classList.remove('show');
+    try {
+      localStorage.removeItem(meetingFlagKey());
+    } catch (e) {}
+  }
+}
+
+async function startMeetingWatch() {
+  if (!isGroup || !roomId || !supabase || !myUser) return;
+
+  try {
+    if (meetingChannel) {
+      try { supabase.removeChannel(meetingChannel); } catch (e) {}
+      meetingChannel = null;
+    }
+
+    if (window._meetingPollTimer) {
+      clearInterval(window._meetingPollTimer);
+      window._meetingPollTimer = null;
+    }
+
+    meetingChannel = supabase.channel(
+      'group-call:' + String(roomId)
+    );
+
+    function countOnlineFromPresence() {
+      var state = meetingChannel.presenceState() || {};
+      var count = 0;
+      var seen = {};
+      Object.keys(state).forEach(function (k) {
+        var metas = state[k] || [];
+        metas.forEach(function (m) {
+          if (!m || !m.online) return;
+          var uid = m.user_id || k;
+          if (seen[uid]) return;
+          seen[uid] = true;
+          count++;
+        });
+      });
+      return count;
+    }
+
+    function refreshFromPresence() {
+      try {
+        var count = countOnlineFromPresence();
+        // 只要還有人在會議中，就顯示橫幅，晚到的人也能「進入」
+        updateMeetingBanner(count > 0, count);
+      } catch (e) {
+        console.warn(e);
+      }
+    }
+
+    meetingChannel
+      .on('presence', { event: 'sync' }, refreshFromPresence)
+      .on('presence', { event: 'join' }, refreshFromPresence)
+      .on('presence', { event: 'leave' }, refreshFromPresence)
+      .on('broadcast', { event: 'meeting_alive' }, function (payload) {
+        // 會議頁定期廣播：即使 presence 偶發延遲，橫幅仍維持
+        var p = payload && payload.payload ? payload.payload : payload;
+        var n = p && p.count != null ? p.count : 1;
+        updateMeetingBanner(true, n);
+      })
+      .on('broadcast', { event: 'meeting_end' }, function () {
+        updateMeetingBanner(false, 0);
+      });
+
+    await meetingChannel.subscribe(function (status) {
+      console.log('Meeting watch:', status);
+      if (status === 'SUBSCRIBED') {
+        refreshFromPresence();
+      }
+    });
+
+    // 輪詢備援：晚進聊天室的人也能很快看到進行中會議
+    window._meetingPollTimer = setInterval(function () {
+      if (!meetingChannel) return;
+      refreshFromPresence();
+    }, 2000);
+
+  } catch (e) {
+    console.warn('startMeetingWatch', e);
+  }
+}
+
+function openGroupMeeting(opts) {
+  opts = opts || {};
+  try {
+    localStorage.setItem(meetingFlagKey(), '1');
+  } catch (e) {}
+  var url =
+    'group-call.html?mode=' +
+    encodeURIComponent(opts.mode || 'audio') +
+    '&name=' +
+    encodeURIComponent(roomName) +
+    '&room_id=' +
+    encodeURIComponent(String(roomId)) +
+    '&id=' +
+    encodeURIComponent(String(roomId));
+  if (opts.textonly) url += '&textonly=1';
+  location.href = url;
+}
+
+function bindMeetingBannerButtons() {
+  var btn = document.getElementById('btnMeetingJoin');
+  var btnText = document.getElementById('btnMeetingText');
+  if (btn) {
+    btn.onclick = function () {
+      if (!meetingActive) return;
+      var inLocal = false;
+      try {
+        inLocal = localStorage.getItem(meetingFlagKey()) === '1';
+      } catch (e) {}
+      if (inLocal) {
+        // 退出：清除旗標並進入通話頁讓使用者掛斷（或直接回聊天）
+        try { localStorage.removeItem(meetingFlagKey()); } catch (e) {}
+        openGroupMeeting({ mode: 'audio' });
+        return;
+      }
+      openGroupMeeting({ mode: 'audio' });
+    };
+  }
+  if (btnText) {
+    btnText.onclick = function () {
+      if (!meetingActive) return;
+      openGroupMeeting({ mode: 'audio', textonly: true });
+    };
+  }
+}
+
+bindMeetingBannerButtons();
+
 
 
 document.getElementById(
@@ -5606,6 +5860,12 @@ async function initRealtime() {
       await loadSOS();
 
       subscribeSOS();
+
+      try {
+        await startMeetingWatch();
+      } catch (e) {
+        console.warn(e);
+      }
 
     }
 
