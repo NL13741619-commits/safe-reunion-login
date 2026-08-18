@@ -7,41 +7,105 @@
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-      background: #f5f5f5;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Noto Sans TC", sans-serif;
       min-height: 100vh;
       display: flex;
       align-items: center;
       justify-content: center;
       padding: 20px;
+      color: #f2f2f2;
+      background:
+        radial-gradient(ellipse at 20% 10%, rgba(180, 0, 0, 0.35), transparent 45%),
+        radial-gradient(ellipse at 80% 90%, rgba(40, 40, 40, 0.9), transparent 50%),
+        linear-gradient(145deg, #0a0a0a 0%, #1a0505 35%, #0d0d0d 60%, #1c1c1c 100%);
+      background-attachment: fixed;
+      position: relative;
+      overflow-x: hidden;
+    }
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      background-image:
+        repeating-linear-gradient(
+          0deg,
+          rgba(255,255,255,0.03) 0px,
+          rgba(255,255,255,0.03) 1px,
+          transparent 1px,
+          transparent 3px
+        ),
+        repeating-linear-gradient(
+          90deg,
+          rgba(255,255,255,0.02) 0px,
+          rgba(255,255,255,0.02) 1px,
+          transparent 1px,
+          transparent 4px
+        );
+      opacity: 0.35;
+      mix-blend-mode: overlay;
+    }
+    body::after {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      background:
+        radial-gradient(circle at 50% 120%, rgba(200, 16, 16, 0.25), transparent 55%),
+        linear-gradient(to bottom, transparent 0%, rgba(0,0,0,0.55) 100%);
     }
     .card {
-      background: white;
-      border-radius: 20px;
+      position: relative;
+      z-index: 1;
+      background: linear-gradient(180deg, rgba(28,28,28,0.92), rgba(12,12,12,0.95));
+      border-radius: 18px;
       padding: 32px 24px;
       width: 100%;
       max-width: 380px;
-      box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+      border: 1px solid rgba(180, 180, 180, 0.25);
+      box-shadow:
+        0 0 0 1px rgba(0,0,0,0.8),
+        0 12px 40px rgba(0,0,0,0.65),
+        0 0 40px rgba(160, 0, 0, 0.15);
+      backdrop-filter: blur(8px);
     }
-    h1 { text-align: center; font-size: 22px; margin-bottom: 6px; }
-    .sub { text-align: center; color: #888; font-size: 14px; margin-bottom: 28px; }
+    h1 {
+      text-align: center;
+      font-size: 24px;
+      margin-bottom: 6px;
+      letter-spacing: 0.08em;
+      color: #f5f5f5;
+      text-shadow: 0 0 12px rgba(200, 0, 0, 0.35);
+    }
+    .sub {
+      text-align: center;
+      color: #a0a0a0;
+      font-size: 14px;
+      margin-bottom: 28px;
+    }
     input {
       width: 100%;
       padding: 14px 16px;
-      border: 1px solid #e0e0e0;
+      border: 1px solid #3a3a3a;
       border-radius: 12px;
       font-size: 15px;
       margin-bottom: 12px;
       outline: none;
+      background: #141414;
+      color: #f0f0f0;
     }
-    input:focus { border-color: #06C755; }
+    input::placeholder { color: #777; }
+    input:focus {
+      border-color: #c01010;
+      box-shadow: 0 0 0 2px rgba(192, 16, 16, 0.25);
+    }
     .remember {
       display: flex;
       align-items: center;
       gap: 8px;
       margin: 8px 0 20px;
       font-size: 14px;
-      color: #555;
+      color: #bdbdbd;
     }
     .remember input { width: auto; margin: 0; }
     .btn {
@@ -49,20 +113,27 @@
       padding: 14px;
       border-radius: 12px;
       font-size: 16px;
-      font-weight: 600;
+      font-weight: 700;
       border: none;
       margin-bottom: 12px;
       cursor: pointer;
+      letter-spacing: 0.04em;
     }
-    .btn-green { background: #06C755; color: white; }
+    .btn-green {
+      background: linear-gradient(180deg, #d41818, #8b0000);
+      color: #fff;
+      box-shadow: 0 4px 16px rgba(139, 0, 0, 0.45);
+    }
+    .btn-green:active { transform: scale(0.99); }
     .btn-outline {
-      background: white;
-      border: 1px solid #ddd;
-      color: #333;
+      background: transparent;
+      border: 1px solid #555;
+      color: #e0e0e0;
     }
+    .btn-outline:active { background: rgba(255,255,255,0.06); }
     .divider {
       text-align: center;
-      color: #aaa;
+      color: #777;
       font-size: 13px;
       margin: 16px 0;
     }
@@ -71,7 +142,12 @@
       margin-top: 20px;
       font-size: 14px;
     }
-    .links a { color: #06C755; text-decoration: none; margin: 0 8px; }
+    .links a {
+      color: #e0e0e0;
+      text-decoration: none;
+      margin: 0 8px;
+      border-bottom: 1px solid rgba(192,16,16,0.5);
+    }
     .status {
       margin-top: 16px;
       padding: 12px;
@@ -80,20 +156,20 @@
       display: none;
       word-break: break-all;
     }
-    .status.ok { background: #e8f5e9; color: #2e7d32; display: block; }
-    .status.err { background: #fdecea; color: #c62828; display: block; }
+    .status.ok { background: rgba(46, 125, 50, 0.25); color: #a5d6a7; display: block; }
+    .status.err { background: rgba(198, 40, 40, 0.25); color: #ef9a9a; display: block; }
   </style>
 </head>
 <body>
   <div class="card">
     <h1>安全團聚</h1>
-    <div class="sub">登入你的帳號</div>
+    <div class="sub">可用短帳號或 Email 登入</div>
 
-    <input type="email" id="email" placeholder="Email">
+    <input type="text" id="email" placeholder="帳號 或 Email" autocomplete="username">
     <input type="password" id="password" placeholder="密碼">
 
     <label class="remember">
-      <input type="checkbox" id="remember"> 記住我（15 天）
+      <input type="checkbox" id="remember"> 記住帳號 15 天（保持勾選直到到期或取消）
     </label>
 
     <button class="btn btn-green" id="btnLogin">登入</button>
@@ -101,7 +177,6 @@
     <div class="divider">或使用以下方式</div>
 
     <button class="btn btn-outline" id="btnGoogle">用 Google 登入</button>
-    <button class="btn btn-outline" id="btnLine">用 LINE 登入</button>
 
     <div class="links">
       <a href="register.html">註冊新帳號</a>
@@ -119,7 +194,7 @@
         el.textContent = msg;
         el.className = 'status ' + (isError ? 'err' : 'ok');
       }
-      alert(msg);
+      // 不再用 alert，避免還要手動按關閉
     }
 
     window.addEventListener('DOMContentLoaded', function () {
@@ -132,42 +207,117 @@
       const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBlcmZzaXBwZXJuY3Zqb2N6bmhsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODYwMTUyMzAsImV4cCI6MjEwMTU5MTIzMH0.I7vXkV247kAzRJ0RigDZt3Hzn8KJDyMc6o9E3oHJZoY';
       const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-      function setRemember(days) {
-        if (days > 0) {
-          localStorage.setItem('remember_until', Date.now() + days * 24 * 60 * 60 * 1000);
-        } else {
-          localStorage.removeItem('remember_until');
+      var REMEMBER_DAYS = 15;
+      var KEY_UNTIL = 'safe_reunion_remember_until';
+      var KEY_ACCOUNT = 'safe_reunion_remember_account';
+      var KEY_PASSWORD = 'safe_reunion_remember_password';
+      var KEY_FLAG = 'safe_reunion_remember_flag';
+
+      function clearRemember() {
+        localStorage.removeItem(KEY_UNTIL);
+        localStorage.removeItem(KEY_ACCOUNT);
+        localStorage.removeItem(KEY_PASSWORD);
+        localStorage.removeItem(KEY_FLAG);
+      }
+
+      function saveRemember(account, password) {
+        var until = Date.now() + REMEMBER_DAYS * 24 * 60 * 60 * 1000;
+        localStorage.setItem(KEY_UNTIL, String(until));
+        localStorage.setItem(KEY_ACCOUNT, account);
+        localStorage.setItem(KEY_PASSWORD, password);
+        localStorage.setItem(KEY_FLAG, '1');
+      }
+
+      function loadRemember() {
+        var until = parseInt(localStorage.getItem(KEY_UNTIL) || '0', 10);
+        var flag = localStorage.getItem(KEY_FLAG);
+        if (!flag || !until || Date.now() > until) {
+          clearRemember();
+          return null;
         }
+        return {
+          account: localStorage.getItem(KEY_ACCOUNT) || '',
+          password: localStorage.getItem(KEY_PASSWORD) || ''
+        };
+      }
+
+      // 進入頁面：若 15 天內有勾選過，自動填入並保持勾選
+      (function restoreRemember() {
+        var saved = loadRemember();
+        var cb = document.getElementById('remember');
+        var acc = document.getElementById('email');
+        var pwd = document.getElementById('password');
+        if (saved) {
+          if (cb) cb.checked = true;
+          if (acc && saved.account) acc.value = saved.account;
+          if (pwd && saved.password) pwd.value = saved.password;
+        } else {
+          if (cb) cb.checked = false;
+        }
+      })();
+
+      // 自己取消勾選 → 立刻忘掉帳號
+      var rememberEl = document.getElementById('remember');
+      if (rememberEl) {
+        rememberEl.addEventListener('change', function () {
+          if (!rememberEl.checked) {
+            clearRemember();
+          }
+        });
       }
 
       document.getElementById('btnLogin').onclick = async function () {
-        const email = document.getElementById('email').value.trim();
+        const raw = document.getElementById('email').value.trim();
         const password = document.getElementById('password').value;
         const remember = document.getElementById('remember').checked;
 
-        if (!email || !password) {
-          showStatus('請輸入 Email 和密碼', true);
+        if (!raw || !password) {
+          showStatus('請輸入帳號（或 Email）和密碼', true);
           return;
+        }
+
+        // 短帳號 → 自動轉成臨時信箱格式（與建立臨時帳號一致）
+        var email = raw;
+        if (raw.indexOf('@') === -1) {
+          var id = raw.toLowerCase().replace(/[^a-z0-9_]/g, '');
+          email = id + '@temp.safereunion.app';
         }
 
         showStatus('登入中…');
 
         try {
-          const { data, error } = await supabase.auth.signInWithPassword({
+          var result = await supabase.auth.signInWithPassword({
             email: email,
             password: password
           });
 
-          if (error) {
-            showStatus('登入失敗：' + error.message, true);
+          // 若短帳號失敗，再試舊格式 @example.com（相容之前建的帳號）
+          if (result.error && raw.indexOf('@') === -1) {
+            var id2 = raw.toLowerCase().replace(/[^a-z0-9_]/g, '');
+            var result2 = await supabase.auth.signInWithPassword({
+              email: id2 + '@example.com',
+              password: password
+            });
+            if (!result2.error) {
+              result = result2;
+            }
+          }
+
+          if (result.error) {
+            showStatus('登入失敗：' + result.error.message, true);
             return;
           }
 
-          setRemember(remember ? 15 : 0);
+          // 勾選：記住 15 天（帳號+密碼+勾選狀態）
+          // 未勾選：清除
+          if (remember) {
+            saveRemember(raw, password);
+          } else {
+            clearRemember();
+          }
+
           showStatus('登入成功，正在進入…');
-          setTimeout(function () {
-            location.href = 'home.html';
-          }, 600);
+          location.href = 'home.html';
         } catch (e) {
           showStatus('發生錯誤：' + e.message, true);
         }
@@ -179,14 +329,6 @@
           options: { redirectTo: 'https://nl13741619-commits.github.io/safe-reunion-login/home.html' }
         });
         if (error) showStatus('Google 失敗：' + error.message, true);
-      };
-
-      document.getElementById('btnLine').onclick = async function () {
-        const { error } = await supabase.auth.signInWithOAuth({
-          provider: 'CUSTOM:LINE',
-          options: { redirectTo: 'https://nl13741619-commits.github.io/safe-reunion-login/home.html' }
-        });
-        if (error) showStatus('LINE 失敗：' + error.message, true);
       };
 
       document.getElementById('btnForgot').onclick = async function (e) {
@@ -214,3 +356,4 @@
   </script>
 </body>
 </html>
+
