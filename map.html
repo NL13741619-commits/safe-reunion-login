@@ -115,6 +115,13 @@ body {
 
   box-shadow:
     0 2px 10px rgba(0,0,0,.22);
+
+  /* 加強鎖定，減少手機瀏覽器晃動 */
+  transform: translateZ(0);
+  -webkit-transform: translateZ(0);
+  will-change: transform;
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
 }
 
 
@@ -920,6 +927,11 @@ body.navigation-mode .navigation-info {
 }
 
 
+
+.my-location-arrow {
+  background: transparent !important;
+  border: none !important;
+}
 </style>
 
 </head>
@@ -1170,6 +1182,9 @@ body.navigation-mode .navigation-info {
 
   <div class="list-title">
     地圖模式
+    <span id="searchCountLabel" style="float:right;font-size:12px;color:#666;font-weight:normal">
+      搜尋：0 / 10000
+    </span>
   </div>
 
   <div class="row" style="margin-bottom:12px;">
@@ -1177,7 +1192,7 @@ body.navigation-mode .navigation-info {
       台灣
     </button>
     <button type="button" class="btn btn-outline" id="btnModeAmap" style="flex:1">
-      高德
+      Google
     </button>
   </div>
 
@@ -2149,13 +2164,22 @@ function drawCameraMarkers() {
           {
 
             radius:
-              5,
+              8,
 
             weight:
-              1,
+              3,
+
+            color:
+              "#e53935",
+
+            fillColor:
+              "transparent",
 
             fillOpacity:
-              .8
+              0,
+
+            opacity:
+              0.95
 
           }
 
@@ -2987,15 +3011,32 @@ function onPosition(
 
 
   /* -------------------------------------------------------
-     我的定位標記
+     我的定位標記（方向箭頭）
      ------------------------------------------------------- */
+
+  const headingDeg = Number.isFinite(heading) ? heading : 0;
+
+  const arrowHtml =
+    '<div style="' +
+      'width:36px;height:36px;' +
+      'display:flex;align-items:center;justify-content:center;' +
+      'transform:rotate(' + headingDeg + 'deg);' +
+      'filter:drop-shadow(0 1px 3px rgba(0,0,0,.45));' +
+    '">' +
+      '<div style="' +
+        'width:0;height:0;' +
+        'border-left:10px solid transparent;' +
+        'border-right:10px solid transparent;' +
+        'border-bottom:22px solid #06C755;' +
+      '"></div>' +
+    '</div>';
 
   if (
     !myMarker
   ) {
 
     myMarker =
-      L.circleMarker(
+      L.marker(
 
         [
           myLat,
@@ -3003,19 +3044,13 @@ function onPosition(
         ],
 
         {
-
-          radius:
-            8,
-
-          color:
-            "#06C755",
-
-          fillColor:
-            "#06C755",
-
-          fillOpacity:
-            .95
-
+          icon: L.divIcon({
+            className: "my-location-arrow",
+            html: arrowHtml,
+            iconSize: [36, 36],
+            iconAnchor: [18, 18]
+          }),
+          zIndexOffset: 1000
         }
 
       )
@@ -3031,6 +3066,15 @@ function onPosition(
       myLat,
       myLng
     ]);
+
+    // 更新箭頭方向
+    const icon = L.divIcon({
+      className: "my-location-arrow",
+      html: arrowHtml,
+      iconSize: [36, 36],
+      iconAnchor: [18, 18]
+    });
+    myMarker.setIcon(icon);
 
   }
 
@@ -5588,8 +5632,39 @@ async function deleteWp(
 
 
 /* =========================================================
-   31. 搜尋地址（支援台灣 / 高德雙模式）
+   31. 搜尋地址（台灣 Nominatim / Google Edge Function）
    ========================================================= */
+
+const GOOGLE_SEARCH_LIMIT = 9000;   // 達到此次數自動切回台灣模式
+
+function getSearchCountKey() {
+  const now = new Date();
+  return "google_search_count_" + now.getFullYear() + "_" + (now.getMonth() + 1);
+}
+
+function getSearchCount() {
+  return parseInt(localStorage.getItem(getSearchCountKey()) || "0", 10);
+}
+
+function increaseSearchCount() {
+  const key = getSearchCountKey();
+  const count = getSearchCount() + 1;
+  localStorage.setItem(key, String(count));
+  updateSearchCountLabel();
+  return count;
+}
+
+function updateSearchCountLabel() {
+  const el = document.getElementById("searchCountLabel");
+  if (!el) return;
+  const count = getSearchCount();
+  el.textContent = "搜尋：" + count + " / 10000";
+  if (count >= GOOGLE_SEARCH_LIMIT) {
+    el.style.color = "#c62828";
+  } else {
+    el.style.color = "#666";
+  }
+}
 
 async function searchPlace() {
 
@@ -5609,11 +5684,15 @@ async function searchPlace() {
 
     let results = [];
 
-    if (currentMapMode === "taiwan") {
-      // ===== 台灣模式：Nominatim（加強精準版）=====
-      const viewbox = "118.0,21.5,122.5,25.5";
+    // 如果已經達到上限，強制使用台灣模式
+    if (currentMapMode === "amap" && getSearchCount() >= GOOGLE_SEARCH_LIMIT) {
+      alert("本月 Google 搜尋已達 9000 次上限，已自動切換回台灣地圖。");
+      switchMapMode("taiwan");
+    }
 
-      // 自動補上「台灣」提高命中率與精準度
+    if (currentMapMode === "taiwan") {
+      // ===== 台灣模式：Nominatim =====
+      const viewbox = "118.0,21.5,122.5,25.5";
       let query = q;
       if (!/台灣|臺灣|台|臺/.test(q)) {
         query = q + " 台灣";
@@ -5651,34 +5730,28 @@ async function searchPlace() {
       });
 
     } else {
-      // ===== 高德模式 =====
-      if (!AMAP_KEY) {
-        box.innerHTML = '<div style="padding:10px;color:#c62828;font-size:12px">尚未設定高德 Key，無法使用高德搜尋。請先在程式最上方填入 AMAP_KEY。</div>';
-        return;
+      // ===== Google 模式：呼叫 Supabase Edge Function =====
+      const { data, error } = await sb.functions.invoke("geocode", {
+        body: { address: q }
+      });
+
+      if (error) {
+        throw new Error(error.message || "Google 搜尋失敗");
       }
 
-      const url =
-        "https://restapi.amap.com/v3/geocode/geo" +
-        "?address=" + encodeURIComponent(q) +
-        "&key=" + AMAP_KEY +
-        "&output=JSON";
+      if (data && data.error) {
+        throw new Error(data.error);
+      }
 
-      const response = await fetch(url);
-      const data = await response.json();
+      results = (data && data.results) ? data.results : [];
 
-      if (data.status !== "1" || !data.geocodes || !data.geocodes.length) {
-        results = [];
-      } else {
-        results = data.geocodes.map(function(item) {
-          const parts = (item.location || "").split(",");
-          const lng = parseFloat(parts[0]);
-          const lat = parseFloat(parts[1]);
-          return {
-            name: item.formatted_address || item.address || q,
-            lat: lat,
-            lng: lng
-          };
-        });
+      // 成功搜尋才計次
+      const count = increaseSearchCount();
+      if (count >= GOOGLE_SEARCH_LIMIT) {
+        setTimeout(function() {
+          alert("本月 Google 搜尋已達 9000 次，已自動切換回台灣地圖。");
+          switchMapMode("taiwan");
+        }, 500);
       }
     }
 
@@ -5726,7 +5799,7 @@ async function searchPlace() {
 
   } catch (error) {
     console.error("地址搜尋錯誤：", error);
-    box.innerHTML = '<div style="padding:10px;color:#c62828;font-size:12px">搜尋失敗，請稍後再試</div>';
+    box.innerHTML = '<div style="padding:10px;color:#c62828;font-size:12px">搜尋失敗：' + (error.message || "請稍後再試") + '</div>';
   }
 }
 
@@ -5746,6 +5819,12 @@ document.getElementById("searchInput").addEventListener("keydown", function (eve
    ========================================================= */
 
 function switchMapMode(mode) {
+
+  // 如果已經超過 Google 上限，不允許切到 Google
+  if (mode === "amap" && getSearchCount() >= GOOGLE_SEARCH_LIMIT) {
+    alert("本月 Google 搜尋已達上限，請使用台灣模式。");
+    mode = "taiwan";
+  }
 
   currentMapMode = mode;
 
@@ -5770,7 +5849,9 @@ function switchMapMode(mode) {
       btnAmap.classList.remove("btn-green");
     }
   } else {
-    amapLayer.addTo(map);
+    // Google 模式暫時仍使用 OSM 底圖（或之後可換成 Google 圖磚）
+    // 這裡先繼續用 taiwanLayer，重點在搜尋改用 Google
+    taiwanLayer.addTo(map);
     if (btnAmap) {
       btnAmap.classList.add("btn-green");
       btnAmap.classList.remove("btn-outline");
@@ -5781,7 +5862,6 @@ function switchMapMode(mode) {
     }
   }
 
-  // 強制地圖重新計算尺寸，避免灰色
   setTimeout(function () {
     try { map.invalidateSize(); } catch (e) {}
   }, 100);
@@ -5802,9 +5882,10 @@ if (btnModeAmap) {
   };
 }
 
-// 預設選中台灣（延遲一點確保地圖已準備好）
+// 預設台灣模式 + 更新次數顯示
 setTimeout(function () {
   switchMapMode("taiwan");
+  updateSearchCountLabel();
 }, 200);
 
 
