@@ -3,31 +3,21 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-
-<title>群組會議 - 安全團聚</title>
+<title>群組通話 - 安全團聚</title>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <style>
-*{
-  box-sizing:border-box;
-  margin:0;
-  padding:0;
-}
+*{box-sizing:border-box;margin:0;padding:0}
 
-html,
-body{
+html,body{
   width:100%;
   height:100%;
   overflow:hidden;
   background:#0b0f14;
   color:#fff;
-  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Noto Sans TC",sans-serif;
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Noto Sans TC",sans-serif
 }
-
-/* =========================
-   頂部
-========================= */
 
 .top-bar{
   position:fixed;
@@ -35,21 +25,12 @@ body{
   left:0;
   right:0;
   z-index:50;
-
-  padding:
-    calc(10px + env(safe-area-inset-top,0px))
-    12px
-    10px;
-
+  padding:calc(10px + env(safe-area-inset-top,0px)) 12px 10px;
   display:flex;
   align-items:center;
   justify-content:space-between;
-  gap:8px;
-
-  background:linear-gradient(
-    rgba(0,0,0,.82),
-    transparent
-  );
+  background:linear-gradient(rgba(0,0,0,.8),transparent);
+  gap:8px
 }
 
 .room-name{
@@ -58,34 +39,31 @@ body{
   white-space:nowrap;
   overflow:hidden;
   text-overflow:ellipsis;
-  max-width:42vw;
+  max-width:42vw
 }
 
 .room-sub{
   font-size:11px;
   opacity:.85;
-  margin-top:2px;
+  margin-top:2px
 }
 
 .top-right{
   display:flex;
   align-items:center;
   gap:6px;
-  flex-shrink:0;
+  flex-shrink:0
 }
 
 .online-pill{
   display:flex;
   align-items:center;
   gap:5px;
-
   background:rgba(255,255,255,.12);
   border-radius:999px;
-
   padding:5px 9px;
-
   font-size:12px;
-  font-weight:600;
+  font-weight:600
 }
 
 .online-dot{
@@ -93,674 +71,418 @@ body{
   height:7px;
   border-radius:50%;
   background:#06C755;
-  box-shadow:0 0 6px #06C755;
+  box-shadow:0 0 6px #06C755
 }
 
 .icon-btn{
   width:34px;
   height:34px;
-
   border-radius:50%;
   border:0;
-
   background:rgba(255,255,255,.16);
   color:#fff;
-
-  font-size:16px;
+  font-size:16px
 }
-
-/* =========================
-   視訊格
-========================= */
 
 .grid{
   position:absolute;
-
   left:0;
   right:0;
   top:0;
-
-  bottom:calc(
-    88px + env(safe-area-inset-bottom,0px)
-  );
-
-  padding:
-    calc(58px + env(safe-area-inset-top,0px))
-    6px
-    6px;
-
+  bottom:calc(88px + env(safe-area-inset-bottom,0px));
+  padding:calc(58px + env(safe-area-inset-top,0px)) 6px 6px;
   display:grid;
-
   grid-template-columns:repeat(2,1fr);
-
   gap:6px;
-
-  transition:
-    bottom .25s ease,
-    padding .25s ease;
+  transition:bottom .25s ease,padding .25s ease
 }
 
 body.chat-open .grid{
-  bottom:calc(
-    38vh + 88px + env(safe-area-inset-bottom,0px)
-  );
+  bottom:calc(38vh + 88px + env(safe-area-inset-bottom,0px))
 }
 
-.grid.slots-1{
-  grid-template-columns:1fr;
-}
-
-.grid.slots-3,
-.grid.slots-4{
-  grid-template-columns:1fr 1fr;
-}
-
-.grid.slots-5,
-.grid.slots-6{
-  grid-template-columns:1fr 1fr 1fr;
-}
-
-.grid.slots-7,
-.grid.slots-8{
-  grid-template-columns:1fr 1fr 1fr 1fr;
-}
+.grid.slots-1{grid-template-columns:1fr}
+.grid.slots-3,.grid.slots-4{grid-template-columns:1fr 1fr}
+.grid.slots-5,.grid.slots-6{grid-template-columns:1fr 1fr 1fr}
+.grid.slots-7,.grid.slots-8{grid-template-columns:1fr 1fr 1fr 1fr}
 
 .slot{
   position:relative;
-
   border-radius:12px;
   overflow:hidden;
-
   background:#1a222d;
-
-  min-height:70px;
+  min-height:70px
 }
 
 .slot video{
   width:100%;
   height:100%;
-
   object-fit:cover;
-
   display:block;
-
-  background:#111;
+  background:#111820
 }
 
 .slot.audio-only video{
-  display:none;
+  display:none
 }
 
 .slot-avatar{
   position:absolute;
   inset:0;
-
   display:flex;
   flex-direction:column;
   align-items:center;
   justify-content:center;
-
   gap:6px;
-
-  background:
-    linear-gradient(
-      160deg,
-      #1b5e20,
-      #0d47a1
-    );
+  background:linear-gradient(160deg,#1b5e20,#0d47a1);
+  z-index:1
 }
 
 .slot-avatar .face{
   width:52px;
   height:52px;
-
   border-radius:50%;
-
   background:rgba(255,255,255,.2);
-
   display:flex;
   align-items:center;
   justify-content:center;
-
   font-size:22px;
-  font-weight:700;
+  font-weight:700
 }
 
 .slot-name{
   position:absolute;
-
   left:6px;
   bottom:6px;
-
+  z-index:3;
   font-size:11px;
   font-weight:600;
-
   background:rgba(0,0,0,.5);
-
   padding:3px 7px;
-
   border-radius:7px;
-
   max-width:92%;
-
   overflow:hidden;
   text-overflow:ellipsis;
-  white-space:nowrap;
+  white-space:nowrap
 }
 
 .slot-badge{
   position:absolute;
-
   top:6px;
   right:6px;
-
+  z-index:3;
   font-size:10px;
-
   padding:2px 6px;
-
   border-radius:999px;
-
-  background:rgba(0,0,0,.45);
+  background:rgba(0,0,0,.45)
 }
 
 .slot.me{
-  border:1px solid rgba(6,199,85,.55);
+  border:1px solid rgba(6,199,85,.55)
 }
-
-/* =========================
-   會議聊天
-========================= */
 
 .chat-dock{
   position:fixed;
-
   left:0;
   right:0;
-
   z-index:45;
-
-  bottom:calc(
-    72px + env(safe-area-inset-bottom,0px)
-  );
-
+  bottom:calc(72px + env(safe-area-inset-bottom,0px));
   height:0;
-
   overflow:hidden;
-
-  background:rgba(8,12,18,.94);
-
+  background:rgba(8,12,18,.92);
   border-top:1px solid rgba(255,255,255,.1);
-
   transition:height .25s ease;
-
   display:flex;
-  flex-direction:column;
+  flex-direction:column
 }
 
 body.chat-open .chat-dock{
-  height:38vh;
+  height:38vh
 }
 
 .chat-dock-head{
   display:flex;
-
   align-items:center;
   justify-content:space-between;
-
   padding:6px 10px 0;
-
   font-size:11px;
-
-  color:#90a4ae;
+  color:#90a4ae
 }
 
 .chat-dock-head button{
   border:0;
-
   background:rgba(255,255,255,.12);
-
   color:#fff;
-
   border-radius:8px;
-
   padding:4px 10px;
-
-  font-size:12px;
+  font-size:12px
 }
 
 .chat-messages{
   flex:1;
-
   min-height:4.2em;
-
-  max-height:100%;
-
   overflow-y:auto;
-
   -webkit-overflow-scrolling:touch;
-
   padding:8px 10px;
-
   font-size:13px;
-
-  line-height:1.35;
+  line-height:1.35
 }
 
 .chat-line{
   margin-bottom:6px;
-  word-break:break-word;
+  word-break:break-word
 }
 
 .chat-line .who{
   color:#81d4fa;
-
   font-weight:700;
-
-  margin-right:4px;
+  margin-right:4px
 }
 
 .chat-line .when{
   color:#78909c;
-
   font-size:10px;
-
-  margin-left:6px;
+  margin-left:6px
 }
 
 .chat-input-row{
   display:flex;
-
   gap:6px;
-
   padding:8px 10px;
-
-  border-top:
-    1px solid rgba(255,255,255,.08);
-
-  background:rgba(0,0,0,.35);
+  border-top:1px solid rgba(255,255,255,.08);
+  background:rgba(0,0,0,.35)
 }
 
 .chat-input-row input{
   flex:1;
-
   border:0;
-
   border-radius:10px;
-
   padding:10px 12px;
-
   background:#1c2430;
-
   color:#fff;
-
   font-size:14px;
-
-  outline:none;
+  outline:none
 }
 
 .chat-input-row button{
   border:0;
-
   border-radius:10px;
-
   padding:0 14px;
-
   background:#06C755;
-
   color:#fff;
-
   font-weight:700;
-
-  font-size:14px;
+  font-size:14px
 }
-
-/* =========================
-   控制列
-========================= */
 
 .controls{
   position:fixed;
-
   left:0;
   right:0;
   bottom:0;
-
   z-index:50;
-
   display:flex;
-
   justify-content:center;
   align-items:center;
-
   gap:12px;
-
-  padding:
-    12px
-    10px
-    calc(14px + env(safe-area-inset-bottom,0px));
-
-  background:
-    linear-gradient(
-      transparent,
-      rgba(0,0,0,.92)
-    );
+  padding:12px 10px calc(14px + env(safe-area-inset-bottom,0px));
+  background:linear-gradient(transparent,rgba(0,0,0,.92))
 }
 
 .ctrl{
   width:54px;
   height:54px;
-
   border-radius:50%;
   border:0;
-
   background:rgba(255,255,255,.18);
-
   color:#fff;
-
   font-size:10px;
   font-weight:700;
-
   display:flex;
   flex-direction:column;
-
   align-items:center;
   justify-content:center;
-
-  gap:1px;
+  gap:1px
 }
 
 .ctrl .ico{
-  font-size:18px;
+  font-size:18px
 }
 
 .ctrl.off{
-  background:#e53935;
+  background:#e53935
 }
 
 .ctrl.disabled{
-  opacity:.45;
+  opacity:.45
 }
 
 .ctrl.hangup{
   background:#e53935;
-
   width:58px;
-  height:58px;
+  height:58px
 }
 
 .kb-fab{
   position:fixed;
-
   right:14px;
-
-  bottom:calc(
-    78px + env(safe-area-inset-bottom,0px)
-  );
-
+  bottom:calc(78px + env(safe-area-inset-bottom,0px));
   z-index:55;
-
   width:48px;
   height:48px;
-
   border-radius:50%;
   border:0;
-
   background:#1565c0;
-
   color:#fff;
-
   font-size:22px;
-
-  box-shadow:
-    0 4px 14px rgba(0,0,0,.35);
-
+  box-shadow:0 4px 14px rgba(0,0,0,.35);
   display:flex;
-
   align-items:center;
-  justify-content:center;
+  justify-content:center
 }
 
 body.chat-open .kb-fab{
-  display:none;
+  display:none
 }
 
 .hint{
   position:fixed;
-
   left:10px;
   right:10px;
-
   z-index:40;
-
   text-align:center;
-
   font-size:11px;
-
   color:#b0bec5;
-
   pointer-events:none;
-
-  bottom:calc(
-    78px + env(safe-area-inset-bottom,0px)
-  );
+  bottom:calc(78px + env(safe-area-inset-bottom,0px))
 }
 
 body.chat-open .hint{
-  display:none;
+  display:none
 }
-
-/* =========================
-   成員面板
-========================= */
 
 .panel-mask{
   display:none;
-
   position:fixed;
-
   inset:0;
-
   z-index:80;
-
-  background:rgba(0,0,0,.55);
+  background:rgba(0,0,0,.55)
 }
 
 .panel-mask.show{
-  display:block;
+  display:block
 }
 
 .member-panel{
   position:fixed;
-
   left:12px;
   right:12px;
   bottom:12px;
-
   z-index:90;
-
   max-height:55vh;
-
   overflow:auto;
-
   background:#161c24;
-
   border-radius:16px;
-
   padding:14px;
-
-  display:none;
+  display:none
 }
 
 .member-panel.show{
-  display:block;
+  display:block
 }
 
 .member-row{
   display:flex;
-
   align-items:center;
-
   gap:10px;
-
   padding:10px 4px;
-
-  border-bottom:
-    1px solid rgba(255,255,255,.06);
+  border-bottom:1px solid rgba(255,255,255,.06)
 }
 
 .member-av{
   width:40px;
   height:40px;
-
   border-radius:50%;
-
   background:#2a3441;
-
   display:flex;
-
   align-items:center;
   justify-content:center;
-
-  font-weight:700;
+  font-weight:700
 }
 
 .member-meta{
   flex:1;
-
-  min-width:0;
+  min-width:0
 }
 
 .member-meta .n{
   font-size:14px;
-  font-weight:600;
+  font-weight:600
 }
 
 .member-meta .s{
   font-size:12px;
-  opacity:.75;
+  opacity:.75
 }
 
 .tag{
   font-size:11px;
-
   font-weight:700;
-
   padding:4px 8px;
-
-  border-radius:999px;
+  border-radius:999px
 }
 
 .tag.on{
   background:rgba(6,199,85,.2);
-  color:#69f0ae;
+  color:#69f0ae
 }
 
 .tag.off{
   background:rgba(255,255,255,.08);
-  color:#9e9e9e;
+  color:#9e9e9e
 }
 
 .tag.vid{
   background:rgba(33,150,243,.2);
-  color:#90caf9;
+  color:#90caf9
 }
 
 .tag.txt{
   background:rgba(255,193,7,.15);
-  color:#ffe082;
+  color:#ffe082
 }
 </style>
 </head>
 
 <body>
 
-<!-- =========================
-     頂部
-========================= -->
-
 <div class="top-bar">
-
   <div style="min-width:0;flex:1">
-
-    <div
-      class="room-name"
-      id="roomName"
-    >
-      群組會議
-    </div>
-
-    <div
-      class="room-sub"
-      id="roomSub"
-    >
-      會議準備中…
-    </div>
-
+    <div class="room-name" id="roomName">群組通話</div>
+    <div class="room-sub" id="roomSub">會議進行中 · 準備中…</div>
   </div>
 
   <div class="top-right">
-
     <div class="online-pill">
       <span class="online-dot"></span>
-      <span id="onlineCount">0</span>
-      在線
+      <span id="onlineCount">0</span>在線
     </div>
 
-    <button
-      type="button"
-      class="icon-btn"
-      id="btnMembers"
-      title="成員"
-    >
-      👤
-    </button>
-
+    <button type="button" class="icon-btn" id="btnMembers">👤</button>
   </div>
-
 </div>
 
+<div class="grid slots-1" id="videoGrid"></div>
 
-<!-- =========================
-     視訊格
-========================= -->
-
-<div
-  class="grid slots-1"
-  id="videoGrid"
-></div>
-
-
-<!-- =========================
-     會議聊天
-========================= -->
-
-<div
-  class="chat-dock"
-  id="chatDock"
->
+<div class="chat-dock" id="chatDock">
 
   <div class="chat-dock-head">
-
-    <span>
-      會議字幕（僅本次會議）
-    </span>
-
-    <button
-      type="button"
-      id="btnChatCollapse"
-    >
-      收起 ⌨️
-    </button>
-
+    <span>會議字幕（僅本次通話可見，結束即消失）</span>
+    <button type="button" id="btnChatCollapse">收起 ⌨️</button>
   </div>
 
-  <div
-    class="chat-messages"
-    id="chatMessages"
-  ></div>
+  <div class="chat-messages" id="chatMessages"></div>
 
   <div class="chat-input-row">
-
     <input
       type="text"
       id="chatInput"
@@ -768,109 +490,49 @@ body.chat-open .hint{
       maxlength="500"
       autocomplete="off"
     >
-
-    <button
-      type="button"
-      id="btnChatSend"
-    >
-      送出
-    </button>
-
+    <button type="button" id="btnChatSend">送出</button>
   </div>
 
 </div>
 
+<button type="button" class="kb-fab" id="kbFab">⌨️</button>
 
-<!-- 鍵盤 -->
-
-<button
-  type="button"
-  class="kb-fab"
-  id="kbFab"
-  title="打字"
->
-  ⌨️
-</button>
-
-
-<div
-  class="hint"
-  id="ruleHint"
->
-  群組視訊最多 8 人
+<div class="hint" id="ruleHint">
+  多人視訊最多 8 人 · 點右下鍵盤可打字
 </div>
-
-
-<!-- =========================
-     控制
-========================= -->
 
 <div class="controls">
 
-  <button
-    type="button"
-    class="ctrl off"
-    id="btnMic"
-  >
+  <button type="button" class="ctrl off" id="btnMic">
     <span class="ico">🔇</span>
     麥克風
   </button>
 
-  <button
-    type="button"
-    class="ctrl off"
-    id="btnCam"
-  >
+  <button type="button" class="ctrl off" id="btnCam">
     <span class="ico">📷</span>
     視訊
   </button>
 
-  <button
-    type="button"
-    class="ctrl hangup"
-    id="btnHangup"
-  >
+  <button type="button" class="ctrl hangup" id="btnHangup">
     <span class="ico">📞</span>
     退出
   </button>
 
 </div>
 
+<div class="panel-mask" id="panelMask"></div>
 
-<!-- =========================
-     成員面板
-========================= -->
-
-<div
-  class="panel-mask"
-  id="panelMask"
-></div>
-
-<div
-  class="member-panel"
-  id="memberPanel"
->
-
-  <h3
-    style="margin:0 0 10px;font-size:15px"
-  >
+<div class="member-panel" id="memberPanel">
+  <h3 style="margin:0 0 10px;font-size:15px">
     群組成員狀態
   </h3>
 
   <div id="memberList"></div>
-
 </div>
 
-
 <script>
-(function(){
 
-  "use strict";
-
-
-  /* ============================================================
-     Supabase
-  ============================================================ */
+(function () {
 
   var SUPABASE_URL =
     "https://perfsipperncvjocznhl.supabase.co";
@@ -878,21 +540,26 @@ body.chat-open .hint{
   var SUPABASE_KEY =
     "sb_publishable_qpqAwj49L6HcWqWTnNsTxw_oBEauWBA";
 
-  var sb =
-    window.supabase.createClient(
-      SUPABASE_URL,
-      SUPABASE_KEY
-    );
-
-
-  /* ============================================================
-     會議設定
-  ============================================================ */
-
   var MAX_VIDEO = 8;
 
-  var params =
-    new URLSearchParams(location.search);
+  /*
+   * 第一階段先使用 STUN。
+   *
+   * TURN 我們之後接自己的伺服器。
+   * 不放假的 TURN 帳密。
+   */
+  var RTC_CONFIG = {
+    iceServers: [
+      {
+        urls: [
+          "stun:stun.l.google.com:19302",
+          "stun:stun1.l.google.com:19302"
+        ]
+      }
+    ]
+  };
+
+  var params = new URLSearchParams(location.search);
 
   var mode =
     (params.get("mode") || "audio").toLowerCase();
@@ -900,7 +567,7 @@ body.chat-open .hint{
   var roomName =
     params.get("name") ||
     params.get("room") ||
-    "群組會議";
+    "群組通話";
 
   var roomId =
     params.get("room_id") ||
@@ -911,103 +578,60 @@ body.chat-open .hint{
     params.get("textonly") === "1" ||
     params.get("join") === "chat";
 
-
-  /* ============================================================
-     WebRTC 設定
-     
-     目前先使用公開 STUN。
-     TURN 之後直接加入 iceServers 即可。
-  ============================================================ */
-
-  var RTC_CONFIG = {
-
-    iceServers: [
-
-      {
-        urls:
-          "stun:stun.l.google.com:19302"
-      },
-
-      {
-        urls:
-          "stun:stun1.l.google.com:19302"
-      }
-
-    ]
-
-  };
-
-
-  /* ============================================================
-     狀態
-  ============================================================ */
+  var sb =
+    window.supabase.createClient(
+      SUPABASE_URL,
+      SUPABASE_KEY
+    );
 
   var me = null;
-
   var myName = "我";
-
   var myStream = null;
 
   var micOn = false;
-
   var camOn = false;
-
   var chatOpen = false;
 
   var channel = null;
-
   var chatChannel = null;
 
   var members = {};
-
   var chatLog = [];
 
   /*
-   * peers[userId] = {
-   *   pc,
-   *   stream,
-   *   videoElement,
-   *   iceQueue
-   * }
+   * WebRTC：
+   * user_id -> RTCPeerConnection
    */
   var peers = {};
 
-  var leaving = false;
+  /*
+   * user_id -> MediaStream
+   */
+  var remoteStreams = {};
 
-
-  /* ============================================================
-     DOM
-  ============================================================ */
+  var destroyed = false;
 
   var grid =
     document.getElementById("videoGrid");
 
-
-  document.getElementById(
-    "roomName"
-  ).textContent = roomName;
+  document.getElementById("roomName")
+    .textContent = roomName;
 
 
-  /* ============================================================
-     工具
-  ============================================================ */
-
-  function escapeHtml(s){
+  function escapeHtml(s) {
 
     return String(s || "")
-
-      .replace(/&/g,"&amp;")
-      .replace(/</g,"&lt;")
-      .replace(/>/g,"&gt;")
-      .replace(/"/g,"&quot;");
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;");
 
   }
 
 
-  function initialOf(n){
+  function initialOf(n) {
 
-    n =
-      (n || "?").trim();
+    n = (n || "?").trim();
 
     return n
       ? n.charAt(0).toUpperCase()
@@ -1016,77 +640,62 @@ body.chat-open .hint{
   }
 
 
-  function countOnline(){
+  function countOnline() {
 
     var n = 0;
 
-    Object.keys(members)
-      .forEach(function(k){
+    Object.keys(members).forEach(function (k) {
 
-        if(members[k].online){
-          n++;
-        }
+      if (members[k].online) {
+        n++;
+      }
 
-      });
+    });
 
     return n;
 
   }
 
 
-  function countVideoOn(){
+  function countVideoOn() {
 
     var n = 0;
 
-    Object.keys(members)
-      .forEach(function(k){
+    Object.keys(members).forEach(function (k) {
 
-        if(
-          members[k].online &&
-          members[k].video
-        ){
-          n++;
-        }
+      if (
+        members[k].online &&
+        members[k].video
+      ) {
+        n++;
+      }
 
-      });
+    });
 
     return n;
 
   }
 
 
-  function canEnableVideo(){
+  function canEnableVideo() {
 
-    return (
-      camOn ||
-      countVideoOn() < MAX_VIDEO
-    );
+    return camOn ||
+      countVideoOn() < MAX_VIDEO;
 
   }
 
 
-  /* ============================================================
-     頂部資訊
-  ============================================================ */
+  function updateTop() {
 
-  function updateTop(){
-
-    document.getElementById(
-      "onlineCount"
-    ).textContent =
+    document.getElementById("onlineCount")
+      .textContent =
       String(countOnline());
 
+    var v = countVideoOn();
 
-    var v =
-      countVideoOn();
-
-
-    document.getElementById(
-      "roomSub"
-    ).textContent =
-
+    document.getElementById("roomSub")
+      .textContent =
       "會議進行中 · " +
-
       (
         textOnly
           ? "打字模式"
@@ -1096,154 +705,110 @@ body.chat-open .hint{
                 : "語音模式"
             )
       ) +
-
       " · 視訊 " +
-
       v +
-
       "/" +
-
       MAX_VIDEO;
 
-
     var btnCam =
-      document.getElementById(
-        "btnCam"
-      );
+      document.getElementById("btnCam");
 
+    if (textOnly) {
 
-    if(textOnly){
+      btnCam.classList.add("disabled");
 
-      btnCam.classList.add(
-        "disabled"
-      );
+      document.getElementById("btnMic")
+        .classList.add("disabled");
 
-      document.getElementById(
-        "btnMic"
-      ).classList.add(
-        "disabled"
-      );
+      document.getElementById("ruleHint")
+        .textContent =
+        "你目前以打字加入 · 可傳訊息給通話中的朋友";
 
-      document.getElementById(
-        "ruleHint"
-      ).textContent =
-        "你目前以打字加入";
-
-    }
-
-    else if(
+    } else if (
       v >= MAX_VIDEO &&
       !camOn
-    ){
+    ) {
 
-      document.getElementById(
-        "ruleHint"
-      ).textContent =
-        "視訊已滿 8 人";
+      document.getElementById("ruleHint")
+        .textContent =
+        "視訊已滿 8 人，仍可使用語音或打字";
 
-      btnCam.classList.add(
-        "disabled"
-      );
+      btnCam.classList.add("disabled");
 
-    }
+    } else {
 
-    else{
+      document.getElementById("ruleHint")
+        .textContent =
+        "多人視訊最多 8 人 · 點右下鍵盤可打字";
 
-      document.getElementById(
-        "ruleHint"
-      ).textContent =
-        "群組視訊最多 8 人";
-
-      btnCam.classList.remove(
-        "disabled"
-      );
+      btnCam.classList.remove("disabled");
 
     }
 
   }
 
 
-  /* ============================================================
-     聊天
-  ============================================================ */
-
-  function setChatOpen(on){
+  function setChatOpen(on) {
 
     chatOpen = !!on;
 
-    document.body.classList.toggle(
-      "chat-open",
-      chatOpen
-    );
+    document.body.classList
+      .toggle("chat-open", chatOpen);
 
+    setTimeout(function () {
 
-    if(chatOpen){
+      if (chatOpen) {
 
-      setTimeout(function(){
+        var el =
+          document.getElementById("chatInput");
 
-        var input =
-          document.getElementById(
-            "chatInput"
-          );
-
-        if(input){
-
-          input.focus();
-
+        if (el) {
+          el.focus();
         }
 
         scrollChatBottom();
 
-      },280);
+      }
 
+    }, 280);
+
+  }
+
+
+  function scrollChatBottom() {
+
+    var box =
+      document.getElementById("chatMessages");
+
+    if (box) {
+      box.scrollTop = box.scrollHeight;
     }
 
   }
 
 
-  function scrollChatBottom(){
+  function renderChat() {
 
     var box =
-      document.getElementById(
-        "chatMessages"
-      );
+      document.getElementById("chatMessages");
 
-    if(box){
-
-      box.scrollTop =
-        box.scrollHeight;
-
-    }
-
-  }
-
-
-  function renderChat(){
-
-    var box =
-      document.getElementById(
-        "chatMessages"
-      );
-
-    if(!box){
+    if (!box) {
       return;
     }
 
-
-    if(!chatLog.length){
+    if (!chatLog.length) {
 
       box.innerHTML =
         '<div style="opacity:.6;font-size:12px;padding:8px 0">' +
-        '尚無訊息 · 本次會議結束後不保留' +
+        '尚無字幕 · 僅本次會議可見，結束後不會保留' +
         '</div>';
 
       return;
 
     }
 
-
     box.innerHTML =
-      chatLog.map(function(m){
+      chatLog.map(function (m) {
 
         var t =
           m.at
@@ -1257,80 +822,1410 @@ body.chat-open .hint{
                 ":" +
                 String(
                   t.getMinutes()
-                ).padStart(2,"0")
+                ).padStart(2, "0")
               )
             : "";
 
-
         return (
-
           '<div class="chat-line">' +
-
-            '<span class="who">' +
-
-              escapeHtml(
-                m.name ||
-                "成員"
-              ) +
-
-            '</span>' +
-
-            escapeHtml(
-              m.text
-            ) +
-
-            (
-
-              ts
-
-                ? (
-                    '<span class="when">' +
-                    ts +
-                    '</span>'
-                  )
-
-                : ""
-
-            ) +
-
-          '</div>'
-
+          '<span class="who">' +
+          escapeHtml(
+            m.name || "成員"
+          ) +
+          '</span>' +
+          escapeHtml(m.text) +
+          (
+            ts
+              ? '<span class="when">' +
+                ts +
+                "</span>"
+              : ""
+          ) +
+          "</div>"
         );
 
       }).join("");
-
 
     scrollChatBottom();
 
   }
 
 
-  function pushChat(msg){
+  function pushChat(msg) {
 
     chatLog.push(msg);
 
-
-    if(chatLog.length > 200){
-
+    if (chatLog.length > 200) {
       chatLog =
         chatLog.slice(-200);
-
     }
-
 
     renderChat();
 
-
-    if(!chatOpen){
-
+    if (!chatOpen) {
       setChatOpen(true);
+    }
+
+  }
+
+
+  /*
+   * 建立／更新畫面
+   */
+  function renderGrid() {
+
+    var list =
+      Object.keys(members)
+        .map(function (k) {
+          return members[k];
+        })
+        .filter(function (m) {
+          return m.online && !m.text_only;
+        })
+        .sort(function (a, b) {
+
+          if (
+            me &&
+            a.user_id === me.id
+          ) {
+            return -1;
+          }
+
+          if (
+            me &&
+            b.user_id === me.id
+          ) {
+            return 1;
+          }
+
+          return (
+            a.name || ""
+          ).localeCompare(
+            b.name || ""
+          );
+
+        });
+
+    var slots =
+      list.slice(0, MAX_VIDEO);
+
+    var n =
+      Math.max(1, slots.length);
+
+    grid.className =
+      "grid slots-" +
+      Math.min(8, n);
+
+    grid.innerHTML = "";
+
+    if (!slots.length) {
+
+      grid.innerHTML =
+        '<div class="slot">' +
+        '<div class="slot-avatar">' +
+        '<div class="face">💬</div>' +
+        '<div>等待通話成員…</div>' +
+        '<div style="font-size:12px;opacity:.8">' +
+        '也可打字參與' +
+        '</div>' +
+        '</div>' +
+        '</div>';
+
+      return;
+
+    }
+
+    slots.forEach(function (m) {
+
+      var slot =
+        document.createElement("div");
+
+      slot.className =
+        "slot" +
+        (
+          me &&
+          m.user_id === me.id
+            ? " me"
+            : ""
+        ) +
+        (
+          m.video
+            ? ""
+            : " audio-only"
+        );
+
+      var avatar =
+        document.createElement("div");
+
+      avatar.className =
+        "slot-avatar";
+
+      avatar.innerHTML =
+        '<div class="face">' +
+        initialOf(m.name) +
+        '</div>' +
+        '<div style="font-size:12px">' +
+        escapeHtml(
+          m.name || "成員"
+        ) +
+        "</div>";
+
+      var video =
+        document.createElement("video");
+
+      video.autoplay = true;
+      video.playsInline = true;
+      video.muted =
+        !!(
+          me &&
+          m.user_id === me.id
+        );
+
+      /*
+       * 自己的畫面
+       */
+      if (
+        me &&
+        m.user_id === me.id &&
+        myStream &&
+        camOn
+      ) {
+
+        video.srcObject =
+          myStream;
+
+        avatar.style.display =
+          "none";
+
+      }
+
+      /*
+       * 別人的 WebRTC 畫面
+       */
+      if (
+        me &&
+        m.user_id !== me.id &&
+        remoteStreams[m.user_id] &&
+        m.video
+      ) {
+
+        video.srcObject =
+          remoteStreams[m.user_id];
+
+        avatar.style.display =
+          "none";
+
+      }
+
+      var name =
+        document.createElement("div");
+
+      name.className =
+        "slot-name";
+
+      name.textContent =
+        (m.name || "成員") +
+        (
+          m.mic
+            ? " · 🎤"
+            : " · 🔇"
+        );
+
+      var badge =
+        document.createElement("div");
+
+      badge.className =
+        "slot-badge";
+
+      badge.textContent =
+        m.video
+          ? "視訊"
+          : "語音";
+
+      slot.appendChild(avatar);
+      slot.appendChild(video);
+      slot.appendChild(name);
+      slot.appendChild(badge);
+
+      grid.appendChild(slot);
+
+    });
+
+  }
+
+
+  function renderMemberList() {
+
+    var keys =
+      Object.keys(members);
+
+    var box =
+      document.getElementById("memberList");
+
+    if (!keys.length) {
+
+      box.innerHTML =
+        '<div style="opacity:.7;font-size:13px">' +
+        '尚無成員' +
+        '</div>';
+
+      return;
+
+    }
+
+    keys.sort(function (a, b) {
+
+      var ma = members[a];
+      var mb = members[b];
+
+      if (
+        ma.online !== mb.online
+      ) {
+        return ma.online ? -1 : 1;
+      }
+
+      return (
+        ma.name || ""
+      ).localeCompare(
+        mb.name || ""
+      );
+
+    });
+
+    box.innerHTML =
+      keys.map(function (k) {
+
+        var m = members[k];
+
+        var tags =
+          '<span class="tag ' +
+          (
+            m.online
+              ? "on"
+              : "off"
+          ) +
+          '">' +
+          (
+            m.online
+              ? "在線"
+              : "離線"
+          ) +
+          "</span>";
+
+        if (
+          m.online &&
+          m.video
+        ) {
+
+          tags +=
+            ' <span class="tag vid">' +
+            "視訊" +
+            "</span>";
+
+        }
+
+        if (
+          m.online &&
+          m.text_only
+        ) {
+
+          tags +=
+            ' <span class="tag txt">' +
+            "打字" +
+            "</span>";
+
+        }
+
+        return (
+          '<div class="member-row">' +
+          '<div class="member-av">' +
+          initialOf(m.name) +
+          '</div>' +
+          '<div class="member-meta">' +
+          '<div class="n">' +
+          escapeHtml(
+            m.name || "成員"
+          ) +
+          (
+            me &&
+            m.user_id === me.id
+              ? "（我）"
+              : ""
+          ) +
+          '</div>' +
+          '<div class="s">' +
+          (
+            m.online
+              ? (
+                  m.text_only
+                    ? "僅打字參與"
+                    : (
+                        m.video
+                          ? "視訊中"
+                          : "語音中"
+                      )
+                )
+              : "未在通話"
+          ) +
+          "</div>" +
+          "</div>" +
+          tags +
+          "</div>"
+        );
+
+      }).join("");
+
+  }
+
+
+  function setMicUi() {
+
+    var b =
+      document.getElementById("btnMic");
+
+    if (micOn) {
+
+      b.classList.remove("off");
+
+      b.innerHTML =
+        '<span class="ico">🎤</span>麥克風';
+
+    } else {
+
+      b.classList.add("off");
+
+      b.innerHTML =
+        '<span class="ico">🔇</span>麥克風';
 
     }
 
   }
 
 
-  async function sendChat(){
+  function setCamUi() {
+
+    var b =
+      document.getElementById("btnCam");
+
+    if (camOn) {
+
+      b.classList.remove("off");
+
+      b.innerHTML =
+        '<span class="ico">📹</span>視訊';
+
+    } else {
+
+      b.classList.add("off");
+
+      b.innerHTML =
+        '<span class="ico">📷</span>視訊';
+
+    }
+
+  }
+
+
+  /*
+   * 取得麥克風
+   */
+  async function ensureMedia() {
+
+    if (textOnly) {
+      return null;
+    }
+
+    if (myStream) {
+      return myStream;
+    }
+
+    if (
+      !navigator.mediaDevices ||
+      !navigator.mediaDevices.getUserMedia
+    ) {
+
+      throw new Error(
+        "此瀏覽器不支援麥克風"
+      );
+
+    }
+
+    document.getElementById("roomSub")
+      .textContent =
+      "請求麥克風權限…";
+
+    myStream =
+      await navigator.mediaDevices
+        .getUserMedia({
+          audio:true,
+          video:false
+        });
+
+    myStream
+      .getAudioTracks()
+      .forEach(function (t) {
+        t.enabled = false;
+      });
+
+    micOn = false;
+
+    setMicUi();
+
+    return myStream;
+
+  }
+
+
+  /*
+   * Presence
+   */
+  async function trackPresence() {
+
+    if (!channel || !me) {
+      return;
+    }
+
+    try {
+
+      await channel.track({
+
+        user_id:me.id,
+
+        name:myName,
+
+        online:true,
+
+        mic:micOn,
+
+        video:camOn,
+
+        text_only:!!textOnly,
+
+        at:Date.now()
+
+      });
+
+    } catch (e) {
+
+      console.warn(
+        "presence track error",
+        e
+      );
+
+    }
+
+  }
+
+
+  /*
+   * WebRTC：建立 PeerConnection
+   */
+  function createPeerConnection(remoteId) {
+
+    if (peers[remoteId]) {
+      return peers[remoteId];
+    }
+
+    console.log(
+      "建立 WebRTC 連線：",
+      remoteId
+    );
+
+    var pc =
+      new RTCPeerConnection(
+        RTC_CONFIG
+      );
+
+    peers[remoteId] = pc;
+
+    /*
+     * 把自己的音訊／影像軌加入連線
+     */
+    if (myStream) {
+
+      myStream
+        .getTracks()
+        .forEach(function (track) {
+
+          try {
+
+            pc.addTrack(
+              track,
+              myStream
+            );
+
+          } catch (e) {
+
+            console.warn(
+              "addTrack error",
+              e
+            );
+
+          }
+
+        });
+
+    }
+
+    /*
+     * 收到遠端影音
+     */
+    pc.ontrack =
+      function (event) {
+
+        console.log(
+          "收到遠端影音：",
+          remoteId
+        );
+
+        var stream =
+          event.streams &&
+          event.streams[0];
+
+        if (!stream) {
+
+          if (
+            !remoteStreams[remoteId]
+          ) {
+
+            remoteStreams[remoteId] =
+              new MediaStream();
+
+          }
+
+          remoteStreams[remoteId]
+            .addTrack(
+              event.track
+            );
+
+        } else {
+
+          remoteStreams[remoteId] =
+            stream;
+
+        }
+
+        renderGrid();
+
+      };
+
+
+    /*
+     * ICE Candidate
+     */
+    pc.onicecandidate =
+      async function (event) {
+
+        if (
+          !event.candidate ||
+          !channel
+        ) {
+          return;
+        }
+
+        try {
+
+          await channel.send({
+
+            type:"broadcast",
+
+            event:"webrtc_ice",
+
+            payload:{
+
+              from:me.id,
+
+              to:remoteId,
+
+              candidate:
+                event.candidate
+
+            }
+
+          });
+
+        } catch (e) {
+
+          console.warn(
+            "ICE 發送失敗",
+            e
+          );
+
+        }
+
+      };
+
+
+    pc.onconnectionstatechange =
+      function () {
+
+        console.log(
+          "WebRTC 狀態",
+          remoteId,
+          pc.connectionState
+        );
+
+        if (
+          pc.connectionState ===
+            "failed" ||
+          pc.connectionState ===
+            "closed"
+        ) {
+
+          closePeer(
+            remoteId
+          );
+
+        }
+
+      };
+
+
+    pc.oniceconnectionstatechange =
+      function () {
+
+        console.log(
+          "ICE 狀態",
+          remoteId,
+          pc.iceConnectionState
+        );
+
+      };
+
+
+    return pc;
+
+  }
+
+
+  /*
+   * 判斷誰負責建立 offer。
+   *
+   * user_id 字串排序較小的一方建立 offer。
+   *
+   * 避免兩邊同時 offer。
+   */
+  function shouldOffer(remoteId) {
+
+    if (!me) {
+      return false;
+    }
+
+    return String(me.id) <
+      String(remoteId);
+
+  }
+
+
+  async function makeOffer(remoteId) {
+
+    if (
+      !channel ||
+      !me ||
+      remoteId === me.id
+    ) {
+      return;
+    }
+
+    var pc =
+      createPeerConnection(
+        remoteId
+      );
+
+    try {
+
+      var offer =
+        await pc.createOffer();
+
+      await pc.setLocalDescription(
+        offer
+      );
+
+      await channel.send({
+
+        type:"broadcast",
+
+        event:"webrtc_offer",
+
+        payload:{
+
+          from:me.id,
+
+          to:remoteId,
+
+          description:
+            pc.localDescription
+
+        }
+
+      });
+
+      console.log(
+        "Offer 已送出",
+        remoteId
+      );
+
+    } catch (e) {
+
+      console.error(
+        "建立 Offer 失敗",
+        e
+      );
+
+    }
+
+  }
+
+
+  async function handleOffer(payload) {
+
+    if (
+      !payload ||
+      !me ||
+      payload.to !== me.id
+    ) {
+      return;
+    }
+
+    var remoteId =
+      payload.from;
+
+    if (!remoteId) {
+      return;
+    }
+
+    var pc =
+      createPeerConnection(
+        remoteId
+      );
+
+    try {
+
+      await pc.setRemoteDescription(
+        new RTCSessionDescription(
+          payload.description
+        )
+      );
+
+      var answer =
+        await pc.createAnswer();
+
+      await pc.setLocalDescription(
+        answer
+      );
+
+      await channel.send({
+
+        type:"broadcast",
+
+        event:"webrtc_answer",
+
+        payload:{
+
+          from:me.id,
+
+          to:remoteId,
+
+          description:
+            pc.localDescription
+
+        }
+
+      });
+
+      console.log(
+        "Answer 已送出",
+        remoteId
+      );
+
+    } catch (e) {
+
+      console.error(
+        "處理 Offer 失敗",
+        e
+      );
+
+    }
+
+  }
+
+
+  async function handleAnswer(payload) {
+
+    if (
+      !payload ||
+      !me ||
+      payload.to !== me.id
+    ) {
+      return;
+    }
+
+    var remoteId =
+      payload.from;
+
+    var pc =
+      peers[remoteId];
+
+    if (!pc) {
+      return;
+    }
+
+    try {
+
+      await pc.setRemoteDescription(
+        new RTCSessionDescription(
+          payload.description
+        )
+      );
+
+      console.log(
+        "Answer 已套用",
+        remoteId
+      );
+
+    } catch (e) {
+
+      console.error(
+        "處理 Answer 失敗",
+        e
+      );
+
+    }
+
+  }
+
+
+  async function handleIce(payload) {
+
+    if (
+      !payload ||
+      !me ||
+      payload.to !== me.id
+    ) {
+      return;
+    }
+
+    var remoteId =
+      payload.from;
+
+    var pc =
+      peers[remoteId];
+
+    if (!pc) {
+
+      pc =
+        createPeerConnection(
+          remoteId
+        );
+
+    }
+
+    try {
+
+      if (
+        payload.candidate
+      ) {
+
+        await pc.addIceCandidate(
+          new RTCIceCandidate(
+            payload.candidate
+          )
+        );
+
+      }
+
+    } catch (e) {
+
+      console.warn(
+        "加入 ICE Candidate 失敗",
+        e
+      );
+
+    }
+
+  }
+
+
+  function closePeer(remoteId) {
+
+    var pc =
+      peers[remoteId];
+
+    if (pc) {
+
+      try {
+        pc.close();
+      } catch (e) {}
+
+    }
+
+    delete peers[remoteId];
+
+    delete remoteStreams[
+      remoteId
+    ];
+
+    renderGrid();
+
+  }
+
+
+  /*
+   * Presence 發生變化後：
+   * 需要與每個在線的視訊成員建立 WebRTC。
+   */
+  async function syncWebRTCConnections() {
+
+    if (
+      !me ||
+      textOnly
+    ) {
+      return;
+    }
+
+    var ids =
+      Object.keys(members);
+
+    for (
+      var i = 0;
+      i < ids.length;
+      i++
+    ) {
+
+      var remoteId =
+        ids[i];
+
+      if (
+        remoteId === me.id
+      ) {
+        continue;
+      }
+
+      var member =
+        members[remoteId];
+
+      if (
+        !member ||
+        !member.online ||
+        member.text_only
+      ) {
+        continue;
+      }
+
+      /*
+       * 如果對方沒有開視訊，
+       * 我們仍然建立連線，
+       * 讓語音可以互通。
+       */
+
+      if (!peers[remoteId]) {
+
+        createPeerConnection(
+          remoteId
+        );
+
+        /*
+         * 只有 ID 較小的一方建立 Offer。
+         */
+        if (
+          shouldOffer(remoteId)
+        ) {
+
+          await makeOffer(
+            remoteId
+          );
+
+        }
+
+      }
+
+    }
+
+  }
+
+
+  function applyPresenceState(state) {
+
+    var onlineIds = {};
+
+    Object.keys(
+      state || {}
+    ).forEach(function (key) {
+
+      var meta =
+        (state[key] || [])[0] ||
+        {};
+
+      var uid =
+        meta.user_id ||
+        key;
+
+      onlineIds[uid] = true;
+
+      members[uid] = {
+
+        user_id:uid,
+
+        name:
+          meta.name ||
+          (
+            members[uid] &&
+            members[uid].name
+          ) ||
+          "成員",
+
+        online:true,
+
+        mic:!!meta.mic,
+
+        video:!!meta.video,
+
+        text_only:
+          !!meta.text_only
+
+      };
+
+    });
+
+
+    Object.keys(
+      members
+    ).forEach(function (uid) {
+
+      if (!onlineIds[uid]) {
+
+        members[uid].online =
+          false;
+
+        members[uid].mic =
+          false;
+
+        members[uid].video =
+          false;
+
+        if (peers[uid]) {
+
+          closePeer(uid);
+
+        }
+
+      }
+
+    });
+
+
+    updateTop();
+    renderGrid();
+    renderMemberList();
+
+    /*
+     * Presence 更新後建立 WebRTC。
+     */
+    syncWebRTCConnections()
+      .catch(function (e) {
+
+        console.warn(
+          "WebRTC 同步失敗",
+          e
+        );
+
+      });
+
+  }
+
+
+  async function toggleMic() {
+
+    if (textOnly) {
+
+      alert(
+        "你目前是打字模式，無法開麥克風。"
+      );
+
+      return;
+
+    }
+
+    try {
+
+      await ensureMedia();
+
+      micOn =
+        !micOn;
+
+      myStream
+        .getAudioTracks()
+        .forEach(function (t) {
+
+          t.enabled =
+            micOn;
+
+        });
+
+      setMicUi();
+
+      if (me) {
+
+        members[me.id].mic =
+          micOn;
+
+      }
+
+      await trackPresence();
+
+      renderGrid();
+      renderMemberList();
+
+    } catch (e) {
+
+      alert(
+        "無法使用麥克風：" +
+        (e.message || e)
+      );
+
+    }
+
+  }
+
+
+  async function toggleCam() {
+
+    if (textOnly) {
+
+      alert(
+        "打字模式無法開視訊。"
+      );
+
+      return;
+
+    }
+
+    try {
+
+      if (
+        !camOn &&
+        !canEnableVideo()
+      ) {
+
+        alert(
+          "視訊名額已滿（最多 8 人）。"
+        );
+
+        return;
+
+      }
+
+
+      if (!camOn) {
+
+        var oldStream =
+          myStream;
+
+        var newStream =
+          await navigator
+            .mediaDevices
+            .getUserMedia({
+
+              audio:true,
+
+              video:{
+                facingMode:"user",
+                width:{
+                  ideal:640
+                },
+                height:{
+                  ideal:480
+                }
+              }
+
+            });
+
+
+        newStream
+          .getAudioTracks()
+          .forEach(function (t) {
+
+            t.enabled =
+              micOn;
+
+          });
+
+
+        /*
+         * 如果原本已有麥克風，
+         * 把舊軌移除並換成新軌。
+         */
+        if (oldStream) {
+
+          oldStream
+            .getTracks()
+            .forEach(function (t) {
+
+              t.stop();
+
+            });
+
+        }
+
+        myStream =
+          newStream;
+
+        camOn = true;
+
+
+        /*
+         * 把新的音訊／影像軌
+         * 更新到所有 PeerConnection。
+         */
+        Object.keys(
+          peers
+        ).forEach(function (remoteId) {
+
+          var pc =
+            peers[remoteId];
+
+          var senders =
+            pc.getSenders();
+
+          newStream
+            .getTracks()
+            .forEach(function (track) {
+
+              var sender =
+                senders.find(
+                  function (s) {
+
+                    return (
+                      s.track &&
+                      s.track.kind ===
+                      track.kind
+                    );
+
+                  }
+                );
+
+              if (sender) {
+
+                sender
+                  .replaceTrack(track)
+                  .catch(function(e){
+
+                    console.warn(
+                      "replaceTrack",
+                      e
+                    );
+
+                  });
+
+              } else {
+
+                try {
+
+                  pc.addTrack(
+                    track,
+                    newStream
+                  );
+
+                } catch (e) {
+
+                  console.warn(
+                    "addTrack",
+                    e
+                  );
+
+                }
+
+              }
+
+            });
+
+        });
+
+
+      } else {
+
+        /*
+         * 關閉攝影機。
+         *
+         * 保留音訊。
+         */
+        myStream
+          .getVideoTracks()
+          .forEach(function (t) {
+
+            t.stop();
+
+            myStream
+              .removeTrack(t);
+
+          });
+
+        /*
+         * 告訴 PeerConnection
+         * 不再傳送影像。
+         */
+        Object.keys(
+          peers
+        ).forEach(function (remoteId) {
+
+          var pc =
+            peers[remoteId];
+
+          pc.getSenders()
+            .forEach(function (sender) {
+
+              if (
+                sender.track &&
+                sender.track.kind ===
+                "video"
+              ) {
+
+                sender
+                  .replaceTrack(null)
+                  .catch(function(e){});
+
+              }
+
+            });
+
+        });
+
+        camOn = false;
+
+      }
+
+
+      setCamUi();
+
+      if (me) {
+
+        members[me.id].video =
+          camOn;
+
+        members[me.id].mic =
+          micOn;
+
+      }
+
+      await trackPresence();
+
+      updateTop();
+      renderGrid();
+      renderMemberList();
+
+    } catch (e) {
+
+      alert(
+        "無法使用鏡頭：" +
+        (e.message || e)
+      );
+
+    }
+
+  }
+
+
+  async function sendChat() {
 
     var input =
       document.getElementById(
@@ -1338,43 +2233,37 @@ body.chat-open .hint{
       );
 
     var text =
-      (input.value || "").trim();
+      (input.value || "")
+      .trim();
 
-
-    if(!text || !me){
+    if (
+      !text ||
+      !me
+    ) {
       return;
     }
 
-
     input.value = "";
-
 
     var payload = {
 
-      user_id:
-        me.id,
+      user_id:me.id,
 
-      name:
-        myName,
+      name:myName,
 
-      text:
-        text,
+      text:text,
 
-      at:
-        Date.now(),
+      at:Date.now(),
 
-      room_id:
-        String(roomId)
+      room_id:String(roomId)
 
     };
 
-
     pushChat(payload);
 
+    try {
 
-    try{
-
-      if(chatChannel){
+      if (chatChannel) {
 
         await chatChannel.send({
 
@@ -1388,12 +2277,10 @@ body.chat-open .hint{
 
       }
 
-    }
-
-    catch(e){
+    } catch (e) {
 
       console.warn(
-        "chat send error",
+        "聊天發送失敗",
         e
       );
 
@@ -1402,1961 +2289,20 @@ body.chat-open .hint{
   }
 
 
-  /* ============================================================
-     Media
-  ============================================================ */
+  async function joinRoom() {
 
-  async function ensureAudio(){
-
-    if(textOnly){
-      return null;
-    }
-
-
-    if(myStream){
-
-      return myStream;
-
-    }
-
-
-    if(
-      !navigator.mediaDevices ||
-      !navigator.mediaDevices.getUserMedia
-    ){
-
-      throw new Error(
-        "此瀏覽器不支援麥克風或攝影機"
-      );
-
-    }
-
-
-    document.getElementById(
-      "roomSub"
-    ).textContent =
-      "請求麥克風權限…";
-
-
-    myStream =
-      await navigator.mediaDevices.getUserMedia({
-
-        audio:true,
-
-        video:false
-
-      });
-
-
-    myStream
-      .getAudioTracks()
-      .forEach(function(t){
-
-        t.enabled = false;
-
-      });
-
-
-    micOn = false;
-
-    setMicUi();
-
-
-    return myStream;
-
-  }
-
-
-  async function enableCamera(){
-
-    if(textOnly){
-
-      throw new Error(
-        "目前是打字模式"
-      );
-
-    }
-
-
-    if(
-      !canEnableVideo()
-    ){
-
-      throw new Error(
-        "視訊名額已滿 8 人"
-      );
-
-    }
-
-
-    /*
-     * 如果還沒有音訊串流，
-     * 一次取得音訊＋視訊。
-     */
-
-    if(!myStream){
-
-      myStream =
-        await navigator.mediaDevices.getUserMedia({
-
-          audio:true,
-
-          video:{
-            facingMode:"user",
-
-            width:{
-              ideal:640
-            },
-
-            height:{
-              ideal:480
-            }
-          }
-
-        });
-
-    }
-
-    else{
-
-      var videoStream =
-        await navigator.mediaDevices.getUserMedia({
-
-          video:{
-            facingMode:"user",
-
-            width:{
-              ideal:640
-            },
-
-            height:{
-              ideal:480
-            }
-
-          }
-
-        });
-
-
-      var videoTrack =
-        videoStream.getVideoTracks()[0];
-
-
-      myStream.addTrack(
-        videoTrack
-      );
-
-    }
-
-
-    myStream
-      .getAudioTracks()
-      .forEach(function(t){
-
-        t.enabled =
-          micOn;
-
-      });
-
-
-    var videoTrack =
-      myStream.getVideoTracks()[0];
-
-
-    if(videoTrack){
-
-      videoTrack.enabled =
-        true;
-
-    }
-
-
-    camOn = true;
-
-
-    /*
-     * 將新的 camera track
-     * 加到所有 PeerConnection。
-     */
-
-    await updateVideoTrackForAllPeers();
-
-  }
-
-
-  async function disableCamera(){
-
-    if(!myStream){
-      return;
-    }
-
-
-    var tracks =
-      myStream.getVideoTracks();
-
-
-    tracks.forEach(function(track){
-
-      track.stop();
-
-      myStream.removeTrack(
-        track
-      );
-
-    });
-
-
-    camOn = false;
-
-
-    await updateVideoTrackForAllPeers();
-
-  }
-
-
-  async function toggleMic(){
-
-    if(textOnly){
-
-      alert(
-        "你目前是打字模式，無法開啟麥克風。"
-      );
-
-      return;
-
-    }
-
-
-    try{
-
-      await ensureAudio();
-
-
-      micOn =
-        !micOn;
-
-
-      myStream
-        .getAudioTracks()
-        .forEach(function(t){
-
-          t.enabled =
-            micOn;
-
-        });
-
-
-      setMicUi();
-
-
-      if(me && members[me.id]){
-
-        members[me.id].mic =
-          micOn;
-
-      }
-
-
-      await trackPresence();
-
-
-      renderGrid();
-
-      renderMemberList();
-
-    }
-
-    catch(e){
-
-      alert(
-        "無法使用麥克風：" +
-        (e.message || e)
-      );
-
-    }
-
-  }
-
-
-  async function toggleCam(){
-
-    if(textOnly){
-
-      alert(
-        "打字模式無法開啟視訊。"
-      );
-
-      return;
-
-    }
-
-
-    if(
-      !camOn &&
-      !canEnableVideo()
-    ){
-
-      alert(
-        "視訊名額已滿（最多 8 人）。"
-      );
-
-      return;
-
-    }
-
-
-    try{
-
-      if(!camOn){
-
-        await enableCamera();
-
-      }
-
-      else{
-
-        await disableCamera();
-
-      }
-
-
-      setCamUi();
-
-
-      if(me && members[me.id]){
-
-        members[me.id].video =
-          camOn;
-
-        members[me.id].mic =
-          micOn;
-
-      }
-
-
-      await trackPresence();
-
-
-      updateTop();
-
-      renderGrid();
-
-      renderMemberList();
-
-    }
-
-    catch(e){
-
-      alert(
-        "無法使用鏡頭：" +
-        (e.message || e)
-      );
-
-    }
-
-  }
-
-
-  /* ============================================================
-     WebRTC：建立 PeerConnection
-  ============================================================ */
-
-  function createPeer(remoteId){
-
-    if(
-      !remoteId ||
-      !me ||
-      remoteId === me.id
-    ){
-
-      return null;
-
-    }
-
-
-    if(
-      peers[remoteId] &&
-      peers[remoteId].pc
-    ){
-
-      return peers[remoteId];
-
-    }
-
-
-    var pc =
-      new RTCPeerConnection(
-        RTC_CONFIG
-      );
-
-
-    var remoteStream =
-      new MediaStream();
-
-
-    peers[remoteId] = {
-
-      pc:pc,
-
-      stream:remoteStream,
-
-      iceQueue:[],
-
-      remoteId:remoteId
-
-    };
-
-
-    /*
-     * 加入自己的音訊／視訊軌。
-     */
-
-    if(myStream){
-
-      myStream
-        .getTracks()
-        .forEach(function(track){
-
-          pc.addTrack(
-            track,
-            myStream
-          );
-
-        });
-
-    }
-
-
-    /*
-     * 收到遠端媒體。
-     */
-
-    pc.ontrack =
-      function(event){
-
-        if(event.streams && event.streams[0]){
-
-          var stream =
-            event.streams[0];
-
-
-          /*
-           * 使用對方真正的 MediaStream。
-           */
-
-          peers[remoteId].stream =
-            stream;
-
-        }
-
-        else{
-
-          remoteStream.addTrack(
-            event.track
-          );
-
-          peers[remoteId].stream =
-            remoteStream;
-
-        }
-
-
-        renderGrid();
-
-      };
-
-
-    /*
-     * ICE Candidate
-     */
-
-    pc.onicecandidate =
-      function(event){
-
-        if(
-          event.candidate &&
-          channel
-        ){
-
-          channel.send({
-
-            type:"broadcast",
-
-            event:"webrtc_ice",
-
-            payload:{
-
-              from:
-                me.id,
-
-              to:
-                remoteId,
-
-              candidate:
-                event.candidate
-
-            }
-
-          }).catch(function(e){
-
-            console.warn(
-              "ICE send error",
-              e
-            );
-
-          });
-
-        }
-
-      };
-
-
-    /*
-     * ICE 狀態
-     */
-
-    pc.oniceconnectionstatechange =
-      function(){
-
-        var state =
-          pc.iceConnectionState;
-
-
-        console.log(
-          "ICE",
-          remoteId,
-          state
-        );
-
-
-        if(
-          state === "failed" ||
-          state === "closed"
-        ){
-
-          closePeer(
-            remoteId
-          );
-
-        }
-
-      };
-
-
-    pc.onconnectionstatechange =
-      function(){
-
-        console.log(
-          "PeerConnection",
-          remoteId,
-          pc.connectionState
-        );
-
-
-        if(
-          pc.connectionState ===
-            "failed"
-        ){
-
-          /*
-           * 嘗試重新建立。
-           */
-
-          closePeer(
-            remoteId
-          );
-
-        }
-
-      };
-
-
-    return peers[remoteId];
-
-  }
-
-
-  /* ============================================================
-     更新所有 Peer 的 Camera Track
-  ============================================================ */
-
-  async function updateVideoTrackForAllPeers(){
-
-    var videoTrack =
-      myStream
-        ? myStream.getVideoTracks()[0] || null
-        : null;
-
-
-    var ids =
-      Object.keys(peers);
-
-
-    for(
-      var i = 0;
-      i < ids.length;
-      i++
-    ){
-
-      var remoteId =
-        ids[i];
-
-
-      var item =
-        peers[remoteId];
-
-
-      if(
-        !item ||
-        !item.pc
-      ){
-
-        continue;
-
-      }
-
-
-      var sender =
-        item.pc
-          .getSenders()
-          .find(function(s){
-
-            return (
-              s.track &&
-              s.track.kind ===
-                "video"
-            );
-
-          });
-
-
-      try{
-
-        if(sender){
-
-          await sender.replaceTrack(
-            videoTrack
-          );
-
-        }
-
-        else if(videoTrack){
-
-          item.pc.addTrack(
-            videoTrack,
-            myStream
-          );
-
-        }
-
-      }
-
-      catch(e){
-
-        console.warn(
-          "replace video track error",
-          remoteId,
-          e
-        );
-
-      }
-
-    }
-
-  }
-
-
-  /* ============================================================
-     WebRTC Offer
-  ============================================================ */
-
-  async function makeOffer(remoteId){
-
-    if(!me){
-      return;
-    }
-
-
-    /*
-     * 只有 user_id 較小的一方主動建立 Offer。
-     *
-     * 這樣兩邊不會同時互相建立 Offer。
-     */
-
-    if(
-      String(me.id) >=
-      String(remoteId)
-    ){
-
-      return;
-
-    }
-
-
-    var item =
-      createPeer(remoteId);
-
-
-    if(!item){
-      return;
-    }
-
-
-    var pc =
-      item.pc;
-
-
-    try{
-
-      var offer =
-        await pc.createOffer({
-
-          offerToReceiveAudio:true,
-
-          offerToReceiveVideo:true
-
-        });
-
-
-      await pc.setLocalDescription(
-        offer
-      );
-
-
-      if(channel){
-
-        await channel.send({
-
-          type:"broadcast",
-
-          event:"webrtc_offer",
-
-          payload:{
-
-            from:
-              me.id,
-
-            to:
-              remoteId,
-
-            description:
-              pc.localDescription
-
-          }
-
-        });
-
-      }
-
-    }
-
-    catch(e){
-
-      console.error(
-        "makeOffer error",
-        e
-      );
-
-    }
-
-  }
-
-
-  /* ============================================================
-     WebRTC Answer
-  ============================================================ */
-
-  async function handleOffer(payload){
-
-    if(
-      !payload ||
-      !me ||
-      payload.to !== me.id
-    ){
-
-      return;
-
-    }
-
-
-    var remoteId =
-      payload.from;
-
-
-    if(!remoteId){
-      return;
-    }
-
-
-    var item =
-      createPeer(remoteId);
-
-
-    if(!item){
-      return;
-    }
-
-
-    var pc =
-      item.pc;
-
-
-    try{
-
-      await pc.setRemoteDescription(
-        new RTCSessionDescription(
-          payload.description
-        )
-      );
-
-
-      /*
-       * 處理之前暫存的 ICE。
-       */
-
-      await flushIceQueue(
-        remoteId
-      );
-
-
-      var answer =
-        await pc.createAnswer();
-
-
-      await pc.setLocalDescription(
-        answer
-      );
-
-
-      if(channel){
-
-        await channel.send({
-
-          type:"broadcast",
-
-          event:"webrtc_answer",
-
-          payload:{
-
-            from:
-              me.id,
-
-            to:
-              remoteId,
-
-            description:
-              pc.localDescription
-
-          }
-
-        });
-
-      }
-
-    }
-
-    catch(e){
-
-      console.error(
-        "handleOffer error",
-        e
-      );
-
-    }
-
-  }
-
-
-  /* ============================================================
-     WebRTC Answer
-  ============================================================ */
-
-  async function handleAnswer(payload){
-
-    if(
-      !payload ||
-      !me ||
-      payload.to !== me.id
-    ){
-
-      return;
-
-    }
-
-
-    var remoteId =
-      payload.from;
-
-
-    var item =
-      peers[remoteId];
-
-
-    if(!item){
-      return;
-    }
-
-
-    try{
-
-      await item.pc.setRemoteDescription(
-
-        new RTCSessionDescription(
-          payload.description
-        )
-
-      );
-
-
-      await flushIceQueue(
-        remoteId
-      );
-
-    }
-
-    catch(e){
-
-      console.error(
-        "handleAnswer error",
-        e
-      );
-
-    }
-
-  }
-
-
-  /* ============================================================
-     ICE
-  ============================================================ */
-
-  async function handleIce(payload){
-
-    if(
-      !payload ||
-      !me ||
-      payload.to !== me.id
-    ){
-
-      return;
-
-    }
-
-
-    var remoteId =
-      payload.from;
-
-
-    var item =
-      createPeer(remoteId);
-
-
-    if(!item){
-      return;
-    }
-
-
-    var candidate =
-      payload.candidate;
-
-
-    if(!candidate){
-      return;
-    }
-
-
-    /*
-     * 如果 RemoteDescription 還沒有設定，
-     * 暫存 Candidate。
-     */
-
-    if(
-      !item.pc.remoteDescription
-    ){
-
-      item.iceQueue.push(
-        candidate
-      );
-
-      return;
-
-    }
-
-
-    try{
-
-      await item.pc.addIceCandidate(
-        new RTCIceCandidate(
-          candidate
-        )
-      );
-
-    }
-
-    catch(e){
-
-      console.warn(
-        "addIceCandidate error",
-        e
-      );
-
-    }
-
-  }
-
-
-  async function flushIceQueue(remoteId){
-
-    var item =
-      peers[remoteId];
-
-
-    if(!item){
-      return;
-    }
-
-
-    if(
-      !item.pc.remoteDescription
-    ){
-
-      return;
-
-    }
-
-
-    var queue =
-      item.iceQueue || [];
-
-
-    item.iceQueue = [];
-
-
-    for(
-      var i = 0;
-      i < queue.length;
-      i++
-    ){
-
-      try{
-
-        await item.pc.addIceCandidate(
-
-          new RTCIceCandidate(
-            queue[i]
-          )
-
-        );
-
-      }
-
-      catch(e){
-
-        console.warn(
-          "flush ICE error",
-          e
-        );
-
-      }
-
-    }
-
-  }
-
-
-  /* ============================================================
-     關閉 Peer
-  ============================================================ */
-
-  function closePeer(remoteId){
-
-    var item =
-      peers[remoteId];
-
-
-    if(!item){
-      return;
-    }
-
-
-    try{
-
-      item.pc.ontrack =
-        null;
-
-      item.pc.onicecandidate =
-        null;
-
-      item.pc.close();
-
-    }
-
-    catch(e){}
-
-
-    delete peers[remoteId];
-
-
-    renderGrid();
-
-  }
-
-
-  /* ============================================================
-     成員 Presence
-  ============================================================ */
-
-  function applyPresenceState(state){
-
-    var onlineIds = {};
-
-
-    Object.keys(state || {})
-      .forEach(function(key){
-
-        var meta =
-          (state[key] || [])[0] || {};
-
-
-        var uid =
-          meta.user_id ||
-          key;
-
-
-        onlineIds[uid] = true;
-
-
-        members[uid] = {
-
-          user_id:
-            uid,
-
-          name:
-            meta.name ||
-            (
-              members[uid] &&
-              members[uid].name
-            ) ||
-            "成員",
-
-          online:true,
-
-          mic:
-            !!meta.mic,
-
-          video:
-            !!meta.video,
-
-          text_only:
-            !!meta.text_only
-
-        };
-
-      });
-
-
-    /*
-     * 已離開的人。
-     */
-
-    Object.keys(members)
-      .forEach(function(uid){
-
-        if(!onlineIds[uid]){
-
-          members[uid].online =
-            false;
-
-          members[uid].mic =
-            false;
-
-          members[uid].video =
-            false;
-
-
-          if(peers[uid]){
-
-            closePeer(uid);
-
-          }
-
-        }
-
-      });
-
-
-    updateTop();
-
-    renderGrid();
-
-    renderMemberList();
-
-  }
-
-
-  async function trackPresence(){
-
-    if(
-      !channel ||
-      !me
-    ){
-
-      return;
-
-    }
-
-
-    try{
-
-      await channel.track({
-
-        user_id:
-          me.id,
-
-        name:
-          myName,
-
-        online:true,
-
-        mic:
-          micOn,
-
-        video:
-          camOn,
-
-        text_only:
-          !!textOnly,
-
-        at:
-          Date.now()
-
-      });
-
-    }
-
-    catch(e){
-
-      console.warn(
-        "presence track error",
-        e
-      );
-
-    }
-
-  }
-
-
-  /* ============================================================
-     WebRTC 信令事件
-  ============================================================ */
-
-  function setupSignalHandlers(){
-
-    channel
-
-      .on(
-        "broadcast",
-        {event:"webrtc_offer"},
-        function(message){
-
-          var p =
-            message &&
-            message.payload;
-
-          handleOffer(p);
-
-        }
-      )
-
-
-      .on(
-        "broadcast",
-        {event:"webrtc_answer"},
-        function(message){
-
-          var p =
-            message &&
-            message.payload;
-
-          handleAnswer(p);
-
-        }
-      )
-
-
-      .on(
-        "broadcast",
-        {event:"webrtc_ice"},
-        function(message){
-
-          var p =
-            message &&
-            message.payload;
-
-          handleIce(p);
-
-        }
-      )
-
-
-      /*
-       * 新成員進入。
-       *
-       * 每個人收到 hello 後：
-       *
-       * user_id 較小的人建立 Offer。
-       */
-
-      .on(
-        "broadcast",
-        {event:"meeting_hello"},
-        function(message){
-
-          var p =
-            message &&
-            message.payload;
-
-
-          if(
-            !p ||
-            !p.user_id ||
-            !me
-          ){
-
-            return;
-
-          }
-
-
-          if(
-            p.user_id ===
-            me.id
-          ){
-
-            return;
-
-          }
-
-
-          /*
-           * 只有真正在線的人建立連線。
-           */
-
-          if(
-            members[p.user_id] &&
-            members[p.user_id].online
-          ){
-
-            setTimeout(function(){
-
-              makeOffer(
-                p.user_id
-              );
-
-            },150);
-
-          }
-
-        }
-      )
-
-
-      /*
-       * 對方離開時立即清除 Peer。
-       */
-
-      .on(
-        "broadcast",
-        {event:"meeting_leave"},
-        function(message){
-
-          var p =
-            message &&
-            message.payload;
-
-
-          if(
-            p &&
-            p.user_id
-          ){
-
-            closePeer(
-              p.user_id
-            );
-
-          }
-
-        }
-      );
-
-  }
-
-
-  /* ============================================================
-     視訊格
-  ============================================================ */
-
-  function renderGrid(){
-
-    var list =
-      Object.keys(members)
-
-        .map(function(k){
-
-          return members[k];
-
-        })
-
-        .filter(function(m){
-
-          return (
-            m.online &&
-            !m.text_only
-          );
-
-        })
-
-        .sort(function(a,b){
-
-          if(
-            me &&
-            a.user_id === me.id
-          ){
-
-            return -1;
-
-          }
-
-
-          if(
-            me &&
-            b.user_id === me.id
-          ){
-
-            return 1;
-
-          }
-
-
-          return (
-            a.name || ""
-          ).localeCompare(
-            b.name || ""
-          );
-
-        });
-
-
-    var slots =
-      list.slice(
-        0,
-        MAX_VIDEO
-      );
-
-
-    var n =
-      Math.max(
-        1,
-        slots.length
-      );
-
-
-    grid.className =
-      "grid slots-" +
-      Math.min(
-        MAX_VIDEO,
-        n
-      );
-
-
-    grid.innerHTML = "";
-
-
-    /*
-     * 沒有人真正開視訊／語音時。
-     */
-
-    if(!slots.length){
-
-      grid.innerHTML =
-
-        '<div class="slot">' +
-
-          '<div class="slot-avatar">' +
-
-            '<div class="face">👥</div>' +
-
-            '<div>等待通話成員…</div>' +
-
-            '<div style="font-size:12px;opacity:.8">' +
-
-              '可以開啟視訊或麥克風加入會議' +
-
-            '</div>' +
-
-          '</div>' +
-
-        '</div>';
-
-      return;
-
-    }
-
-
-    slots.forEach(function(m){
-
-      var isMe =
-        me &&
-        m.user_id === me.id;
-
-
-      var slot =
-        document.createElement(
-          "div"
-        );
-
-
-      slot.className =
-        "slot" +
-
-        (
-          isMe
-            ? " me"
-            : ""
-        ) +
-
-        (
-          m.video
-            ? ""
-            : " audio-only"
-        );
-
-
-      var avatar =
-        document.createElement(
-          "div"
-        );
-
-
-      avatar.className =
-        "slot-avatar";
-
-
-      avatar.innerHTML =
-
-        '<div class="face">' +
-
-          initialOf(
-            m.name
-          ) +
-
-        '</div>' +
-
-        '<div style="font-size:12px">' +
-
-          escapeHtml(
-            m.name ||
-            "成員"
-          ) +
-
-        '</div>';
-
-
-      var video =
-        document.createElement(
-          "video"
-        );
-
-
-      video.autoplay =
-        true;
-
-      video.playsInline =
-        true;
-
-      video.muted =
-        !!isMe;
-
-
-      /*
-       * 自己的畫面
-       */
-
-      if(
-        isMe &&
-        myStream &&
-        m.video
-      ){
-
-        video.srcObject =
-          myStream;
-
-        avatar.style.display =
-          "none";
-
-      }
-
-
-      /*
-       * 遠端畫面
-       */
-
-      if(
-        !isMe &&
-        m.video &&
-        peers[m.user_id] &&
-        peers[m.user_id].stream
-      ){
-
-        video.srcObject =
-          peers[m.user_id].stream;
-
-        avatar.style.display =
-          "none";
-
-      }
-
-
-      var name =
-        document.createElement(
-          "div"
-        );
-
-
-      name.className =
-        "slot-name";
-
-
-      name.textContent =
-        (
-          m.name ||
-          "成員"
-        ) +
-
-        (
-          m.mic
-            ? " · 🎤"
-            : " · 🔇"
-        );
-
-
-      var badge =
-        document.createElement(
-          "div"
-        );
-
-
-      badge.className =
-        "slot-badge";
-
-
-      badge.textContent =
-        m.video
-          ? "視訊"
-          : "語音";
-
-
-      slot.appendChild(
-        avatar
-      );
-
-      slot.appendChild(
-        video
-      );
-
-      slot.appendChild(
-        name
-      );
-
-      slot.appendChild(
-        badge
-      );
-
-
-      grid.appendChild(
-        slot
-      );
-
-    });
-
-  }
-
-
-  /* ============================================================
-     成員列表
-  ============================================================ */
-
-  function renderMemberList(){
-
-    var keys =
-      Object.keys(members);
-
-
-    var box =
-      document.getElementById(
-        "memberList"
-      );
-
-
-    if(!keys.length){
-
-      box.innerHTML =
-        '<div style="opacity:.7;font-size:13px">' +
-        '尚無成員' +
-        '</div>';
-
-      return;
-
-    }
-
-
-    keys.sort(function(a,b){
-
-      var ma =
-        members[a];
-
-      var mb =
-        members[b];
-
-
-      if(
-        ma.online !==
-        mb.online
-      ){
-
-        return ma.online
-          ? -1
-          : 1;
-
-      }
-
-
-      return (
-        ma.name || ""
-      ).localeCompare(
-        mb.name || ""
-      );
-
-    });
-
-
-    box.innerHTML =
-      keys.map(function(k){
-
-        var m =
-          members[k];
-
-
-        var tags =
-
-          '<span class="tag ' +
-
-          (
-            m.online
-              ? "on"
-              : "off"
-          ) +
-
-          '">' +
-
-          (
-            m.online
-              ? "在線"
-              : "離線"
-          ) +
-
-          '</span>';
-
-
-        if(
-          m.online &&
-          m.video
-        ){
-
-          tags +=
-
-            ' <span class="tag vid">' +
-            '視訊' +
-            '</span>';
-
-        }
-
-
-        if(
-          m.online &&
-          m.text_only
-        ){
-
-          tags +=
-
-            ' <span class="tag txt">' +
-            '打字' +
-            '</span>';
-
-        }
-
-
-        return
-
-          '<div class="member-row">' +
-
-            '<div class="member-av">' +
-
-              initialOf(
-                m.name
-              ) +
-
-            '</div>' +
-
-            '<div class="member-meta">' +
-
-              '<div class="n">' +
-
-                escapeHtml(
-                  m.name ||
-                  "成員"
-                ) +
-
-                (
-                  me &&
-                  m.user_id === me.id
-                    ? "（我）"
-                    : ""
-                ) +
-
-              '</div>' +
-
-              '<div class="s">' +
-
-                (
-                  m.online
-
-                    ? (
-                        m.text_only
-                          ? "僅打字參與"
-                          : (
-                              m.video
-                                ? "視訊中"
-                                : "語音中"
-                            )
-                      )
-
-                    : "未在會議"
-
-                ) +
-
-              '</div>' +
-
-            '</div>' +
-
-            tags +
-
-          '</div>';
-
-      }).join("");
-
-  }
-
-
-  /* ============================================================
-     UI
-  ============================================================ */
-
-  function setMicUi(){
-
-    var b =
-      document.getElementById(
-        "btnMic"
-      );
-
-
-    if(micOn){
-
-      b.classList.remove(
-        "off"
-      );
-
-      b.innerHTML =
-        '<span class="ico">🎤</span>麥克風';
-
-    }
-
-    else{
-
-      b.classList.add(
-        "off"
-      );
-
-      b.innerHTML =
-        '<span class="ico">🔇</span>麥克風';
-
-    }
-
-  }
-
-
-  function setCamUi(){
-
-    var b =
-      document.getElementById(
-        "btnCam"
-      );
-
-
-    if(camOn){
-
-      b.classList.remove(
-        "off"
-      );
-
-      b.innerHTML =
-        '<span class="ico">📹</span>視訊';
-
-    }
-
-    else{
-
-      b.classList.add(
-        "off"
-      );
-
-      b.innerHTML =
-        '<span class="ico">📷</span>視訊';
-
-    }
-
-  }
-
-
-  /* ============================================================
-     加入會議
-  ============================================================ */
-
-  async function joinRoom(){
-
-    document.getElementById(
-      "roomSub"
-    ).textContent =
+    document.getElementById("roomSub")
+      .textContent =
       "檢查登入…";
-
 
     var session;
 
-
-    try{
+    try {
 
       session =
         await sb.auth.getSession();
 
-    }
-
-    catch(e){
-
-      document.getElementById(
-        "roomSub"
-      ).textContent =
-        "登入檢查失敗";
-
+    } catch (e) {
 
       alert(
         "無法檢查登入：" +
@@ -3367,29 +2313,20 @@ body.chat-open .hint{
 
     }
 
-
     me =
       session.data &&
       session.data.session &&
       session.data.session.user;
 
 
-    if(!me){
-
-      document.getElementById(
-        "roomSub"
-      ).textContent =
-        "尚未登入";
-
+    if (!me) {
 
       alert(
-        "請先登入再進入群組會議"
+        "請先登入再進入群組通話"
       );
-
 
       location.href =
         "login.html";
-
 
       return;
 
@@ -3397,7 +2334,6 @@ body.chat-open .hint{
 
 
     myName =
-
       (
         me.user_metadata &&
         (
@@ -3405,7 +2341,6 @@ body.chat-open .hint{
           me.user_metadata.display_name
         )
       ) ||
-
       (
         me.email
           ? me.email.split("@")[0]
@@ -3415,11 +2350,9 @@ body.chat-open .hint{
 
     members[me.id] = {
 
-      user_id:
-        me.id,
+      user_id:me.id,
 
-      name:
-        myName,
+      name:myName,
 
       online:true,
 
@@ -3427,40 +2360,32 @@ body.chat-open .hint{
 
       video:false,
 
-      text_only:
-        !!textOnly
+      text_only:!!textOnly
 
     };
 
 
-    /*
-     * 非打字模式先取得麥克風權限。
-     */
+    if (!textOnly) {
 
-    if(!textOnly){
+      try {
 
-      try{
+        await ensureMedia();
 
-        await ensureAudio();
+      } catch (e) {
 
-      }
-
-      catch(e){
-
-        document.getElementById(
-          "roomSub"
-        ).textContent =
-          "麥克風尚未啟用，可稍後再開啟";
+        console.warn(
+          "麥克風初始化失敗",
+          e
+        );
 
       }
 
     }
 
 
-    /* ========================================================
-       主 Realtime Channel
-    ======================================================== */
-
+    /*
+     * 一個群組一個 WebRTC signaling channel
+     */
     var topic =
       "group-call:" +
       String(roomId);
@@ -3468,9 +2393,7 @@ body.chat-open .hint{
 
     channel =
       sb.channel(
-
         topic,
-
         {
           config:{
             presence:{
@@ -3478,22 +2401,19 @@ body.chat-open .hint{
             }
           }
         }
-
       );
 
 
     /*
      * Presence
      */
-
     channel
-
       .on(
         "presence",
         {
           event:"sync"
         },
-        function(){
+        function () {
 
           applyPresenceState(
             channel.presenceState()
@@ -3501,13 +2421,12 @@ body.chat-open .hint{
 
         }
       )
-
       .on(
         "presence",
         {
           event:"join"
         },
-        function(){
+        function () {
 
           applyPresenceState(
             channel.presenceState()
@@ -3515,13 +2434,12 @@ body.chat-open .hint{
 
         }
       )
-
       .on(
         "presence",
         {
           event:"leave"
         },
-        function(){
+        function () {
 
           applyPresenceState(
             channel.presenceState()
@@ -3532,20 +2450,97 @@ body.chat-open .hint{
 
 
     /*
-     * WebRTC 信令
+     * WebRTC Offer
      */
+    channel.on(
+      "broadcast",
+      {
+        event:"webrtc_offer"
+      },
+      function (data) {
 
-    setupSignalHandlers();
+        var p =
+          data &&
+          data.payload
+            ? data.payload
+            : data;
+
+        handleOffer(p);
+
+      }
+    );
 
 
-    document.getElementById(
-      "roomSub"
-    ).textContent =
+    /*
+     * WebRTC Answer
+     */
+    channel.on(
+      "broadcast",
+      {
+        event:"webrtc_answer"
+      },
+      function (data) {
+
+        var p =
+          data &&
+          data.payload
+            ? data.payload
+            : data;
+
+        handleAnswer(p);
+
+      }
+    );
+
+
+    /*
+     * WebRTC ICE
+     */
+    channel.on(
+      "broadcast",
+      {
+        event:"webrtc_ice"
+      },
+      function (data) {
+
+        var p =
+          data &&
+          data.payload
+            ? data.payload
+            : data;
+
+        handleIce(p);
+
+      }
+    );
+
+
+    /*
+     * 會議結束
+     */
+    channel.on(
+      "broadcast",
+      {
+        event:"meeting_end"
+      },
+      function (data) {
+
+        console.log(
+          "收到會議結束訊號",
+          data
+        );
+
+      }
+    );
+
+
+    document.getElementById("roomSub")
+      .textContent =
       "連線會議頻道…";
 
 
     await channel.subscribe(
-      async function(status){
+      async function (status) {
 
         console.log(
           "group-call channel:",
@@ -3553,171 +2548,106 @@ body.chat-open .hint{
         );
 
 
-        if(
+        if (
           status ===
           "SUBSCRIBED"
-        ){
+        ) {
 
-          try{
+          try {
 
             localStorage.setItem(
-
               "safe_reunion_in_meeting_" +
               String(roomId),
-
               "1"
-
             );
 
-          }
+          } catch (e) {}
 
-          catch(e){}
-
-
-          /*
-           * 自己加入 Presence。
-           */
 
           await trackPresence();
 
 
           /*
-           * 告訴其他成員：
-           * 我進來了。
+           * 先讓 Presence 完成，
+           * 再開始 WebRTC。
            */
+          setTimeout(
+            function () {
 
-          try{
+              syncWebRTCConnections()
+                .catch(function(e){
+
+                  console.warn(
+                    "初始 WebRTC 失敗",
+                    e
+                  );
+
+                });
+
+            },
+            500
+          );
+
+
+          try {
 
             await channel.send({
 
               type:"broadcast",
 
-              event:"meeting_hello",
+              event:"meeting_start",
 
               payload:{
-
-                user_id:
-                  me.id,
-
-                name:
-                  myName,
 
                 room_id:
                   String(roomId),
 
-                at:
-                  Date.now()
+                starter_id:
+                  me.id,
+
+                starter_name:
+                  myName,
+
+                mode:mode,
+
+                at:Date.now()
 
               }
 
             });
 
-          }
-
-          catch(e){
-
-            console.warn(
-              "hello error",
-              e
-            );
-
-          }
+          } catch (e) {}
 
 
-          /*
-           * 讀取目前已在線成員。
-           */
-
-          applyPresenceState(
-            channel.presenceState()
-          );
-
-
-          /*
-           * 如果目前已經有人，
-           * 主動建立必要的 Peer。
-           *
-           * 只有 UUID 字串較小的一方
-           * 會送 Offer。
-           */
-
-          var ids =
-            Object.keys(members);
-
-
-          for(
-            var i = 0;
-            i < ids.length;
-            i++
-          ){
-
-            var remoteId =
-              ids[i];
-
-
-            if(
-              remoteId !== me.id &&
-              members[remoteId] &&
-              members[remoteId].online
-            ){
-
-              setTimeout(
-
-                (function(id){
-
-                  return function(){
-
-                    makeOffer(id);
-
-                  };
-
-                })(remoteId),
-
-                250 + i * 80
-
-              );
-
-            }
-
-          }
-
-
-          document.getElementById(
-            "roomSub"
-          ).textContent =
-
+          document.getElementById("roomSub")
+            .textContent =
             textOnly
-
-              ? "已以打字加入會議"
-
-              : "已進入群組會議";
+              ? "已以打字加入"
+              : "已進入會議（WebRTC 準備中）";
 
 
           updateTop();
-
           renderGrid();
-
           renderMemberList();
 
         }
 
-        else if(
+        else if (
           status ===
           "CHANNEL_ERROR"
-        ){
+        ) {
 
           document.getElementById(
             "roomSub"
           ).textContent =
             "會議頻道連線失敗";
 
-
         }
 
-        else if(
+        else if (
           status ===
           "TIMED_OUT"
-        ){
+        ) {
 
           document.getElementById(
             "roomSub"
@@ -3730,124 +2660,133 @@ body.chat-open .hint{
     );
 
 
-    /* ========================================================
-       會議聊天 Channel
-    ======================================================== */
-
+    /*
+     * 會議聊天
+     */
     chatChannel =
       sb.channel(
-
         "group-call-chat:" +
         String(roomId)
-
       );
 
 
     chatChannel.on(
-
       "broadcast",
-
       {
         event:"call_chat"
       },
-
-      function(message){
+      function (data) {
 
         var p =
-          message &&
-          message.payload;
+          data &&
+          data.payload
+            ? data.payload
+            : data;
 
-
-        if(
+        if (
           !p ||
           !p.text
-        ){
-
+        ) {
           return;
-
         }
 
-
-        /*
-         * 自己不要重複顯示。
-         */
-
-        if(
+        if (
           me &&
           p.user_id === me.id
-        ){
-
+        ) {
           return;
-
         }
-
 
         pushChat(p);
 
       }
-
     );
 
 
     await chatChannel.subscribe();
 
 
-    /*
-     * 打字加入，自動打開聊天。
-     */
-
-    if(textOnly){
-
-      setChatOpen(
-        true
-      );
-
+    if (textOnly) {
+      setChatOpen(true);
     }
 
   }
 
 
-  /* ============================================================
-     離開
-  ============================================================ */
+  /*
+   * 離開
+   */
+  async function hangup() {
 
-  async function hangup(){
-
-    if(leaving){
+    if (destroyed) {
       return;
     }
 
-
-    leaving = true;
+    destroyed = true;
 
 
     /*
-     * 告訴其他人我離開。
+     * 關閉所有 WebRTC
      */
+    Object.keys(
+      peers
+    ).forEach(function (id) {
 
-    try{
+      try {
 
-      if(
-        channel &&
-        me
-      ){
+        peers[id].close();
+
+      } catch (e) {}
+
+    });
+
+    peers = {};
+
+    remoteStreams = {};
+
+
+    /*
+     * 關閉本地攝影機／麥克風
+     */
+    if (myStream) {
+
+      myStream
+        .getTracks()
+        .forEach(function (t) {
+
+          try {
+            t.stop();
+          } catch (e) {}
+
+        });
+
+      myStream = null;
+
+    }
+
+
+    /*
+     * 告知其他人
+     */
+    try {
+
+      if (channel) {
 
         await channel.send({
 
           type:"broadcast",
 
-          event:"meeting_leave",
+          event:"meeting_end",
 
           payload:{
-
-            user_id:
-              me.id,
 
             room_id:
               String(roomId),
 
-            at:
-              Date.now()
+            user_id:
+              me ? me.id : null,
+
+            at:Date.now()
 
           }
 
@@ -3855,74 +2794,18 @@ body.chat-open .hint{
 
       }
 
-    }
-
-    catch(e){}
+    } catch (e) {}
 
 
-    /*
-     * 停止 Media
-     */
+    try {
 
-    try{
+      if (channel) {
 
-      if(myStream){
+        try {
+          await channel.untrack();
+        } catch (e) {}
 
-        myStream
-          .getTracks()
-          .forEach(function(t){
-
-            t.stop();
-
-          });
-
-        myStream = null;
-
-      }
-
-    }
-
-    catch(e){}
-
-
-    /*
-     * 關閉所有 PeerConnection
-     */
-
-    Object.keys(peers)
-      .forEach(function(id){
-
-        closePeer(id);
-
-      });
-
-
-    /*
-     * Untrack Presence
-     */
-
-    try{
-
-      if(channel){
-
-        await channel.untrack();
-
-      }
-
-    }
-
-    catch(e){}
-
-
-    /*
-     * 移除 Realtime Channel
-     */
-
-    try{
-
-      if(channel){
-
-        await sb.removeChannel(
+        sb.removeChannel(
           channel
         );
 
@@ -3930,16 +2813,9 @@ body.chat-open .hint{
 
       }
 
-    }
+      if (chatChannel) {
 
-    catch(e){}
-
-
-    try{
-
-      if(chatChannel){
-
-        await sb.removeChannel(
+        sb.removeChannel(
           chatChannel
         );
 
@@ -3947,43 +2823,36 @@ body.chat-open .hint{
 
       }
 
-    }
-
-    catch(e){}
+    } catch (e) {}
 
 
-    try{
+    try {
 
       localStorage.removeItem(
-
         "safe_reunion_in_meeting_" +
         String(roomId)
-
       );
 
-    }
+    } catch (e) {}
 
-    catch(e){}
+
+    chatLog = [];
+
+    renderChat();
 
 
     /*
-     * 回聊天室
+     * 回到原本群組聊天室
      */
-
     var back =
-
       "room.html?id=" +
-
       encodeURIComponent(
         roomId
       ) +
-
       "&name=" +
-
       encodeURIComponent(
         roomName
       );
-
 
     location.href =
       back;
@@ -3991,14 +2860,13 @@ body.chat-open .hint{
   }
 
 
-  /* ============================================================
-     按鈕
-  ============================================================ */
-
+  /*
+   * 按鈕
+   */
   document.getElementById(
     "btnMic"
   ).onclick =
-    function(){
+    function () {
 
       toggleMic();
 
@@ -4008,31 +2876,25 @@ body.chat-open .hint{
   document.getElementById(
     "btnCam"
   ).onclick =
-    function(){
+    function () {
 
-      var btn =
-        document.getElementById(
-          "btnCam"
-        );
-
-
-      if(
-        btn.classList.contains(
-          "disabled"
-        ) &&
+      if (
+        document
+          .getElementById("btnCam")
+          .classList
+          .contains("disabled") &&
         !camOn
-      ){
+      ) {
 
         alert(
           textOnly
-            ? "打字模式無法開啟視訊"
+            ? "打字模式無法開視訊"
             : "視訊已滿 8 人"
         );
 
         return;
 
       }
-
 
       toggleCam();
 
@@ -4042,57 +2904,39 @@ body.chat-open .hint{
   document.getElementById(
     "btnHangup"
   ).onclick =
-    function(){
+    function () {
 
       hangup();
 
     };
 
 
-  var kbFab =
-    document.getElementById(
-      "kbFab"
-    );
+  document.getElementById(
+    "kbFab"
+  ).onclick =
+    function () {
+
+      setChatOpen(
+        !chatOpen
+      );
+
+    };
 
 
-  if(kbFab){
+  document.getElementById(
+    "btnChatCollapse"
+  ).onclick =
+    function () {
 
-    kbFab.onclick =
-      function(){
+      setChatOpen(false);
 
-        setChatOpen(
-          !chatOpen
-        );
-
-      };
-
-  }
-
-
-  var btnCollapse =
-    document.getElementById(
-      "btnChatCollapse"
-    );
-
-
-  if(btnCollapse){
-
-    btnCollapse.onclick =
-      function(){
-
-        setChatOpen(
-          false
-        );
-
-      };
-
-  }
+    };
 
 
   document.getElementById(
     "btnChatSend"
   ).onclick =
-    function(){
+    function () {
 
       sendChat();
 
@@ -4103,11 +2947,12 @@ body.chat-open .hint{
     "chatInput"
   ).addEventListener(
     "keydown",
-    function(e){
+    function (e) {
 
-      if(
-        e.key === "Enter"
-      ){
+      if (
+        e.key ===
+        "Enter"
+      ) {
 
         e.preventDefault();
 
@@ -4123,42 +2968,36 @@ body.chat-open .hint{
     "chatInput"
   ).addEventListener(
     "focus",
-    function(){
+    function () {
 
-      if(!chatOpen){
-
-        setChatOpen(
-          true
-        );
-
+      if (!chatOpen) {
+        setChatOpen(true);
       }
 
     }
   );
 
 
-  /* ============================================================
-     成員按鈕
-  ============================================================ */
-
   document.getElementById(
     "btnMembers"
   ).onclick =
-    function(){
+    function () {
 
       renderMemberList();
 
-      document.getElementById(
-        "memberPanel"
-      ).classList.add(
-        "show"
-      );
+      document
+        .getElementById(
+          "memberPanel"
+        )
+        .classList
+        .add("show");
 
-      document.getElementById(
-        "panelMask"
-      ).classList.add(
-        "show"
-      );
+      document
+        .getElementById(
+          "panelMask"
+        )
+        .classList
+        .add("show");
 
     };
 
@@ -4166,56 +3005,87 @@ body.chat-open .hint{
   document.getElementById(
     "panelMask"
   ).onclick =
-    function(){
+    function () {
 
-      document.getElementById(
-        "memberPanel"
-      ).classList.remove(
-        "show"
-      );
+      document
+        .getElementById(
+          "memberPanel"
+        )
+        .classList
+        .remove("show");
 
-      document.getElementById(
-        "panelMask"
-      ).classList.remove(
-        "show"
-      );
+      document
+        .getElementById(
+          "panelMask"
+        )
+        .classList
+        .remove("show");
 
     };
 
 
-  /* ============================================================
-     初始化
-  ============================================================ */
+  /*
+   * 頁面離開時清理
+   */
+  window.addEventListener(
+    "pagehide",
+    function () {
+
+      try {
+
+        Object.keys(
+          peers
+        ).forEach(function(id){
+
+          try {
+            peers[id].close();
+          } catch(e){}
+
+        });
+
+        if (myStream) {
+
+          myStream
+            .getTracks()
+            .forEach(function(t){
+
+              try {
+                t.stop();
+              } catch(e){}
+
+            });
+
+        }
+
+      } catch (e) {}
+
+    }
+  );
+
 
   updateTop();
-
   setMicUi();
-
   setCamUi();
-
   renderChat();
 
 
   console.log(
-    "SAFE REUNION GROUP WEBRTC CALL",
+    "SAFE REUNION GROUP WEBRTC BOOT",
     {
+      mode:mode,
       roomId:roomId,
       roomName:roomName,
-      mode:mode,
       textOnly:textOnly,
+      rtc:"WebRTC + Supabase Realtime signaling",
       maxVideo:MAX_VIDEO
     }
   );
 
 
   joinRoom()
-    .catch(function(e){
+    .catch(function (e) {
 
-      console.error(
-        "group-call startup error",
-        e
-      );
-
+      console.error(e);
 
       document.getElementById(
         "roomSub"
