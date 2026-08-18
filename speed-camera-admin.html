@@ -629,7 +629,7 @@ function parseOfficialCSV(text) {
   var lines =
     getCSVLines(text);
 
-  if (lines.length < 3) {
+  if (lines.length < 2) {
 
     throw new Error(
       "CSV 資料不足。"
@@ -648,7 +648,24 @@ function parseOfficialCSV(text) {
   var index =
     makeHeaderIndex(headers);
 
-  var requiredHeaders = [
+
+  /*
+   * ==================================================
+   * 格式一：原本官方固定測速 CSV
+   *
+   * CityName
+   * RegionName
+   * Address
+   * DeptNm
+   * BranchNm
+   * Longitude
+   * Latitude
+   * direct
+   * limit
+   * ==================================================
+   */
+
+  var officialHeaders = [
 
     "CityName",
     "RegionName",
@@ -662,167 +679,525 @@ function parseOfficialCSV(text) {
 
   ];
 
-  for (
-    var h = 0;
-    h < requiredHeaders.length;
-    h++
+
+  var isOfficialFormat =
+    officialHeaders.every(
+      function(header) {
+
+        return (
+          index[
+            cleanHeader(header)
+          ] !== undefined
+        );
+
+      }
+    );
+
+
+  /*
+   * ==================================================
+   * 格式二：中文固定測速 CSV
+   *
+   * 編號
+   * 轄區分局
+   * 行政區
+   * 取締地點
+   * 取締行向
+   * 速限Speed
+   * 經度
+   * 緯度
+   * ==================================================
+   */
+
+  var chineseHeaders = [
+
+    "編號",
+    "轄區分局",
+    "行政區",
+    "取締地點",
+    "取締行向",
+    "速限Speed",
+    "經度",
+    "緯度"
+
+  ];
+
+
+  var isChineseFormat =
+    chineseHeaders.every(
+      function(header) {
+
+        return (
+          index[
+            cleanHeader(header)
+          ] !== undefined
+        );
+
+      }
+    );
+
+
+  /*
+   * ==================================================
+   * 如果兩種格式都不是
+   * ==================================================
+   */
+
+  if (
+    !isOfficialFormat &&
+    !isChineseFormat
   ) {
 
-    if (
-      index[
-        cleanHeader(
-          requiredHeaders[h]
-        )
-      ] === undefined
-    ) {
+    throw new Error(
 
-      throw new Error(
-        "缺少官方欄位：" +
-        requiredHeaders[h]
-      );
-    }
+      "無法辨識固定測速 CSV 格式。\n\n" +
+
+      "支援的格式如下：\n\n" +
+
+      "【官方格式】\n" +
+      "CityName、RegionName、Address、DeptNm、BranchNm、Longitude、Latitude、direct、limit\n\n" +
+
+      "【中文格式】\n" +
+      "編號、轄區分局、行政區、取締地點、取締行向、速限Speed、經度、緯度"
+
+    );
+
   }
+
 
   var rows = [];
 
+
   /*
-    第一行：英文欄位
-    第二行：中文說明
-    第三行開始：資料
-  */
+   * ==================================================
+   * 官方格式
+   * ==================================================
+   */
 
-  for (
-    var i = 2;
-    i < lines.length;
-    i++
-  ) {
+  if (isOfficialFormat) {
 
-    var values =
-      parseCSVLine(
-        lines[i],
-        separator
-      );
+    /*
+     * 官方 CSV 通常：
+     *
+     * 第 1 行：英文欄位
+     * 第 2 行：中文說明
+     * 第 3 行開始：資料
+     */
 
-    var longitude =
-      numberValue(
-        getValue(
-          values,
-          index,
-          ["Longitude"]
-        )
-      );
-
-    var latitude =
-      numberValue(
-        getValue(
-          values,
-          index,
-          ["Latitude"]
-        )
-      );
-
-    var limitText =
-      getValue(
-        values,
-        index,
-        ["limit"]
-      );
-
-    var speedLimit =
-      numberValue(
-        limitText
-      );
-
-    if (
-      longitude === null ||
-      latitude === null
+    for (
+      var i = 2;
+      i < lines.length;
+      i++
     ) {
 
-      throw new Error(
-        "第 " +
-        (i + 1) +
-        " 行經緯度不是有效數字。"
-      );
+      var values =
+        parseCSVLine(
+          lines[i],
+          separator
+        );
+
+
+      /*
+       * 空白列跳過
+       */
+
+      var hasData =
+        values.some(
+          function(value) {
+
+            return (
+              String(value || "")
+                .trim() !== ""
+            );
+
+          }
+        );
+
+
+      if (!hasData) {
+        continue;
+      }
+
+
+      var longitude =
+        numberValue(
+          getValue(
+            values,
+            index,
+            ["Longitude"]
+          )
+        );
+
+
+      var latitude =
+        numberValue(
+          getValue(
+            values,
+            index,
+            ["Latitude"]
+          )
+        );
+
+
+      var speedLimit =
+        numberValue(
+          getValue(
+            values,
+            index,
+            ["limit"]
+          )
+        );
+
+
+      if (
+        longitude === null ||
+        latitude === null
+      ) {
+
+        throw new Error(
+
+          "第 " +
+          (i + 1) +
+          " 行經緯度不是有效數字。"
+
+        );
+
+      }
+
+
+      if (
+        speedLimit !== null &&
+        !Number.isInteger(
+          speedLimit
+        )
+      ) {
+
+        throw new Error(
+
+          "第 " +
+          (i + 1) +
+          " 行速限不是整數。"
+
+        );
+
+      }
+
+
+      rows.push({
+
+        /*
+         * 官方 CSV 沒有編號
+         */
+
+        camera_no:
+          null,
+
+        CityName:
+          getValue(
+            values,
+            index,
+            ["CityName"]
+          ) || null,
+
+        RegionName:
+          getValue(
+            values,
+            index,
+            ["RegionName"]
+          ) || null,
+
+        Address:
+          getValue(
+            values,
+            index,
+            ["Address"]
+          ) || null,
+
+        DeptNm:
+          getValue(
+            values,
+            index,
+            ["DeptNm"]
+          ) || null,
+
+        BranchNm:
+          getValue(
+            values,
+            index,
+            ["BranchNm"]
+          ) || null,
+
+        Longitude:
+          longitude,
+
+        Latitude:
+          latitude,
+
+        direct:
+          getValue(
+            values,
+            index,
+            ["direct"]
+          ) || null,
+
+        limit:
+          speedLimit
+
+      });
+
     }
 
-    if (
-      speedLimit !== null &&
-      !Number.isInteger(
-        speedLimit
-      )
-    ) {
-
-      throw new Error(
-        "第 " +
-        (i + 1) +
-        " 行速限不是整數。"
-      );
-    }
-
-    rows.push({
-
-      CityName:
-        getValue(
-          values,
-          index,
-          ["CityName"]
-        ) || null,
-
-      RegionName:
-        getValue(
-          values,
-          index,
-          ["RegionName"]
-        ) || null,
-
-      Address:
-        getValue(
-          values,
-          index,
-          ["Address"]
-        ) || null,
-
-      DeptNm:
-        getValue(
-          values,
-          index,
-          ["DeptNm"]
-        ) || null,
-
-      BranchNm:
-        getValue(
-          values,
-          index,
-          ["BranchNm"]
-        ) || null,
-
-      Longitude:
-        longitude,
-
-      Latitude:
-        latitude,
-
-      direct:
-        getValue(
-          values,
-          index,
-          ["direct"]
-        ) || null,
-
-      limit:
-        speedLimit
-
-    });
   }
+
+
+  /*
+   * ==================================================
+   * 中文格式
+   * ==================================================
+   */
+
+  if (isChineseFormat) {
+
+    /*
+     * 中文格式通常：
+     *
+     * 第 1 行：欄位名稱
+     * 第 2 行開始：資料
+     */
+
+    for (
+      var j = 1;
+      j < lines.length;
+      j++
+    ) {
+
+      var chineseValues =
+        parseCSVLine(
+          lines[j],
+          separator
+        );
+
+
+      /*
+       * 空白列跳過
+       */
+
+      var chineseHasData =
+        chineseValues.some(
+          function(value) {
+
+            return (
+              String(value || "")
+                .trim() !== ""
+            );
+
+          }
+        );
+
+
+      if (!chineseHasData) {
+        continue;
+      }
+
+
+      var cameraNo =
+        getValue(
+          chineseValues,
+          index,
+          ["編號"]
+        );
+
+
+      var deptNm =
+        getValue(
+          chineseValues,
+          index,
+          ["轄區分局"]
+        );
+
+
+      var regionName =
+        getValue(
+          chineseValues,
+          index,
+          ["行政區"]
+        );
+
+
+      var address =
+        getValue(
+          chineseValues,
+          index,
+          ["取締地點"]
+        );
+
+
+      var direct =
+        getValue(
+          chineseValues,
+          index,
+          ["取締行向"]
+        );
+
+
+      var speedLimit =
+        numberValue(
+          getValue(
+            chineseValues,
+            index,
+            ["速限Speed"]
+          )
+        );
+
+
+      var longitude =
+        numberValue(
+          getValue(
+            chineseValues,
+            index,
+            ["經度"]
+          )
+        );
+
+
+      var latitude =
+        numberValue(
+          getValue(
+            chineseValues,
+            index,
+            ["緯度"]
+          )
+        );
+
+
+      /*
+       * 檢查座標
+       */
+
+      if (
+        longitude === null ||
+        latitude === null
+      ) {
+
+        throw new Error(
+
+          "中文固定測速 CSV 第 " +
+          (j + 1) +
+          " 行經緯度無效。\n\n" +
+
+          "經度：" +
+          getValue(
+            chineseValues,
+            index,
+            ["經度"]
+          ) +
+
+          "\n" +
+
+          "緯度：" +
+          getValue(
+            chineseValues,
+            index,
+            ["緯度"]
+          )
+
+        );
+
+      }
+
+
+      /*
+       * 檢查台灣座標範圍
+       */
+
+      if (
+        longitude < 118 ||
+        longitude > 123.5 ||
+        latitude < 20 ||
+        latitude > 26.5
+      ) {
+
+        throw new Error(
+
+          "中文固定測速 CSV 第 " +
+          (j + 1) +
+          " 行座標超出合理範圍。\n\n" +
+
+          "經度：" +
+          longitude +
+
+          "\n" +
+
+          "緯度：" +
+          latitude
+
+        );
+
+      }
+
+
+      /*
+       * 建立統一格式
+       *
+       * 中文 → 資料庫英文欄位
+       */
+
+      rows.push({
+
+        camera_no:
+          cameraNo || null,
+
+        CityName:
+          null,
+
+        RegionName:
+          regionName || null,
+
+        Address:
+          address || null,
+
+        DeptNm:
+          deptNm || null,
+
+        BranchNm:
+          null,
+
+        Longitude:
+          longitude,
+
+        Latitude:
+          latitude,
+
+        direct:
+          direct || null,
+
+        limit:
+          speedLimit
+
+      });
+
+    }
+
+  }
+
+
+  /*
+   * ==================================================
+   * 最後檢查
+   * ==================================================
+   */
 
   if (!rows.length) {
 
     throw new Error(
-      "沒有讀取到任何資料。"
+      "沒有讀取到任何有效資料。"
     );
+
   }
 
+
   return rows;
+
 }
 
 /* =========================
