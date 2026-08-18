@@ -1095,39 +1095,70 @@
   <div class="tabbar">
 
     <a
-      class="tab"
-      href="social.html"
-      aria-label="社群"
-    >
-      <div class="ico">
-        ◎
-      </div>
-      社群
-    </a>
 
+  class="tab"
 
-    <a
-      class="tab"
-      href="learning.html"
-      aria-label="學習"
-    >
-      <div class="ico">
-        🎓
-      </div>
-      學習
-    </a>
+  href="#"
 
+  aria-label="社群"
 
-    <a
-      class="tab"
-      href="shop.html"
-      aria-label="購物"
-    >
-      <div class="ico">
-        🛍️
-      </div>
-      購物
-    </a>
+  onclick="showComingSoon(event, '社群')"
+
+>
+
+  <div class="ico">
+
+    ◎
+
+  </div>
+
+  社群
+
+</a>
+
+<a
+
+  class="tab"
+
+  href="#"
+
+  aria-label="學習"
+
+  onclick="showComingSoon(event, '學習')"
+
+>
+
+  <div class="ico">
+
+    🎓
+
+  </div>
+
+  學習
+
+</a>
+
+<a
+
+  class="tab"
+
+  href="#"
+
+  aria-label="購物"
+
+  onclick="showComingSoon(event, '購物')"
+
+>
+
+  <div class="ico">
+
+    🛍️
+
+  </div>
+
+  購物
+
+</a>
 
 
     <a
@@ -3645,6 +3676,21 @@ async function loadWeatherByLocation(
   }
 
 }
+
+function showComingSoon(event, name) {
+
+  if (event) {
+    event.preventDefault();
+  }
+
+  alert(
+    '「' + name + '」平台\n\n敬請期待'
+  );
+
+}
+
+  
+
 
 </script>
 
