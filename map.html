@@ -5515,6 +5515,9 @@ async function deleteWp(
   }
 
 
+  console.log("準備刪除集合點 id =", id, "目前登入者 =", me.id);
+
+
   const confirmed =
     confirm(
       "確定要刪除這個集合點嗎？"
@@ -5539,7 +5542,11 @@ async function deleteWp(
       .eq(
         "id",
         id
-      );
+      )
+      .select();   // 加 select 才能知道有沒有真的刪到資料
+
+
+  console.log("刪除結果：", result);
 
 
   if (
@@ -5547,9 +5554,24 @@ async function deleteWp(
   ) {
 
     alert(
-      "刪除失敗："
-      +
-      result.error.message
+      "刪除失敗：\n" +
+      result.error.message +
+      "\n\n請把這段錯誤訊息給我"
+    );
+
+    return;
+
+  }
+
+
+  // 如果沒有刪到任何資料
+  if (
+    !result.data ||
+    result.data.length === 0
+  ) {
+
+    alert(
+      "刪除失敗：資料庫沒有刪除任何資料。\n可能是權限不足（RLS）或這個集合點不存在。"
     );
 
     return;
