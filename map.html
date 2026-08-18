@@ -807,6 +807,114 @@ body.navigation-mode .navigation-info {
 
 }
 
+
+/* =========================================================
+   群組成員定位標記樣式（家人不同顏色＋形狀）
+   ========================================================= */
+
+.group-member-leaflet-icon {
+  background: transparent !important;
+  border: none !important;
+}
+
+.group-member-marker {
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  filter: drop-shadow(0 1px 3px rgba(0,0,0,.45));
+}
+
+.member-shape {
+  width: 22px;
+  height: 22px;
+  box-sizing: border-box;
+}
+
+/* 圓形 */
+.member-circle {
+  border-radius: 50%;
+  border: 2px solid #fff;
+}
+
+/* 方形 */
+.member-square {
+  border-radius: 3px;
+  border: 2px solid #fff;
+}
+
+/* 三角形 */
+.member-triangle {
+  width: 0;
+  height: 0;
+  border-left: 12px solid transparent;
+  border-right: 12px solid transparent;
+  border-bottom: 22px solid;
+  background: transparent !important;
+}
+
+/* 菱形 */
+.member-diamond {
+  width: 18px;
+  height: 18px;
+  transform: rotate(45deg);
+  border: 2px solid #fff;
+}
+
+/* 星星 */
+.member-star {
+  font-size: 26px;
+  line-height: 1;
+  text-shadow: 0 0 2px #fff, 0 0 3px #fff;
+}
+
+/* 六角形 */
+.member-hexagon {
+  width: 22px;
+  height: 20px;
+  border-radius: 4px;
+  border: 2px solid #fff;
+  clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+}
+
+/* 五角形 */
+.member-pentagon {
+  width: 22px;
+  height: 22px;
+  border: 2px solid #fff;
+  clip-path: polygon(50% 0%, 100% 38%, 82% 100%, 18% 100%, 0% 38%);
+}
+
+/* 加號 */
+.member-plus {
+  font-size: 24px;
+  font-weight: 900;
+  line-height: 1;
+  text-shadow: 0 0 2px #fff;
+}
+
+/* SOS 專用 */
+.group-member-sos {
+  width: 42px;
+  height: 42px;
+  background: #ff0000;
+  border-radius: 50%;
+  border: 3px solid #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 0 0 3px rgba(255,0,0,.35);
+}
+
+.group-member-sos-icon {
+  color: white;
+  font-size: 13px;
+  font-weight: 900;
+  letter-spacing: 0.5px;
+}
+
+
 </style>
 
 </head>
@@ -1056,6 +1164,20 @@ body.navigation-mode .navigation-info {
 
 
   <div class="list-title">
+    地圖模式
+  </div>
+
+  <div class="row" style="margin-bottom:12px;">
+    <button type="button" class="btn btn-green" id="btnModeTaiwan" style="flex:1">
+      台灣
+    </button>
+    <button type="button" class="btn btn-outline" id="btnModeAmap" style="flex:1">
+      高德
+    </button>
+  </div>
+
+
+  <div class="list-title">
     搜尋地址設為集合點
   </div>
 
@@ -1220,14 +1342,47 @@ const map =
   );
 
 
-L.tileLayer(
-  "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+/* 台灣專用底圖（使用較穩定的來源） */
+const taiwanLayer = L.tileLayer(
+  "https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png",
   {
     maxZoom: 19,
-    attribution:
-      "&copy; OpenStreetMap contributors"
+    attribution: "&copy; OpenStreetMap contributors"
   }
-).addTo(map);
+);
+
+/* 備用台灣底圖 */
+const taiwanLayerBackup = L.tileLayer(
+  "https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png",
+  {
+    maxZoom: 19,
+    attribution: "&copy; OpenStreetMap, &copy; CartoDB"
+  }
+);
+
+/* 高德底圖 */
+const amapLayer = L.tileLayer(
+  "https://webrd0{s}.is.autonavi.com/appmaptile?lang=zh_cn&size=1&scale=1&style=8&x={x}&y={y}&z={z}",
+  {
+    subdomains: ["1", "2", "3", "4"],
+    maxZoom: 18,
+    attribution: "© 高德地圖"
+  }
+);
+
+// 預設用台灣模式
+taiwanLayer.addTo(map);
+
+/* 地圖模式設定 */
+const AMAP_KEY = "";   // ← 之後填入你的高德 Web服務 Key
+let currentMapMode = "taiwan";
+
+// 防止地圖灰色：載入後強制重算尺寸
+setTimeout(function () {
+  try {
+    map.invalidateSize();
+  } catch (e) {}
+}, 300);
 
 
 /* =========================================================
@@ -5391,318 +5546,217 @@ async function deleteWp(
 
 
 /* =========================================================
-   31. 搜尋地址
+   31. 搜尋地址（支援台灣 / 高德雙模式）
    ========================================================= */
 
 async function searchPlace() {
 
-  const input =
-    document.getElementById(
-      "searchInput"
-    );
+  const input = document.getElementById("searchInput");
+  const q = input.value.trim();
 
-
-  const q =
-    input.value.trim();
-
-
-  if (
-    !q
-  ) {
-
-    alert(
-      "請輸入地址或地名"
-    );
-
+  if (!q) {
+    alert("請輸入地址或地名");
     return;
-
   }
 
-
-  const box =
-    document.getElementById(
-      "searchResults"
-    );
-
-
-  box.style.display =
-    "block";
-
-
-  box.innerHTML =
-
-    '<div style="padding:10px;color:#888;font-size:12px">'
-    +
-    "搜尋中…"
-    +
-    "</div>";
-
+  const box = document.getElementById("searchResults");
+  box.style.display = "block";
+  box.innerHTML = '<div style="padding:10px;color:#888;font-size:12px">搜尋中…</div>';
 
   try {
 
-    const url =
+    let results = [];
 
-      "https://nominatim.openstreetmap.org/search"
-      +
-      "?format=json"
-      +
-      "&q="
-      +
-      encodeURIComponent(
-        q
-      )
-      +
-      "&limit=6"
-      +
-      "&accept-language=zh-TW";
+    if (currentMapMode === "taiwan") {
+      // ===== 台灣模式：Nominatim =====
+      const viewbox = "118.0,21.5,122.5,25.5";
 
+      const url =
+        "https://nominatim.openstreetmap.org/search" +
+        "?format=json" +
+        "&q=" + encodeURIComponent(q) +
+        "&limit=8" +
+        "&countrycodes=tw" +
+        "&viewbox=" + viewbox +
+        "&bounded=0" +
+        "&accept-language=zh-TW" +
+        "&addressdetails=1";
 
-    const response =
-      await fetch(
-        url,
-        {
-          headers: {
-            "Accept":
-              "application/json"
-          }
+      const response = await fetch(url, {
+        headers: {
+          "Accept": "application/json",
+          "User-Agent": "SafeReunionMap/1.0 (https://nl13741619-commits.github.io/safe-reunion-login/; contact=local-app)"
         }
-      );
+      });
 
+      if (!response.ok) throw new Error("搜尋服務 HTTP " + response.status);
 
-    if (
-      !response.ok
-    ) {
+      const arr = await response.json();
 
-      throw new Error(
-        "搜尋服務 HTTP "
-        +
-        response.status
-      );
+      results = (arr || []).map(function(item) {
+        return {
+          name: item.display_name,
+          lat: parseFloat(item.lat),
+          lng: parseFloat(item.lon)
+        };
+      });
 
-    }
-
-
-    const arr =
-      await response.json();
-
-
-    box.innerHTML =
-      "";
-
-
-    if (
-      !Array.isArray(arr)
-      ||
-      !arr.length
-    ) {
-
-      box.innerHTML =
-
-        '<div style="padding:10px;color:#888;font-size:12px">'
-        +
-        "找不到地點"
-        +
-        "</div>";
-
-      return;
-
-    }
-
-
-    arr.forEach(
-      function (
-        item
-      ) {
-
-        const div =
-          document.createElement(
-            "div"
-          );
-
-
-        div.style.cssText =
-
-          "padding:10px;"
-          +
-          "border-bottom:1px solid #eee;"
-          +
-          "font-size:12px;"
-          +
-          "cursor:pointer;";
-
-
-        div.textContent =
-          item.display_name;
-
-
-        div.onclick =
-          async function () {
-
-            const lat =
-              parseFloat(
-                item.lat
-              );
-
-
-            const lng =
-              parseFloat(
-                item.lon
-              );
-
-
-            if (
-              !Number.isFinite(
-                lat
-              )
-              ||
-              !Number.isFinite(
-                lng
-              )
-            ) {
-
-              alert(
-                "搜尋結果座標無效"
-              );
-
-              return;
-
-            }
-
-
-            const title =
-              (
-                item.display_name
-                ||
-                q
-              )
-              .split(
-                ","
-              )[0];
-
-
-            const titleInput =
-              document.getElementById(
-                "wpTitle"
-              );
-
-
-            if (
-              !titleInput.value.trim()
-            ) {
-
-              titleInput.value =
-                title;
-
-            }
-
-
-            map.setView(
-              [
-                lat,
-                lng
-              ],
-              16
-            );
-
-
-            L.circleMarker(
-
-              [
-                lat,
-                lng
-              ],
-
-              {
-
-                radius:
-                  6,
-
-                color:
-                  "#1565c0",
-
-                fillColor:
-                  "#1565c0",
-
-                fillOpacity:
-                  .8
-
-              }
-
-            )
-            .addTo(
-              map
-            );
-
-
-            box.style.display =
-              "none";
-
-
-            await addWaypoint(
-              lat,
-              lng
-            );
-
-          };
-
-
-        box.appendChild(
-          div
-        );
-
+    } else {
+      // ===== 高德模式 =====
+      if (!AMAP_KEY) {
+        box.innerHTML = '<div style="padding:10px;color:#c62828;font-size:12px">尚未設定高德 Key，無法使用高德搜尋。請先在程式最上方填入 AMAP_KEY。</div>';
+        return;
       }
-    );
 
+      const url =
+        "https://restapi.amap.com/v3/geocode/geo" +
+        "?address=" + encodeURIComponent(q) +
+        "&key=" + AMAP_KEY +
+        "&output=JSON";
+
+      const response = await fetch(url);
+      const data = await response.json();
+
+      if (data.status !== "1" || !data.geocodes || !data.geocodes.length) {
+        results = [];
+      } else {
+        results = data.geocodes.map(function(item) {
+          const parts = (item.location || "").split(",");
+          const lng = parseFloat(parts[0]);
+          const lat = parseFloat(parts[1]);
+          return {
+            name: item.formatted_address || item.address || q,
+            lat: lat,
+            lng: lng
+          };
+        });
+      }
+    }
+
+    // 顯示結果
+    box.innerHTML = "";
+
+    if (!results.length) {
+      box.innerHTML = '<div style="padding:10px;color:#888;font-size:12px">找不到地點</div>';
+      return;
+    }
+
+    results.forEach(function (item) {
+
+      const div = document.createElement("div");
+      div.style.cssText = "padding:10px;border-bottom:1px solid #eee;font-size:12px;cursor:pointer;";
+      div.textContent = item.name;
+
+      div.onclick = async function () {
+
+        if (!Number.isFinite(item.lat) || !Number.isFinite(item.lng)) {
+          alert("搜尋結果座標無效");
+          return;
+        }
+
+        const titleInput = document.getElementById("wpTitle");
+        if (!titleInput.value.trim()) {
+          titleInput.value = (item.name || "").split(/[,，]/)[0];
+        }
+
+        map.setView([item.lat, item.lng], 17);
+
+        L.circleMarker([item.lat, item.lng], {
+          radius: 6,
+          color: "#1565c0",
+          fillColor: "#1565c0",
+          fillOpacity: 0.8
+        }).addTo(map);
+
+        box.style.display = "none";
+        await addWaypoint(item.lat, item.lng);
+      };
+
+      box.appendChild(div);
+    });
+
+  } catch (error) {
+    console.error("地址搜尋錯誤：", error);
+    box.innerHTML = '<div style="padding:10px;color:#c62828;font-size:12px">搜尋失敗，請稍後再試</div>';
   }
-
-  catch (
-    error
-  ) {
-
-    console.error(
-      "地址搜尋錯誤：",
-      error
-    );
-
-
-    box.innerHTML =
-
-      '<div style="padding:10px;color:#c62828;font-size:12px">'
-      +
-      "搜尋失敗，請稍後再試"
-      +
-      "</div>";
-
-  }
-
 }
 
 
-document.getElementById(
-  "btnSearch"
-).onclick =
-  searchPlace;
+document.getElementById("btnSearch").onclick = searchPlace;
 
 
-document.getElementById(
-  "searchInput"
-).addEventListener(
-  "keydown",
-  function (
-    event
-  ) {
-
-    if (
-      event.key ===
-      "Enter"
-    ) {
-
-      searchPlace();
-
-    }
-
+document.getElementById("searchInput").addEventListener("keydown", function (event) {
+  if (event.key === "Enter") {
+    searchPlace();
   }
-);
+});
+
+
+/* =========================================================
+   地圖模式切換
+   ========================================================= */
+
+function switchMapMode(mode) {
+
+  currentMapMode = mode;
+
+  const btnTaiwan = document.getElementById("btnModeTaiwan");
+  const btnAmap = document.getElementById("btnModeAmap");
+
+  // 先清掉所有底圖
+  if (map.hasLayer(amapLayer)) map.removeLayer(amapLayer);
+  if (map.hasLayer(taiwanLayer)) map.removeLayer(taiwanLayer);
+  if (typeof taiwanLayerBackup !== "undefined" && map.hasLayer(taiwanLayerBackup)) {
+    map.removeLayer(taiwanLayerBackup);
+  }
+
+  if (mode === "taiwan") {
+    taiwanLayer.addTo(map);
+    if (btnTaiwan) {
+      btnTaiwan.classList.add("btn-green");
+      btnTaiwan.classList.remove("btn-outline");
+    }
+    if (btnAmap) {
+      btnAmap.classList.add("btn-outline");
+      btnAmap.classList.remove("btn-green");
+    }
+  } else {
+    amapLayer.addTo(map);
+    if (btnAmap) {
+      btnAmap.classList.add("btn-green");
+      btnAmap.classList.remove("btn-outline");
+    }
+    if (btnTaiwan) {
+      btnTaiwan.classList.add("btn-outline");
+      btnTaiwan.classList.remove("btn-green");
+    }
+  }
+
+  // 強制地圖重新計算尺寸，避免灰色
+  setTimeout(function () {
+    try { map.invalidateSize(); } catch (e) {}
+  }, 100);
+}
+
+var btnModeTaiwan = document.getElementById("btnModeTaiwan");
+var btnModeAmap = document.getElementById("btnModeAmap");
+
+if (btnModeTaiwan) {
+  btnModeTaiwan.onclick = function () {
+    switchMapMode("taiwan");
+  };
+}
+
+if (btnModeAmap) {
+  btnModeAmap.onclick = function () {
+    switchMapMode("amap");
+  };
+}
+
+// 預設選中台灣（延遲一點確保地圖已準備好）
+setTimeout(function () {
+  switchMapMode("taiwan");
+}, 200);
 
 
 /* =========================================================
