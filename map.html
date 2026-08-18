@@ -458,14 +458,19 @@ body {
   box-shadow:
     0 -3px 20px rgba(0,0,0,.18);
 
-  max-height: 48vh;
+  max-height: 28vh;          /* 大約 3 行左右的空間 */
 
-  overflow-y: auto;
+  overflow-x: hidden;        /* 鎖住左右移動 */
+  overflow-y: auto;          /* 只允許上下滾動 */
+
+  -webkit-overflow-scrolling: touch;
 
   padding: 10px 12px 18px;
 
   transition:
     transform .25s ease;
+
+  overscroll-behavior-x: none;   /* 防止左右彈性滾動 */
 }
 
 
@@ -5501,6 +5506,25 @@ async function deleteWp(
     !me
   ) {
 
+    alert(
+      "請先登入後再刪除集合點"
+    );
+
+    return;
+
+  }
+
+
+  const confirmed =
+    confirm(
+      "確定要刪除這個集合點嗎？"
+    );
+
+
+  if (
+    !confirmed
+  ) {
+
     return;
 
   }
@@ -5515,10 +5539,6 @@ async function deleteWp(
       .eq(
         "id",
         id
-      )
-      .eq(
-        "created_by",
-        me.id
       );
 
 
@@ -5568,19 +5588,26 @@ async function searchPlace() {
     let results = [];
 
     if (currentMapMode === "taiwan") {
-      // ===== 台灣模式：Nominatim =====
+      // ===== 台灣模式：Nominatim（加強精準版）=====
       const viewbox = "118.0,21.5,122.5,25.5";
+
+      // 自動補上「台灣」提高命中率與精準度
+      let query = q;
+      if (!/台灣|臺灣|台|臺/.test(q)) {
+        query = q + " 台灣";
+      }
 
       const url =
         "https://nominatim.openstreetmap.org/search" +
         "?format=json" +
-        "&q=" + encodeURIComponent(q) +
-        "&limit=8" +
+        "&q=" + encodeURIComponent(query) +
+        "&limit=10" +
         "&countrycodes=tw" +
         "&viewbox=" + viewbox +
         "&bounded=0" +
         "&accept-language=zh-TW" +
-        "&addressdetails=1";
+        "&addressdetails=1" +
+        "&dedupe=1";
 
       const response = await fetch(url, {
         headers: {
@@ -5659,7 +5686,7 @@ async function searchPlace() {
           titleInput.value = (item.name || "").split(/[,，]/)[0];
         }
 
-        map.setView([item.lat, item.lng], 17);
+        map.setView([item.lat, item.lng], 18);
 
         L.circleMarker([item.lat, item.lng], {
           radius: 6,
