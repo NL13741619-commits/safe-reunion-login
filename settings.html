@@ -93,10 +93,18 @@ document.addEventListener("DOMContentLoaded", function () {
 
       resultEl.style.display = "block";
       resultEl.style.color = "#666";
-      resultEl.textContent = "建立中…";
+      resultEl.textContent = "建立中…（最多等待 20 秒）";
+      btn.disabled = true;
 
       try {
-        var res = await sbSettings.functions.invoke("create-temp-user", {
+        var timeoutMs = 20000;
+        var timeoutPromise = new Promise(function (_, reject) {
+          setTimeout(function () {
+            reject(new Error("連線逾時：create-temp-user 沒有回應。請到 Supabase → Edge Functions 確認已部署，並查看 Logs。"));
+          }, timeoutMs);
+        });
+
+        var invokePromise = sbSettings.functions.invoke("create-temp-user", {
           body: {
             login_id: loginId,
             password: password,
@@ -104,7 +112,20 @@ document.addEventListener("DOMContentLoaded", function () {
           }
         });
 
-        if (res.error) throw new Error(res.error.message || "建立失敗");
+        var res = await Promise.race([invokePromise, timeoutPromise]);
+
+        console.log("create-temp-user result", res);
+
+        if (res.error) {
+          var msg = res.error.message || String(res.error);
+          if (res.error.context) {
+            try {
+              var bodyText = await res.error.context.text();
+              if (bodyText) msg += " | " + bodyText;
+            } catch (e2) {}
+          }
+          throw new Error(msg);
+        }
         if (res.data && res.data.error) throw new Error(res.data.error);
 
         var loginEmail = (res.data && res.data.email) ? res.data.email : (loginId + "@temp.safereunion.local");
@@ -118,10 +139,17 @@ document.addEventListener("DOMContentLoaded", function () {
 
         document.getElementById("tempPassword").value = "";
       } catch (e) {
+        console.error(e);
         resultEl.style.color = "#b91c1c";
         resultEl.textContent =
           "失敗：" + (e.message || e) +
-          "\n\n請確認已部署 Edge Function：create-temp-user，且白名單包含你的 Email。";
+          "\n\n請檢查：\n" +
+          "1. Supabase → Edge Functions 是否有 create-temp-user\n" +
+          "2. 是否已 Deploy 成功\n" +
+          "3. Functions → Logs 有無錯誤\n" +
+          "4. 白名單是否為 tomlin530@yahoo.com.tw 或 n_950143@hotmail.com";
+      } finally {
+        btn.disabled = false;
       }
     };
   }
@@ -1741,10 +1769,18 @@ document.addEventListener("DOMContentLoaded", function () {
 
       resultEl.style.display = "block";
       resultEl.style.color = "#666";
-      resultEl.textContent = "建立中…";
+      resultEl.textContent = "建立中…（最多等待 20 秒）";
+      btn.disabled = true;
 
       try {
-        var res = await sbSettings.functions.invoke("create-temp-user", {
+        var timeoutMs = 20000;
+        var timeoutPromise = new Promise(function (_, reject) {
+          setTimeout(function () {
+            reject(new Error("連線逾時：create-temp-user 沒有回應。請到 Supabase → Edge Functions 確認已部署，並查看 Logs。"));
+          }, timeoutMs);
+        });
+
+        var invokePromise = sbSettings.functions.invoke("create-temp-user", {
           body: {
             login_id: loginId,
             password: password,
@@ -1752,7 +1788,20 @@ document.addEventListener("DOMContentLoaded", function () {
           }
         });
 
-        if (res.error) throw new Error(res.error.message || "建立失敗");
+        var res = await Promise.race([invokePromise, timeoutPromise]);
+
+        console.log("create-temp-user result", res);
+
+        if (res.error) {
+          var msg = res.error.message || String(res.error);
+          if (res.error.context) {
+            try {
+              var bodyText = await res.error.context.text();
+              if (bodyText) msg += " | " + bodyText;
+            } catch (e2) {}
+          }
+          throw new Error(msg);
+        }
         if (res.data && res.data.error) throw new Error(res.data.error);
 
         var loginEmail = (res.data && res.data.email) ? res.data.email : (loginId + "@temp.safereunion.local");
@@ -1766,10 +1815,17 @@ document.addEventListener("DOMContentLoaded", function () {
 
         document.getElementById("tempPassword").value = "";
       } catch (e) {
+        console.error(e);
         resultEl.style.color = "#b91c1c";
         resultEl.textContent =
           "失敗：" + (e.message || e) +
-          "\n\n請確認已部署 Edge Function：create-temp-user，且白名單包含你的 Email。";
+          "\n\n請檢查：\n" +
+          "1. Supabase → Edge Functions 是否有 create-temp-user\n" +
+          "2. 是否已 Deploy 成功\n" +
+          "3. Functions → Logs 有無錯誤\n" +
+          "4. 白名單是否為 tomlin530@yahoo.com.tw 或 n_950143@hotmail.com";
+      } finally {
+        btn.disabled = false;
       }
     };
   }
