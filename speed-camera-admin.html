@@ -307,7 +307,56 @@ button:disabled {
   </div>
 
 </div>
+<!-- 移動式／雷達測速 -->
 
+<div class="card">
+
+  <h2 class="section-title">
+    📡 移動式／雷達測速
+  </h2>
+
+  <p>
+    上傳移動式測速、雷達測速或臨時測速資料。
+  </p>
+
+  <p class="small">
+    此資料與固定測速照相、科技執法完全分開管理。
+    不會因為更新固定測速 CSV 而被刪除。
+  </p>
+
+  <input
+    type="file"
+    id="radarCsvFile"
+    accept=".csv,text/csv"
+  >
+
+  <button
+    id="radarPreviewBtn"
+    style="
+      background:#0891b2;
+      color:white;
+    "
+  >
+    預覽移動式／雷達測速 CSV
+  </button>
+
+  <div
+    id="radarPreview"
+    class="status hidden"
+  ></div>
+
+  <button
+    id="radarUpdateBtn"
+    disabled
+    style="
+      background:#0f766e;
+      color:white;
+    "
+  >
+    確認新增／更新雷達測速資料
+  </button>
+
+</div>
 <script>
 
 var SUPABASE_URL =
@@ -356,9 +405,23 @@ var techPreview =
 var techUpdateBtn =
   document.getElementById("techUpdateBtn");
 
+var radarCsvFile =
+  document.getElementById("radarCsvFile");
+
+var radarPreviewBtn =
+  document.getElementById("radarPreviewBtn");
+
+var radarPreview =
+  document.getElementById("radarPreview");
+
+var radarUpdateBtn =
+  document.getElementById("radarUpdateBtn");
+
 var parsedRows = [];
 
 var parsedTechRows = [];
+
+var parsedRadarRows = [];
 
 var detectedTechFormat = "";
 
