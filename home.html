@@ -3734,7 +3734,9 @@ function showComingSoon(event, name) {
 </script>
 
 
-<script src="call-notify.js">
+<script src="call-notify.js"></script>
+
+<script>
 /* 鎖定直向螢幕 */
 (function lockPortrait() {
   try {
@@ -3750,47 +3752,61 @@ function showComingSoon(event, name) {
   } catch (e) {}
 })();
 
-
-/* =========================================================
-   北京時間 + 農曆（天氣右上角）
-========================================================= */
-
-function getBeijingDate() {
-  return new Date(
-    new Date().toLocaleString('en-US', { timeZone: 'Asia/Shanghai' })
-  );
-}
-
+/* 北京時間 + 農曆 */
 function pad2(n) {
-  return String(n).padStart(2, '0');
+  return (n < 10 ? '0' : '') + n;
 }
 
-var LUNAR_INFO = [
-  0x04bd8,0x04ae0,0x0a570,0x054d5,0x0d260,0x0d950,0x16554,0x056a0,0x09d50,0x0e968,
-  0x06e40,0x0ea60,0x06d20,0x0a650,0x0a8d4,0x0a8d0,0x0d250,0x1d255,0x0b540,0x0d6a0,
-  0x0ada2,0x049b0,0x0a774,0x0a4b0,0x0aa50,0x1b255,0x06d20,0x0ada0,0x14b63,0x09370,
-  0x049f8,0x04970,0x064b0,0x168a6,0x05a50,0x06d40,0x1a5c4,0x0b620,0x09368,0x092e0,
-  0x0c960,0x0d4a0,0x0da50,0x07552,0x056a0,0x0abb7,0x025d0,0x092d0,0x0cab5,0x0a950,
-  0x0b4a0,0x0baa4,0x0ad50,0x055d9,0x04ba0,0x0a5b0,0x15176,0x052b0,0x0a930,0x07954,
-  0x06aa0,0x0ad50,0x05b52,0x04b60,0x0a6e6,0x0a4e0,0x0d260,0x0ea65,0x0d530,0x05aa0,
-  0x076a3,0x096d0,0x04afb,0x04ad0,0x0a4d0,0x1d0b6,0x0d250,0x0d520,0x0dd45,0x0b5a0,
-  0x056d0,0x055b2,0x049b0,0x0a577,0x0a4b0,0x0aa50,0x1b255,0x06d20,0x0ada0,0x14b63,
-  0x09370,0x049f8,0x04970,0x064b0,0x168a6,0x05a50,0x06d40,0x1a5c4,0x0b620,0x09368,
-  0x092e0,0x0c960,0x0d4a0,0x0da50,0x07552,0x056a0,0x0abb7,0x025d0,0x092d0,0x0cab5,
-  0x0a950,0x0b4a0,0x0baa4,0x0ad50,0x055d9,0x04ba0,0x0a5b0,0x15176,0x052b0,0x0a930,
-  0x07954,0x06aa0,0x0ad50,0x05b52,0x04b60,0x0a6e6,0x0a4e0,0x0d260,0x0ea65,0x0d530,
-  0x05aa0,0x076a3,0x096d0,0x04afb,0x04ad0,0x0a4d0,0x1d0b6,0x0d250,0x0d520,0x0dd45,
-  0x0b5a0,0x056d0,0x055b2,0x049b0,0x0a577,0x0a4b0,0x0aa50,0x1b255,0x06d20,0x0ada0
-];
+function getBeijingParts() {
+  var fmt = new Intl.DateTimeFormat('en-US', {
+    timeZone: 'Asia/Shanghai',
+    year: 'numeric', month: 'numeric', day: 'numeric',
+    hour: 'numeric', minute: 'numeric', second: 'numeric',
+    hour12: false
+  });
+  var parts = fmt.formatToParts(new Date());
+  var o = {};
+  parts.forEach(function (p) {
+    if (p.type !== 'literal') o[p.type] = p.value;
+  });
+  return {
+    y: parseInt(o.year, 10),
+    m: parseInt(o.month, 10),
+    d: parseInt(o.day, 10),
+    hh: pad2(parseInt(o.hour, 10) % 24),
+    mm: pad2(parseInt(o.minute, 10)),
+    ss: pad2(parseInt(o.second, 10))
+  };
+}
 
+/* 農曆（1900-2100 簡表） */
+var LUNAR_INFO = [
+0x04bd8,0x04ae0,0x0a570,0x054d5,0x0d260,0x0d950,0x16554,0x056a0,0x09d50,0x0e968,
+0x06e40,0x0ea60,0x06d20,0x0a650,0x0a8d4,0x0a8d0,0x0d250,0x1d255,0x0b540,0x0d6a0,
+0x0ada2,0x049b0,0x0a774,0x0a4b0,0x0aa50,0x1b255,0x06d20,0x0ada0,0x14b63,0x09370,
+0x049f8,0x04970,0x064b0,0x168a6,0x05a50,0x06d40,0x1a5c4,0x0b620,0x09368,0x092e0,
+0x0c960,0x0d4a0,0x0da50,0x07552,0x056a0,0x0abb7,0x025d0,0x092d0,0x0cab5,0x0a950,
+0x0b4a0,0x0baa4,0x0ad50,0x055d9,0x04ba0,0x0a5b0,0x15176,0x052b0,0x0a930,0x07954,
+0x06aa0,0x0ad50,0x05b52,0x04b60,0x0a6e6,0x0a4e0,0x0d260,0x0ea65,0x0d530,0x05aa0,
+0x076a3,0x096d0,0x04afb,0x04ad0,0x0a4d0,0x1d0b6,0x0d250,0x0d520,0x0dd45,0x0b5a0,
+0x056d0,0x055b2,0x049b0,0x0a577,0x0a4b0,0x0aa50,0x1b255,0x06d20,0x0ada0,0x14b63,
+0x09370,0x049f8,0x04970,0x064b0,0x168a6,0x05a50,0x06d40,0x1a5c4,0x0b620,0x09368,
+0x092e0,0x0c960,0x0d4a0,0x0da50,0x07552,0x056a0,0x0abb7,0x025d0,0x092d0,0x0cab5,
+0x0a950,0x0b4a0,0x0baa4,0x0ad50,0x055d9,0x04ba0,0x0a5b0,0x15176,0x052b0,0x0a930,
+0x07954,0x06aa0,0x0ad50,0x05b52,0x04b60,0x0a6e6,0x0a4e0,0x0d260,0x0ea65,0x0d530,
+0x05aa0,0x076a3,0x096d0,0x04afb,0x04ad0,0x0a4d0,0x1d0b6,0x0d250,0x0d520,0x0dd45,
+0x0b5a0,0x056d0,0x055b2,0x049b0,0x0a577,0x0a4b0,0x0aa50,0x1b255,0x06d20,0x0ada0,
+0x14b63,0x09370,0x049f8,0x04970,0x064b0,0x168a6,0x05a50,0x06d40,0x1a5c4,0x0b620,
+0x09368,0x092e0,0x0c960,0x0d4a0,0x0da50,0x07552,0x056a0,0x0abb7,0x025d0,0x092d0,
+0x0cab5,0x0a950,0x0b4a0,0x0baa4,0x0ad50,0x055d9,0x04ba0,0x0a5b0,0x15176,0x052b0,
+0x0a930,0x07954,0x06aa0,0x0ad50,0x05b52,0x04b60,0x0a6e6,0x0a4e0,0x0d260,0x0ea65,
+0x0d530,0x05aa0,0x076a3,0x096d0,0x04afb,0x04ad0,0x0a4d0,0x1d0b6,0x0d250,0x0d520
+];
 var LUNAR_MONTHS = ['正','二','三','四','五','六','七','八','九','十','冬','臘'];
-var LUNAR_DAYS = ['初一','初二','初三','初四','初五','初六','初七','初八','初九','初十',
-  '十一','十二','十三','十四','十五','十六','十七','十八','十九','二十',
-  '廿一','廿二','廿三','廿四','廿五','廿六','廿七','廿八','廿九','三十'];
+var LUNAR_DAYS = ['初一','初二','初三','初四','初五','初六','初七','初八','初九','初十','十一','十二','十三','十四','十五','十六','十七','十八','十九','二十','廿一','廿二','廿三','廿四','廿五','廿六','廿七','廿八','廿九','三十'];
 
 function lunarYearDays(y) {
-  var i, sum = 348;
-  var info = LUNAR_INFO[y - 1900];
+  var i, sum = 348, info = LUNAR_INFO[y - 1900];
   if (info == null) return 365;
   for (i = 0x8000; i > 0x8; i >>= 1) sum += (info & i) ? 1 : 0;
   return sum + leapDays(y);
@@ -3800,37 +3816,27 @@ function leapMonth(y) {
   return info ? (info & 0xf) : 0;
 }
 function leapDays(y) {
-  if (leapMonth(y)) {
-    return (LUNAR_INFO[y - 1900] & 0x10000) ? 30 : 29;
-  }
+  if (leapMonth(y)) return (LUNAR_INFO[y - 1900] & 0x10000) ? 30 : 29;
   return 0;
 }
 function monthDays(y, m) {
   return (LUNAR_INFO[y - 1900] & (0x10000 >> m)) ? 30 : 29;
 }
-
 function solarToLunar(y, m, d) {
   var base = new Date(1900, 0, 31);
   var obj = new Date(y, m - 1, d);
   var offset = Math.floor((obj - base) / 86400000);
   var i, temp = 0, year, month, day, isLeap = false;
-
   for (i = 1900; i < 2101 && offset > 0; i++) {
     temp = lunarYearDays(i);
     offset -= temp;
   }
-  if (offset < 0) {
-    offset += temp;
-    i--;
-  }
+  if (offset < 0) { offset += temp; i--; }
   year = i;
-
   var leap = leapMonth(year);
   for (i = 1; i < 13 && offset > 0; i++) {
     if (leap > 0 && i === (leap + 1) && !isLeap) {
-      --i;
-      isLeap = true;
-      temp = leapDays(year);
+      --i; isLeap = true; temp = leapDays(year);
     } else {
       temp = monthDays(year, i);
     }
@@ -3838,36 +3844,19 @@ function solarToLunar(y, m, d) {
     offset -= temp;
   }
   if (offset === 0 && leap > 0 && i === leap + 1) {
-    if (isLeap) {
-      isLeap = false;
-    } else {
-      isLeap = true;
-      --i;
-    }
+    if (isLeap) isLeap = false;
+    else { isLeap = true; --i; }
   }
-  if (offset < 0) {
-    offset += temp;
-    --i;
-  }
+  if (offset < 0) { offset += temp; --i; }
   month = i;
   day = offset + 1;
-
-  var monthStr = (isLeap ? '閏' : '') + LUNAR_MONTHS[month - 1] + '月';
-  var dayStr = LUNAR_DAYS[day - 1] || (day + '日');
-  return monthStr + dayStr;
+  return (isLeap ? '閏' : '') + LUNAR_MONTHS[month - 1] + '月' + (LUNAR_DAYS[day - 1] || (day + '日'));
 }
 
 function formatBeijingDateTime() {
-  var bj = getBeijingDate();
-  var y = bj.getFullYear();
-  var m = bj.getMonth() + 1;
-  var d = bj.getDate();
-  var hh = pad2(bj.getHours());
-  var mm = pad2(bj.getMinutes());
-  var ss = pad2(bj.getSeconds());
-  var lunar = solarToLunar(y, m, d);
-  return y + '/' + m + '/' + d + ' ' + hh + ':' + mm + ':' + ss +
-    '\n農曆' + lunar;
+  var p = getBeijingParts();
+  var lunar = solarToLunar(p.y, p.m, p.d);
+  return p.y + '/' + p.m + '/' + p.d + ' ' + p.hh + ':' + p.mm + ':' + p.ss + '\n農曆' + lunar;
 }
 
 function refreshBeijingWeatherTime() {
@@ -3876,22 +3865,23 @@ function refreshBeijingWeatherTime() {
   el.style.whiteSpace = 'pre-line';
   el.style.textAlign = 'right';
   el.style.lineHeight = '1.35';
+  el.style.fontSize = '11px';
   el.textContent = formatBeijingDateTime();
 }
 
 function startBeijingClock() {
-  refreshBeijingWeatherTime();
-  if (window._beijingClockTimer) clearInterval(window._beijingClockTimer);
-  window._beijingClockTimer = setInterval(refreshBeijingWeatherTime, 1000);
+  try {
+    refreshBeijingWeatherTime();
+    if (window._beijingClockTimer) clearInterval(window._beijingClockTimer);
+    window._beijingClockTimer = setInterval(refreshBeijingWeatherTime, 1000);
+  } catch (e) {
+    console.error('北京時間時鐘錯誤', e);
+    var el = document.getElementById('weatherUpdated');
+    if (el) el.textContent = '時間讀取失敗';
+  }
 }
 
-if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', startBeijingClock);
-} else {
-  startBeijingClock();
-}
-
-
+startBeijingClock();
 </script>
 
 </body>
