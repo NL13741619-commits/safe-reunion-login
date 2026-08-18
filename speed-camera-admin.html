@@ -516,15 +516,97 @@ function detectSeparator(line) {
 function getCSVLines(text) {
 
   text =
-    text.replace(/^\uFEFF/, "");
+    String(text || "")
+      .replace(/^\uFEFF/, "");
 
-  return text
-    .split(/\r?\n/)
-    .filter(function(line) {
+  var lines = [];
 
-      return line.trim() !== "";
+  var current = "";
 
-    });
+  var insideQuotes = false;
+
+  for (
+    var i = 0;
+    i < text.length;
+    i++
+  ) {
+
+    var char = text[i];
+
+    /*
+     * CSV 雙引號
+     */
+    if (char === '"') {
+
+      /*
+       * "" 代表欄位裡的一個 "
+       */
+      if (
+        insideQuotes &&
+        text[i + 1] === '"'
+      ) {
+
+        current += '""';
+
+        i++;
+
+        continue;
+      }
+
+      insideQuotes =
+        !insideQuotes;
+
+      current += char;
+
+      continue;
+    }
+
+    /*
+     * 只有不在雙引號裡面的換行，
+     * 才是真正的 CSV 下一列。
+     */
+    if (
+      (char === "\n" || char === "\r") &&
+      !insideQuotes
+    ) {
+
+      /*
+       * Windows CSV 的 \r\n
+       */
+      if (
+        char === "\r" &&
+        text[i + 1] === "\n"
+      ) {
+
+        i++;
+      }
+
+      if (
+        current.trim() !== ""
+      ) {
+
+        lines.push(current);
+      }
+
+      current = "";
+
+      continue;
+    }
+
+    current += char;
+  }
+
+  /*
+   * 最後一列
+   */
+  if (
+    current.trim() !== ""
+  ) {
+
+    lines.push(current);
+  }
+
+  return lines;
 }
 
 function getHeaders(lines) {
