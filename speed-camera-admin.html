@@ -1263,35 +1263,99 @@ function parseOfficialCSV(text) {
 
       }
 
+/*
+ * ==================================================
+ * 台灣座標自動判斷
+ * ==================================================
+ *
+ * 正常：
+ * 經度 = 118 ~ 123.5
+ * 緯度 = 20 ~ 26.5
+ *
+ * 有些官方中文 CSV 會把兩者實際值反過來：
+ * 經度欄 = 24.x
+ * 緯度欄 = 120.x
+ *
+ * 如果偵測到這種情況，就自動交換。
+ * ==================================================
+ */
 
-      /*
-       * 台灣合理座標範圍
-       */
+var longitudeLooksCorrect =
+  longitude >= 118 &&
+  longitude <= 123.5;
 
-      if (
-        longitude < 118 ||
-        longitude > 123.5 ||
-        latitude < 20 ||
-        latitude > 26.5
-      ) {
+var latitudeLooksCorrect =
+  latitude >= 20 &&
+  latitude <= 26.5;
 
-        throw new Error(
 
-          "中文固定測速 CSV 第 " +
-          (j + 1) +
-          " 行座標超出臺灣合理範圍。\n\n" +
+/*
+ * 情況一：
+ * 經度、緯度正常
+ */
 
-          "經度：" +
-          longitude +
+if (
+  longitudeLooksCorrect &&
+  latitudeLooksCorrect
+) {
 
-          "\n" +
+  /*
+   * 不需要處理
+   */
 
-          "緯度：" +
-          latitude
+}
 
-        );
 
-      }
+/*
+ * 情況二：
+ * 經緯度反過來
+ */
+
+else if (
+  longitude >= 20 &&
+  longitude <= 26.5 &&
+  latitude >= 118 &&
+  latitude <= 123.5
+) {
+
+  var temp =
+    longitude;
+
+  longitude =
+    latitude;
+
+  latitude =
+    temp;
+
+}
+
+
+/*
+ * 情況三：
+ * 兩個都不是合理的台灣座標
+ */
+
+else {
+
+  throw new Error(
+
+    "中文固定測速 CSV 第 " +
+    (j + 1) +
+    " 行座標超出臺灣合理範圍。\n\n" +
+
+    "目前讀取：\n" +
+
+    "經度：" +
+    longitude +
+
+    "\n" +
+
+    "緯度：" +
+    latitude
+
+  );
+
+}
 
 
       /*
