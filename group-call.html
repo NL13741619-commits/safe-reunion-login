@@ -16,7 +16,8 @@ html,body{width:100%;height:100%;overflow:hidden;background:#0b0f14;color:#fff;f
 .online-dot{width:7px;height:7px;border-radius:50%;background:#06C755;box-shadow:0 0 6px #06C755}
 .icon-btn{width:34px;height:34px;border-radius:50%;border:0;background:rgba(255,255,255,.16);color:#fff;font-size:16px}
 .grid{position:absolute;left:0;right:0;top:0;bottom:calc(88px + env(safe-area-inset-bottom,0px));padding:calc(58px + env(safe-area-inset-top,0px)) 6px 6px;display:grid;grid-template-columns:repeat(2,1fr);gap:6px;transition:bottom .25s ease,padding .25s ease}
-body.chat-open .grid{bottom:calc(38vh + 88px + env(safe-area-inset-bottom,0px))}
+/* 聊天開啟時不再縮小視訊格；聊天區改為覆蓋在視訊下方 */
+body.chat-open .grid{bottom:calc(88px + env(safe-area-inset-bottom,0px))}
 .grid.slots-1{grid-template-columns:1fr}
 .grid.slots-3,.grid.slots-4{grid-template-columns:1fr 1fr}
 .grid.slots-5,.grid.slots-6{grid-template-columns:1fr 1fr 1fr}
