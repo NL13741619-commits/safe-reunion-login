@@ -4885,6 +4885,185 @@ function stopLocationUpload() {
 
 let peerChannel = null;
 
+/* ---------------------------------------------------------
+   每個成員固定顏色
+   依 user_id 決定，所以同一個人永遠同一色
+   --------------------------------------------------------- */
+
+const MEMBER_PIN_COLORS = [
+  "#1565C0", // 藍
+  "#2E7D32", // 綠
+  "#EF6C00", // 橘
+  "#6A1B9A", // 紫
+  "#C62828", // 紅
+  "#00838F", // 青
+  "#AD1457", // 粉紅
+  "#5D4037", // 咖啡
+  "#283593", // 靛藍
+  "#558B2F"  // 黃綠
+];
+
+function memberColorFromId(userId) {
+
+  const text =
+    String(userId || "member");
+
+  let hash = 0;
+
+  for (let i = 0; i < text.length; i++) {
+    hash =
+      ((hash << 5) - hash) +
+      text.charCodeAt(i);
+
+    hash |= 0;
+  }
+
+  const index =
+    Math.abs(hash) %
+    MEMBER_PIN_COLORS.length;
+
+  return MEMBER_PIN_COLORS[index];
+}
+
+
+/* ---------------------------------------------------------
+   建立真正的大頭針 SVG
+   --------------------------------------------------------- */
+
+function createMemberPinIcon(color) {
+
+  const svg =
+    '<svg xmlns="http://www.w3.org/2000/svg" ' +
+    'width="42" height="52" viewBox="0 0 42 52">' +
+
+      '<path ' +
+        'd="M21 1C10 1 2 9.4 2 20 ' +
+        'c0 13.5 19 30 19 30s19-16.5 19-30C40 9.4 32 1 21 1z" ' +
+        'fill="' + color + '" ' +
+        'stroke="#ffffff" ' +
+        'stroke-width="3"/>' +
+
+      '<circle ' +
+        'cx="21" cy="20" r="8" ' +
+        'fill="#ffffff"/>' +
+
+      '<circle ' +
+        'cx="21" cy="20" r="4" ' +
+        'fill="' + color + '"/>' +
+
+    '</svg>';
+
+  return L.divIcon({
+
+    className:
+      "group-member-pin",
+
+    html:
+      '<div style="' +
+        'width:42px;' +
+        'height:52px;' +
+        'filter:drop-shadow(0 2px 4px rgba(0,0,0,.45));' +
+      '">' +
+        svg +
+      '</div>',
+
+    iconSize:
+      [42, 52],
+
+    iconAnchor:
+      [21, 50],
+
+    popupAnchor:
+      [0, -48]
+
+  });
+}
+
+
+/* ---------------------------------------------------------
+   成員 Popup
+   --------------------------------------------------------- */
+
+function createMemberPopup(row, color) {
+
+  const name =
+    row.display_name ||
+    "成員";
+
+  const userId =
+    row.user_id ||
+    "";
+
+  const groupId =
+    row.group_id ||
+    "";
+
+  const updated =
+    row.updated_at
+      ? new Date(row.updated_at)
+          .toLocaleString("zh-TW")
+      : "未知";
+
+  return (
+
+    '<div style="' +
+      'min-width:180px;' +
+      'font-size:14px;' +
+    '">' +
+
+      '<div style="' +
+        'font-size:16px;' +
+        'font-weight:700;' +
+        'margin-bottom:8px;' +
+        'color:' + color + ';"' +
+      '>' +
+
+        '📍 ' +
+        escapeHtml(name) +
+
+      '</div>' +
+
+      '<div style="margin-bottom:5px;">' +
+        '<b>身分：</b>群組成員' +
+      '</div>' +
+
+      '<div style="margin-bottom:5px;">' +
+        '<b>最後定位：</b><br>' +
+        escapeHtml(updated) +
+      '</div>' +
+
+      (
+        groupId
+          ? (
+              '<div style="font-size:11px;color:#888;' +
+              'word-break:break-all;">' +
+              '<b>群組：</b>' +
+              escapeHtml(String(groupId)) +
+              '</div>'
+            )
+          : ''
+      ) +
+
+      '<div style="' +
+        'margin-top:8px;' +
+        'font-size:11px;' +
+        'color:#888;' +
+      '">' +
+
+        '此顏色為此成員的固定識別色' +
+
+      '</div>' +
+
+    '</div>'
+
+  );
+}
+
+
+/* ---------------------------------------------------------
+   載入群組成員位置
+   --------------------------------------------------------- */
+
 async function loadPeers() {
 
   if (!roomId) {
@@ -4901,7 +5080,8 @@ async function loadPeers() {
         .gte(
           "updated_at",
           new Date(
-            Date.now() - 30 * 60 * 1000
+            Date.now() -
+            30 * 60 * 1000
           ).toISOString()
         );
 
@@ -4917,52 +5097,256 @@ async function loadPeers() {
 
     const rows =
       result.data || [];
-console.log(
-  "[loadPeers] roomId=",
-  roomId,
-  "收到定位資料=",
-  rows.length,
-  rows
-);
-    /*
-     * 清除舊成員 Marker
-     *
-     * 注意：
-     * 不碰測速照相 Marker。
-     */
-    Object.keys(peerMarkers).forEach(
-      function (key) {
+
+    console.log(
+      "[loadPeers]",
+      "roomId=",
+      roomId,
+      "收到定位資料=",
+      rows.length,
+      rows
+    );
+
+
+    /* -----------------------------------------------------
+       供路線圖使用
+       ----------------------------------------------------- */
+
+    window._lastPeerRows =
+      rows;
+
+    scheduleRouteUpdate();
+
+
+    /* -----------------------------------------------------
+       記錄目前資料庫裡仍然存在的成員
+       ----------------------------------------------------- */
+
+    const activePeerIds = {};
+
+
+    /* -----------------------------------------------------
+       更新 / 建立 Marker
+       不再每次全部刪除重建
+       ----------------------------------------------------- */
+
+    rows.forEach(function (row) {
+
+      /*
+       * 自己不重複顯示
+       */
+      if (
+        me &&
+        String(row.user_id) ===
+        String(me.id)
+      ) {
+
+        return;
+
+      }
+
+
+      /*
+       * 座標檢查
+       */
+      if (
+        row.lat == null ||
+        row.lng == null
+      ) {
+
+        return;
+
+      }
+
+
+      const lat =
+        Number(row.lat);
+
+      const lng =
+        Number(row.lng);
+
+
+      if (
+        !Number.isFinite(lat) ||
+        !Number.isFinite(lng)
+      ) {
+
+        return;
+
+      }
+
+
+      const userId =
+        String(row.user_id);
+
+
+      activePeerIds[userId] =
+        true;
+
+
+      /*
+       * 固定顏色
+       */
+      const color =
+        memberColorFromId(
+          userId
+        );
+
+
+      /*
+       * 已經有 Marker
+       * → 只移動位置
+       */
+      if (
+        peerMarkers[userId]
+      ) {
+
+        const marker =
+          peerMarkers[userId];
+
+
+        /*
+         * 只更新座標
+         *
+         * 不 remove
+         * 不重新 add
+         * 不重新建立 icon
+         *
+         * 這樣就不會出現：
+         * 出現 → 消失 → 出現
+         */
+        marker.setLatLng([
+          lat,
+          lng
+        ]);
+
+
+        /*
+         * 更新 Popup 內容
+         */
+        marker.setPopupContent(
+          createMemberPopup(
+            row,
+            color
+          )
+        );
+
+
+        return;
+
+      }
+
+
+      /* ---------------------------------------------------
+         第一次出現 → 建立大頭針
+         --------------------------------------------------- */
+
+      const marker =
+        L.marker(
+          [
+            lat,
+            lng
+          ],
+          {
+            icon:
+              createMemberPinIcon(
+                color
+              ),
+
+            zIndexOffset:
+              500
+          }
+        );
+
+
+      marker
+        .addTo(map)
+        .bindPopup(
+          createMemberPopup(
+            row,
+            color
+          )
+        );
+
+
+      /*
+       * 點擊大頭針
+       */
+      marker.on(
+        "click",
+        function () {
+
+          marker.openPopup();
+
+        }
+      );
+
+
+      /*
+       * 保存 Marker
+       */
+      peerMarkers[userId] =
+        marker;
+
+    });
+
+
+    /* -----------------------------------------------------
+       移除已經不在資料庫的舊成員
+       ----------------------------------------------------- */
+
+    Object.keys(
+      peerMarkers
+    ).forEach(
+      function (userId) {
 
         if (
-          peerMarkers[key] &&
-          map.hasLayer(peerMarkers[key])
+          !activePeerIds[userId]
         ) {
 
-          map.removeLayer(
-            peerMarkers[key]
-          );
+          const marker =
+            peerMarkers[userId];
+
+
+          if (
+            marker &&
+            map.hasLayer(marker)
+          ) {
+
+            map.removeLayer(
+              marker
+            );
+
+          }
+
+
+          delete peerMarkers[
+            userId
+          ];
 
         }
 
       }
     );
 
-    peerMarkers = {};
+
+    /* -----------------------------------------------------
+       計算目前分享定位人數
+       ----------------------------------------------------- */
 
     let count = 0;
 
     rows.forEach(
       function (row) {
 
-        /*
-         * 自己不重複顯示
-         */
         if (
           me &&
-          row.user_id === me.id
+          String(row.user_id) ===
+          String(me.id)
         ) {
 
           return;
+
         }
 
         if (
@@ -4971,6 +5355,7 @@ console.log(
         ) {
 
           return;
+
         }
 
         const lat =
@@ -4980,155 +5365,31 @@ console.log(
           Number(row.lng);
 
         if (
-          !Number.isFinite(lat) ||
-          !Number.isFinite(lng)
+          Number.isFinite(lat) &&
+          Number.isFinite(lng)
         ) {
 
-          return;
-        }
-
-        /*
-         * 取得固定成員顏色＋形狀
-         */
-        let identifier = null;
-
-        if (
-          window.GroupLocationIdentifiers
-        ) {
-
-          identifier =
-            window
-              .GroupLocationIdentifiers
-              .createMemberIdentifier(
-                row
-              );
+          count++;
 
         }
-
-        /*
-         * 如果後台沒有識別資料，
-         * 暫時使用藍色圓形。
-         *
-         * 這只是成員 Marker，
-         * 不會碰測速照相 Marker。
-         */
-        let marker;
-
-        if (
-          identifier
-        ) {
-
-          const html =
-            window
-              .GroupLocationIdentifiers
-              .createMemberMarkerSVG(
-                identifier,
-                row.display_name ||
-                "成員"
-              );
-
-          marker =
-            L.marker(
-              [
-                lat,
-                lng
-              ],
-              {
-                icon:
-                  L.divIcon({
-
-                    className:
-                      "group-member-leaflet-icon",
-
-                    html:
-                      html,
-
-                    iconSize:
-                      [
-                        36,
-                        36
-                      ],
-
-                    iconAnchor:
-                      [
-                        18,
-                        18
-                      ],
-
-                    popupAnchor:
-                      [
-                        0,
-                        -18
-                      ]
-
-                  })
-              }
-            );
-
-        }
-        else {
-
-          marker =
-            L.circleMarker(
-              [
-                lat,
-                lng
-              ],
-              {
-
-                radius:
-                  8,
-
-                color:
-                  "#1565c0",
-
-                fillColor:
-                  "#1565c0",
-
-                fillOpacity:
-                  0.9,
-
-                weight:
-                  2
-
-              }
-            );
-
-        }
-
-        marker
-          .addTo(map)
-          .bindPopup(
-            escapeHtml(
-              row.display_name ||
-              "成員"
-            )
-          );
-
-        peerMarkers[
-          row.user_id
-        ] =
-          marker;
-
-        count++;
 
       }
     );
 
-    // 供路線圖使用
-    window._lastPeerRows = rows;
-    scheduleRouteUpdate();
 
+    /*
+     * 狀態文字
+     */
     const statusEl =
       document.getElementById(
         "partStatus"
       );
 
+
     if (statusEl) {
 
       statusEl.textContent =
-        "目前分享定位人數："
-        +
+        "目前分享定位人數：" +
         (
           count +
           (
@@ -5137,12 +5398,9 @@ console.log(
               ? 1
               : 0
           )
-        )
-        +
-        "（含行程點 "
-        +
-        waypoints.length
-        +
+        ) +
+        "（含行程點 " +
+        waypoints.length +
         " 個）";
 
     }
@@ -5158,7 +5416,6 @@ console.log(
   }
 
 }
-
 
 /* =========================================================
    成員定位即時更新
