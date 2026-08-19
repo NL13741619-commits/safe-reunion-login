@@ -7600,7 +7600,94 @@ bootAuth();
   
 startPeerPolling();
   startPeerRealtime();
+/* =========================================================
+   群組成員定位顯示補強
+   ========================================================= */
 
+async function forceRenderGroupLocations() {
+  if (!me || !me.id || !roomId) return;
+
+  try {
+    const result = await sb
+      .from("location_shares")
+      .select("user_id,room_id,lat,lng,display_name,updated_at")
+      .eq("room_id", roomId);
+
+    if (result.error) {
+      console.error("讀取群組定位失敗：", result.error);
+      return;
+    }
+
+    const rows = result.data || [];
+
+    console.log(
+      "群組定位資料：",
+      rows
+    );
+
+    rows.forEach(function (row) {
+
+      // 不畫自己的位置
+      if (String(row.user_id) === String(me.id)) return;
+
+      if (
+        row.lat == null ||
+        row.lng == null
+      ) return;
+
+      const lat = Number(row.lat);
+      const lng = Number(row.lng);
+
+      if (!Number.isFinite(lat) || !Number.isFinite(lng)) return;
+
+      // 已有 marker 就更新
+      if (
+        typeof peerMarkers !== "undefined" &&
+        peerMarkers[row.user_id]
+      ) {
+
+        peerMarkers[row.user_id].setLatLng([lat, lng]);
+
+        return;
+      }
+
+      // 沒有 marker 就建立
+      const marker = L.marker(
+        [lat, lng]
+      ).addTo(map);
+
+      marker.bindPopup(
+        "📍 " +
+        escapeHtml(
+          row.display_name || "群組成員"
+        )
+      );
+
+      if (typeof peerMarkers !== "undefined") {
+        peerMarkers[row.user_id] = marker;
+      }
+
+    });
+
+  } catch (e) {
+    console.error(
+      "群組定位顯示例外：",
+      e
+    );
+  }
+}
+
+// 立即執行
+setTimeout(
+  forceRenderGroupLocations,
+  1500
+);
+
+// 每 5 秒更新
+setInterval(
+  forceRenderGroupLocations,
+  5000
+);
 })();
 
 </script>
