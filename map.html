@@ -4852,7 +4852,32 @@ async function uploadLocation() {
   }
 
 }
+// =========================================================
+// 定期更新自己的群組定位
+// =========================================================
 
+let locationUploadTimer = null;
+
+function startLocationUpload() {
+  if (locationUploadTimer) {
+    clearInterval(locationUploadTimer);
+  }
+
+  // 立即上傳一次
+  uploadLocation();
+
+  // 每 10 秒更新一次
+  locationUploadTimer = setInterval(function () {
+    uploadLocation();
+  }, 10000);
+}
+
+function stopLocationUpload() {
+  if (locationUploadTimer) {
+    clearInterval(locationUploadTimer);
+    locationUploadTimer = null;
+  }
+}
 
 /* =========================================================
    25. 成員定位
