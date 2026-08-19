@@ -4835,21 +4835,37 @@ async function startDeviceOrientation() {
 
   try {
 
+    if (
+      typeof DeviceOrientationEvent === "undefined"
+    ) {
+
+      alert("此 iPhone 瀏覽器不支援方向感測");
+
+      return false;
+    }
+
+
     /*
-     * iPhone / iPad 需要使用者操作後授權
+     * iPhone 需要使用者操作後取得授權
      */
     if (
-      typeof DeviceOrientationEvent !== "undefined" &&
       typeof DeviceOrientationEvent.requestPermission === "function"
     ) {
 
       const permission =
         await DeviceOrientationEvent.requestPermission();
 
-      if (permission !== "granted") {
+      console.log(
+        "方向權限：",
+        permission
+      );
 
-        console.warn(
-          "手機方向權限未授權"
+      if (
+        permission !== "granted"
+      ) {
+
+        alert(
+          "沒有取得手機方向權限，請允許方向與動作感測。"
         );
 
         return false;
@@ -4857,15 +4873,59 @@ async function startDeviceOrientation() {
 
     }
 
+
+    /*
+     * 一般方向感測
+     */
     window.addEventListener(
       "deviceorientation",
       handleDeviceOrientation,
       true
     );
 
+
+    /*
+     * 部分裝置使用 absolute 方向感測
+     */
+    window.addEventListener(
+      "deviceorientationabsolute",
+      handleDeviceOrientation,
+      true
+    );
+
+
     console.log(
       "手機方向感測已啟動"
     );
+
+
+    /*
+     * 測試 3 秒內是否收到方向資料
+     */
+    setTimeout(
+      function () {
+
+        if (
+          myHeading == null
+        ) {
+
+          alert(
+            "iPhone 已啟動方向感測，但目前沒有收到羅盤方向資料。"
+          );
+
+        } else {
+
+          console.log(
+            "目前 heading：",
+            myHeading
+          );
+
+        }
+
+      },
+      3000
+    );
+
 
     return true;
 
@@ -4877,7 +4937,14 @@ async function startDeviceOrientation() {
       error
     );
 
+    alert(
+      "手機方向感測啟動失敗："
+      +
+      error.message
+    );
+
     return false;
+
   }
 
 }
