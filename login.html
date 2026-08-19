@@ -163,9 +163,9 @@
 <body>
   <div class="card">
     <h1>安全團聚</h1>
-    <div class="sub">可用短帳號或 Email 登入</div>
+   <div class="sub">使用帳號登入安全團聚</div>
 
-    <input type="text" id="email" placeholder="帳號 或 Email" autocomplete="username">
+<input type="text" id="email" placeholder="帳號" autocomplete="username">
     <input type="password" id="password" placeholder="密碼">
 
     <label class="remember">
@@ -267,61 +267,147 @@
       }
 
       document.getElementById('btnLogin').onclick = async function () {
-        const raw = document.getElementById('email').value.trim();
-        const password = document.getElementById('password').value;
-        const remember = document.getElementById('remember').checked;
 
-        if (!raw || !password) {
-          showStatus('請輸入帳號（或 Email）和密碼', true);
-          return;
-        }
+  const raw =
+    document.getElementById('email').value.trim();
 
-        // 短帳號 → 自動轉成臨時信箱格式（與建立臨時帳號一致）
-        var email = raw;
-        if (raw.indexOf('@') === -1) {
-          var id = raw.toLowerCase().replace(/[^a-z0-9_]/g, '');
-          email = id + '@temp.safereunion.app';
-        }
+  const password =
+    document.getElementById('password').value;
 
-        showStatus('登入中…');
+  const remember =
+    document.getElementById('remember').checked;
 
-        try {
-          var result = await supabase.auth.signInWithPassword({
-            email: email,
-            password: password
-          });
+  if (!raw || !password) {
 
-          // 若短帳號失敗，再試舊格式 @example.com（相容之前建的帳號）
-          if (result.error && raw.indexOf('@') === -1) {
-            var id2 = raw.toLowerCase().replace(/[^a-z0-9_]/g, '');
-            var result2 = await supabase.auth.signInWithPassword({
-              email: id2 + '@example.com',
-              password: password
-            });
-            if (!result2.error) {
-              result = result2;
-            }
+    showStatus(
+      '請輸入帳號和密碼',
+      true
+    );
+
+    return;
+  }
+
+  showStatus('登入中…');
+
+  try {
+
+    let email = raw;
+
+    /*
+     * 如果輸入的不是 Email，
+     * 就使用真正的 profiles.username
+     * 找出 Supabase Auth 對應的 Email。
+     */
+    if (raw.indexOf('@') === -1) {
+
+      const { data, error } =
+        await supabase.rpc(
+          'get_login_email_by_username',
+          {
+            p_username: raw
           }
+        );
 
-          if (result.error) {
-            showStatus('登入失敗：' + result.error.message, true);
-            return;
-          }
+      if (error) {
 
-          // 勾選：記住 15 天（帳號+密碼+勾選狀態）
-          // 未勾選：清除
-          if (remember) {
-            saveRemember(raw, password);
-          } else {
-            clearRemember();
-          }
+        console.error(
+          '查詢帳號失敗：',
+          error
+        );
 
-          showStatus('登入成功，正在進入…');
-          location.href = 'home.html';
-        } catch (e) {
-          showStatus('發生錯誤：' + e.message, true);
-        }
-      };
+        showStatus(
+          '帳號查詢失敗：' +
+          error.message,
+          true
+        );
+
+        return;
+      }
+
+      if (!data) {
+
+        showStatus(
+          '帳號不存在，請確認帳號是否正確。',
+          true
+        );
+
+        return;
+      }
+
+      email = data;
+
+    }
+
+    /*
+     * 使用真正的 Auth Email 登入
+     */
+    const result =
+      await supabase.auth.signInWithPassword({
+
+        email:
+          email,
+
+        password:
+          password
+
+      });
+
+    if (result.error) {
+
+      showStatus(
+        '登入失敗：' +
+        result.error.message,
+        true
+      );
+
+      return;
+    }
+
+    /*
+     * 記住登入帳號
+     *
+     * 注意：
+     * 這裡仍然記住使用者輸入的「帳號」，
+     * 不會把畫面改成 Email。
+     */
+    if (remember) {
+
+      saveRemember(
+        raw,
+        password
+      );
+
+    }
+    else {
+
+      clearRemember();
+
+    }
+
+    showStatus(
+      '登入成功，正在進入…'
+    );
+
+    location.href =
+      'home.html';
+
+  }
+  catch (e) {
+
+    console.error(
+      '登入例外：',
+      e
+    );
+
+    showStatus(
+      '發生錯誤：' +
+      e.message,
+      true
+    );
+
+  }
+
+};
 
       document.getElementById('btnGoogle').onclick = async function () {
         const { error } = await supabase.auth.signInWithOAuth({
