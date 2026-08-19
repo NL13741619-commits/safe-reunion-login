@@ -4771,33 +4771,42 @@ function normalizeHeading(value) {
 
 function handleDeviceOrientation(event) {
 
+  console.log(
+    "方向事件：",
+    {
+      alpha: event.alpha,
+      beta: event.beta,
+      gamma: event.gamma,
+      webkitCompassHeading:
+        event.webkitCompassHeading
+    }
+  );
+
   let heading = null;
 
-  /*
-   * iPhone Safari
-   * webkitCompassHeading：
-   * 0 = 北、90 = 東、180 = 南、270 = 西
-   */
   if (
     event.webkitCompassHeading != null &&
-    Number.isFinite(Number(event.webkitCompassHeading))
+    Number.isFinite(
+      Number(event.webkitCompassHeading)
+    )
   ) {
 
     heading =
-      Number(event.webkitCompassHeading);
+      Number(
+        event.webkitCompassHeading
+      );
 
   }
-
-  /*
-   * Android / 部分瀏覽器
-   */
   else if (
     event.alpha != null &&
-    Number.isFinite(Number(event.alpha))
+    Number.isFinite(
+      Number(event.alpha)
+    )
   ) {
 
     heading =
-      360 - Number(event.alpha);
+      360 -
+      Number(event.alpha);
 
   }
 
@@ -4805,10 +4814,18 @@ function handleDeviceOrientation(event) {
     normalizeHeading(heading);
 
   if (heading != null) {
-    myHeading = heading;
-  }
-}
 
+    myHeading =
+      heading;
+
+    console.log(
+      "目前手機方向 heading =",
+      myHeading
+    );
+
+  }
+
+}
 
 /* ---------------------------------------------------------
    啟動手機方向感測
