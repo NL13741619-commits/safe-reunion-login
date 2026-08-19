@@ -6,6 +6,7 @@
 <title>群組通話 - 安全團聚</title>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/livekit-client/dist/livekit-client.umd.min.js"></script>
 
 <style>
 *{
@@ -89,12 +90,6 @@ body{
   font-size:16px
 }
 
-/* =========================================================
-   視訊區
-   底部永遠預留固定控制區
-   開啟聊天時不再把視訊格往上推
-   ========================================================= */
-
 .grid{
   position:absolute;
   left:0;
@@ -104,14 +99,8 @@ body{
   padding:calc(58px + env(safe-area-inset-top,0px)) 6px 6px;
   display:grid;
   grid-template-columns:repeat(2,1fr);
-  gap:6px;
+  gap:6px
 }
-
-/*
- * 注意：
- * 不再使用 body.chat-open .grid 改變 bottom。
- * 聊天區會直接覆蓋在視訊上方。
- */
 
 .grid.slots-1{
   grid-template-columns:1fr
@@ -206,10 +195,6 @@ body{
 .slot.me{
   border:1px solid rgba(6,199,85,.55)
 }
-
-/* =========================================================
-   固定聊天區
-   ========================================================= */
 
 .chat-dock{
   position:fixed;
@@ -310,10 +295,6 @@ body.chat-open .chat-dock{
   font-size:14px
 }
 
-/* =========================================================
-   控制列
-   ========================================================= */
-
 .controls{
   position:fixed;
   left:0;
@@ -362,10 +343,6 @@ body.chat-open .chat-dock{
   height:58px
 }
 
-.ctrl.kb-on{
-  background:#1565c0
-}
-
 .kb-fab{
   position:fixed;
   right:14px;
@@ -403,10 +380,6 @@ body.chat-open .kb-fab{
 body.chat-open .hint{
   display:none
 }
-
-/* =========================================================
-   成員面板
-   ========================================================= */
 
 .panel-mask{
   display:none;
@@ -594,42 +567,26 @@ body.chat-open .hint{
 <script>
 (function () {
 
+  "use strict";
+
   var SUPABASE_URL =
     "https://perfsipperncvjocznhl.supabase.co";
 
   var SUPABASE_KEY =
     "sb_publishable_qpqAwj49L6HcWqWTnNsTxw_oBEauWBA";
 
+  var TOKEN_FUNCTION_URL =
+    SUPABASE_URL +
+    "/functions/v1/livekit-token";
+
   var MAX_VIDEO = 8;
 
-  /*
-   * WebRTC
-   *
-   * 每個 room_id 是獨立會議。
-   * 每個成員與其他成員各自建立 PeerConnection。
-   *
-   * 攝影機開關：
-   * 不重新建立 PeerConnection
-   * 不重新協商整個群組
-   * 使用 replaceTrack / enabled
-   */
-
-  var RTC_CONFIG = {
-    iceServers: [
-      {
-        urls: "stun:stun.l.google.com:19302"
-      },
-      {
-        urls: "stun:stun1.l.google.com:19302"
-      }
-    ]
-  };
-
-
-  var params = new URLSearchParams(location.search);
+  var params =
+    new URLSearchParams(location.search);
 
   var mode =
-    (params.get("mode") || "audio").toLowerCase();
+    (params.get("mode") || "audio")
+      .toLowerCase();
 
   var roomName =
     params.get("name") ||
@@ -641,57 +598,46 @@ body.chat-open .hint{
     params.get("id") ||
     roomName;
 
-
   var sb =
     window.supabase.createClient(
       SUPABASE_URL,
       SUPABASE_KEY
     );
 
-
   var me = null;
 
   var myName = "我";
 
-  var myStream = null;
+  var livekitRoom = null;
 
-  /*
-   * 現在獨立保存攝影機 track。
-   * 關閉攝影機時不銷毀 PeerConnection。
-   */
-  var cameraTrack = null;
+  var livekitUrl = "";
+
+  var chatChannel = null;
+
+  var chatLog = [];
+
+  var chatOpen = false;
+
+  var destroyed = false;
+
+  var participants = {};
+
+  var videoPublications = {};
+
+  var attachedTracks = {};
+
+  var pendingTrackElements = {};
 
   var micOn = false;
 
   var camOn = false;
 
-  var chatOpen = false;
 
-  var channel = null;
-
-  var chatChannel = null;
-
-  var members = {};
-
-  var chatLog = [];
-
-  var peerConnections = {};
-
-  var remoteStreams = {};
-
-  var makingOffer = {};
-
-  var pendingCandidates = {};
-
-  var destroyed = false;
-
-
-  var grid =
-    document.getElementById("videoGrid");
-
-  document.getElementById("roomName")
-    .textContent = roomName;
-
+  /*
+   * =========================================================
+   * 基本工具
+   * =========================================================
+   */
 
   function escapeHtml(s) {
 
@@ -706,7 +652,8 @@ body.chat-open .hint{
 
   function initialOf(n) {
 
-    n = (n || "?").trim();
+    n =
+      (n || "?").trim();
 
     return n
       ? n.charAt(0).toUpperCase()
@@ -715,37 +662,104 @@ body.chat-open .hint{
   }
 
 
-  function countOnline() {
+  function getLiveKit(){
 
-    var n = 0;
-
-    Object.keys(members).forEach(function(k){
-
-      if(members[k].online){
-        n++;
-      }
-
-    });
-
-    return n;
+    return window.LivekitClient;
 
   }
 
 
-  function countVideoOn() {
+  function getParticipantId(p){
+
+    return String(
+      p.identity ||
+      p.sid ||
+      ""
+    );
+
+  }
+
+
+  function getParticipantName(p){
+
+    return (
+      p.name ||
+      p.identity ||
+      "成員"
+    );
+
+  }
+
+
+  function isLocalParticipant(p){
+
+    return (
+      livekitRoom &&
+      p &&
+      p.identity ===
+      livekitRoom.localParticipant.identity
+    );
+
+  }
+
+
+  function getAllParticipants(){
+
+    var list = [];
+
+    if(
+      livekitRoom &&
+      livekitRoom.localParticipant
+    ){
+
+      list.push(
+        livekitRoom.localParticipant
+      );
+
+    }
+
+    if(
+      livekitRoom &&
+      livekitRoom.remoteParticipants
+    ){
+
+      livekitRoom.remoteParticipants
+        .forEach(function(p){
+
+          list.push(p);
+
+        });
+
+    }
+
+    return list;
+
+  }
+
+
+  function getOnlineCount(){
+
+    return getAllParticipants().length;
+
+  }
+
+
+  function countVideoOn(){
 
     var n = 0;
 
-    Object.keys(members).forEach(function(k){
+    getAllParticipants()
+      .forEach(function(p){
 
-      if(
-        members[k].online &&
-        members[k].video
-      ){
-        n++;
-      }
+        if(
+          p.isCameraEnabled
+        ){
 
-    });
+          n++;
+
+        }
+
+      });
 
     return n;
 
@@ -762,20 +776,33 @@ body.chat-open .hint{
   }
 
 
+  /*
+   * =========================================================
+   * UI
+   * =========================================================
+   */
+
   function updateTop(){
 
-    document.getElementById("onlineCount")
-      .textContent =
-      String(countOnline());
+    document.getElementById(
+      "onlineCount"
+    ).textContent =
+      String(getOnlineCount());
 
-    var v = countVideoOn();
 
-    document.getElementById("roomSub")
-      .textContent =
+    var v =
+      countVideoOn();
+
+
+    document.getElementById(
+      "roomSub"
+    ).textContent =
       "會議進行中 · " +
-      (mode === "video"
-        ? "視訊模式"
-        : "語音模式") +
+      (
+        mode === "video"
+          ? "視訊模式"
+          : "語音模式"
+      ) +
       " · 視訊 " +
       v +
       "/" +
@@ -783,7 +810,9 @@ body.chat-open .hint{
 
 
     var b =
-      document.getElementById("btnCam");
+      document.getElementById(
+        "btnCam"
+      );
 
 
     if(
@@ -791,19 +820,87 @@ body.chat-open .hint{
       !camOn
     ){
 
-      document.getElementById("ruleHint")
-        .textContent =
+      document.getElementById(
+        "ruleHint"
+      ).textContent =
         "視訊已滿 8 人，僅能語音；視訊／語音都可以打字";
 
-      b.classList.add("disabled");
+      b.classList.add(
+        "disabled"
+      );
 
     }else{
 
-      document.getElementById("ruleHint")
-        .textContent =
+      document.getElementById(
+        "ruleHint"
+      ).textContent =
         "視訊／語音都可以打字 · 視訊最多 8 人";
 
-      b.classList.remove("disabled");
+      b.classList.remove(
+        "disabled"
+      );
+
+    }
+
+  }
+
+
+  function setMicUi(){
+
+    var b =
+      document.getElementById(
+        "btnMic"
+      );
+
+
+    if(micOn){
+
+      b.classList.remove(
+        "off"
+      );
+
+      b.innerHTML =
+        '<span class="ico">🎤</span>麥克風';
+
+    }else{
+
+      b.classList.add(
+        "off"
+      );
+
+      b.innerHTML =
+        '<span class="ico">🔇</span>麥克風';
+
+    }
+
+  }
+
+
+  function setCamUi(){
+
+    var b =
+      document.getElementById(
+        "btnCam"
+      );
+
+
+    if(camOn){
+
+      b.classList.remove(
+        "off"
+      );
+
+      b.innerHTML =
+        '<span class="ico">📹</span>視訊';
+
+    }else{
+
+      b.classList.add(
+        "off"
+      );
+
+      b.innerHTML =
+        '<span class="ico">📷</span>視訊';
 
     }
 
@@ -811,32 +908,41 @@ body.chat-open .hint{
 
 
   /*
-   * 聊天開啟：
-   * 不改變視訊 grid 高度。
-   * 聊天直接覆蓋在視訊上。
+   * =========================================================
+   * Chat UI
+   * =========================================================
    */
 
-  function setChatOpen(on,focusInput){
+  function setChatOpen(
+    on,
+    focusInput
+  ){
 
-    chatOpen = !!on;
+    chatOpen =
+      !!on;
 
     document.body.classList.toggle(
       "chat-open",
       chatOpen
     );
 
+
     setTimeout(function(){
 
       if(chatOpen){
 
         var el =
-          document.getElementById("chatInput");
+          document.getElementById(
+            "chatInput"
+          );
 
         if(
           focusInput &&
           el
         ){
+
           el.focus();
+
         }
 
         scrollChatBottom();
@@ -851,11 +957,15 @@ body.chat-open .hint{
   function scrollChatBottom(){
 
     var box =
-      document.getElementById("chatMessages");
+      document.getElementById(
+        "chatMessages"
+      );
 
     if(box){
+
       box.scrollTop =
         box.scrollHeight;
+
     }
 
   }
@@ -864,9 +974,13 @@ body.chat-open .hint{
   function renderChat(){
 
     var box =
-      document.getElementById("chatMessages");
+      document.getElementById(
+        "chatMessages"
+      );
 
-    if(!box)return;
+    if(!box){
+      return;
+    }
 
 
     if(!chatLog.length){
@@ -894,8 +1008,9 @@ body.chat-open .hint{
             ? (
               t.getHours() +
               ":" +
-              String(t.getMinutes())
-                .padStart(2,"0")
+              String(
+                t.getMinutes()
+              ).padStart(2,"0")
             )
             : "";
 
@@ -903,9 +1018,14 @@ body.chat-open .hint{
         return (
           '<div class="chat-line">' +
           '<span class="who">' +
-          escapeHtml(m.name || "成員") +
+          escapeHtml(
+            m.name ||
+            "成員"
+          ) +
           "</span>" +
-          escapeHtml(m.text) +
+          escapeHtml(
+            m.text
+          ) +
           (
             ts
               ? '<span class="when">'+
@@ -928,15 +1048,25 @@ body.chat-open .hint{
 
     chatLog.push(msg);
 
-    if(chatLog.length > 200){
+    if(
+      chatLog.length > 200
+    ){
+
       chatLog =
         chatLog.slice(-200);
+
     }
 
     renderChat();
 
+
     if(!chatOpen){
-      setChatOpen(true,false);
+
+      setChatOpen(
+        true,
+        false
+      );
+
     }
 
   }
@@ -944,83 +1074,81 @@ body.chat-open .hint{
 
   /*
    * =========================================================
-   * 視訊格
+   * Video Grid
    *
-   * 重要：
-   * 不再每次 presence 變動就：
-   *
-   * grid.innerHTML = "";
-   *
-   * 這樣可以避免其他人的 video 元素被刪除重建，
-   * 造成黑屏、閃動。
+   * LiveKit participant 是唯一狀態來源。
+   * 不使用 Supabase Presence。
+   * 不使用 RTCPeerConnection。
+   * 不重建其他人的 MediaStream。
    * =========================================================
    */
 
   function renderGrid(){
 
     var list =
-      Object.keys(members)
-        .map(function(k){
-          return members[k];
-        })
-        .filter(function(m){
-          return m.online;
-        })
-        .sort(function(a,b){
+      getAllParticipants();
 
-          if(
-            me &&
-            a.user_id === me.id
-          ){
-            return -1;
-          }
 
-          if(
-            me &&
-            b.user_id === me.id
-          ){
-            return 1;
-          }
+    list.sort(function(a,b){
 
-          return (
-            a.name || ""
-          ).localeCompare(
-            b.name || ""
-          );
+      var aLocal =
+        isLocalParticipant(a);
 
-        });
+      var bLocal =
+        isLocalParticipant(b);
+
+
+      if(aLocal && !bLocal){
+        return -1;
+      }
+
+      if(!aLocal && bLocal){
+        return 1;
+      }
+
+
+      return getParticipantName(a)
+        .localeCompare(
+          getParticipantName(b)
+        );
+
+    });
 
 
     var slots =
-      list.slice(0,MAX_VIDEO);
+      list.slice(
+        0,
+        MAX_VIDEO
+      );
+
 
     var n =
-      Math.max(1,slots.length);
+      Math.max(
+        1,
+        slots.length
+      );
 
 
     grid.className =
       "grid slots-" +
-      Math.min(8,n);
+      Math.min(
+        MAX_VIDEO,
+        n
+      );
 
 
     if(!slots.length){
 
-      if(
-        !grid.querySelector(".waiting-slot")
-      ){
-
-        grid.innerHTML =
-          '<div class="slot waiting-slot">'+
-          '<div class="slot-avatar">'+
-          '<div class="face">💬</div>'+
-          '<div>等待通話成員…</div>'+
-          '<div style="font-size:12px;opacity:.8">'+
-          '可使用會議內打字'+
-          '</div>'+
-          '</div>'+
-          '</div>';
-
-      }
+      grid.innerHTML =
+        '<div class="slot waiting-slot">'+
+        '<div class="slot-avatar">'+
+        '<div class="face">💬</div>'+
+        '<div>等待通話成員…</div>'+
+        '<div style="font-size:12px;opacity:.8">'+
+        '可使用會議內打字'+
+        '</div>'+
+        '</div>'+
+        '</div>';
 
       return;
 
@@ -1030,15 +1158,20 @@ body.chat-open .hint{
     var active = {};
 
 
-    slots.forEach(function(m){
+    slots.forEach(function(p){
 
-      active[m.user_id] = true;
+      var uid =
+        getParticipantId(p);
+
+
+      active[uid] =
+        true;
 
 
       var slot =
         grid.querySelector(
           '.slot[data-user-id="' +
-          CSS.escape(m.user_id) +
+          CSS.escape(uid) +
           '"]'
         );
 
@@ -1046,147 +1179,199 @@ body.chat-open .hint{
       if(!slot){
 
         slot =
-          document.createElement("div");
+          document.createElement(
+            "div"
+          );
 
-        slot.className = "slot";
+        slot.className =
+          "slot";
 
         slot.dataset.userId =
-          m.user_id;
+          uid;
 
 
         var avatar =
-          document.createElement("div");
+          document.createElement(
+            "div"
+          );
 
         avatar.className =
           "slot-avatar";
 
         avatar.innerHTML =
           '<div class="face">'+
-          initialOf(m.name)+
+          initialOf(
+            getParticipantName(p)
+          )+
           '</div>'+
           '<div class="avatar-name" '+
           'style="font-size:12px"></div>';
 
 
-        var mediaEl =
-          document.createElement("video");
+        var media =
+          document.createElement(
+            "video"
+          );
 
-        mediaEl.autoplay = true;
+        media.autoplay =
+          true;
 
-        mediaEl.playsInline = true;
+        media.playsInline =
+          true;
 
-        mediaEl.controls = false;
+        media.controls =
+          false;
 
-        mediaEl.dataset.userId =
-          m.user_id;
+        media.muted =
+          isLocalParticipant(p);
 
 
         var name =
-          document.createElement("div");
+          document.createElement(
+            "div"
+          );
 
         name.className =
           "slot-name";
 
 
         var badge =
-          document.createElement("div");
+          document.createElement(
+            "div"
+          );
 
         badge.className =
           "slot-badge";
 
 
-        slot.appendChild(avatar);
+        slot.appendChild(
+          avatar
+        );
 
-        slot.appendChild(mediaEl);
+        slot.appendChild(
+          media
+        );
 
-        slot.appendChild(name);
+        slot.appendChild(
+          name
+        );
 
-        slot.appendChild(badge);
+        slot.appendChild(
+          badge
+        );
 
-        grid.appendChild(slot);
+        grid.appendChild(
+          slot
+        );
 
       }
 
 
       var media =
-        slot.querySelector("video");
+        slot.querySelector(
+          "video"
+        );
 
       var avatar =
-        slot.querySelector(".slot-avatar");
+        slot.querySelector(
+          ".slot-avatar"
+        );
 
       var avatarName =
-        slot.querySelector(".avatar-name");
+        slot.querySelector(
+          ".avatar-name"
+        );
 
       var name =
-        slot.querySelector(".slot-name");
+        slot.querySelector(
+          ".slot-name"
+        );
 
       var badge =
-        slot.querySelector(".slot-badge");
+        slot.querySelector(
+          ".slot-badge"
+        );
 
 
       slot.className =
         "slot" +
         (
-          me &&
-          m.user_id === me.id
+          isLocalParticipant(p)
             ? " me"
             : ""
         );
 
 
-      slot.dataset.userId =
-        m.user_id;
-
-
       if(avatarName){
 
         avatarName.textContent =
-          m.name || "成員";
+          getParticipantName(p);
 
       }
 
 
+      var mic =
+        p.isMicrophoneEnabled;
+
+
+      var video =
+        p.isCameraEnabled;
+
+
       name.textContent =
-        (m.name || "成員") +
+        getParticipantName(p) +
         (
-          m.mic
+          mic
             ? " · 🎤"
             : " · 🔇"
         );
 
 
       badge.textContent =
-        m.video
+        video
           ? "視訊"
           : "語音";
 
 
       /*
-       * 自己的視訊
+       * 本人
        */
 
       if(
-        me &&
-        m.user_id === me.id
+        isLocalParticipant(p)
       ){
 
-        if(
-          myStream &&
-          media.srcObject !== myStream
-        ){
-          media.srcObject =
-            myStream;
-        }
+        media.muted =
+          true;
 
 
-        media.muted = true;
+        var localCamera =
+          p.getTrackPublication(
+            LivekitClient.Track.Source.Camera
+          );
 
 
         if(
-          camOn &&
-          cameraTrack &&
-          cameraTrack.readyState !== "ended"
+          localCamera &&
+          localCamera.videoTrack
         ){
+
+          try{
+
+            localCamera.videoTrack.detach(
+              media
+            );
+
+          }catch(e){}
+
+
+          try{
+
+            localCamera.videoTrack.attach(
+              media
+            );
+
+          }catch(e){}
 
           media.style.visibility =
             "visible";
@@ -1204,50 +1389,49 @@ body.chat-open .hint{
 
         }
 
-
       }else{
 
-        /*
-         * 別人的視訊
-         */
-
-        var remote =
-          remoteStreams[m.user_id];
+        media.muted =
+          false;
 
 
-        if(
-          remote &&
-          media.srcObject !== remote
-        ){
-
-          media.srcObject =
-            remote;
-
-        }
-
-
-        media.muted = false;
-
-
-        if(remote){
-
-          media.play().catch(
-            function(){}
+        var publication =
+          p.getTrackPublication(
+            LivekitClient.Track.Source.Camera
           );
 
-        }
-
 
         if(
-          m.video &&
-          remote
+          publication &&
+          publication.videoTrack
         ){
+
+          try{
+
+            publication.videoTrack.detach(
+              media
+            );
+
+          }catch(e){}
+
+
+          try{
+
+            publication.videoTrack.attach(
+              media
+            );
+
+          }catch(e){}
 
           media.style.visibility =
             "visible";
 
           avatar.style.display =
             "none";
+
+          media.play().catch(
+            function(){}
+          );
 
         }else{
 
@@ -1263,10 +1447,6 @@ body.chat-open .hint{
 
     });
 
-
-    /*
-     * 只刪除真正離開的人。
-     */
 
     Array.prototype.slice.call(
       grid.querySelectorAll(
@@ -1280,6 +1460,11 @@ body.chat-open .hint{
         ]
       ){
 
+        /*
+         * 離開的人才移除自己的格子。
+         * 不碰其他人的 video element。
+         */
+
         slot.remove();
 
       }
@@ -1289,10 +1474,13 @@ body.chat-open .hint{
   }
 
 
-  function renderMemberList(){
+  /*
+   * =========================================================
+   * 成員面板
+   * =========================================================
+   */
 
-    var keys =
-      Object.keys(members);
+  function renderMemberList(){
 
     var box =
       document.getElementById(
@@ -1300,7 +1488,11 @@ body.chat-open .hint{
       );
 
 
-    if(!keys.length){
+    var list =
+      getAllParticipants();
+
+
+    if(!list.length){
 
       box.innerHTML =
         '<div style="opacity:.7;font-size:13px">'+
@@ -1312,60 +1504,49 @@ body.chat-open .hint{
     }
 
 
-    keys.sort(function(a,b){
+    list.sort(function(a,b){
 
-      var ma = members[a];
+      var aLocal =
+        isLocalParticipant(a);
 
-      var mb = members[b];
+      var bLocal =
+        isLocalParticipant(b);
 
 
-      if(
-        ma.online !== mb.online
-      ){
+      if(aLocal && !bLocal){
+        return -1;
+      }
 
-        return ma.online
-          ? -1
-          : 1;
-
+      if(!aLocal && bLocal){
+        return 1;
       }
 
 
-      return (
-        ma.name || ""
-      ).localeCompare(
-        mb.name || ""
-      );
+      return getParticipantName(a)
+        .localeCompare(
+          getParticipantName(b)
+        );
 
     });
 
 
     box.innerHTML =
-      keys.map(function(k){
+      list.map(function(p){
 
-        var m =
-          members[k];
+        var video =
+          p.isCameraEnabled;
+
+        var mic =
+          p.isMicrophoneEnabled;
 
 
         var tags =
-          '<span class="tag '+
-          (
-            m.online
-              ? "on"
-              : "off"
-          )+
-          '">'+
-          (
-            m.online
-              ? "在線"
-              : "離線"
-          )+
+          '<span class="tag on">'+
+          "在線"+
           "</span>";
 
 
-        if(
-          m.online &&
-          m.video
-        ){
+        if(video){
 
           tags +=
             ' <span class="tag vid">'+
@@ -1379,18 +1560,19 @@ body.chat-open .hint{
           '<div class="member-row">'+
 
           '<div class="member-av">'+
-          initialOf(m.name)+
+          initialOf(
+            getParticipantName(p)
+          )+
           '</div>'+
 
           '<div class="member-meta">'+
 
           '<div class="n">'+
           escapeHtml(
-            m.name || "成員"
+            getParticipantName(p)
           )+
           (
-            me &&
-            m.user_id === me.id
+            isLocalParticipant(p)
               ? "（我）"
               : ""
           )+
@@ -1398,13 +1580,14 @@ body.chat-open .hint{
 
           '<div class="s">'+
           (
-            m.online
-              ? (
-                m.video
-                  ? "視訊中"
-                  : "語音中"
-              )
-              : "未在通話"
+            video
+              ? "視訊中"
+              : "語音中"
+          )+
+          (
+            mic
+              ? " · 麥克風開啟"
+              : " · 麥克風關閉"
           )+
           '</div>'+
 
@@ -1420,493 +1603,274 @@ body.chat-open .hint{
   }
 
 
-  function setMicUi(){
-
-    var b =
-      document.getElementById(
-        "btnMic"
-      );
-
-
-    if(micOn){
-
-      b.classList.remove("off");
-
-      b.innerHTML =
-        '<span class="ico">🎤</span>麥克風';
-
-    }else{
-
-      b.classList.add("off");
-
-      b.innerHTML =
-        '<span class="ico">🔇</span>麥克風';
-
-    }
-
-  }
-
-
-  function setCamUi(){
-
-    var b =
-      document.getElementById(
-        "btnCam"
-      );
-
-
-    if(camOn){
-
-      b.classList.remove("off");
-
-      b.innerHTML =
-        '<span class="ico">📹</span>視訊';
-
-    }else{
-
-      b.classList.add("off");
-
-      b.innerHTML =
-        '<span class="ico">📷</span>視訊';
-
-    }
-
-  }
-
-
   /*
    * =========================================================
-   * 麥克風
+   * LiveKit Token
    * =========================================================
    */
 
-  async function ensureMedia(){
+  async function getLiveKitToken(){
 
-    if(myStream){
-      return myStream;
+    if(!me){
+
+      throw new Error(
+        "尚未登入"
+      );
+
+    }
+
+
+    var sessionResult =
+      await sb.auth.getSession();
+
+
+    var session =
+      sessionResult.data &&
+      sessionResult.data.session;
+
+
+    if(!session){
+
+      throw new Error(
+        "登入已失效，請重新登入"
+      );
+
+    }
+
+
+    var response =
+      await fetch(
+        TOKEN_FUNCTION_URL,
+        {
+          method:"POST",
+
+          headers:{
+            "Authorization":
+              "Bearer " +
+              session.access_token,
+
+            "apikey":
+              SUPABASE_KEY,
+
+            "Content-Type":
+              "application/json"
+          },
+
+          body:
+            JSON.stringify({
+
+              room:
+                String(roomId),
+
+              name:
+                myName
+
+            })
+        }
+      );
+
+
+    var data;
+
+
+    try{
+
+      data =
+        await response.json();
+
+    }catch(e){
+
+      data = {};
+
+    }
+
+
+    if(!response.ok){
+
+      throw new Error(
+        data.error ||
+        "LiveKit Token 取得失敗"
+      );
+
     }
 
 
     if(
-      !navigator.mediaDevices ||
-      !navigator.mediaDevices.getUserMedia
+      !data.token ||
+      !data.url
     ){
 
       throw new Error(
-        "此瀏覽器不支援麥克風"
+        "LiveKit Token 回應不完整"
       );
 
     }
 
 
-    document.getElementById("roomSub")
-      .textContent =
-      "請求麥克風權限…";
+    livekitUrl =
+      data.url;
 
 
-    myStream =
-      await navigator.mediaDevices
-        .getUserMedia({
-          audio:true,
-          video:false
-        });
-
-
-    micOn = true;
-
-
-    myStream
-      .getAudioTracks()
-      .forEach(function(t){
-
-        t.enabled = true;
-
-      });
-
-
-    setMicUi();
-
-    return myStream;
+    return data.token;
 
   }
 
 
   /*
    * =========================================================
-   * Presence
+   * LiveKit 事件
    * =========================================================
    */
 
-  async function trackPresence(){
+  function setupLiveKitEvents(){
 
-    if(
-      !channel ||
-      !me
-    ){
+    if(!livekitRoom){
       return;
     }
 
 
-    try{
+    livekitRoom.on(
+      LivekitClient.RoomEvent.ParticipantConnected,
+      function(participant){
 
-      await channel.track({
-
-        user_id:me.id,
-
-        name:myName,
-
-        online:true,
-
-        mic:micOn,
-
-        video:camOn,
-
-        at:Date.now()
-
-      });
-
-    }catch(e){
-
-      console.warn(
-        "presence track failed",
-        e
-      );
-
-    }
-
-  }
+        participants[
+          getParticipantId(participant)
+        ] =
+          participant;
 
 
-  /*
-   * =========================================================
-   * 把目前的 audio track 加到 Peer
-   * =========================================================
-   */
+        renderGrid();
 
-  function addLocalAudioToPeer(pc){
+        renderMemberList();
 
-    if(!myStream){
-      return;
-    }
-
-
-    var audioTracks =
-      myStream.getAudioTracks();
-
-
-    if(!audioTracks.length){
-      return;
-    }
-
-
-    var existing =
-      pc.getSenders()
-        .some(function(s){
-
-          return (
-            s.track &&
-            s.track.kind === "audio"
-          );
-
-        });
-
-
-    if(!existing){
-
-      try{
-
-        pc.addTrack(
-          audioTracks[0],
-          myStream
-        );
-
-      }catch(e){
-
-        console.warn(
-          "add audio track failed",
-          e
-        );
+        updateTop();
 
       }
-
-    }
-
-  }
-
-
-  /*
-   * =========================================================
-   * Remote Stream
-   * =========================================================
-   */
-
-  function attachRemoteStream(
-    uid,
-    stream
-  ){
-
-    remoteStreams[uid] =
-      stream;
-
-
-    var media =
-      document.querySelector(
-        '[data-user-id="' +
-        CSS.escape(uid) +
-        '"]'
-      );
-
-
-    if(media){
-
-      if(
-        media.srcObject !== stream
-      ){
-
-        media.srcObject =
-          stream;
-
-      }
-
-
-      media.play().catch(
-        function(){}
-      );
-
-
-      var slot =
-        media.parentElement;
-
-
-      if(slot){
-
-        var av =
-          slot.querySelector(
-            ".slot-avatar"
-          );
-
-
-        if(
-          av &&
-          members[uid] &&
-          members[uid].video
-        ){
-
-          av.style.display =
-            "none";
-
-          media.style.visibility =
-            "visible";
-
-        }
-
-      }
-
-    }
-
-  }
-
-
-  /*
-   * =========================================================
-   * Peer 清理
-   * =========================================================
-   */
-
-  function cleanupPeer(uid){
-
-    if(
-      peerConnections[uid]
-    ){
-
-      try{
-        peerConnections[uid].close();
-      }catch(e){}
-
-      delete peerConnections[uid];
-
-    }
-
-
-    delete remoteStreams[uid];
-
-    delete makingOffer[uid];
-
-    delete pendingCandidates[uid];
-
-
-    renderGrid();
-
-  }
-
-
-  function sendSignal(
-    to,
-    payload
-  ){
-
-    if(
-      !channel ||
-      destroyed
-    ){
-
-      return Promise.resolve();
-
-    }
-
-
-    return channel.send({
-
-      type:"broadcast",
-
-      event:"webrtc_signal",
-
-      payload:{
-
-        from:me.id,
-
-        to:to,
-
-        room_id:String(roomId),
-
-        data:payload
-
-      }
-
-    });
-
-  }
-
-
-  function isInitiator(
-    remoteId
-  ){
-
-    return (
-      String(me.id) <
-      String(remoteId)
     );
 
-  }
 
+    livekitRoom.on(
+      LivekitClient.RoomEvent.ParticipantDisconnected,
+      function(participant){
 
-  /*
-   * =========================================================
-   * PeerConnection
-   *
-   * 重要：
-   * 一開始就建立 video transceiver。
-   * 後面開關鏡頭不重新協商。
-   * =========================================================
-   */
-
-  function getPeer(uid){
-
-    if(
-      peerConnections[uid]
-    ){
-
-      return peerConnections[uid];
-
-    }
-
-
-    var pc =
-      new RTCPeerConnection(
-        RTC_CONFIG
-      );
-
-
-    peerConnections[uid] =
-      pc;
-
-    makingOffer[uid] =
-      false;
-
-    pendingCandidates[uid] =
-      [];
-
-
-    /*
-     * Audio
-     */
-
-    addLocalAudioToPeer(pc);
-
-
-    /*
-     * Video transceiver
-     *
-     * 這是本次最重要的修改。
-     */
-
-    try{
-
-      pc.addTransceiver(
-        "video",
-        {
-          direction:"sendrecv"
-        }
-      );
-
-    }catch(e){
-
-      console.warn(
-        "video transceiver failed",
-        e
-      );
-
-    }
-
-
-    pc.onicecandidate =
-      function(e){
-
-        if(e.candidate){
-
-          sendSignal(
-            uid,
-            {
-              type:"candidate",
-              candidate:e.candidate
-            }
+        var uid =
+          getParticipantId(
+            participant
           );
 
+
+        delete participants[uid];
+
+
+        /*
+         * 只移除離開者。
+         * 不重建其他人的媒體。
+         */
+
+        var slot =
+          grid.querySelector(
+            '.slot[data-user-id="' +
+            CSS.escape(uid) +
+            '"]'
+          );
+
+
+        if(slot){
+
+          slot.remove();
+
         }
 
-      };
+
+        renderGrid();
+
+        renderMemberList();
+
+        updateTop();
+
+      }
+    );
 
 
-    pc.ontrack =
-      function(e){
+    livekitRoom.on(
+      LivekitClient.RoomEvent.TrackSubscribed,
+      function(
+        track,
+        publication,
+        participant
+      ){
 
-        var stream =
-          e.streams &&
-          e.streams[0];
+        if(
+          track.kind ===
+          LivekitClient.Track.Kind.Video
+        ){
+
+          var uid =
+            getParticipantId(
+              participant
+            );
 
 
-        if(!stream){
+          var slot =
+            grid.querySelector(
+              '.slot[data-user-id="' +
+              CSS.escape(uid) +
+              '"]'
+            );
 
-          stream =
-            remoteStreams[uid] ||
-            new MediaStream();
+
+          if(!slot){
+
+            renderGrid();
+
+            slot =
+              grid.querySelector(
+                '.slot[data-user-id="' +
+                CSS.escape(uid) +
+                '"]'
+              );
+
+          }
 
 
-          if(
-            e.track &&
-            !stream.getTracks()
-              .some(function(t){
+          if(slot){
 
-                return (
-                  t.id ===
-                  e.track.id
-                );
+            var media =
+              slot.querySelector(
+                "video"
+              );
 
-              })
-          ){
+            var avatar =
+              slot.querySelector(
+                ".slot-avatar"
+              );
 
-            stream.addTrack(
-              e.track
+
+            try{
+
+              track.attach(
+                media
+              );
+
+            }catch(e){
+
+              console.warn(
+                "LiveKit video attach failed",
+                e
+              );
+
+            }
+
+
+            media.style.visibility =
+              "visible";
+
+            avatar.style.display =
+              "none";
+
+
+            media.play().catch(
+              function(){}
             );
 
           }
@@ -1914,640 +1878,397 @@ body.chat-open .hint{
         }
 
 
-        attachRemoteStream(
-          uid,
-          stream
-        );
-
-      };
-
-
-    pc.onconnectionstatechange =
-      function(){
-
         if(
-          [
-            "failed",
-            "closed"
-          ].indexOf(
-            pc.connectionState
-          ) >= 0
-        ){
-
-          cleanupPeer(uid);
-
-        }else if(
-          pc.connectionState ===
-          "connected"
-        ){
-
-          document.getElementById(
-            "roomSub"
-          ).textContent =
-            "會議連線正常 · 視訊 " +
-            countVideoOn() +
-            "/" +
-            MAX_VIDEO;
-
-        }
-
-      };
-
-
-    pc.oniceconnectionstatechange =
-      function(){
-
-        if(
-          pc.iceConnectionState ===
-          "failed"
-        ){
-
-          console.warn(
-            "ICE failed:",
-            uid
-          );
-
-        }
-
-      };
-
-
-    return pc;
-
-  }
-
-
-  /*
-   * =========================================================
-   * Offer
-   * =========================================================
-   */
-
-  async function makeOffer(uid){
-
-    if(
-      !me ||
-      uid === me.id ||
-      !isInitiator(uid)
-    ){
-
-      return;
-
-    }
-
-
-    var pc =
-      getPeer(uid);
-
-
-    if(
-      makingOffer[uid]
-    ){
-
-      return;
-
-    }
-
-
-    makingOffer[uid] =
-      true;
-
-
-    try{
-
-      var offer =
-        await pc.createOffer();
-
-
-      await pc.setLocalDescription(
-        offer
-      );
-
-
-      await sendSignal(
-        uid,
-        {
-          type:"offer",
-          description:
-            pc.localDescription
-        }
-      );
-
-
-    }catch(e){
-
-      console.warn(
-        "offer failed",
-        uid,
-        e
-      );
-
-
-    }finally{
-
-      makingOffer[uid] =
-        false;
-
-    }
-
-  }
-
-
-  /*
-   * =========================================================
-   * WebRTC Signal
-   * =========================================================
-   */
-
-  async function handleSignal(msg){
-
-    if(
-      !msg ||
-      !me ||
-      msg.room_id !== String(roomId) ||
-      msg.to !== me.id ||
-      msg.from === me.id
-    ){
-
-      return;
-
-    }
-
-
-    var uid =
-      msg.from;
-
-    var data =
-      msg.data || {};
-
-    var pc =
-      getPeer(uid);
-
-
-    try{
-
-      if(
-        data.type === "offer"
-      ){
-
-        if(
-          pc.signalingState !==
-          "stable"
+          track.kind ===
+          LivekitClient.Track.Kind.Audio
         ){
 
           try{
 
-            await pc.setLocalDescription({
-              type:"rollback"
-            });
+            var audio =
+              track.attach();
 
-          }catch(e){}
+            audio.style.display =
+              "none";
 
-        }
+            document.body.appendChild(
+              audio
+            );
 
+            audio.play().catch(
+              function(){}
+            );
 
-        await pc.setRemoteDescription(
-          new RTCSessionDescription(
-            data.description
-          )
-        );
+          }catch(e){
 
-
-        if(
-          pendingCandidates[uid]
-        ){
-
-          for(
-            var i=0;
-            i<pendingCandidates[uid].length;
-            i++
-          ){
-
-            await pc.addIceCandidate(
-              new RTCIceCandidate(
-                pendingCandidates[uid][i]
-              )
+            console.warn(
+              "LiveKit audio attach failed",
+              e
             );
 
           }
 
-          pendingCandidates[uid] =
-            [];
-
         }
 
 
-        addLocalAudioToPeer(pc);
+        renderGrid();
+
+        renderMemberList();
+
+        updateTop();
+
+      }
+    );
 
 
-        var answer =
-          await pc.createAnswer();
-
-
-        await pc.setLocalDescription(
-          answer
-        );
-
-
-        await sendSignal(
-          uid,
-          {
-            type:"answer",
-            description:
-              pc.localDescription
-          }
-        );
-
-
-      }else if(
-        data.type === "answer"
+    livekitRoom.on(
+      LivekitClient.RoomEvent.TrackUnsubscribed,
+      function(
+        track,
+        publication,
+        participant
       ){
 
-        await pc.setRemoteDescription(
-          new RTCSessionDescription(
-            data.description
-          )
-        );
+        try{
+
+          track.detach();
+
+        }catch(e){}
 
 
-        if(
-          pendingCandidates[uid]
-        ){
+        renderGrid();
 
-          for(
-            var j=0;
-            j<pendingCandidates[uid].length;
-            j++
-          ){
+        renderMemberList();
 
-            await pc.addIceCandidate(
-              new RTCIceCandidate(
-                pendingCandidates[uid][j]
-              )
-            );
+        updateTop();
 
-          }
-
-          pendingCandidates[uid] =
-            [];
-
-        }
+      }
+    );
 
 
-      }else if(
-        data.type === "candidate"
-      ){
+    livekitRoom.on(
+      LivekitClient.RoomEvent.LocalTrackPublished,
+      function(){
 
-        if(
-          pc.remoteDescription &&
-          pc.remoteDescription.type
-        ){
+        renderGrid();
 
-          await pc.addIceCandidate(
-            new RTCIceCandidate(
-              data.candidate
-            )
-          );
+        renderMemberList();
 
-        }else{
+        updateTop();
 
-          pendingCandidates[uid]
-            .push(data.candidate);
+      }
+    );
+
+
+    livekitRoom.on(
+      LivekitClient.RoomEvent.LocalTrackUnpublished,
+      function(){
+
+        renderGrid();
+
+        renderMemberList();
+
+        updateTop();
+
+      }
+    );
+
+
+    livekitRoom.on(
+      LivekitClient.RoomEvent.ParticipantMetadataChanged,
+      function(){
+
+        renderGrid();
+
+        renderMemberList();
+
+      }
+    );
+
+
+    livekitRoom.on(
+      LivekitClient.RoomEvent.ActiveSpeakersChanged,
+      function(){
+
+        renderGrid();
+
+      }
+    );
+
+
+    livekitRoom.on(
+      LivekitClient.RoomEvent.Disconnected,
+      function(){
+
+        if(!destroyed){
+
+          document.getElementById(
+            "roomSub"
+          ).textContent =
+            "會議連線已中斷";
 
         }
 
       }
+    );
 
+
+    livekitRoom.on(
+      LivekitClient.RoomEvent.Reconnecting,
+      function(){
+
+        document.getElementById(
+          "roomSub"
+        ).textContent =
+          "會議重新連線中…";
+
+      }
+    );
+
+
+    livekitRoom.on(
+      LivekitClient.RoomEvent.Reconnected,
+      function(){
+
+        document.getElementById(
+          "roomSub"
+        ).textContent =
+          "會議已重新連線";
+
+
+        renderGrid();
+
+        renderMemberList();
+
+        updateTop();
+
+      }
+    );
+
+
+    livekitRoom.on(
+      LivekitClient.RoomEvent.MediaDevicesError,
+      function(error){
+
+        console.warn(
+          "LiveKit media device error",
+          error
+        );
+
+      }
+    );
+
+
+    livekitRoom.on(
+      LivekitClient.RoomEvent.AudioPlaybackStatusChanged,
+      function(){
+
+        if(
+          livekitRoom &&
+          !livekitRoom.canPlaybackAudio
+        ){
+
+          document.getElementById(
+            "ruleHint"
+          ).textContent =
+            "請點擊畫面或按鈕啟用通話聲音";
+
+        }
+
+      }
+    );
+
+  }
+
+
+  /*
+   * =========================================================
+   * 建立 LiveKit Room
+   * =========================================================
+   */
+
+  async function connectLiveKit(){
+
+    if(
+      !getLiveKit()
+    ){
+
+      throw new Error(
+        "LiveKit SDK 載入失敗"
+      );
+
+    }
+
+
+    var token =
+      await getLiveKitToken();
+
+
+    livekitRoom =
+      new LivekitClient.Room({
+
+        adaptiveStream:true,
+
+        dynacast:true,
+
+        disconnectOnPageLeave:true,
+
+        stopLocalTrackOnUnpublish:true
+
+      });
+
+
+    setupLiveKitEvents();
+
+
+    document.getElementById(
+      "roomSub"
+    ).textContent =
+      "連線 LiveKit SFU…";
+
+
+    await livekitRoom.connect(
+      livekitUrl,
+      token,
+      {
+        autoSubscribe:true
+      }
+    );
+
+
+    /*
+     * 記住目前與會者。
+     */
+
+    participants = {};
+
+
+    participants[
+      livekitRoom.localParticipant
+        .identity
+    ] =
+      livekitRoom.localParticipant;
+
+
+    livekitRoom.remoteParticipants
+      .forEach(function(p){
+
+        participants[
+          p.identity
+        ] =
+          p;
+
+      });
+
+
+    /*
+     * 麥克風
+     */
+
+    try{
+
+      await livekitRoom
+        .localParticipant
+        .setMicrophoneEnabled(
+          true
+        );
+
+      micOn =
+        true;
 
     }catch(e){
 
+      micOn =
+        false;
+
       console.warn(
-        "WebRTC signal error",
-        uid,
+        "microphone unavailable",
         e
       );
 
     }
 
-  }
 
+    setMicUi();
 
-  async function connectToCurrentMembers(){
-
-    if(!me){
-      return;
-    }
-
-
-    var ids =
-      Object.keys(members);
-
-
-    for(
-      var i=0;
-      i<ids.length;
-      i++
-    ){
-
-      var uid =
-        ids[i];
-
-
-      if(
-        uid !== me.id &&
-        members[uid].online &&
-        isInitiator(uid)
-      ){
-
-        await makeOffer(uid);
-
-      }
-
-    }
-
-  }
-
-
-  /*
-   * =========================================================
-   * 開啟攝影機
-   *
-   * 不重新建立 PeerConnection。
-   * 不重新協商。
-   * =========================================================
-   */
-
-  async function addCameraTrack(){
 
     /*
-     * 已經有 camera track：
-     * 只重新開啟。
+     * 視訊模式自動開鏡。
      */
 
     if(
-      cameraTrack &&
-      cameraTrack.readyState !== "ended"
+      mode === "video"
     ){
 
-      cameraTrack.enabled =
-        true;
+      if(
+        countVideoOn() <
+        MAX_VIDEO
+      ){
 
-      camOn =
-        true;
+        try{
 
+          await livekitRoom
+            .localParticipant
+            .setCameraEnabled(
+              true,
+              {
+                facingMode:"user",
 
-      Object.keys(
-        peerConnections
-      ).forEach(function(uid){
+                width:{
+                  ideal:640
+                },
 
-        var pc =
-          peerConnections[uid];
+                height:{
+                  ideal:480
+                }
 
-
-        if(!pc){
-          return;
-        }
-
-
-        var sender =
-          pc.getSenders()
-            .find(function(s){
-
-              return (
-                s.track &&
-                s.track.kind ===
-                "video"
-              );
-
-            });
-
-
-        /*
-         * 若 sender 暫時沒有 track，
-         * 找已經建立好的 video transceiver。
-         */
-
-        if(!sender){
-
-          var transceiver =
-            pc.getTransceivers()
-              .find(function(tr){
-
-                return (
-                  tr.receiver &&
-                  tr.receiver.track &&
-                  tr.receiver.track.kind ===
-                  "video"
-                );
-
-              });
-
-
-          if(transceiver){
-
-            sender =
-              transceiver.sender;
-
-          }
-
-        }
-
-
-        if(sender){
-
-          sender
-            .replaceTrack(
-              cameraTrack
-            )
-            .catch(function(e){
-
-              console.warn(
-                "replace camera track failed",
-                uid,
-                e
-              );
-
-            });
-
-        }
-
-      });
-
-
-      return;
-
-    }
-
-
-    /*
-     * 第一次開啟攝影機
-     */
-
-    var videoStream =
-      await navigator.mediaDevices
-        .getUserMedia({
-
-          video:{
-            facingMode:"user",
-
-            width:{
-              ideal:640
-            },
-
-            height:{
-              ideal:480
-            }
-
-          }
-
-        });
-
-
-    cameraTrack =
-      videoStream
-        .getVideoTracks()[0];
-
-
-    if(!myStream){
-
-      await ensureMedia();
-
-    }
-
-
-    myStream.addTrack(
-      cameraTrack
-    );
-
-
-    cameraTrack.enabled =
-      true;
-
-    camOn =
-      true;
-
-
-    /*
-     * 把新的 camera track
-     * 放進所有既有 PeerConnection。
-     *
-     * 不重新協商。
-     */
-
-    Object.keys(
-      peerConnections
-    ).forEach(function(uid){
-
-      var pc =
-        peerConnections[uid];
-
-
-      if(!pc){
-        return;
-      }
-
-
-      var sender =
-        pc.getSenders()
-          .find(function(s){
-
-            return (
-              s.track &&
-              s.track.kind ===
-              "video"
+              }
             );
 
-          });
+          camOn =
+            true;
 
+        }catch(e){
 
-      if(!sender){
+          camOn =
+            false;
 
-        var transceiver =
-          pc.getTransceivers()
-            .find(function(tr){
-
-              return (
-                tr.receiver &&
-                tr.receiver.track &&
-                tr.receiver.track.kind ===
-                "video"
-              );
-
-            });
-
-
-        if(transceiver){
-
-          sender =
-            transceiver.sender;
+          console.warn(
+            "auto camera failed",
+            e
+          );
 
         }
 
       }
 
-
-      if(sender){
-
-        sender
-          .replaceTrack(
-            cameraTrack
-          )
-          .catch(function(e){
-
-            console.warn(
-              "replace camera track failed",
-              uid,
-              e
-            );
-
-          });
-
-      }
-
-    });
-
-  }
-
-
-  /*
-   * =========================================================
-   * 關閉攝影機
-   *
-   * 絕對不：
-   * - close PeerConnection
-   * - removeTrack
-   * - replaceTrack(null)
-   * - renegotiate
-   *
-   * 只停用 camera track。
-   * =========================================================
-   */
-
-  function removeCameraTrack(){
-
-    if(!cameraTrack){
-      camOn = false;
-      renderGrid();
-      return;
     }
 
 
-    cameraTrack.enabled =
-      false;
-
-
-    camOn =
-      false;
-
-
-    /*
-     * 保留 cameraTrack。
-     *
-     * 這樣重新開啟時，
-     * 不需要重建整個 WebRTC。
-     */
+    setCamUi();
 
     renderGrid();
+
+    renderMemberList();
+
+    updateTop();
+
+
+    try{
+
+      localStorage.setItem(
+        "safe_reunion_in_meeting_" +
+        String(roomId),
+        "1"
+      );
+
+    }catch(e){}
+
+
+    document.getElementById(
+      "roomSub"
+    ).textContent =
+      "已進入會議 · LiveKit SFU";
 
   }
 
@@ -2560,50 +2281,55 @@ body.chat-open .hint{
 
   async function toggleMic(){
 
+    if(
+      !livekitRoom ||
+      !livekitRoom.localParticipant
+    ){
+
+      return;
+
+    }
+
+
     try{
 
-      await ensureMedia();
-
-
-      micOn =
+      var next =
         !micOn;
 
 
-      myStream
-        .getAudioTracks()
-        .forEach(function(t){
+      await livekitRoom
+        .localParticipant
+        .setMicrophoneEnabled(
+          next
+        );
 
-          t.enabled =
-            micOn;
 
-        });
+      micOn =
+        next;
 
 
       setMicUi();
 
-      await trackPresence();
+      renderGrid();
 
+      renderMemberList();
 
-      if(
-        me &&
-        members[me.id]
-      ){
-
-        members[me.id].mic =
-          micOn;
-
-        renderGrid();
-
-        renderMemberList();
-
-      }
-
+      updateTop();
 
     }catch(e){
 
+      console.error(
+        "toggle microphone error",
+        e
+      );
+
+
       alert(
         "無法使用麥克風：" +
-        (e.message || e)
+        (
+          e.message ||
+          e
+        )
       );
 
     }
@@ -2613,11 +2339,25 @@ body.chat-open .hint{
 
   /*
    * =========================================================
-   * 攝影機開關
+   * 攝影機
+   *
+   * 這裡完全不建立 PeerConnection。
+   * LiveKit 自己處理發佈、取消發佈、
+   * 重新連線與其他成員的訂閱。
    * =========================================================
    */
 
   async function toggleCam(){
+
+    if(
+      !livekitRoom ||
+      !livekitRoom.localParticipant
+    ){
+
+      return;
+
+    }
+
 
     try{
 
@@ -2629,7 +2369,7 @@ body.chat-open .hint{
         alert(
           "視訊名額已滿（最多 8 人）。\n"+
           "請等有人關閉視訊。\n"+
-          "你仍可開麥克風或打字。"
+          "你仍可使用語音或打字。"
         );
 
         return;
@@ -2637,49 +2377,40 @@ body.chat-open .hint{
       }
 
 
-      if(!camOn){
+      var next =
+        !camOn;
 
-        await addCameraTrack();
 
-        camOn =
-          true;
+      await livekitRoom
+        .localParticipant
+        .setCameraEnabled(
+          next,
+          {
+            facingMode:"user",
 
-      }else{
+            width:{
+              ideal:640
+            },
 
-        removeCameraTrack();
+            height:{
+              ideal:480
+            }
 
-        camOn =
-          false;
+          }
+        );
 
-      }
+
+      camOn =
+        next;
 
 
       setCamUi();
-
-
-      if(
-        me &&
-        members[me.id]
-      ){
-
-        members[me.id].video =
-          camOn;
-
-        members[me.id].mic =
-          micOn;
-
-      }
-
-
-      await trackPresence();
-
-
-      updateTop();
 
       renderGrid();
 
       renderMemberList();
 
+      updateTop();
 
     }catch(e){
 
@@ -2691,102 +2422,13 @@ body.chat-open .hint{
 
       alert(
         "無法使用鏡頭：" +
-        (e.message || e)
+        (
+          e.message ||
+          e
+        )
       );
 
     }
-
-  }
-
-
-  /*
-   * =========================================================
-   * Presence 狀態
-   * =========================================================
-   */
-
-  function applyPresenceState(state){
-
-    var onlineIds = {};
-
-
-    Object.keys(
-      state || {}
-    ).forEach(function(key){
-
-      var meta =
-        (state[key] || [])[0] ||
-        {};
-
-
-      var uid =
-        meta.user_id ||
-        key;
-
-
-      onlineIds[uid] =
-        true;
-
-
-      members[uid] = {
-
-        user_id:uid,
-
-        name:
-          meta.name ||
-          (
-            members[uid] &&
-            members[uid].name
-          ) ||
-          "成員",
-
-        online:true,
-
-        mic:!!meta.mic,
-
-        video:!!meta.video
-
-      };
-
-    });
-
-
-    Object.keys(
-      members
-    ).forEach(function(uid){
-
-      if(
-        !onlineIds[uid]
-      ){
-
-        members[uid].online =
-          false;
-
-        members[uid].mic =
-          false;
-
-        members[uid].video =
-          false;
-
-
-        /*
-         * 真正離開的人才清 Peer。
-         */
-
-        cleanupPeer(uid);
-
-      }
-
-    });
-
-
-    updateTop();
-
-    renderGrid();
-
-    renderMemberList();
-
-    connectToCurrentMembers();
 
   }
 
@@ -2826,15 +2468,20 @@ body.chat-open .hint{
 
     var payload = {
 
-      user_id:me.id,
+      user_id:
+        me.id,
 
-      name:myName,
+      name:
+        myName,
 
-      text:text,
+      text:
+        text,
 
-      at:Date.now(),
+      at:
+        Date.now(),
 
-      room_id:String(roomId)
+      room_id:
+        String(roomId)
 
     };
 
@@ -2860,9 +2507,67 @@ body.chat-open .hint{
 
     }catch(e){
 
-      console.warn(e);
+      console.warn(
+        "chat send failed",
+        e
+      );
 
     }
+
+  }
+
+
+  async function setupChat(){
+
+    chatChannel =
+      sb.channel(
+        "group-call-chat:" +
+        String(roomId)
+      );
+
+
+    chatChannel.on(
+      "broadcast",
+      {
+        event:"call_chat"
+      },
+      function(message){
+
+        var p =
+          message &&
+          message.payload
+            ? message.payload
+            : message;
+
+
+        if(
+          !p ||
+          !p.text
+        ){
+
+          return;
+
+        }
+
+
+        if(
+          me &&
+          p.user_id ===
+          me.id
+        ){
+
+          return;
+
+        }
+
+
+        pushChat(p);
+
+      }
+    );
+
+
+    await chatChannel.subscribe();
 
   }
 
@@ -2881,12 +2586,12 @@ body.chat-open .hint{
       "檢查登入…";
 
 
-    var session;
+    var sessionResult;
 
 
     try{
 
-      session =
+      sessionResult =
         await sb.auth.getSession();
 
     }catch(e){
@@ -2896,22 +2601,27 @@ body.chat-open .hint{
       ).textContent =
         "登入檢查失敗";
 
-
       alert(
         "無法檢查登入：" +
-        (e.message || e)
+        (
+          e.message ||
+          e
+        )
       );
-
 
       return;
 
     }
 
 
+    var session =
+      sessionResult.data &&
+      sessionResult.data.session;
+
+
     me =
-      session.data &&
-      session.data.session &&
-      session.data.session.user;
+      session &&
+      session.user;
 
 
     if(!me){
@@ -2951,481 +2661,48 @@ body.chat-open .hint{
       );
 
 
-    members[me.id] = {
-
-      user_id:me.id,
-
-      name:myName,
-
-      online:true,
-
-      mic:false,
-
-      video:false
-
-    };
-
-
-    try{
-
-      await ensureMedia();
-
-    }catch(e){
-
-      document.getElementById(
-        "roomSub"
-      ).textContent =
-        "無法取得麥克風權限（仍可加入並使用打字）";
-
-    }
-
-
-    var topic =
-      "group-call:" +
-      String(roomId);
-
-
-    channel =
-      sb.channel(
-        topic,
-        {
-          config:{
-            presence:{
-              key:me.id
-            }
-          }
-        }
-      );
-
-
-    channel
-
-      .on(
-        "presence",
-        {
-          event:"sync"
-        },
-        function(){
-
-          applyPresenceState(
-            channel.presenceState()
-          );
-
-        }
-      )
-
-      .on(
-        "presence",
-        {
-          event:"join"
-        },
-        function(){
-
-          applyPresenceState(
-            channel.presenceState()
-          );
-
-        }
-      )
-
-      .on(
-        "presence",
-        {
-          event:"leave"
-        },
-        function(){
-
-          applyPresenceState(
-            channel.presenceState()
-          );
-
-        }
-      )
-
-      .on(
-        "broadcast",
-        {
-          event:"webrtc_signal"
-        },
-        function(message){
-
-          handleSignal(
-            message &&
-            message.payload
-          );
-
-        }
-      )
-
-      .on(
-        "broadcast",
-        {
-          event:"meeting_end"
-        },
-        function(message){
-
-          console.log(
-            "meeting_end",
-            message
-          );
-
-        }
-      );
+    document.getElementById(
+      "roomName"
+    ).textContent =
+      roomName;
 
 
     document.getElementById(
       "roomSub"
     ).textContent =
-      "連線會議頻道…";
+      "取得 LiveKit 會議權杖…";
 
 
-    await channel.subscribe(
-      async function(status){
+    await setupChat();
 
-        console.log(
-          "group-call channel:",
-          status
-        );
 
+    await connectLiveKit();
 
-        if(
-          status ===
-          "SUBSCRIBED"
-        ){
 
-          try{
+    renderGrid();
 
-            localStorage.setItem(
-              "safe_reunion_in_meeting_" +
-              String(roomId),
-              "1"
-            );
+    renderMemberList();
 
-          }catch(e){}
-
-
-          await trackPresence();
-
-
-          startMeetingAliveBroadcast();
-
-
-          try{
-
-            await channel.send({
-
-              type:"broadcast",
-
-              event:"meeting_start",
-
-              payload:{
-
-                room_id:String(roomId),
-
-                starter_id:me.id,
-
-                starter_name:myName,
-
-                mode:mode,
-
-                at:Date.now()
-
-              }
-
-            });
-
-          }catch(e){}
-
-
-          document.getElementById(
-            "roomSub"
-          ).textContent =
-            "已進入會議（可開麥／視訊／打字）";
-
-
-          /*
-           * 視訊模式自動開啟攝影機
-           */
-
-          if(
-            mode === "video" &&
-            !camOn
-          ){
-
-            try{
-
-              await addCameraTrack();
-
-              camOn =
-                true;
-
-              setCamUi();
-
-              await trackPresence();
-
-            }catch(e){
-
-              console.warn(
-                "auto camera failed",
-                e
-              );
-
-            }
-
-          }
-
-
-          updateTop();
-
-          renderGrid();
-
-          renderMemberList();
-
-
-          setTimeout(
-            connectToCurrentMembers,
-            500
-          );
-
-
-        }else if(
-          status ===
-          "CHANNEL_ERROR"
-        ){
-
-          document.getElementById(
-            "roomSub"
-          ).textContent =
-            "會議頻道連線失敗";
-
-
-        }else if(
-          status ===
-          "TIMED_OUT"
-        ){
-
-          document.getElementById(
-            "roomSub"
-          ).textContent =
-            "會議頻道逾時";
-
-        }
-
-      }
-    );
-
-
-    /*
-     * Chat Channel
-     */
-
-    chatChannel =
-      sb.channel(
-        "group-call-chat:" +
-        String(roomId)
-      );
-
-
-    chatChannel
-
-      .on(
-        "broadcast",
-        {
-          event:"call_chat"
-        },
-        function(message){
-
-          var p =
-            message &&
-            message.payload
-              ? message.payload
-              : message;
-
-
-          if(
-            !p ||
-            !p.text
-          ){
-
-            return;
-
-          }
-
-
-          if(
-            me &&
-            p.user_id === me.id
-          ){
-
-            return;
-
-          }
-
-
-          pushChat(p);
-
-        }
-      );
-
-
-    await chatChannel.subscribe();
+    updateTop();
 
   }
 
 
   /*
    * =========================================================
-   * 會議存活
+   * 退出
    * =========================================================
    */
 
-  var meetingAliveTimer =
-    null;
+  async function hangup(){
 
-
-  function startMeetingAliveBroadcast(){
-
-    if(meetingAliveTimer){
-
-      clearInterval(
-        meetingAliveTimer
-      );
-
+    if(destroyed){
+      return;
     }
 
-
-    async function beat(){
-
-      if(!channel){
-        return;
-      }
-
-
-      var n = 0;
-
-
-      try{
-
-        var state =
-          channel.presenceState() ||
-          {};
-
-
-        Object.keys(state)
-          .forEach(function(k){
-
-            if(
-              (state[k] || [])
-                .length
-            ){
-
-              n++;
-
-            }
-
-          });
-
-      }catch(e){}
-
-
-      try{
-
-        await channel.send({
-
-          type:"broadcast",
-
-          event:"meeting_alive",
-
-          payload:{
-
-            room_id:String(roomId),
-
-            count:
-              Math.max(1,n),
-
-            starter_name:
-              myName,
-
-            at:
-              Date.now()
-
-          }
-
-        });
-
-      }catch(e){}
-
-    }
-
-
-    beat();
-
-
-    meetingAliveTimer =
-      setInterval(
-        beat,
-        3000
-      );
-
-  }
-
-
-  function stopMeetingAliveBroadcast(){
-
-    if(meetingAliveTimer){
-
-      clearInterval(
-        meetingAliveTimer
-      );
-
-      meetingAliveTimer =
-        null;
-
-    }
-
-
-    try{
-
-      if(channel){
-
-        channel.send({
-
-          type:"broadcast",
-
-          event:"meeting_end",
-
-          payload:{
-
-            room_id:
-              String(roomId),
-
-            at:
-              Date.now()
-
-          }
-
-        });
-
-      }
-
-    }catch(e){}
-
-  }
-
-
-  /*
-   * =========================================================
-   * 離開會議
-   * =========================================================
-   */
-
-  function hangup(){
 
     destroyed =
       true;
-
-
-    stopMeetingAliveBroadcast();
 
 
     chatLog =
@@ -3434,83 +2711,36 @@ body.chat-open .hint{
     renderChat();
 
 
-    Object.keys(
-      peerConnections
-    ).forEach(function(uid){
+    try{
 
-      try{
+      if(
+        livekitRoom
+      ){
 
-        peerConnections[uid]
-          .close();
+        await livekitRoom.disconnect(
+          true
+        );
 
-      }catch(e){}
+        livekitRoom =
+          null;
 
-    });
+      }
 
+    }catch(e){
 
-    peerConnections =
-      {};
+      console.warn(
+        "LiveKit disconnect error",
+        e
+      );
 
-    remoteStreams =
-      {};
-
-    makingOffer =
-      {};
-
-    pendingCandidates =
-      {};
+    }
 
 
     try{
 
-      if(cameraTrack){
-
-        try{
-          cameraTrack.stop();
-        }catch(e){}
-
-        cameraTrack =
-          null;
-
-      }
-
-
-      if(myStream){
-
-        myStream
-          .getTracks()
-          .forEach(function(t){
-
-            try{
-              t.stop();
-            }catch(e){}
-
-          });
-
-        myStream =
-          null;
-
-      }
-
-
-      if(channel){
-
-        try{
-          channel.untrack();
-        }catch(e){}
-
-
-        sb.removeChannel(
-          channel
-        );
-
-        channel =
-          null;
-
-      }
-
-
       if(chatChannel){
+
+        await chatChannel.unsubscribe();
 
         sb.removeChannel(
           chatChannel
@@ -3521,25 +2751,28 @@ body.chat-open .hint{
 
       }
 
+    }catch(e){}
 
-      try{
 
-        localStorage.removeItem(
-          "safe_reunion_in_meeting_" +
-          String(roomId)
-        );
+    try{
 
-      }catch(e2){}
-
+      localStorage.removeItem(
+        "safe_reunion_in_meeting_" +
+        String(roomId)
+      );
 
     }catch(e){}
 
 
     var back =
       "room.html?id=" +
-      encodeURIComponent(roomId) +
+      encodeURIComponent(
+        roomId
+      ) +
       "&name=" +
-      encodeURIComponent(roomName);
+      encodeURIComponent(
+        roomName
+      );
 
 
     location.href =
@@ -3595,7 +2828,11 @@ body.chat-open .hint{
   document.getElementById(
     "btnHangup"
   ).onclick =
-    hangup;
+    function(){
+
+      hangup();
+
+    };
 
 
   document.getElementById(
@@ -3616,7 +2853,9 @@ body.chat-open .hint{
   ).onclick =
     function(){
 
-      setChatOpen(false);
+      setChatOpen(
+        false
+      );
 
     };
 
@@ -3624,7 +2863,11 @@ body.chat-open .hint{
   document.getElementById(
     "btnChatSend"
   ).onclick =
-    sendChat;
+    function(){
+
+      sendChat();
+
+    };
 
 
   document.getElementById(
@@ -3633,7 +2876,10 @@ body.chat-open .hint{
     "keydown",
     function(e){
 
-      if(e.key === "Enter"){
+      if(
+        e.key ===
+        "Enter"
+      ){
 
         e.preventDefault();
 
@@ -3671,11 +2917,13 @@ body.chat-open .hint{
 
       renderMemberList();
 
+
       document.getElementById(
         "memberPanel"
       ).classList.add(
         "show"
       );
+
 
       document.getElementById(
         "panelMask"
@@ -3697,6 +2945,7 @@ body.chat-open .hint{
         "show"
       );
 
+
       document.getElementById(
         "panelMask"
       ).classList.remove(
@@ -3707,7 +2956,9 @@ body.chat-open .hint{
 
 
   /*
+   * =========================================================
    * 頁面關閉
+   * =========================================================
    */
 
   window.addEventListener(
@@ -3718,42 +2969,32 @@ body.chat-open .hint{
         true;
 
 
-      Object.keys(
-        peerConnections
-      ).forEach(function(uid){
+      try{
 
-        try{
+        if(
+          livekitRoom
+        ){
 
-          peerConnections[uid]
-            .close();
+          livekitRoom.disconnect(
+            true
+          );
 
-        }catch(e){}
+        }
 
-      });
-
-
-      if(cameraTrack){
-
-        try{
-          cameraTrack.stop();
-        }catch(e){}
-
-      }
+      }catch(e){}
 
 
-      if(myStream){
+      try{
 
-        myStream
-          .getTracks()
-          .forEach(function(t){
+        if(chatChannel){
 
-            try{
-              t.stop();
-            }catch(e){}
+          sb.removeChannel(
+            chatChannel
+          );
 
-          });
+        }
 
-      }
+      }catch(e){}
 
     }
   );
@@ -3765,6 +3006,12 @@ body.chat-open .hint{
    * =========================================================
    */
 
+  document.getElementById(
+    "roomName"
+  ).textContent =
+  roomName;
+
+
   updateTop();
 
   setMicUi();
@@ -3775,11 +3022,16 @@ body.chat-open .hint{
 
 
   console.log(
-    "group-call WebRTC boot",
+    "group-call LiveKit SFU boot",
     {
-      mode:mode,
-      roomId:roomId,
-      roomName:roomName
+      mode:
+        mode,
+
+      roomId:
+        roomId,
+
+      roomName:
+        roomName
     }
   );
 
@@ -3787,13 +3039,20 @@ body.chat-open .hint{
   joinRoom()
     .catch(function(e){
 
-      console.error(e);
+      console.error(
+        "group-call startup error",
+        e
+      );
+
 
       document.getElementById(
         "roomSub"
       ).textContent =
         "啟動失敗：" +
-        (e.message || e);
+        (
+          e.message ||
+          e
+        );
 
     });
 
