@@ -1,0 +1,969 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+
+<head>
+
+  <meta charset="UTF-8">
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+  >
+
+  <meta
+    name="theme-color"
+    content="#0f172a"
+  >
+
+  <title>安全團聚｜後台管理</title>
+
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+
+  <style>
+
+    * {
+      box-sizing: border-box;
+    }
+
+
+    html,
+    body {
+      margin: 0;
+      padding: 0;
+      min-height: 100%;
+    }
+
+
+    body {
+
+      background:
+        linear-gradient(
+          180deg,
+          #0f172a 0%,
+          #111827 100%
+        );
+
+      color: #e5e7eb;
+
+      font-family:
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        "Noto Sans TC",
+        sans-serif;
+
+    }
+
+
+    .hidden {
+      display: none !important;
+    }
+
+
+    .admin-container {
+
+      width: 100%;
+      max-width: 1000px;
+
+      margin: 0 auto;
+
+      padding:
+        20px
+        16px
+        60px;
+
+    }
+
+
+    /* =====================================================
+       頂部
+    ===================================================== */
+
+    .admin-header {
+
+      display: flex;
+
+      align-items: center;
+
+      justify-content: space-between;
+
+      gap: 15px;
+
+      margin-bottom: 20px;
+
+    }
+
+
+    .admin-title {
+
+      margin: 0;
+
+      font-size: 24px;
+
+      font-weight: 700;
+
+    }
+
+
+    .admin-subtitle {
+
+      margin-top: 6px;
+
+      color: #94a3b8;
+
+      font-size: 13px;
+
+    }
+
+
+    #logoutBtn {
+
+      border: none;
+
+      border-radius: 10px;
+
+      padding:
+        11px
+        15px;
+
+      background: #334155;
+
+      color: #ffffff;
+
+      font-size: 14px;
+
+      cursor: pointer;
+
+    }
+
+
+    #logoutBtn:active {
+
+      transform: scale(0.97);
+
+    }
+
+
+    /* =====================================================
+       狀態
+    ===================================================== */
+
+    .status-card {
+
+      background: #1e293b;
+
+      border:
+        1px solid
+        #334155;
+
+      border-radius: 16px;
+
+      padding: 16px;
+
+      margin-bottom: 16px;
+
+    }
+
+
+    .status {
+
+      background: #0f172a;
+
+      border-radius: 10px;
+
+      padding: 13px;
+
+      color: #cbd5e1;
+
+      font-size: 14px;
+
+    }
+
+
+    /* =====================================================
+       管理功能
+    ===================================================== */
+
+    .admin-card {
+
+      background: #1e293b;
+
+      border:
+        1px solid
+        #334155;
+
+      border-radius: 16px;
+
+      padding: 18px;
+
+      margin-bottom: 16px;
+
+    }
+
+
+    .admin-card h2 {
+
+      margin:
+        0
+        0
+        15px;
+
+      font-size: 19px;
+
+    }
+
+
+    .admin-grid {
+
+      display: grid;
+
+      grid-template-columns:
+        repeat(
+          auto-fit,
+          minmax(180px, 1fr)
+        );
+
+      gap: 12px;
+
+    }
+
+
+    .admin-item {
+
+      display: block;
+
+      text-decoration: none;
+
+      background: #0f172a;
+
+      border:
+        1px solid
+        #334155;
+
+      border-radius: 13px;
+
+      padding: 17px;
+
+      color: #ffffff;
+
+      transition:
+        background 0.15s,
+        transform 0.15s;
+
+    }
+
+
+    .admin-item:hover {
+
+      background: #172033;
+
+    }
+
+
+    .admin-item:active {
+
+      transform: scale(0.98);
+
+    }
+
+
+    .admin-item strong {
+
+      display: block;
+
+      font-size: 16px;
+
+      margin-bottom: 7px;
+
+    }
+
+
+    .admin-item span {
+
+      display: block;
+
+      color: #94a3b8;
+
+      font-size: 12px;
+
+      line-height: 1.5;
+
+    }
+
+
+    /* =====================================================
+       返回首頁
+    ===================================================== */
+
+    .back-home {
+
+      display: block;
+
+      width: 100%;
+
+      margin-top: 18px;
+
+      padding: 13px;
+
+      border-radius: 11px;
+
+      background: #2563eb;
+
+      color: #ffffff;
+
+      text-align: center;
+
+      text-decoration: none;
+
+      font-size: 14px;
+
+    }
+
+
+    /* =====================================================
+       手機
+    ===================================================== */
+
+    @media (max-width: 600px) {
+
+      .admin-title {
+
+        font-size: 21px;
+
+      }
+
+
+      .admin-header {
+
+        align-items: flex-start;
+
+      }
+
+
+      .admin-grid {
+
+        grid-template-columns:
+          repeat(
+            2,
+            minmax(0, 1fr)
+          );
+
+      }
+
+
+      .admin-item {
+
+        padding: 14px;
+
+      }
+
+    }
+
+  </style>
+
+</head>
+
+
+<body>
+
+
+<!-- =======================================================
+     後台主畫面
+======================================================== -->
+
+<div
+  id="adminApp"
+  class="admin-container hidden"
+>
+
+
+  <!-- =====================================================
+       頂部
+  ====================================================== -->
+
+  <header class="admin-header">
+
+    <div>
+
+      <h1 class="admin-title">
+        🛡️ 安全團聚｜後台管理
+      </h1>
+
+      <div
+        id="adminUser"
+        class="admin-subtitle"
+      >
+        管理員驗證中…
+      </div>
+
+    </div>
+
+
+    <button
+      id="logoutBtn"
+      type="button"
+    >
+      登出
+    </button>
+
+  </header>
+
+
+
+  <!-- =====================================================
+       權限狀態
+  ====================================================== -->
+
+  <div class="status-card">
+
+    <div
+      id="status"
+      class="status"
+    >
+      正在確認管理員權限…
+    </div>
+
+  </div>
+
+
+
+  <!-- =====================================================
+       管理功能
+  ====================================================== -->
+
+  <section class="admin-card">
+
+    <h2>
+      管理功能
+    </h2>
+
+
+    <div class="admin-grid">
+
+
+      <!-- 使用者 -->
+
+      <a
+        class="admin-item"
+        href="#"
+        onclick="return comingSoon('使用者管理')"
+      >
+
+        <strong>
+          👤 使用者管理
+        </strong>
+
+        <span>
+          查看與管理平台使用者
+        </span>
+
+      </a>
+
+
+
+      <!-- 群組 -->
+
+      <a
+        class="admin-item"
+        href="#"
+        onclick="return comingSoon('群組管理')"
+      >
+
+        <strong>
+          👥 群組管理
+        </strong>
+
+        <span>
+          查看群組與群組成員
+        </span>
+
+      </a>
+
+
+
+      <!-- SOS -->
+
+      <a
+        class="admin-item"
+        href="#"
+        onclick="return comingSoon('SOS 管理')"
+      >
+
+        <strong>
+          🚨 SOS 管理
+        </strong>
+
+        <span>
+          查看緊急求助事件與紀錄
+        </span>
+
+      </a>
+
+
+
+      <!-- 定位 -->
+
+      <a
+        class="admin-item"
+        href="#"
+        onclick="return comingSoon('定位管理')"
+      >
+
+        <strong>
+          📍 定位管理
+        </strong>
+
+        <span>
+          查看群組定位與位置分享
+        </span>
+
+      </a>
+
+
+
+      <!-- 聊天 -->
+
+      <a
+        class="admin-item"
+        href="#"
+        onclick="return comingSoon('聊天管理')"
+      >
+
+        <strong>
+          💬 聊天管理
+        </strong>
+
+        <span>
+          查看聊天與訊息相關資料
+        </span>
+
+      </a>
+
+
+
+      <!-- 測速照相 -->
+
+      <a
+        class="admin-item"
+        href="#"
+        onclick="return comingSoon('測速照相管理')"
+      >
+
+        <strong>
+          📷 測速照相
+        </strong>
+
+        <span>
+          管理 speed_cameras 資料
+        </span>
+
+      </a>
+
+
+
+      <!-- 天氣 -->
+
+      <a
+        class="admin-item"
+        href="#"
+        onclick="return comingSoon('天氣資料管理')"
+      >
+
+        <strong>
+          🌤️ 天氣資料
+        </strong>
+
+        <span>
+          管理 weather_data 資料
+        </span>
+
+      </a>
+
+
+
+      <!-- 系統 -->
+
+      <a
+        class="admin-item"
+        href="#"
+        onclick="return comingSoon('系統設定')"
+      >
+
+        <strong>
+          ⚙️ 系統設定
+        </strong>
+
+        <span>
+          管理平台系統設定
+        </span>
+
+      </a>
+
+
+    </div>
+
+
+    <a
+      class="back-home"
+      href="home.html"
+    >
+      ← 返回安全團聚首頁
+    </a>
+
+  </section>
+
+
+</div>
+
+
+
+<script>
+
+/* =========================================================
+   Supabase 設定
+========================================================= */
+
+var SUPABASE_URL =
+  'https://perfsipperncvjocznhl.supabase.co';
+
+
+var SUPABASE_KEY =
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFub24iLCJpYXQiOjE3ODYwMTUyMzAsImV4cCI6MjEwMTU5MTIzMH0.I7vXkV247kAzRJ0RigDZt3Hzn8KJDyMc6o9E3oHJZoY';
+
+
+var supabaseClient =
+  window.supabase.createClient(
+    SUPABASE_URL,
+    SUPABASE_KEY
+  );
+
+
+
+/* =========================================================
+   後台管理員 UID
+========================================================= */
+
+var ADMIN_UIDS = [
+
+  'f56f6e20-b783-44ee-ab9b-a54145dd8e9f',
+
+  'e63fa28d-8db2-4211-8eb9-73f30141ab7f',
+
+  '11dd26d5-42fb-4947-9676-119279b63dd8'
+
+];
+
+
+
+/* =========================================================
+   拒絕存取
+========================================================= */
+
+function denyAccess(
+  message
+) {
+
+  document.body.innerHTML =
+
+    '<div style="' +
+
+      'min-height:100vh;' +
+
+      'display:flex;' +
+
+      'align-items:center;' +
+
+      'justify-content:center;' +
+
+      'padding:24px;' +
+
+      'text-align:center;' +
+
+      'background:#0f172a;' +
+
+      'color:#fff;' +
+
+      'font-family:-apple-system,BlinkMacSystemFont,sans-serif;' +
+
+    '">' +
+
+      '<div>' +
+
+        '<div style="font-size:54px;">🔒</div>' +
+
+        '<h2>無權限進入後台</h2>' +
+
+        '<p style="color:#94a3b8;">' +
+
+          message +
+
+        '</p>' +
+
+        '<button ' +
+
+          'type="button" ' +
+
+          'onclick="location.href=\'home.html\'" ' +
+
+          'style="' +
+
+            'background:#2563eb;' +
+
+            'color:#fff;' +
+
+            'border:0;' +
+
+            'border-radius:10px;' +
+
+            'padding:12px 20px;' +
+
+            'font-size:14px;' +
+
+          '"' +
+
+        '>' +
+
+          '返回安全團聚' +
+
+        '</button>' +
+
+      '</div>' +
+
+    '</div>';
+
+}
+
+
+
+/* =========================================================
+   尚未完成的管理功能
+========================================================= */
+
+function comingSoon(
+  name
+) {
+
+  alert(
+    '「' +
+    name +
+    '」管理功能下一階段加入。'
+  );
+
+  return false;
+
+}
+
+
+
+/* =========================================================
+   初始化後台
+========================================================= */
+
+async function initAdmin() {
+
+  try {
+
+
+    /* -----------------------------------------------------
+       取得目前登入狀態
+    ----------------------------------------------------- */
+
+    var result =
+      await supabaseClient.auth.getSession();
+
+
+    if (
+      result.error
+    ) {
+
+      console.error(
+        '取得登入狀態失敗：',
+        result.error
+      );
+
+      denyAccess(
+        '無法確認目前登入狀態。'
+      );
+
+      return;
+
+    }
+
+
+    var session =
+      result.data &&
+      result.data.session;
+
+
+    /* -----------------------------------------------------
+       沒登入
+    ----------------------------------------------------- */
+
+    if (
+      !session ||
+      !session.user
+    ) {
+
+      denyAccess(
+        '請先登入安全團聚。'
+      );
+
+      return;
+
+    }
+
+
+    var user =
+      session.user;
+
+
+    var uid =
+      user.id;
+
+
+    /* -----------------------------------------------------
+       管理員 UID 驗證
+    ----------------------------------------------------- */
+
+    var isAdmin =
+      ADMIN_UIDS.includes(
+        uid
+      );
+
+
+    if (!isAdmin) {
+
+      console.warn(
+        '拒絕後台存取：',
+        uid
+      );
+
+      denyAccess(
+        '你的帳號不是後台管理員。'
+      );
+
+      return;
+
+    }
+
+
+    /* -----------------------------------------------------
+       管理員通過
+    ----------------------------------------------------- */
+
+    var adminApp =
+      document.getElementById(
+        'adminApp'
+      );
+
+
+    if (adminApp) {
+
+      adminApp.classList.remove(
+        'hidden'
+      );
+
+    }
+
+
+    var adminUser =
+      document.getElementById(
+        'adminUser'
+      );
+
+
+    if (adminUser) {
+
+      adminUser.textContent =
+        '🛡️ 後台管理員：' +
+        (
+          user.email ||
+          uid
+        );
+
+    }
+
+
+    var status =
+      document.getElementById(
+        'status'
+      );
+
+
+    if (status) {
+
+      status.textContent =
+        '✅ 管理員驗證成功，可以進入後台管理。';
+
+    }
+
+
+    /* -----------------------------------------------------
+       登出
+    ----------------------------------------------------- */
+
+    var logoutBtn =
+      document.getElementById(
+        'logoutBtn'
+      );
+
+
+    if (logoutBtn) {
+
+      logoutBtn.onclick =
+        async function () {
+
+          try {
+
+            await supabaseClient.auth.signOut();
+
+          } catch (error) {
+
+            console.error(
+              '登出錯誤：',
+              error
+            );
+
+          }
+
+
+          location.href =
+            'home.html';
+
+        };
+
+    }
+
+
+  } catch (error) {
+
+    console.error(
+      '後台初始化錯誤：',
+      error
+    );
+
+
+    denyAccess(
+      '後台初始化失敗，請稍後再試。'
+    );
+
+  }
+
+}
+
+
+
+/* =========================================================
+   啟動
+========================================================= */
+
+initAdmin();
+
+</script>
+
+
+</body>
+
+</html>
