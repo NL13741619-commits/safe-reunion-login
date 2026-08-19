@@ -4917,7 +4917,13 @@ async function loadPeers() {
 
     const rows =
       result.data || [];
-
+console.log(
+  "[loadPeers] roomId=",
+  roomId,
+  "收到定位資料=",
+  rows.length,
+  rows
+);
     /*
      * 清除舊成員 Marker
      *
