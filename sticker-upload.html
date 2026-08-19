@@ -1,0 +1,716 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>投稿動態貼圖 - 安全團聚</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    body {
+      font-family:
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        Roboto,
+        "Noto Sans TC",
+        sans-serif;
+      min-height: 100vh;
+      padding: 20px;
+      background:
+        radial-gradient(
+          ellipse at 20% 10%,
+          rgba(180, 0, 0, 0.28),
+          transparent 45%
+        ),
+        linear-gradient(
+          145deg,
+          #080808,
+          #1a0505,
+          #101010
+        );
+      color: #f5f5f5;
+    }
+    .card {
+      width: 100%;
+      max-width: 430px;
+      margin: 0 auto;
+      background: rgba(20,20,20,0.96);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 20px;
+      padding: 24px;
+      box-shadow:
+        0 15px 45px rgba(0,0,0,0.55);
+    }
+    h1 {
+      text-align: center;
+      font-size: 23px;
+      margin-bottom: 8px;
+    }
+    .sub {
+      text-align: center;
+      color: #999;
+      font-size: 14px;
+      margin-bottom: 24px;
+    }
+    .notice {
+      background: rgba(192,16,16,0.12);
+      border: 1px solid rgba(192,16,16,0.35);
+      border-radius: 12px;
+      padding: 13px;
+      font-size: 13px;
+      line-height: 1.6;
+      color: #ddd;
+      margin-bottom: 20px;
+    }
+    label.title {
+      display: block;
+      font-size: 14px;
+      color: #ddd;
+      margin: 15px 0 7px;
+    }
+    input,
+    select {
+      width: 100%;
+      padding: 13px 14px;
+      border-radius: 11px;
+      border: 1px solid #3c3c3c;
+      background: #111;
+      color: #fff;
+      font-size: 15px;
+      outline: none;
+    }
+    input:focus,
+    select:focus {
+      border-color: #c01010;
+    }
+    .fileBox {
+      border: 2px dashed #444;
+      border-radius: 14px;
+      padding: 22px 15px;
+      text-align: center;
+      margin-top: 7px;
+    }
+    .fileBox input {
+      border: none;
+      padding: 0;
+      background: transparent;
+    }
+    .hint {
+      color: #888;
+      font-size: 12px;
+      margin-top: 8px;
+      line-height: 1.5;
+    }
+    .preview {
+      display: none;
+      margin-top: 18px;
+      padding: 15px;
+      background: #0b0b0b;
+      border-radius: 14px;
+      text-align: center;
+    }
+    .preview img {
+      max-width: 180px;
+      max-height: 180px;
+      border-radius: 12px;
+      object-fit: contain;
+    }
+    .previewName {
+      margin-top: 10px;
+      color: #aaa;
+      font-size: 13px;
+      word-break: break-all;
+    }
+    .agree {
+      display: flex;
+      align-items: flex-start;
+      gap: 9px;
+      margin-top: 20px;
+      font-size: 13px;
+      line-height: 1.55;
+      color: #bbb;
+    }
+    .agree input {
+      width: auto;
+      margin-top: 3px;
+    }
+    .agree a {
+      color: #fff;
+    }
+    button {
+      width: 100%;
+      border: none;
+      border-radius: 12px;
+      padding: 14px;
+      font-size: 16px;
+      font-weight: 700;
+      cursor: pointer;
+      margin-top: 18px;
+    }
+    #btnSubmit {
+      background:
+        linear-gradient(
+          180deg,
+          #d41818,
+          #8b0000
+        );
+      color: white;
+    }
+    #btnSubmit:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+    }
+    .btnBack {
+      background: transparent;
+      border: 1px solid #444;
+      color: #ddd;
+    }
+    .status {
+      display: none;
+      margin-top: 16px;
+      padding: 12px;
+      border-radius: 10px;
+      font-size: 13px;
+      line-height: 1.5;
+      word-break: break-word;
+    }
+    .status.ok {
+      display: block;
+      background: rgba(46,125,50,0.2);
+      color: #a5d6a7;
+    }
+    .status.err {
+      display: block;
+      background: rgba(198,40,40,0.2);
+      color: #ef9a9a;
+    }
+  </style>
+</head>
+<body>
+<div class="card">
+  <h1>🎬 投稿動態貼圖</h1>
+  <div class="sub">
+    安全團聚動態貼圖中心
+  </div>
+  <div class="notice">
+    投稿內容會先進入管理員審核。
+    <br>
+    審核通過後才會正式出現在聊天室的動態貼圖中。
+  </div>
+  <label class="title">
+    貼圖名稱
+  </label>
+
+<input
+type=“text”
+id=“stickerName”
+maxlength=“40”
+placeholder=“例如：我安全了”
+
+  <label class="title">
+    貼圖分類
+  </label>
+  <select id="category">
+<option value="😀 表情">
+  😀 表情
+</option>
+<option value="❤️ 愛心">
+  ❤️ 愛心
+</option>
+<option value="👍 手勢">
+  👍 手勢
+</option>
+<option value="😂 搞笑">
+  😂 搞笑
+</option>
+<option value="🎉 慶祝">
+  🎉 慶祝
+</option>
+<option value="🏠 家庭">
+  🏠 家庭
+</option>
+<option value="📍 定位">
+  📍 定位
+</option>
+<option value="🆘 緊急">
+  🆘 緊急
+</option>
+<option value="✅ 平安">
+  ✅ 平安
+</option>
+<option value="其他">
+  其他
+</option>
+  </select>
+  <label class="title">
+    選擇動態貼圖
+  </label>
+  <div class="fileBox">
+<input
+  type="file"
+  id="fileInput"
+  accept=".gif,.webp,.apng,image/gif,image/webp,image/apng"
+>
+<div class="hint">
+  支援 GIF、WebP、APNG
+  <br>
+  建議使用較小的檔案，方便手機快速載入。
+</div>
+  </div>
+  <div
+    id="preview"
+    class="preview"
+  >
+<img
+  id="previewImage"
+  alt="貼圖預覽"
+>
+<div
+  id="previewName"
+  class="previewName"
+></div>
+  </div>
+  <label class="agree">
+<input
+  type="checkbox"
+  id="agree"
+>
+<span>
+  我已閱讀並同意
+  <a href="sticker-guidelines.html">
+    動態貼圖投稿規則
+  </a>，
+  並確認我有權利使用所投稿的內容。
+</span>
+  </label>
+
+<button
+id=“btnSubmit”
+disabled
+
+送出審核
+  </button>
+
+<button
+class=“btnBack”
+id=“btnBack”
+
+返回
+  </button>
+  <div
+    id="status"
+    class="status"
+  ></div>
+</div>
+<script>
+  const SUPABASE_URL =
+    'https://perfsipperncvjocznhl.supabase.co';
+  const SUPABASE_KEY =
+    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJIUzI1NiIsInR5cCI6IkpXVCJ9';
+</script>
+<script>
+window.addEventListener(
+  'DOMContentLoaded',
+  async function () {
+    if (!window.supabase) {
+      showStatus(
+        'Supabase 套件載入失敗，請檢查網路。',
+        true
+      );
+      return;
+    }
+    /*
+     * 使用安全團聚目前使用的 Supabase 設定
+     */
+    const sb =
+      window.supabase.createClient(
+        'https://perfsipperncvjocznhl.supabase.co',
+        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJIUzI1NiIsInR5cCI6IkFub24iLCJpYXQiOjE3ODYwMTUyMzAsImV4cCI6MjEwMTU5MTIzMH0.I7vXkV247kAzRJ0RigDZt3Hzn8KJDyMc6o9E3oHJZoY'
+      );
+    const fileInput =
+      document.getElementById(
+        'fileInput'
+      );
+    const preview =
+      document.getElementById(
+        'preview'
+      );
+    const previewImage =
+      document.getElementById(
+        'previewImage'
+      );
+    const previewName =
+      document.getElementById(
+        'previewName'
+      );
+    const agree =
+      document.getElementById(
+        'agree'
+      );
+    const btnSubmit =
+      document.getElementById(
+        'btnSubmit'
+      );
+    let selectedFile = null;
+    /*
+     * 檢查登入
+     */
+    const {
+      data: sessionData
+    } =
+      await sb.auth.getSession();
+    const session =
+      sessionData.session;
+    if (!session) {
+      showStatus(
+        '請先登入安全團聚，再投稿動態貼圖。',
+        true
+      );
+      btnSubmit.disabled = true;
+      return;
+    }
+    /*
+     * 檔案選擇
+     */
+    fileInput.addEventListener(
+      'change',
+      function () {
+        selectedFile =
+          fileInput.files[0] || null;
+        preview.style.display =
+          'none';
+        if (!selectedFile) {
+          updateButton();
+          return;
+        }
+        const allowedTypes = [
+          'image/gif',
+          'image/webp',
+          'image/apng'
+        ];
+        const fileName =
+          selectedFile.name.toLowerCase();
+        const validExtension =
+          fileName.endsWith('.gif') ||
+          fileName.endsWith('.webp') ||
+          fileName.endsWith('.apng');
+        if (
+          !allowedTypes.includes(
+            selectedFile.type
+          )
+          &&
+          !validExtension
+        ) {
+          selectedFile = null;
+          fileInput.value = '';
+          showStatus(
+            '只支援 GIF、WebP、APNG。',
+            true
+          );
+          updateButton();
+          return;
+        }
+        /*
+         * 限制 10 MB
+         */
+        if (
+          selectedFile.size >
+          10 * 1024 * 1024
+        ) {
+          selectedFile = null;
+          fileInput.value = '';
+          showStatus(
+            '檔案太大，請選擇 10 MB 以下的貼圖。',
+            true
+          );
+          updateButton();
+          return;
+        }
+        /*
+         * 預覽
+         */
+        const objectUrl =
+          URL.createObjectURL(
+            selectedFile
+          );
+        previewImage.src =
+          objectUrl;
+        previewName.textContent =
+          selectedFile.name +
+          '（' +
+          formatSize(
+            selectedFile.size
+          ) +
+          '）';
+        preview.style.display =
+          'block';
+        updateButton();
+      }
+    );
+    /*
+     * 同意規則後才可以送出
+     */
+    agree.addEventListener(
+      'change',
+      updateButton
+    );
+    function updateButton() {
+      btnSubmit.disabled =
+        !selectedFile ||
+        !agree.checked;
+    }
+    /*
+     * 送出投稿
+     */
+    btnSubmit.addEventListener(
+      'click',
+      async function () {
+        if (
+          !selectedFile ||
+          !agree.checked
+        ) {
+          return;
+        }
+        btnSubmit.disabled = true;
+        showStatus(
+          '正在上傳，請稍候…'
+        );
+        try {
+          /*
+           * 再確認登入狀態
+           */
+          const {
+            data: currentData
+          } =
+            await sb.auth.getUser();
+          const user =
+            currentData.user;
+          if (!user) {
+            throw new Error(
+              '登入狀態已失效，請重新登入。'
+            );
+          }
+          const stickerName =
+            document
+              .getElementById(
+                'stickerName'
+              )
+              .value
+              .trim();
+          const category =
+            document
+              .getElementById(
+                'category'
+              )
+              .value;
+          if (!stickerName) {
+            throw new Error(
+              '請輸入貼圖名稱。'
+            );
+          }
+          /*
+           * 取得副檔名
+           */
+          const originalName =
+            selectedFile.name;
+          const extension =
+            originalName
+              .split('.')
+              .pop()
+              .toLowerCase();
+          /*
+           * 每個使用者放在自己的資料夾
+           */
+          const filePath =
+            user.id +
+            '/' +
+            Date.now() +
+            '_' +
+            crypto.randomUUID() +
+            '.' +
+            extension;
+          /*
+           * 上傳 Storage
+           */
+          const uploadResult =
+            await sb.storage
+              .from('stickers')
+              .upload(
+                filePath,
+                selectedFile,
+                {
+                  cacheControl:
+                    '3600',
+                  upsert:
+                    false,
+                  contentType:
+                    selectedFile.type ||
+                    undefined
+                }
+              );
+          if (
+            uploadResult.error
+          ) {
+            throw uploadResult.error;
+          }
+          /*
+           * 取得公開 URL
+           */
+          const publicResult =
+            sb.storage
+              .from('stickers')
+              .getPublicUrl(
+                filePath
+              );
+          const fileUrl =
+            publicResult
+              .data
+              .publicUrl;
+          /*
+           * 建立投稿紀錄
+           */
+          const insertResult =
+            await sb
+              .from(
+                'sticker_submissions'
+              )
+              .insert({
+                user_id:
+                  user.id,
+                name:
+                  stickerName,
+                category:
+                  category,
+                file_path:
+                  filePath,
+                file_url:
+                  fileUrl,
+                file_type:
+                  selectedFile.type ||
+                  (
+                    extension === 'gif'
+                      ? 'image/gif'
+                      : extension === 'webp'
+                        ? 'image/webp'
+                        : 'image/apng'
+                  ),
+                file_size:
+                  selectedFile.size,
+                status:
+                  'pending'
+              });
+          if (
+            insertResult.error
+          ) {
+            /*
+             * 如果資料庫寫入失敗，
+             * 把剛才的檔案刪掉。
+             */
+            await sb.storage
+              .from('stickers')
+              .remove([
+                filePath
+              ]);
+            throw insertResult.error;
+          }
+          showStatus(
+            '投稿成功！已送交管理員審核。',
+            false
+          );
+          /*
+           * 清空表單
+           */
+          selectedFile = null;
+          fileInput.value = '';
+          document
+            .getElementById(
+              'stickerName'
+            )
+            .value = '';
+          agree.checked =
+            false;
+          preview.style.display =
+            'none';
+          btnSubmit.disabled =
+            true;
+        }
+        catch (error) {
+          console.error(
+            '貼圖投稿錯誤：',
+            error
+          );
+          showStatus(
+            '投稿失敗：' +
+            (
+              error.message ||
+              '未知錯誤'
+            ),
+            true
+          );
+          updateButton();
+        }
+      }
+    );
+    /*
+     * 返回
+     */
+    document
+      .getElementById(
+        'btnBack'
+      )
+      .onclick =
+      function () {
+        history.back();
+      };
+    function formatSize(bytes) {
+      if (
+        bytes <
+        1024
+      ) {
+        return bytes +
+          ' B';
+      }
+      if (
+        bytes <
+        1024 * 1024
+      ) {
+        return (
+          bytes / 1024
+        ).toFixed(1) +
+        ' KB';
+      }
+      return (
+        bytes /
+        1024 /
+        1024
+      ).toFixed(2) +
+      ' MB';
+    }
+    function showStatus(
+      message,
+      isError
+    ) {
+      const el =
+        document.getElementById(
+          'status'
+        );
+      el.textContent =
+        message;
+      el.className =
+        'status ' +
+        (
+          isError
+            ? 'err'
+            : 'ok'
+        );
+    }
+  }
+);
+</script>
+</body>
+</html>
