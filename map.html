@@ -4520,7 +4520,7 @@ initSpeech();
    22. 開啟一般定位
    ========================================================= */
 
-function startShare() {
+async function startShare() {
 
   if (
     !navigator.geolocation
@@ -4548,11 +4548,14 @@ function startShare() {
 
 
   shareStatus.textContent =
-    "定位：開啟中…";
+  "定位：開啟中…";
 
 
-  const gpsStarted =
-    startGPS();
+await startDeviceOrientation();
+
+
+const gpsStarted =
+  startGPS();
 
 
   if (
@@ -4749,104 +4752,182 @@ btnShare.onclick =
 
   };
 
+let myHeading = null;
 
+/* =========================================================
+   手機方向／羅盤
+   ========================================================= */
+
+function normalizeHeading(value) {
+  if (value == null || !Number.isFinite(Number(value))) {
+    return null;
+  }
+
+  let h = Number(value) % 360;
+  if (h < 0) h += 360;
+
+  return h;
+}
+
+function handleDeviceOrientation(event) {
+
+  let heading = null;
+
+  /*
+   * iPhone Safari
+   * webkitCompassHeading：
+   * 0 = 北、90 = 東、180 = 南、270 = 西
+   */
+  if (
+    event.webkitCompassHeading != null &&
+    Number.isFinite(Number(event.webkitCompassHeading))
+  ) {
+
+    heading =
+      Number(event.webkitCompassHeading);
+
+  }
+
+  /*
+   * Android / 部分瀏覽器
+   */
+  else if (
+    event.alpha != null &&
+    Number.isFinite(Number(event.alpha))
+  ) {
+
+    heading =
+      360 - Number(event.alpha);
+
+  }
+
+  heading =
+    normalizeHeading(heading);
+
+  if (heading != null) {
+    myHeading = heading;
+  }
+}
+
+
+/* ---------------------------------------------------------
+   啟動手機方向感測
+   --------------------------------------------------------- */
+
+async function startDeviceOrientation() {
+
+  try {
+
+    /*
+     * iPhone / iPad 需要使用者操作後授權
+     */
+    if (
+      typeof DeviceOrientationEvent !== "undefined" &&
+      typeof DeviceOrientationEvent.requestPermission === "function"
+    ) {
+
+      const permission =
+        await DeviceOrientationEvent.requestPermission();
+
+      if (permission !== "granted") {
+
+        console.warn(
+          "手機方向權限未授權"
+        );
+
+        return false;
+      }
+
+    }
+
+    window.addEventListener(
+      "deviceorientation",
+      handleDeviceOrientation,
+      true
+    );
+
+    console.log(
+      "手機方向感測已啟動"
+    );
+
+    return true;
+
+  }
+  catch (error) {
+
+    console.error(
+      "手機方向啟動失敗：",
+      error
+    );
+
+    return false;
+  }
+
+}
 /* =========================================================
    24. 上傳位置
    ========================================================= */
 
 async function uploadLocation() {
 
-  if (
-    !me
-    ||
-    myLat === null
-    ||
-    myLng === null
-  ) {
+  if (!me || !me.id) return;
+  if (!roomId) return;
+  if (myLat == null || myLng == null) return;
 
-    return;
+  const payload = {
 
-  }
+    user_id:
+      me.id,
 
+    room_id:
+      roomId,
 
-  if (
-    !shareOn
-    &&
-    !navigationOn
-  ) {
+    lat:
+      Number(myLat),
 
-    return;
+    lng:
+      Number(myLng),
 
-  }
+    display_name:
+      (me.user_metadata &&
+       me.user_metadata.full_name) ||
+      (me.email
+        ? me.email.split("@")[0]
+        : "成員"),
 
+    updated_at:
+      new Date().toISOString(),
 
-  try {
+    heading:
+      myHeading != null
+        ? Number(myHeading)
+        : null
 
-    const result =
-      await sb
-        .from(
-          "location_shares"
-        )
-        .upsert(
+  };
 
-          {
-
-            user_id:
-              me.id,
-
-            room_id:
-              roomId,
-
-            lat:
-              myLat,
-
-            lng:
-              myLng,
-
-            display_name:
-              (
-                me.email
-                ||
-                "user"
-              )
-              .split(
-                "@"
-              )[0],
-
-            updated_at:
-              new Date()
-                .toISOString()
-
-          },
-
-          {
-            onConflict:
-              "user_id,room_id"
-          }
-
-        );
-
-
-    if (
-      result.error
-    ) {
-
-      console.error(
-        "位置上傳錯誤：",
-        result.error
+  const result =
+    await sb
+      .from("location_shares")
+      .upsert(
+        payload,
+        {
+          onConflict:
+            "user_id,room_id"
+        }
       );
 
-    }
-
-  }
-
-  catch (
-    error
-  ) {
+  if (result.error) {
 
     console.error(
-      "位置上傳例外：",
-      error
+      "定位上傳失敗：",
+      result.error
+    );
+
+  } else {
+
+    console.log(
+      "定位＋方向已更新：",
+      payload
     );
 
   }
@@ -4866,10 +4947,10 @@ function startLocationUpload() {
   // 立即上傳一次
   uploadLocation();
 
-  // 每 10 秒更新一次
+  // 每 2 秒更新一次
   locationUploadTimer = setInterval(function () {
     uploadLocation();
-  }, 10000);
+  }, 2000);
 }
 
 function stopLocationUpload() {
