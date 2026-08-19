@@ -1,0 +1,926 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>動態貼圖管理 - 安全團聚</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+* {
+  box-sizing: border-box;
+}
+body {
+  margin: 0;
+  padding: 20px;
+  background: #0b0b0b;
+  color: #f5f5f5;
+  font-family:
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    Roboto,
+    "Noto Sans TC",
+    sans-serif;
+}
+.container {
+  width: 100%;
+  max-width: 1000px;
+  margin: auto;
+}
+h1 {
+  margin: 0 0 8px;
+  font-size: 24px;
+}
+.sub {
+  color: #999;
+  margin-bottom: 22px;
+}
+.tabs {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  margin-bottom: 20px;
+}
+.tab {
+  flex: 0 0 auto;
+  padding: 11px 16px;
+  border-radius: 10px;
+  border: 1px solid #444;
+  background: #151515;
+  color: #ddd;
+  cursor: pointer;
+}
+.tab.active {
+  background: #8b0000;
+  border-color: #b00000;
+  color: #fff;
+}
+.card {
+  background: #151515;
+  border: 1px solid #333;
+  border-radius: 16px;
+  padding: 16px;
+  margin-bottom: 16px;
+}
+.preview {
+  width: 100%;
+  min-height: 180px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: #090909;
+  border-radius: 12px;
+  margin-bottom: 15px;
+  overflow: hidden;
+}
+.preview img {
+  max-width: 260px;
+  max-height: 260px;
+  object-fit: contain;
+}
+.info {
+  line-height: 1.7;
+  font-size: 14px;
+  color: #ccc;
+}
+.info strong {
+  color: #fff;
+}
+.buttons {
+  display: flex;
+  gap: 10px;
+  margin-top: 15px;
+}
+button {
+  flex: 1;
+  border: none;
+  border-radius: 10px;
+  padding: 13px;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.approve {
+  background: #198754;
+  color: #fff;
+}
+.reject {
+  background: #8b0000;
+  color: #fff;
+}
+.disable {
+  background: #555;
+  color: #fff;
+}
+.empty {
+  text-align: center;
+  padding: 45px 20px;
+  color: #888;
+}
+.status {
+  padding: 12px;
+  border-radius: 10px;
+  margin-bottom: 18px;
+  display: none;
+}
+.status.ok {
+  display: block;
+  background: rgba(46,125,50,.2);
+  color: #a5d6a7;
+}
+.status.err {
+  display: block;
+  background: rgba(198,40,40,.2);
+  color: #ef9a9a;
+}
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>🎬 動態貼圖管理</h1>
+  <div class="sub">
+    安全團聚｜投稿審核與貼圖上架
+  </div>
+  <div id="status" class="status"></div>
+  <div class="tabs">
+<button
+  class="tab active"
+  id="tabPending"
+  type="button"
+>
+  待審核
+</button>
+<button
+  class="tab"
+  id="tabApproved"
+  type="button"
+>
+  已上架
+</button>
+  </div>
+  <div id="list"></div>
+</div>
+<script>
+const SUPABASE_URL =
+  'https://perfsipperncvjocznhl.supabase.co';
+const SUPABASE_KEY =
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFub24iLCJpYXQiOjE3ODYwMTUyMzAsImV4cCI6MjEwMTU5MTIzMH0.I7vXkV247kAzRJ0RigDZt3Hzn8KJDyMc6o9E3oHJZoY';
+const sb =
+  window.supabase.createClient(
+    SUPABASE_URL,
+    SUPABASE_KEY
+  );
+let currentMode = 'pending';
+/* =========================================================
+   初始化
+   ========================================================= */
+window.addEventListener(
+  'DOMContentLoaded',
+  async function () {
+    const {
+      data
+    } = await sb.auth.getUser();
+    if (!data.user) {
+      showStatus(
+        '請先登入管理員帳號。',
+        true
+      );
+      return;
+    }
+    /*
+     * 這裡先確認登入狀態。
+     *
+     * 真正的管理員權限仍應由你目前
+     * 安全團聚後台的管理員 UID 機制控制。
+     */
+    await loadPending();
+  }
+);
+/* =========================================================
+   待審核
+   ========================================================= */
+async function loadPending() {
+  currentMode =
+    'pending';
+  setActiveTab(
+    'tabPending'
+  );
+  const list =
+    document.getElementById(
+      'list'
+    );
+  list.innerHTML =
+    '<div class="empty">載入中…</div>';
+  const {
+    data,
+    error
+  } =
+    await sb
+      .from(
+        'sticker_submissions'
+      )
+      .select('*')
+      .eq(
+        'status',
+        'pending'
+      )
+      .order(
+        'created_at',
+        {
+          ascending: false
+        }
+      );
+  if (error) {
+    showStatus(
+      '讀取待審核貼圖失敗：' +
+      error.message,
+      true
+    );
+    return;
+  }
+  renderSubmissions(
+    data || []
+  );
+}
+/* =========================================================
+   已上架
+   ========================================================= */
+async function loadApproved() {
+  currentMode =
+    'approved';
+  setActiveTab(
+    'tabApproved'
+  );
+  const list =
+    document.getElementById(
+      'list'
+    );
+  list.innerHTML =
+    '<div class="empty">載入中…</div>';
+  const {
+    data,
+    error
+  } =
+    await sb
+      .from(
+        'stickers'
+      )
+      .select('*')
+      .order(
+        'created_at',
+        {
+          ascending: false
+        }
+      );
+  if (error) {
+    showStatus(
+      '讀取已上架貼圖失敗：' +
+      error.message,
+      true
+    );
+    return;
+  }
+  renderApproved(
+    data || []
+  );
+}
+/* =========================================================
+   顯示待審核
+   ========================================================= */
+function renderSubmissions(
+  rows
+) {
+  const list =
+    document.getElementById(
+      'list'
+    );
+  if (!rows.length) {
+    list.innerHTML =
+      '<div class="empty">目前沒有待審核貼圖。</div>';
+    return;
+  }
+  list.innerHTML = '';
+  rows.forEach(
+    function (row) {
+      const card =
+        document.createElement(
+          'div'
+        );
+      card.className =
+        'card';
+      const preview =
+        document.createElement(
+          'div'
+        );
+      preview.className =
+        'preview';
+      const img =
+        document.createElement(
+          'img'
+        );
+      img.src =
+        row.file_url;
+      img.alt =
+        row.name ||
+        '動態貼圖';
+      preview.appendChild(
+        img
+      );
+      const info =
+        document.createElement(
+          'div'
+        );
+      info.className =
+        'info';
+      info.innerHTML =
+        '<strong>名稱：</strong>' +
+        escapeHtml(
+          row.name
+        ) +
+        '<br>' +
+        '<strong>分類：</strong>' +
+        escapeHtml(
+          row.category
+        ) +
+        '<br>' +
+        '<strong>格式：</strong>' +
+        escapeHtml(
+          row.file_type
+        ) +
+        '<br>' +
+        '<strong>大小：</strong>' +
+        formatSize(
+          row.file_size
+        ) +
+        '<br>' +
+        '<strong>投稿時間：</strong>' +
+        formatDate(
+          row.created_at
+        ) +
+        '<br>' +
+        '<strong>投稿者：</strong>' +
+        escapeHtml(
+          row.user_id
+        );
+      const buttons =
+        document.createElement(
+          'div'
+        );
+      buttons.className =
+        'buttons';
+      const approve =
+        document.createElement(
+          'button'
+        );
+      approve.className =
+        'approve';
+      approve.textContent =
+        '✅ 通過並上架';
+      approve.onclick =
+        function () {
+          approveSubmission(
+            row
+          );
+        };
+      const reject =
+        document.createElement(
+          'button'
+        );
+      reject.className =
+        'reject';
+      reject.textContent =
+        '❌ 拒絕';
+      reject.onclick =
+        function () {
+          rejectSubmission(
+            row
+          );
+        };
+      buttons.appendChild(
+        approve
+      );
+      buttons.appendChild(
+        reject
+      );
+      card.appendChild(
+        preview
+      );
+      card.appendChild(
+        info
+      );
+      card.appendChild(
+        buttons
+      );
+      list.appendChild(
+        card
+      );
+    }
+  );
+}
+/* =========================================================
+   通過投稿
+   ========================================================= */
+async function approveSubmission(
+  row
+) {
+  if (
+    !confirm(
+      '確定要通過「' +
+      row.name +
+      '」並正式上架嗎？'
+    )
+  ) {
+    return;
+  }
+  showStatus(
+    '正在上架…'
+  );
+  try {
+    const {
+      data: userData
+    } =
+      await sb.auth.getUser();
+    const admin =
+      userData.user;
+    if (!admin) {
+      throw new Error(
+        '登入狀態已失效。'
+      );
+    }
+    /*
+     * 建立正式貼圖
+     */
+    const {
+      data: sticker,
+      error: insertError
+    } =
+      await sb
+        .from(
+          'stickers'
+        )
+        .insert({
+          name:
+            row.name,
+          category:
+            row.category,
+          file_path:
+            row.file_path,
+          file_url:
+            row.file_url,
+          file_type:
+            row.file_type,
+          file_size:
+            row.file_size,
+          created_by:
+            row.user_id,
+          source_submission_id:
+            row.id
+        })
+        .select()
+        .single();
+    if (insertError) {
+      throw insertError;
+    }
+    /*
+     * 更新投稿狀態
+     */
+    const {
+      error:
+        updateError
+    } =
+      await sb
+        .from(
+          'sticker_submissions'
+        )
+        .update({
+          status:
+            'approved',
+          reviewed_by:
+            admin.id,
+          reviewed_at:
+            new Date()
+              .toISOString()
+        })
+        .eq(
+          'id',
+          row.id
+        );
+    if (updateError) {
+      /*
+       * 如果狀態更新失敗，
+       * 刪掉剛建立的正式資料，
+       * 避免出現半套資料。
+       */
+      if (
+        sticker &&
+        sticker.id
+      ) {
+        await sb
+          .from(
+            'stickers'
+          )
+          .delete()
+          .eq(
+            'id',
+            sticker.id
+          );
+      }
+      throw updateError;
+    }
+    showStatus(
+      '貼圖已成功上架。',
+      false
+    );
+    await loadPending();
+  }
+  catch (error) {
+    console.error(
+      '上架錯誤：',
+      error
+    );
+    showStatus(
+      '上架失敗：' +
+      error.message,
+      true
+    );
+  }
+}
+/* =========================================================
+   拒絕投稿
+   ========================================================= */
+async function rejectSubmission(
+  row
+) {
+  const reason =
+    prompt(
+      '請輸入拒絕原因：',
+      ''
+    );
+  if (
+    reason === null
+  ) {
+    return;
+  }
+  showStatus(
+    '正在處理…'
+  );
+  try {
+    const {
+      data: userData
+    } =
+      await sb.auth.getUser();
+    const admin =
+      userData.user;
+    if (!admin) {
+      throw new Error(
+        '登入狀態已失效。'
+      );
+    }
+    const {
+      error
+    } =
+      await sb
+        .from(
+          'sticker_submissions'
+        )
+        .update({
+          status:
+            'rejected',
+          rejection_reason:
+            reason.trim() ||
+            '未提供原因',
+          reviewed_by:
+            admin.id,
+          reviewed_at:
+            new Date()
+              .toISOString()
+        })
+        .eq(
+          'id',
+          row.id
+        );
+    if (error) {
+      throw error;
+    }
+    showStatus(
+      '投稿已拒絕。',
+      false
+    );
+    await loadPending();
+  }
+  catch (error) {
+    console.error(
+      '拒絕投稿錯誤：',
+      error
+    );
+    showStatus(
+      '拒絕失敗：' +
+      error.message,
+      true
+    );
+  }
+}
+/* =========================================================
+   顯示已上架
+   ========================================================= */
+function renderApproved(
+  rows
+) {
+  const list =
+    document.getElementById(
+      'list'
+    );
+  if (!rows.length) {
+    list.innerHTML =
+      '<div class="empty">目前沒有正式貼圖。</div>';
+    return;
+  }
+  list.innerHTML = '';
+  rows.forEach(
+    function (row) {
+      const card =
+        document.createElement(
+          'div'
+        );
+      card.className =
+        'card';
+      const preview =
+        document.createElement(
+          'div'
+        );
+      preview.className =
+        'preview';
+      const img =
+        document.createElement(
+          'img'
+        );
+      img.src =
+        row.file_url;
+      img.alt =
+        row.name ||
+        '動態貼圖';
+      preview.appendChild(
+        img
+      );
+      const info =
+        document.createElement(
+          'div'
+        );
+      info.className =
+        'info';
+      info.innerHTML =
+        '<strong>名稱：</strong>' +
+        escapeHtml(
+          row.name
+        ) +
+        '<br>' +
+        '<strong>分類：</strong>' +
+        escapeHtml(
+          row.category
+        ) +
+        '<br>' +
+        '<strong>格式：</strong>' +
+        escapeHtml(
+          row.file_type
+        ) +
+        '<br>' +
+        '<strong>使用次數：</strong>' +
+        Number(
+          row.use_count || 0
+        ) +
+        '<br>' +
+        '<strong>狀態：</strong>' +
+        (
+          row.is_active
+            ? '目前上架'
+            : '已下架'
+        );
+      const buttons =
+        document.createElement(
+          'div'
+        );
+      buttons.className =
+        'buttons';
+      const toggle =
+        document.createElement(
+          'button'
+        );
+      toggle.className =
+        row.is_active
+          ? 'disable'
+          : 'approve';
+      toggle.textContent =
+        row.is_active
+          ? '下架'
+          : '重新上架';
+      toggle.onclick =
+        function () {
+          toggleSticker(
+            row
+          );
+        };
+      buttons.appendChild(
+        toggle
+      );
+      card.appendChild(
+        preview
+      );
+      card.appendChild(
+        info
+      );
+      card.appendChild(
+        buttons
+      );
+      list.appendChild(
+        card
+      );
+    }
+  );
+}
+/* =========================================================
+   上架／下架
+   ========================================================= */
+async function toggleSticker(
+  row
+) {
+  const newState =
+    !row.is_active;
+  const action =
+    newState
+      ? '重新上架'
+      : '下架';
+  if (
+    !confirm(
+      '確定要' +
+      action +
+      '「' +
+      row.name +
+      '」嗎？'
+    )
+  ) {
+    return;
+  }
+  const {
+    error
+  } =
+    await sb
+      .from(
+        'stickers'
+      )
+      .update({
+        is_active:
+          newState,
+        updated_at:
+          new Date()
+            .toISOString()
+      })
+      .eq(
+        'id',
+        row.id
+      );
+  if (error) {
+    showStatus(
+      action +
+      '失敗：' +
+      error.message,
+      true
+    );
+    return;
+  }
+  showStatus(
+    '貼圖已' +
+    action +
+    '。',
+    false
+  );
+  await loadApproved();
+}
+/* =========================================================
+   分頁
+   ========================================================= */
+document
+  .getElementById(
+    'tabPending'
+  )
+  .onclick =
+  loadPending;
+document
+  .getElementById(
+    'tabApproved'
+  )
+  .onclick =
+  loadApproved;
+function setActiveTab(
+  id
+) {
+  document
+    .querySelectorAll(
+      '.tab'
+    )
+    .forEach(
+      function (el) {
+        el.classList.remove(
+          'active'
+        );
+      }
+    );
+  document
+    .getElementById(
+      id
+    )
+    .classList.add(
+      'active'
+    );
+}
+/* =========================================================
+   工具
+   ========================================================= */
+function formatSize(
+  bytes
+) {
+  if (!bytes) {
+    return '未知';
+  }
+  if (
+    bytes <
+    1024
+  ) {
+    return bytes +
+      ' B';
+  }
+  if (
+    bytes <
+    1024 * 1024
+  ) {
+    return (
+      bytes / 1024
+    ).toFixed(1) +
+    ' KB';
+  }
+  return (
+    bytes /
+    1024 /
+    1024
+  ).toFixed(2) +
+  ' MB';
+}
+function formatDate(
+  value
+) {
+  if (!value) {
+    return '未知';
+  }
+  return new Date(
+    value
+  ).toLocaleString(
+    'zh-TW'
+  );
+}
+function escapeHtml(
+  value
+) {
+  return String(
+    value || ''
+  )
+  .replace(
+    /&/g,
+    '&amp;'
+  )
+  .replace(
+    /</g,
+    '&lt;'
+  )
+  .replace(
+    />/g,
+    '&gt;'
+  )
+  .replace(
+    /"/g,
+    '&quot;'
+  )
+  .replace(
+    /'/g,
+    '&#039;'
+  );
+}
+function showStatus(
+  message,
+  isError
+) {
+  const el =
+    document.getElementById(
+      'status'
+    );
+  el.textContent =
+    message;
+  el.className =
+    'status ' +
+    (
+      isError
+        ? 'err'
+        : 'ok'
+    );
+}
+</script>
+</body>
+</html>
