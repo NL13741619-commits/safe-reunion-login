@@ -199,27 +199,18 @@
       <button type="button" id="btnClearSaves" style="margin-top:8px;width:100%;">清空本機存檔</button>
     </div>
 
-    <details class="cfg">
-      <summary>Supabase 設定（上傳用）</summary>
-      <label>Supabase URL</label>
-      <input type="text" id="supaUrl" placeholder="https://xxxx.supabase.co" />
-      <label>anon / publishable key</label>
-      <input type="text" id="supaKey" placeholder="eyJ..." />
-      <button type="button" id="btnSaveCfg" style="margin-top:8px;width:100%;">儲存設定</button>
-      <label>Email</label>
-      <input type="email" id="email" />
-      <label>Password</label>
-      <input type="password" id="password" />
-      <div class="btns" style="margin-top:8px;">
-        <button type="button" id="btnLogin">登入</button>
-        <button type="button" id="btnLogout">登出</button>
-      </div>
-      <p id="who" style="font-size:0.8rem;color:#888;margin-top:8px;"></p>
-    </details>
+    <p id="who" style="font-size:0.8rem;color:#888;margin-top:10px;text-align:center;"></p>
+    <p style="font-size:0.75rem;color:#666;margin-top:6px;text-align:center;">
+      <a href="me.html" style="color:#8ab4f8;">← 返回「我」</a>
+    </p>
   </div>
 
   <script>
 (function () {
+  // 與 map.html 同一專案（用戶無需填寫）
+  const SUPABASE_URL = "https://perfsipperncvjocznhl.supabase.co";
+  const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBlcmZzaXBwZXJuY3Zqb2N6bmhsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODYwMTUyMzAsImV4cCI6MjEwMTU5MTIzMH0.I7vXkV247kAzRJ0RigDZt3Hzn8KJDyMc6o9E3oHJZoY";
+
   const video = document.getElementById("video");
   const snap = document.getElementById("snapshot");
   const processed = document.getElementById("processed");
@@ -503,33 +494,28 @@
   }
 
   function initSb() {
-    const url = document.getElementById("supaUrl").value.trim();
-    const key = document.getElementById("supaKey").value.trim();
-    if (!url || !key) {
-      sb = null;
-      return;
-    }
-    sb = supabase.createClient(url, key);
+    sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
     refreshWho();
   }
 
   async function refreshWho() {
     const who = document.getElementById("who");
+    if (!who) return;
     if (!sb) {
-      who.textContent = "未設定 Supabase";
+      who.textContent = "";
       return;
     }
     const { data: { session } } = await sb.auth.getSession();
     if (session && session.user) {
-      who.textContent = "已登入：" + (session.user.email || session.user.id);
+      who.textContent = "已登入，可上傳大頭娃娃";
     } else {
-      who.textContent = "未登入";
+      who.textContent = "尚未登入：請先回安全團聚登入，再來上傳";
     }
   }
 
   async function doUpload() {
     if (!sb) {
-      setStatus("請先填 Supabase 並登入", "err");
+      setStatus("請先在安全團聚登入後再上傳", "err");
       return;
     }
     const url = currentDataUrl || rawDataUrl;
@@ -584,42 +570,12 @@
     doUpload();
   };
 
-  document.getElementById("btnSaveCfg").onclick = function () {
-    localStorage.setItem("doll_test_url", document.getElementById("supaUrl").value.trim());
-    localStorage.setItem("doll_test_key", document.getElementById("supaKey").value.trim());
-    initSb();
-    setStatus("設定已存", "ok");
-  };
-  document.getElementById("btnLogin").onclick = async function () {
-    if (!sb) initSb();
-    if (!sb) {
-      setStatus("請先填 URL 與 key", "err");
-      return;
-    }
-    const { error } = await sb.auth.signInWithPassword({
-      email: document.getElementById("email").value.trim(),
-      password: document.getElementById("password").value,
-    });
-    if (error) setStatus("登入失敗：" + error.message, "err");
-    else {
-      setStatus("登入成功", "ok");
-      refreshWho();
-    }
-  };
-  document.getElementById("btnLogout").onclick = async function () {
-    if (sb) await sb.auth.signOut();
-    refreshWho();
-    setStatus("已登出");
-  };
   document.getElementById("btnClearSaves").onclick = function () {
     localStorage.removeItem(STORAGE_KEY);
     renderThumbs();
     setStatus("本機存檔已清空");
   };
 
-  // 載入設定
-  document.getElementById("supaUrl").value = localStorage.getItem("doll_test_url") || "";
-  document.getElementById("supaKey").value = localStorage.getItem("doll_test_key") || "";
   initSb();
   renderThumbs();
   setStatus("請按「開啟相機」");
