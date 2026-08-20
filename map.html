@@ -1100,7 +1100,120 @@ body.navigation-mode .navigation-info {
      ======================================================= -->
 
 <div id="map"></div>
+<!-- =======================================================
+     群組定位快速工具
+     ======================================================= -->
 
+<div
+  id="locationTools"
+  style="
+    position:fixed;
+    right:12px;
+    bottom:calc(32vh + 8px);
+    z-index:1800;
+    display:flex;
+    flex-direction:column;
+    gap:8px;
+  "
+>
+
+  <button
+    type="button"
+    id="btnMyLocation"
+    style="
+      width:48px;
+      height:48px;
+      border:none;
+      border-radius:50%;
+      background:#fff;
+      box-shadow:0 3px 12px rgba(0,0,0,.25);
+      font-size:23px;
+      cursor:pointer;
+    "
+    title="回到我的位置"
+  >
+    📍
+  </button>
+
+  <button
+    type="button"
+    id="btnViewFriends"
+    style="
+      width:48px;
+      height:48px;
+      border:none;
+      border-radius:50%;
+      background:#fff;
+      box-shadow:0 3px 12px rgba(0,0,0,.25);
+      font-size:23px;
+      cursor:pointer;
+    "
+    title="查看朋友位置"
+  >
+    👥
+  </button>
+
+</div>
+
+
+<!-- =======================================================
+     查看朋友位置
+     ======================================================= -->
+
+<div
+  id="friendLocationPanel"
+  style="
+    display:none;
+    position:fixed;
+    right:12px;
+    bottom:calc(32vh + 116px);
+    z-index:2500;
+    width:min(300px,85vw);
+    max-height:45vh;
+    overflow-y:auto;
+    background:#fff;
+    border-radius:16px;
+    box-shadow:0 5px 25px rgba(0,0,0,.25);
+    padding:14px;
+  "
+>
+
+  <div
+    style="
+      font-size:16px;
+      font-weight:800;
+      margin-bottom:6px;
+    "
+  >
+    👥 查看朋友位置
+  </div>
+
+  <div
+    style="
+      font-size:12px;
+      color:#777;
+      margin-bottom:10px;
+    "
+  >
+    只會顯示對方已允許你查看的位置
+  </div>
+
+  <div id="friendLocationList">
+    <div style="color:#888;font-size:13px">
+      尚無可查看的位置
+    </div>
+  </div>
+
+  <button
+    type="button"
+    id="btnCloseFriendLocation"
+    class="btn btn-outline"
+    style="width:100%;margin-top:10px"
+  >
+    關閉
+  </button>
+
+</div>
 <button type="button" class="admin-fab" id="adminFab" title="開發者設定">⚙️</button>
 <div class="admin-panel" id="adminPanel">
   <h3>⚙️ 開發者・臨時帳號</h3>
@@ -1500,7 +1613,30 @@ const sb =
     SUPABASE_URL,
     SUPABASE_KEY
   );
+const btnMyLocation =
+  document.getElementById(
+    "btnMyLocation"
+  );
 
+const btnViewFriends =
+  document.getElementById(
+    "btnViewFriends"
+  );
+
+const friendLocationPanel =
+  document.getElementById(
+    "friendLocationPanel"
+  );
+
+const friendLocationList =
+  document.getElementById(
+    "friendLocationList"
+  );
+
+const btnCloseFriendLocation =
+  document.getElementById(
+    "btnCloseFriendLocation"
+  );
 
 /* =========================================================
    2. 房間
@@ -3374,34 +3510,6 @@ function onPosition(
   }
 
 
-  /* -------------------------------------------------------
-     導航模式跟隨
-     ------------------------------------------------------- */
-
-  if (
-    navigationOn
-  ) {
-
-    map.setView(
-
-      [
-        myLat,
-        myLng
-      ],
-
-      Math.max(
-        map.getZoom(),
-        15
-      ),
-
-      {
-        animate:
-          true
-      }
-
-    );
-
-  }
 
 
   /* -------------------------------------------------------
@@ -3676,7 +3784,86 @@ async function startNavigation() {
 
 }
 
+/* =========================================================
+   回到自己的目前位置
+   ========================================================= */
 
+if (btnMyLocation) {
+
+  btnMyLocation.onclick =
+    function () {
+
+      if (
+        myLat === null ||
+        myLng === null
+      ) {
+
+        alert(
+          "目前還沒有取得你的 GPS 位置"
+        );
+
+        return;
+
+      }
+
+      map.setView(
+        [
+          myLat,
+          myLng
+        ],
+        Math.max(
+          map.getZoom(),
+          15
+        ),
+        {
+          animate: true
+        }
+      );
+
+    };
+
+}
+
+
+/* =========================================================
+   查看朋友位置
+   ========================================================= */
+
+if (btnViewFriends) {
+
+  btnViewFriends.onclick =
+    async function () {
+
+      if (
+        friendLocationPanel
+      ) {
+
+        friendLocationPanel.style.display =
+          friendLocationPanel.style.display ===
+          "none"
+            ? "block"
+            : "none";
+
+      }
+
+      await renderFriendLocationList();
+
+    };
+
+}
+
+
+if (btnCloseFriendLocation) {
+
+  btnCloseFriendLocation.onclick =
+    function () {
+
+      friendLocationPanel.style.display =
+        "none";
+
+    };
+
+}
 /* =========================================================
    19. 停止導航
    ========================================================= */
@@ -5401,7 +5588,178 @@ async function loadPeers() {
 
       }
 
+     async function renderFriendLocationList() {
 
+  if (
+    !friendLocationList
+  ) {
+
+    return;
+
+  }
+
+  friendLocationList.innerHTML =
+    '<div style="color:#888;font-size:13px">正在載入…</div>';
+
+
+  /*
+   * loadPeers() 已經經過 Supabase RLS。
+   *
+   * 所以這裡的 rows 本身就是：
+   * 「目前登入者有權查看的定位」
+   */
+
+  const rows =
+    Array.isArray(
+      window._lastPeerRows
+    )
+      ? window._lastPeerRows
+      : [];
+
+
+  if (!rows.length) {
+
+    friendLocationList.innerHTML =
+      '<div style="color:#888;font-size:13px">' +
+      '目前沒有成員允許你查看位置' +
+      '</div>';
+
+    return;
+
+  }
+
+
+  friendLocationList.innerHTML =
+    "";
+
+
+  rows.forEach(
+    function (row) {
+
+      if (
+        !row ||
+        !row.user_id ||
+        row.lat == null ||
+        row.lng == null
+      ) {
+
+        return;
+
+      }
+
+
+      const lat =
+        Number(row.lat);
+
+      const lng =
+        Number(row.lng);
+
+
+      if (
+        !Number.isFinite(lat) ||
+        !Number.isFinite(lng)
+      ) {
+
+        return;
+
+      }
+
+
+      const userId =
+        String(row.user_id);
+
+
+      const name =
+        row.display_name ||
+        "群組成員";
+
+
+      const updated =
+        row.updated_at
+          ? new Date(
+              row.updated_at
+            ).toLocaleString(
+              "zh-TW"
+            )
+          : "未知";
+
+
+      const item =
+        document.createElement(
+          "button"
+        );
+
+
+      item.type =
+        "button";
+
+
+      item.style.cssText =
+        "display:block;" +
+        "width:100%;" +
+        "text-align:left;" +
+        "border:none;" +
+        "background:#f7f7f7;" +
+        "border-radius:12px;" +
+        "padding:10px;" +
+        "margin-bottom:7px;" +
+        "cursor:pointer;";
+
+
+      item.innerHTML =
+        "<strong>📍 " +
+        escapeHtml(name) +
+        "</strong>" +
+        "<div style=" +
+        "'font-size:11px;color:#777;margin-top:3px'" +
+        ">" +
+        "最後更新：" +
+        escapeHtml(updated) +
+        "</div>";
+
+
+      item.onclick =
+        function () {
+
+          map.setView(
+            [
+              lat,
+              lng
+            ],
+            Math.max(
+              map.getZoom(),
+              15
+            ),
+            {
+              animate:true
+            }
+          );
+
+
+          if (
+            peerMarkers[userId]
+          ) {
+
+            peerMarkers[userId]
+              .openPopup();
+
+          }
+
+
+          friendLocationPanel.style.display =
+            "none";
+
+        };
+
+
+      friendLocationList.appendChild(
+        item
+      );
+
+    }
+  );
+
+}
       /* ---------------------------------------------------
          第一次出現 → 建立大頭針
          --------------------------------------------------- */
