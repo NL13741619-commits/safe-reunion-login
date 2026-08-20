@@ -83,6 +83,9 @@
       grid-template-columns: 1fr 1fr;
       gap: 8px;
     }
+    #liveBtns {
+      grid-template-columns: 1fr 1fr 1fr;
+    }
     .btns.single { grid-template-columns: 1fr; }
     button {
       border: none;
@@ -179,6 +182,7 @@
 
     <div class="btns" id="liveBtns">
       <button type="button" id="btnStart" class="primary">開啟相機</button>
+      <button type="button" id="btnFlip">切換鏡頭</button>
       <button type="button" id="btnCapture" class="ok" disabled>拍照</button>
     </div>
 
@@ -223,6 +227,7 @@
   const btnConfirmUpload = document.getElementById("btnConfirmUpload");
 
   let stream = null;
+  let facingMode = "user"; // user=前鏡頭 environment=後鏡頭
   let mode = "live"; // live | preview
   let rawDataUrl = null;
   let currentDataUrl = null;
@@ -253,7 +258,7 @@
       stream = await navigator.mediaDevices.getUserMedia({
         audio: false,
         video: {
-          facingMode: "user",
+          facingMode: { ideal: facingMode },
           width: { ideal: 1280 },
           height: { ideal: 1280 },
         },
@@ -262,16 +267,18 @@
       await video.play();
       mode = "live";
       video.style.display = "block";
+      // 前鏡頭鏡像，後鏡頭不鏡像（拍別人／群體）
+      video.style.transform = facingMode === "user" ? "scaleX(-1)" : "none";
       snap.style.display = "none";
       processed.style.display = "none";
-      guideLabel.style.display = "block";
+      if (guideLabel) guideLabel.style.display = "none";
       liveBtns.classList.remove("hidden");
       previewBtns.classList.add("hidden");
       btnCapture.disabled = false;
       btnConfirmUpload.classList.add("hidden");
       pendingUpload = false;
       setTimeout(drawGuide, 100);
-      setStatus("相機已開啟，請對準臉框");
+      setStatus(facingMode === "user" ? "前鏡頭（自拍）" : "後鏡頭（拍別人／群體）");
     } catch (e) {
       setStatus("無法開啟相機：" + (e.message || e), "err");
     }
@@ -287,11 +294,16 @@
     snap.width = w;
     snap.height = h;
     const ctx = snap.getContext("2d");
-    // 鏡像拍攝（與預覽一致）
-    ctx.translate(w, 0);
-    ctx.scale(-1, 1);
-    ctx.drawImage(video, 0, 0, w, h);
-    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    if (facingMode === "user") {
+      // 前鏡頭：鏡像拍攝（與預覽一致）
+      ctx.translate(w, 0);
+      ctx.scale(-1, 1);
+      ctx.drawImage(video, 0, 0, w, h);
+      ctx.setTransform(1, 0, 0, 1, 0, 0);
+    } else {
+      // 後鏡頭：正常方向
+      ctx.drawImage(video, 0, 0, w, h);
+    }
 
     rawDataUrl = snap.toDataURL("image/jpeg", 0.92);
     applyBeauty();
@@ -302,7 +314,6 @@
     mode = "preview";
     video.style.display = "none";
     processed.style.display = "block";
-    // processed 已畫好，取消鏡像顯示（圖本身已鏡像）
     processed.style.transform = "none";
     guideLabel.style.display = "none";
     drawGuide();
@@ -514,8 +525,14 @@
   }
 
   async function doUpload() {
+    if (!sb) initSb();
     if (!sb) {
-      setStatus("請先在安全團聚登入後再上傳", "err");
+      setStatus("系統未就緒，請重新整理頁面", "err");
+      return;
+    }
+    const { data: { session } } = await sb.auth.getSession();
+    if (!session) {
+      setStatus("請先回安全團聚登入，再來上傳大頭娃娃", "err");
       return;
     }
     const url = currentDataUrl || rawDataUrl;
@@ -523,7 +540,7 @@
       setStatus("沒有照片", "err");
       return;
     }
-    setStatus("上傳中…");
+    setStatus("上傳中，請稍候（可能需要數十秒）…");
     try {
       const { data, error } = await sb.functions.invoke("create-doll-avatar", {
         body: { image_base64: url, ext: "jpg" },
@@ -552,6 +569,11 @@
   }
 
   document.getElementById("btnStart").onclick = startCamera;
+  document.getElementById("btnFlip").onclick = async function () {
+    facingMode = facingMode === "user" ? "environment" : "user";
+    setStatus("切換鏡頭中…");
+    await startCamera();
+  };
   document.getElementById("btnCapture").onclick = captureFrame;
   document.getElementById("btnRetake").onclick = retake;
   document.getElementById("btnDelete").onclick = deleteShot;
