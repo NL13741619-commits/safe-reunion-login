@@ -7962,95 +7962,229 @@ bootAuth();
 startPeerPolling();
   startPeerRealtime();
 /* =========================================================
-   群組成員定位顯示補強
+   群組成員定位顯示 — 強制同步版
+   直接以 location_shares 為準
    ========================================================= */
 
+let groupLocationMarkers = {};
+
 async function forceRenderGroupLocations() {
-  if (!me || !me.id || !roomId) return;
+
+  if (!me || !me.id || !roomId) {
+    return;
+  }
 
   try {
+
     const result = await sb
       .from("location_shares")
-      .select("user_id,room_id,lat,lng,display_name,updated_at")
-      .eq("room_id", roomId);
+      .select(
+        "user_id,room_id,lat,lng,display_name,updated_at"
+      )
+      .eq(
+        "room_id",
+        roomId
+      );
 
     if (result.error) {
-      console.error("讀取群組定位失敗：", result.error);
+
+      console.error(
+        "群組定位讀取失敗：",
+        result.error
+      );
+
       return;
     }
 
-    const rows = result.data || [];
+    const rows =
+      Array.isArray(result.data)
+        ? result.data
+        : [];
 
     console.log(
-      "群組定位資料：",
+      "群組定位同步：",
       rows
     );
 
-    rows.forEach(function (row) {
+    /*
+     * 提供給路線功能使用
+     */
+    window._lastPeerRows =
+      rows.slice();
 
-      // 不畫自己的位置
-      if (String(row.user_id) === String(me.id)) return;
+    /*
+     * 本次資料中實際存在的成員
+     */
+    const activeIds = {};
 
-      if (
-        row.lat == null ||
-        row.lng == null
-      ) return;
+    /*
+     * 建立／更新其他成員 marker
+     */
+    rows.forEach(
+      function (row) {
 
-      const lat = Number(row.lat);
-      const lng = Number(row.lng);
+        if (!row || !row.user_id) {
+          return;
+        }
 
-      if (!Number.isFinite(lat) || !Number.isFinite(lng)) return;
+        /*
+         * 自己的位置不畫群組 marker
+         */
+        if (
+          String(row.user_id) ===
+          String(me.id)
+        ) {
+          return;
+        }
 
-      // 已有 marker 就更新
-      if (
-        typeof peerMarkers !== "undefined" &&
-        peerMarkers[row.user_id]
-      ) {
+        const lat =
+          Number(row.lat);
 
-        peerMarkers[row.user_id].setLatLng([lat, lng]);
+        const lng =
+          Number(row.lng);
 
-        return;
+        if (
+          !Number.isFinite(lat) ||
+          !Number.isFinite(lng)
+        ) {
+          return;
+        }
+
+        const userId =
+          String(row.user_id);
+
+        activeIds[userId] = true;
+
+        /*
+         * 已存在 → 只更新位置
+         */
+        if (
+          groupLocationMarkers[userId]
+        ) {
+
+          const marker =
+            groupLocationMarkers[userId];
+
+          marker.setLatLng(
+            [lat, lng]
+          );
+
+          /*
+           * 更新名稱
+           */
+          marker.setPopupContent(
+            "📍 " +
+            escapeHtml(
+              row.display_name ||
+              "群組成員"
+            )
+          );
+
+          return;
+        }
+
+        /*
+         * 新成員 → 建立 marker
+         */
+        const marker =
+          L.marker(
+            [lat, lng]
+          ).addTo(map);
+
+        marker.bindPopup(
+          "📍 " +
+          escapeHtml(
+            row.display_name ||
+            "群組成員"
+          )
+        );
+
+        groupLocationMarkers[userId] =
+          marker;
+
       }
+    );
 
-      // 沒有 marker 就建立
-      const marker = L.marker(
-        [lat, lng]
-      ).addTo(map);
+    /*
+     * 移除已經離開群組定位資料的 marker
+     */
+    Object.keys(
+      groupLocationMarkers
+    ).forEach(
+      function (userId) {
 
-      marker.bindPopup(
-        "📍 " +
-        escapeHtml(
-          row.display_name || "群組成員"
-        )
-      );
+        if (
+          !activeIds[userId]
+        ) {
 
-      if (typeof peerMarkers !== "undefined") {
-        peerMarkers[row.user_id] = marker;
+          const marker =
+            groupLocationMarkers[userId];
+
+          if (
+            marker &&
+            map.hasLayer(marker)
+          ) {
+
+            map.removeLayer(
+              marker
+            );
+
+          }
+
+          delete groupLocationMarkers[userId];
+        }
+
       }
+    );
 
-    });
+    /*
+     * 更新路線
+     */
+    if (
+      typeof scheduleRouteUpdate ===
+      "function"
+    ) {
+
+      scheduleRouteUpdate();
+
+    }
 
   } catch (e) {
+
     console.error(
-      "群組定位顯示例外：",
+      "群組定位同步例外：",
       e
     );
+
   }
+
 }
 
-// 立即執行
+
+/*
+ * 第一次載入
+ */
 setTimeout(
-  forceRenderGroupLocations,
+  function () {
+
+    forceRenderGroupLocations();
+
+  },
   1500
 );
 
-// 每 5 秒更新
+
+/*
+ * 持續同步
+ */
 setInterval(
-  forceRenderGroupLocations,
+  function () {
+
+    forceRenderGroupLocations();
+
+  },
   5000
 );
-})();
-
 </script>
 
 
