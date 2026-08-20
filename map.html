@@ -1423,12 +1423,13 @@ async function loadPeers() {
     let rows = result.data || [];
     const rawCount = rows.length;
 
-    // 寬鬆時間：2 小時內（避免時區／延遲）
-    const cutoff = Date.now() - 2 * 60 * 60 * 1000;
+    // 不再用時間過濾：安全團聚優先「看得到人」
+    // 只要本房間有有效座標就顯示
     rows = rows.filter(function (row) {
-      if (!row.updated_at) return true;
-      const t = new Date(row.updated_at).getTime();
-      return !Number.isFinite(t) || t >= cutoff;
+      if (!row) return false;
+      const lat = Number(row.lat != null ? row.lat : row.latitude);
+      const lng = Number(row.lng != null ? row.lng : row.longitude);
+      return Number.isFinite(lat) && Number.isFinite(lng);
     });
 
     window._lastPeerRows = rows;
@@ -1494,7 +1495,7 @@ async function loadPeers() {
       partStatus.style.color = otherCount > 0 ? "#166534" : "#555";
       partStatus.textContent =
         "可見 " + (otherCount + selfCount) +
-        " 人｜DB本房 " + rawCount + " 筆(有效" + rows.length + ")" +
+        " 人｜DB本房 " + rawCount + " 筆(有座標" + rows.length + ")" +
         "｜room=" + String(roomId).slice(0, 12);
       if (otherCount === 0 && rawCount === 0 && shareOn) {
         partStatus.textContent += "｜對方可能不同房間或未寫入";
