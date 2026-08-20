@@ -2578,6 +2578,66 @@ updateSearchCountLabel();
 
 console.log("[SafeReunion Map] ready, roomId =", roomId);
 })();
+  <input type="file" id="dollFile" accept="image/*" capture="user" />
+<button type="button" id="dollUploadBtn">上傳大頭娃娃（測試）</button>
+<p id="dollResult"></p>
+<img id="dollPreview" alt="" style="max-width:160px;display:none;border-radius:12px;" />
+
+<script>
+(function () {
+  const fileInput = document.getElementById("dollFile");
+  const btn = document.getElementById("dollUploadBtn");
+  const result = document.getElementById("dollResult");
+  const preview = document.getElementById("dollPreview");
+
+  // 若你頁面變數不叫 sb，改成你的 supabase client
+  if (typeof sb === "undefined") {
+    result.textContent = "找不到 sb（Supabase client）";
+    return;
+  }
+
+  btn.addEventListener("click", async function () {
+    const file = fileInput.files && fileInput.files[0];
+    if (!file) {
+      result.textContent = "請先選照片";
+      return;
+    }
+    result.textContent = "上傳中…";
+    preview.style.display = "none";
+
+    const reader = new FileReader();
+    reader.onload = async function () {
+      try {
+        const dataUrl = reader.result;
+        const { data, error } = await sb.functions.invoke("create-doll-avatar", {
+          body: {
+            image_base64: dataUrl,
+            ext: file.name.toLowerCase().endsWith(".png") ? "png" : "jpg",
+          },
+        });
+
+        if (error) {
+          result.textContent = "失敗：" + (error.message || JSON.stringify(error));
+          return;
+        }
+        if (data && data.error) {
+          result.textContent = "失敗：" + data.error;
+          return;
+        }
+
+        result.textContent = "成功：" + (data && data.note ? data.note : "ok");
+        if (data && data.doll_url) {
+          preview.src = data.doll_url + "?t=" + Date.now();
+          preview.style.display = "block";
+        }
+      } catch (e) {
+        result.textContent = "例外：" + (e.message || e);
+      }
+    };
+    reader.readAsDataURL(file);
+  });
+})();
+
 </script>
 
 </body>
