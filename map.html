@@ -8185,6 +8185,87 @@ setInterval(
   },
   5000
 );
+        /* =========================================================
+   iPhone / Safari 地圖灰屏修正
+   ========================================================= */
+
+function fixMapDisplay() {
+
+  if (
+    typeof map === "undefined" ||
+    !map
+  ) {
+    return;
+  }
+
+  try {
+
+    map.invalidateSize(true);
+
+    setTimeout(function () {
+      try {
+        map.invalidateSize(true);
+      } catch (e) {}
+    }, 300);
+
+    setTimeout(function () {
+      try {
+        map.invalidateSize(true);
+      } catch (e) {}
+    }, 1000);
+
+  } catch (e) {
+    console.error(
+      "iPhone 地圖尺寸修正失敗：",
+      e
+    );
+  }
+}
+
+
+/* 頁面完成 */
+window.addEventListener(
+  "load",
+  function () {
+    fixMapDisplay();
+  }
+);
+
+
+/* iPhone Safari 回到頁面 */
+window.addEventListener(
+  "pageshow",
+  function () {
+    setTimeout(
+      fixMapDisplay,
+      200
+    );
+  }
+);
+
+
+/* 螢幕方向改變 */
+window.addEventListener(
+  "orientationchange",
+  function () {
+    setTimeout(
+      fixMapDisplay,
+      300
+    );
+  }
+);
+
+
+/* 視窗尺寸改變 */
+window.addEventListener(
+  "resize",
+  function () {
+    setTimeout(
+      fixMapDisplay,
+      200
+    );
+  }
+);
 </script>
 
 
