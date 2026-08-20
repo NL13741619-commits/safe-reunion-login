@@ -1380,27 +1380,51 @@ function createMemberPopup(row, color) {
 async function loadPeers() {
   if (!roomId) return;
   try {
-    // 先不過濾時間，避免時鐘差或上傳失敗造成「都看不到」
+    // 讀取本房間全部定位（先不過濾時間，避免時鐘差造成全消失）
     let result = await sb
       .from("location_shares")
       .select("*")
       .eq("room_id", String(roomId));
+
+    // 若 0 筆，再試一次不轉型比對（少數專案 room_id 型別不一致）
+    if (!result.error && (!result.data || result.data.length === 0)) {
+      const allTry = await sb.from("location_shares").select("*").limit(50);
+      if (!allTry.error && allTry.data && allTry.data.length) {
+        const matched = allTry.data.filter(function (r) {
+          return String(r.room_id) === String(roomId);
+        });
+        if (matched.length) {
+          result = { data: matched, error: null };
+        } else if (partStatus) {
+          // 顯示實際存在的 room_id，方便對照
+          const rooms = {};
+          allTry.data.forEach(function (r) {
+            rooms[String(r.room_id)] = (rooms[String(r.room_id)] || 0) + 1;
+          });
+          partStatus.style.color = "#c62828";
+          partStatus.textContent =
+            "房間不匹配｜我的 room=" + String(roomId) +
+            "｜資料庫有：" + Object.keys(rooms).slice(0, 5).join(", ");
+          console.warn("[loadPeers] room mismatch", roomId, rooms);
+        }
+      }
+    }
 
     if (result.error) {
       console.error("成員定位錯誤：", result.error);
       if (partStatus) {
         partStatus.style.color = "#c62828";
         partStatus.textContent =
-          "讀取成員失敗（多半是 RLS）：" +
-          (result.error.message || "").slice(0, 50);
+          "讀取成員失敗：" + (result.error.message || "").slice(0, 60);
       }
       return;
     }
 
     let rows = result.data || [];
+    const rawCount = rows.length;
 
-    // 只保留 30 分鐘內有更新的（若有 updated_at）
-    const cutoff = Date.now() - 30 * 60 * 1000;
+    // 寬鬆時間：2 小時內（避免時區／延遲）
+    const cutoff = Date.now() - 2 * 60 * 60 * 1000;
     rows = rows.filter(function (row) {
       if (!row.updated_at) return true;
       const t = new Date(row.updated_at).getTime();
@@ -1409,33 +1433,51 @@ async function loadPeers() {
 
     window._lastPeerRows = rows;
     const activePeerIds = {};
+    const boundsPts = [];
 
     rows.forEach(function (row) {
-      if (!row || !row.user_id) return;
-      if (me && String(row.user_id) === String(me.id)) return;
-      if (row.lat == null || row.lng == null) return;
+      if (!row || row.user_id == null) return;
 
-      const lat = Number(row.lat);
-      const lng = Number(row.lng);
+      // 相容 lat/lng 或 latitude/longitude
+      const lat = Number(row.lat != null ? row.lat : row.latitude);
+      const lng = Number(row.lng != null ? row.lng : row.longitude);
       if (!Number.isFinite(lat) || !Number.isFinite(lng)) return;
 
       const userId = String(row.user_id);
-      activePeerIds[userId] = true;
-      const color = memberColorFromId(userId);
+      const isSelf = me && userId === String(me.id);
 
-      if (peerMarkers[userId]) {
-        peerMarkers[userId].setLatLng([lat, lng]);
-        peerMarkers[userId].setPopupContent(createMemberPopup(row, color));
-        return;
+      if (!isSelf) {
+        activePeerIds[userId] = true;
+        const color = memberColorFromId(userId);
+        const name = row.display_name || row.name || "成員";
+
+        if (peerMarkers[userId]) {
+          peerMarkers[userId].setLatLng([lat, lng]);
+          peerMarkers[userId].setPopupContent(
+            createMemberPopup(
+              { display_name: name, updated_at: row.updated_at, user_id: userId },
+              color
+            )
+          );
+        } else {
+          const marker = L.marker([lat, lng], {
+            icon: createMemberPinIcon(color),
+            zIndexOffset: 500
+          })
+            .addTo(map)
+            .bindPopup(
+              createMemberPopup(
+                { display_name: name, updated_at: row.updated_at, user_id: userId },
+                color
+              )
+            );
+          marker.on("click", function () { marker.openPopup(); });
+          peerMarkers[userId] = marker;
+        }
+        boundsPts.push([lat, lng]);
+      } else if (myLat != null && myLng != null) {
+        boundsPts.push([myLat, myLng]);
       }
-
-      const marker = L.marker([lat, lng], {
-        icon: createMemberPinIcon(color),
-        zIndexOffset: 500
-      }).addTo(map).bindPopup(createMemberPopup(row, color));
-
-      marker.on("click", function () { marker.openPopup(); });
-      peerMarkers[userId] = marker;
     });
 
     Object.keys(peerMarkers).forEach(function (userId) {
@@ -1445,23 +1487,25 @@ async function loadPeers() {
       }
     });
 
-    let count = 0;
-    rows.forEach(function (row) {
-      if (me && String(row.user_id) === String(me.id)) return;
-      if (row.lat == null || row.lng == null) return;
-      if (Number.isFinite(Number(row.lat)) && Number.isFinite(Number(row.lng))) count++;
-    });
+    const otherCount = Object.keys(activePeerIds).length;
+    const selfCount = (shareOn && myLat != null && lastUploadOk) ? 1 : 0;
 
     if (partStatus) {
-      partStatus.style.color = count > 0 ? "#166534" : "#555";
-      const selfCount = (shareOn && myLat != null && lastUploadOk) ? 1 : 0;
+      partStatus.style.color = otherCount > 0 ? "#166534" : "#555";
       partStatus.textContent =
-        "互相可見人數：" + (count + selfCount) +
-        "（資料庫本房 " + rows.length + " 筆｜行程點 " + waypoints.length + "）";
-      if (count === 0 && rows.length <= 1 && shareOn) {
-        partStatus.textContent +=
-          "｜若對方也開了分享仍為 0，請檢查 Supabase RLS";
+        "可見 " + (otherCount + selfCount) +
+        " 人｜DB本房 " + rawCount + " 筆(有效" + rows.length + ")" +
+        "｜room=" + String(roomId).slice(0, 12);
+      if (otherCount === 0 && rawCount === 0 && shareOn) {
+        partStatus.textContent += "｜對方可能不同房間或未寫入";
       }
+    }
+
+    // 有其他成員時，自動把地圖縮放到大家都能看到
+    if (boundsPts.length >= 2 && !navigationOn) {
+      try {
+        map.fitBounds(boundsPts, { padding: [60, 60], maxZoom: 16 });
+      } catch (e) {}
     }
 
     scheduleRouteUpdate();
