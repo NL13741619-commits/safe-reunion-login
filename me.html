@@ -32,6 +32,7 @@ button{cursor:pointer}
 }
 
 .avatar{
+  position:relative;
   width:64px;
   height:64px;
   border-radius:8px;
@@ -42,12 +43,45 @@ button{cursor:pointer}
   font-size:28px;
   color:#999;
   overflow:hidden;
+  user-select:none;
+  -webkit-user-select:none;
 }
-
 .avatar img{
   width:100%;
   height:100%;
   object-fit:cover;
+}
+.avatar-sheet{
+  display:none;
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.45);
+  z-index:10001;
+  align-items:flex-end;
+  justify-content:center;
+}
+.avatar-sheet.show{display:flex}
+.avatar-sheet-box{
+  width:100%;
+  max-width:480px;
+  background:#fff;
+  border-radius:16px 16px 0 0;
+  padding:12px 16px 24px;
+}
+.avatar-sheet button{
+  width:100%;
+  border:none;
+  background:#f5f5f5;
+  padding:14px;
+  border-radius:10px;
+  font-size:16px;
+  font-weight:600;
+  margin-top:8px;
+  cursor:pointer;
+}
+.avatar-sheet button.danger{
+  background:#ffebee;
+  color:#d32f2f;
 }
 
 .profile-info{flex:1}
@@ -576,8 +610,17 @@ button{cursor:pointer}
 <div id="home-section" class="section active">
 
    <div class="profile-header">
-    <div class="avatar" id="profile-avatar" onclick="openProfile()">👤</div>
-
+    <div class="avatar" id="profile-avatar" title="長按更換頭像">👤</div>
+<input type="file" id="avatar-file" accept="image/*" style="display:none" />
+<div id="avatar-sheet" class="avatar-sheet">
+  <div class="avatar-sheet-box">
+    <div style="text-align:center;font-weight:700;margin-bottom:8px">更換頭像</div>
+    <button type="button" onclick="avatarTakePhoto()">📷 拍照（大頭娃娃頁）</button>
+    <button type="button" onclick="avatarPickAlbum()">🖼️ 從相簿選擇</button>
+    <button type="button" class="danger" onclick="avatarRemove()">🗑️ 刪除頭像</button>
+    <button type="button" onclick="closeAvatarSheet()">取消</button>
+  </div>
+</div>
     <div class="profile-info" onclick="openProfile()">
       <div class="profile-name" id="profile-name">使用者</div>
       <div class="profile-id" id="profile-id">點擊設定暱稱與頭像</div>
@@ -8045,6 +8088,7 @@ console.log(
   }
 
 })();
+  
 </script>
 
 </body>
