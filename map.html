@@ -1167,9 +1167,16 @@ async function startShare() {
 
   if (!uploadTimer) {
     uploadTimer = setInterval(function () {
-      if (shareOn || navigationOn) uploadLocation();
-    }, 3000);
+      if (shareOn || navigationOn) {
+        uploadLocation().then(function () {
+          loadPeers();
+        });
+      }
+    }, 2500);
   }
+  // 立刻再拉一次成員，避免對方已分享卻看不到
+  setTimeout(loadPeers, 800);
+  setTimeout(loadPeers, 2500);
 }
 
 function stopShare() {
@@ -1213,14 +1220,24 @@ async function startDeviceOrientation() {
   }
 }
 
-/* 上傳位置 */
+/* 上傳位置（失敗會顯示在畫面上，方便排查） */
+let lastUploadOk = false;
+let lastUploadError = "";
+let lastUploadAt = 0;
+
 async function uploadLocation() {
-  if (!me || !me.id || !roomId) return;
+  if (!me || !me.id || !roomId) {
+    if (shareOn && shareStatus) {
+      shareStatus.textContent = "定位：未登入，無法分享給他人";
+      shareStatus.style.color = "#c62828";
+    }
+    return;
+  }
   if (myLat == null || myLng == null) return;
 
   const payload = {
     user_id: me.id,
-    room_id: roomId,
+    room_id: String(roomId),
     lat: Number(myLat),
     lng: Number(myLng),
     display_name:
@@ -1230,12 +1247,53 @@ async function uploadLocation() {
     heading: myHeading != null ? Number(myHeading) : (lastHeading != null ? Number(lastHeading) : null)
   };
 
-  const result = await sb
-    .from("location_shares")
-    .upsert(payload, { onConflict: "user_id,room_id" });
+  try {
+    // 先試 upsert（需要 unique 約束 user_id + room_id）
+    let result = await sb
+      .from("location_shares")
+      .upsert(payload, { onConflict: "user_id,room_id" });
 
-  if (result.error) {
-    console.error("定位上傳失敗：", result.error);
+    // 若 upsert 失敗，改用 delete + insert 備援
+    if (result.error) {
+      console.warn("upsert 失敗，改用 insert 備援：", result.error.message);
+      await sb
+        .from("location_shares")
+        .delete()
+        .eq("user_id", me.id)
+        .eq("room_id", String(roomId));
+
+      result = await sb.from("location_shares").insert(payload);
+    }
+
+    if (result.error) {
+      lastUploadOk = false;
+      lastUploadError = result.error.message || String(result.error);
+      console.error("定位上傳失敗：", result.error);
+      if (shareStatus) {
+        shareStatus.style.color = "#c62828";
+        shareStatus.textContent =
+          "上傳失敗（RLS/權限）：" + lastUploadError.slice(0, 60);
+      }
+      return;
+    }
+
+    lastUploadOk = true;
+    lastUploadError = "";
+    lastUploadAt = Date.now();
+    if (shareStatus && shareOn) {
+      shareStatus.style.color = "#166534";
+      shareStatus.textContent =
+        "定位：分享中 ✓ " +
+        new Date().toLocaleTimeString("zh-TW", { hour: "2-digit", minute: "2-digit", second: "2-digit" });
+    }
+  } catch (e) {
+    lastUploadOk = false;
+    lastUploadError = e.message || String(e);
+    console.error("定位上傳例外：", e);
+    if (shareStatus) {
+      shareStatus.style.color = "#c62828";
+      shareStatus.textContent = "上傳例外：" + lastUploadError.slice(0, 50);
+    }
   }
 }
 
@@ -1291,18 +1349,33 @@ function createMemberPopup(row, color) {
 async function loadPeers() {
   if (!roomId) return;
   try {
-    const result = await sb
+    // 先不過濾時間，避免時鐘差或上傳失敗造成「都看不到」
+    let result = await sb
       .from("location_shares")
       .select("*")
-      .eq("room_id", roomId)
-      .gte("updated_at", new Date(Date.now() - 20 * 60 * 1000).toISOString());
+      .eq("room_id", String(roomId));
 
     if (result.error) {
       console.error("成員定位錯誤：", result.error);
+      if (partStatus) {
+        partStatus.style.color = "#c62828";
+        partStatus.textContent =
+          "讀取成員失敗（多半是 RLS）：" +
+          (result.error.message || "").slice(0, 50);
+      }
       return;
     }
 
-    const rows = result.data || [];
+    let rows = result.data || [];
+
+    // 只保留 30 分鐘內有更新的（若有 updated_at）
+    const cutoff = Date.now() - 30 * 60 * 1000;
+    rows = rows.filter(function (row) {
+      if (!row.updated_at) return true;
+      const t = new Date(row.updated_at).getTime();
+      return !Number.isFinite(t) || t >= cutoff;
+    });
+
     window._lastPeerRows = rows;
     const activePeerIds = {};
 
@@ -1334,7 +1407,6 @@ async function loadPeers() {
       peerMarkers[userId] = marker;
     });
 
-    // 移除已離線
     Object.keys(peerMarkers).forEach(function (userId) {
       if (!activePeerIds[userId]) {
         if (map.hasLayer(peerMarkers[userId])) map.removeLayer(peerMarkers[userId]);
@@ -1342,23 +1414,32 @@ async function loadPeers() {
       }
     });
 
-    // 狀態
     let count = 0;
     rows.forEach(function (row) {
       if (me && String(row.user_id) === String(me.id)) return;
       if (row.lat == null || row.lng == null) return;
       if (Number.isFinite(Number(row.lat)) && Number.isFinite(Number(row.lng))) count++;
     });
+
     if (partStatus) {
+      partStatus.style.color = count > 0 ? "#166534" : "#555";
+      const selfCount = (shareOn && myLat != null && lastUploadOk) ? 1 : 0;
       partStatus.textContent =
-        "目前分享定位人數：" +
-        (count + (shareOn && myLat != null ? 1 : 0)) +
-        "（行程點 " + waypoints.length + " 個）";
+        "互相可見人數：" + (count + selfCount) +
+        "（資料庫本房 " + rows.length + " 筆｜行程點 " + waypoints.length + "）";
+      if (count === 0 && rows.length <= 1 && shareOn) {
+        partStatus.textContent +=
+          "｜若對方也開了分享仍為 0，請檢查 Supabase RLS";
+      }
     }
 
     scheduleRouteUpdate();
   } catch (e) {
     console.error("成員定位例外：", e);
+    if (partStatus) {
+      partStatus.style.color = "#c62828";
+      partStatus.textContent = "讀取例外：" + (e.message || e);
+    }
   }
 }
 
@@ -1384,9 +1465,10 @@ function startPeerRealtime() {
 function startPeerPolling() {
   if (peerTimer) clearInterval(peerTimer);
   loadPeers();
+  // 2.5 秒同步一次，接近 Uber 即時感，也避免 Realtime 沒開時完全看不到
   peerTimer = setInterval(function () {
     if (roomId) loadPeers();
-  }, 4000);
+  }, 2500);
 }
 
 /* =========================================================
