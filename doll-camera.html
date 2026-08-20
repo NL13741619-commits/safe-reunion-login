@@ -1,0 +1,629 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>大頭娃娃拍照・安全團聚</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Noto Sans TC", "Microsoft JhengHei", sans-serif;
+      background: #0d0d0f;
+      color: #f2f2f2;
+      min-height: 100vh;
+      max-width: 480px;
+      margin: 0 auto;
+      padding-bottom: 24px;
+    }
+    header {
+      padding: 14px 16px 8px;
+      text-align: center;
+    }
+    header h1 { font-size: 1.05rem; font-weight: 600; }
+    header p { font-size: 0.75rem; color: #999; margin-top: 4px; }
+
+    .stage {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 3 / 4;
+      background: #1a1a1e;
+      overflow: hidden;
+    }
+    #video, #snapshot, #processed {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transform: scaleX(-1);
+    }
+    #snapshot, #processed { display: none; }
+    #overlay {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      z-index: 2;
+    }
+    .guide-label {
+      position: absolute;
+      left: 50%;
+      top: 12%;
+      transform: translateX(-50%);
+      font-size: 0.8rem;
+      color: rgba(255,255,255,0.85);
+      text-shadow: 0 1px 4px #000;
+      z-index: 3;
+      pointer-events: none;
+    }
+
+    .panel {
+      padding: 12px 14px;
+    }
+    .sliders {
+      display: grid;
+      gap: 10px;
+      background: #1a1a1e;
+      border-radius: 14px;
+      padding: 12px;
+      margin-bottom: 12px;
+    }
+    .sliders label {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 0.82rem;
+      color: #ccc;
+    }
+    .sliders label span { width: 4.5em; flex-shrink: 0; }
+    .sliders input[type="range"] { flex: 1; }
+
+    .btns {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+    .btns.single { grid-template-columns: 1fr; }
+    button {
+      border: none;
+      border-radius: 12px;
+      padding: 12px 10px;
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      color: #fff;
+      background: #2a2a30;
+    }
+    button.primary { background: #1a73e8; }
+    button.danger { background: #b3261e; }
+    button.ok { background: #1e7a46; }
+    button:disabled { opacity: 0.4; cursor: not-allowed; }
+
+    #status {
+      margin-top: 10px;
+      padding: 10px 12px;
+      border-radius: 10px;
+      background: #1a1a1e;
+      font-size: 0.85rem;
+      line-height: 1.45;
+      word-break: break-all;
+      min-height: 2.4em;
+      color: #bbb;
+    }
+    #status.err { color: #ff8a80; }
+    #status.ok { color: #81c784; }
+
+    .cfg {
+      margin-top: 12px;
+      background: #1a1a1e;
+      border-radius: 14px;
+      padding: 12px;
+    }
+    .cfg summary {
+      cursor: pointer;
+      font-size: 0.85rem;
+      color: #aaa;
+      list-style: none;
+    }
+    .cfg label { display: block; font-size: 0.75rem; color: #888; margin: 8px 0 4px; }
+    .cfg input {
+      width: 100%;
+      padding: 8px 10px;
+      border-radius: 8px;
+      border: 1px solid #333;
+      background: #111;
+      color: #eee;
+      font-size: 0.9rem;
+    }
+    .thumb-row {
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      padding: 8px 0;
+      min-height: 64px;
+    }
+    .thumb-row img {
+      width: 56px;
+      height: 56px;
+      object-fit: cover;
+      border-radius: 10px;
+      border: 2px solid transparent;
+      cursor: pointer;
+      transform: scaleX(-1);
+    }
+    .thumb-row img.active { border-color: #1a73e8; }
+    .hidden { display: none !important; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>大頭娃娃・拍照</h1>
+    <p>調美顏 → 拍照 → 確認後可上傳／下載</p>
+  </header>
+
+  <div class="stage" id="stage">
+    <video id="video" playsinline autoplay muted></video>
+    <canvas id="snapshot"></canvas>
+    <canvas id="processed"></canvas>
+    <canvas id="overlay"></canvas>
+    <div class="guide-label" id="guideLabel" style="display:none"></div>
+  </div>
+
+  <div class="panel">
+    <div class="sliders" id="beautyPanel">
+      <label><span>美白</span><input type="range" id="whiten" min="0" max="100" value="25" /></label>
+      <label><span>瘦臉</span><input type="range" id="slim" min="0" max="100" value="20" /></label>
+      <label><span>縮下巴</span><input type="range" id="chin" min="0" max="100" value="15" /></label>
+      <label><span>磨皮</span><input type="range" id="smooth" min="0" max="100" value="30" /></label>
+    </div>
+
+    <div class="btns" id="liveBtns">
+      <button type="button" id="btnStart" class="primary">開啟相機</button>
+      <button type="button" id="btnCapture" class="ok" disabled>拍照</button>
+    </div>
+
+    <div class="btns hidden" id="previewBtns">
+      <button type="button" id="btnRetake">再拍</button>
+      <button type="button" id="btnDelete" class="danger">刪除</button>
+      <button type="button" id="btnSave" class="ok">存檔</button>
+      <button type="button" id="btnDownload" class="primary">下載到手機</button>
+      <button type="button" id="btnUpload" class="primary">上傳大頭娃娃</button>
+      <button type="button" id="btnConfirmUpload" class="ok hidden">確定上傳</button>
+    </div>
+
+    <div id="status">尚未開啟相機</div>
+
+    <div class="cfg">
+      <summary>本機存檔（點圖可讀取）</summary>
+      <div class="thumb-row" id="thumbs"></div>
+      <button type="button" id="btnClearSaves" style="margin-top:8px;width:100%;">清空本機存檔</button>
+    </div>
+
+    <details class="cfg">
+      <summary>Supabase 設定（上傳用）</summary>
+      <label>Supabase URL</label>
+      <input type="text" id="supaUrl" placeholder="https://xxxx.supabase.co" />
+      <label>anon / publishable key</label>
+      <input type="text" id="supaKey" placeholder="eyJ..." />
+      <button type="button" id="btnSaveCfg" style="margin-top:8px;width:100%;">儲存設定</button>
+      <label>Email</label>
+      <input type="email" id="email" />
+      <label>Password</label>
+      <input type="password" id="password" />
+      <div class="btns" style="margin-top:8px;">
+        <button type="button" id="btnLogin">登入</button>
+        <button type="button" id="btnLogout">登出</button>
+      </div>
+      <p id="who" style="font-size:0.8rem;color:#888;margin-top:8px;"></p>
+    </details>
+  </div>
+
+  <script>
+(function () {
+  const video = document.getElementById("video");
+  const snap = document.getElementById("snapshot");
+  const processed = document.getElementById("processed");
+  const overlay = document.getElementById("overlay");
+  const guideLabel = document.getElementById("guideLabel");
+  const statusEl = document.getElementById("status");
+  const liveBtns = document.getElementById("liveBtns");
+  const previewBtns = document.getElementById("previewBtns");
+  const btnCapture = document.getElementById("btnCapture");
+  const btnConfirmUpload = document.getElementById("btnConfirmUpload");
+
+  let stream = null;
+  let mode = "live"; // live | preview
+  let rawDataUrl = null;
+  let currentDataUrl = null;
+  let sb = null;
+  let pendingUpload = false;
+
+  const STORAGE_KEY = "doll_camera_saves_v1";
+  const MAX_SAVES = 12;
+
+  function setStatus(msg, kind) {
+    statusEl.textContent = msg;
+    statusEl.className = kind === "err" ? "err" : kind === "ok" ? "ok" : "";
+  }
+
+  function drawGuide() {
+    const w = overlay.width = overlay.clientWidth * (window.devicePixelRatio || 1);
+    const h = overlay.height = overlay.clientHeight * (window.devicePixelRatio || 1);
+    const ctx = overlay.getContext("2d");
+    ctx.clearRect(0, 0, w, h);
+    // 不要線、不要遮罩
+  }
+
+  window.addEventListener("resize", drawGuide);
+
+  async function startCamera() {
+    try {
+      if (stream) stream.getTracks().forEach((t) => t.stop());
+      stream = await navigator.mediaDevices.getUserMedia({
+        audio: false,
+        video: {
+          facingMode: "user",
+          width: { ideal: 1280 },
+          height: { ideal: 1280 },
+        },
+      });
+      video.srcObject = stream;
+      await video.play();
+      mode = "live";
+      video.style.display = "block";
+      snap.style.display = "none";
+      processed.style.display = "none";
+      guideLabel.style.display = "block";
+      liveBtns.classList.remove("hidden");
+      previewBtns.classList.add("hidden");
+      btnCapture.disabled = false;
+      btnConfirmUpload.classList.add("hidden");
+      pendingUpload = false;
+      setTimeout(drawGuide, 100);
+      setStatus("相機已開啟，請對準臉框");
+    } catch (e) {
+      setStatus("無法開啟相機：" + (e.message || e), "err");
+    }
+  }
+
+  function captureFrame() {
+    if (!video.videoWidth) {
+      setStatus("相機尚未就緒", "err");
+      return;
+    }
+    const w = video.videoWidth;
+    const h = video.videoHeight;
+    snap.width = w;
+    snap.height = h;
+    const ctx = snap.getContext("2d");
+    // 鏡像拍攝（與預覽一致）
+    ctx.translate(w, 0);
+    ctx.scale(-1, 1);
+    ctx.drawImage(video, 0, 0, w, h);
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+
+    rawDataUrl = snap.toDataURL("image/jpeg", 0.92);
+    applyBeauty();
+    enterPreview();
+  }
+
+  function enterPreview() {
+    mode = "preview";
+    video.style.display = "none";
+    processed.style.display = "block";
+    // processed 已畫好，取消鏡像顯示（圖本身已鏡像）
+    processed.style.transform = "none";
+    guideLabel.style.display = "none";
+    drawGuide();
+    liveBtns.classList.add("hidden");
+    previewBtns.classList.remove("hidden");
+    btnConfirmUpload.classList.add("hidden");
+    pendingUpload = false;
+    setStatus("已拍照。可調美顏滑桿，或再拍／存檔／下載／上傳");
+  }
+
+  function applyBeauty() {
+    if (!rawDataUrl) return;
+    const img = new Image();
+    img.onload = function () {
+      const w = img.width;
+      const h = img.height;
+      processed.width = w;
+      processed.height = h;
+      const ctx = processed.getContext("2d");
+      ctx.drawImage(img, 0, 0);
+
+      const whiten = Number(document.getElementById("whiten").value) / 100;
+      const slim = Number(document.getElementById("slim").value) / 100;
+      const chin = Number(document.getElementById("chin").value) / 100;
+      const smooth = Number(document.getElementById("smooth").value) / 100;
+
+      // 瘦臉／縮下巴：水平方向向中心微縮（臉部中段）
+      if (slim > 0.01 || chin > 0.01) {
+        const src = ctx.getImageData(0, 0, w, h);
+        const out = ctx.createImageData(w, h);
+        const s = src.data;
+        const d = out.data;
+        const cx = w / 2;
+        const faceTop = h * 0.18;
+        const faceBot = h * 0.78;
+        for (let y = 0; y < h; y++) {
+          for (let x = 0; x < w; x++) {
+            let sx = x;
+            if (y >= faceTop && y <= faceBot) {
+              const ny = (y - faceTop) / (faceBot - faceTop);
+              let strength = slim * 0.12;
+              // 下巴區再多縮
+              if (ny > 0.65) strength += chin * 0.1 * ((ny - 0.65) / 0.35);
+              const dx = (x - cx) / (w / 2);
+              sx = cx + (x - cx) * (1 + strength * dx * dx);
+            }
+            sx = Math.max(0, Math.min(w - 1, sx));
+            const x0 = Math.floor(sx);
+            const x1 = Math.min(w - 1, x0 + 1);
+            const fx = sx - x0;
+            const i = (y * w + x) * 4;
+            const i0 = (y * w + x0) * 4;
+            const i1 = (y * w + x1) * 4;
+            for (let c = 0; c < 4; c++) {
+              d[i + c] = s[i0 + c] * (1 - fx) + s[i1 + c] * fx;
+            }
+          }
+        }
+        ctx.putImageData(out, 0, 0);
+      }
+
+      // 美白 + 簡易磨皮（鄰域混合）
+      if (whiten > 0.01 || smooth > 0.01) {
+        const imgData = ctx.getImageData(0, 0, w, h);
+        const data = imgData.data;
+        const copy = new Uint8ClampedArray(data);
+        const radius = smooth > 0.01 ? 1 : 0;
+        for (let y = 0; y < h; y++) {
+          for (let x = 0; x < w; x++) {
+            const i = (y * w + x) * 4;
+            let r = copy[i], g = copy[i + 1], b = copy[i + 2];
+            if (radius) {
+              let rr = 0, gg = 0, bb = 0, n = 0;
+              for (let dy = -radius; dy <= radius; dy++) {
+                for (let dx = -radius; dx <= radius; dx++) {
+                  const xx = x + dx, yy = y + dy;
+                  if (xx < 0 || yy < 0 || xx >= w || yy >= h) continue;
+                  const j = (yy * w + xx) * 4;
+                  rr += copy[j]; gg += copy[j + 1]; bb += copy[j + 2]; n++;
+                }
+              }
+              rr /= n; gg /= n; bb /= n;
+              r = r * (1 - smooth * 0.7) + rr * smooth * 0.7;
+              g = g * (1 - smooth * 0.7) + gg * smooth * 0.7;
+              b = b * (1 - smooth * 0.7) + bb * smooth * 0.7;
+            }
+            if (whiten > 0) {
+              r = r + (255 - r) * whiten * 0.35;
+              g = g + (255 - g) * whiten * 0.32;
+              b = b + (255 - b) * whiten * 0.28;
+            }
+            data[i] = r;
+            data[i + 1] = g;
+            data[i + 2] = b;
+          }
+        }
+        ctx.putImageData(imgData, 0, 0);
+      }
+
+      currentDataUrl = processed.toDataURL("image/jpeg", 0.92);
+    };
+    img.src = rawDataUrl;
+  }
+
+  ["whiten", "slim", "chin", "smooth"].forEach(function (id) {
+    document.getElementById(id).addEventListener("input", function () {
+      if (mode === "preview" && rawDataUrl) applyBeauty();
+    });
+  });
+
+  function retake() {
+    rawDataUrl = null;
+    currentDataUrl = null;
+    mode = "live";
+    processed.style.display = "none";
+    processed.style.transform = "scaleX(-1)";
+    video.style.display = "block";
+    guideLabel.style.display = "block";
+    liveBtns.classList.remove("hidden");
+    previewBtns.classList.add("hidden");
+    btnConfirmUpload.classList.add("hidden");
+    pendingUpload = false;
+    drawGuide();
+    setStatus("請再拍一張");
+  }
+
+  function deleteShot() {
+    rawDataUrl = null;
+    currentDataUrl = null;
+    retake();
+    setStatus("已刪除目前照片");
+  }
+
+  function loadSaves() {
+    try {
+      return JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
+    } catch (e) {
+      return [];
+    }
+  }
+
+  function renderThumbs() {
+    const list = loadSaves();
+    const box = document.getElementById("thumbs");
+    box.innerHTML = "";
+    list.forEach(function (item, idx) {
+      const im = document.createElement("img");
+      im.src = item.dataUrl;
+      im.title = item.at || "";
+      im.onclick = function () {
+        rawDataUrl = item.dataUrl;
+        applyBeauty();
+        enterPreview();
+        setStatus("已讀取本機存檔 #" + (idx + 1));
+      };
+      box.appendChild(im);
+    });
+  }
+
+  function saveLocal() {
+    if (!currentDataUrl && !rawDataUrl) {
+      setStatus("沒有可存的照片", "err");
+      return;
+    }
+    const list = loadSaves();
+    list.unshift({
+      dataUrl: currentDataUrl || rawDataUrl,
+      at: new Date().toISOString(),
+    });
+    while (list.length > MAX_SAVES) list.pop();
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(list));
+    renderThumbs();
+    setStatus("已存到本機（最多 " + MAX_SAVES + " 張）", "ok");
+  }
+
+  function downloadPhone() {
+    const url = currentDataUrl || rawDataUrl;
+    if (!url) {
+      setStatus("沒有可下載的照片", "err");
+      return;
+    }
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "doll-photo-" + Date.now() + ".jpg";
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setStatus("已觸發下載（若沒出現，請用系統瀏覽器打開本頁）", "ok");
+  }
+
+  function initSb() {
+    const url = document.getElementById("supaUrl").value.trim();
+    const key = document.getElementById("supaKey").value.trim();
+    if (!url || !key) {
+      sb = null;
+      return;
+    }
+    sb = supabase.createClient(url, key);
+    refreshWho();
+  }
+
+  async function refreshWho() {
+    const who = document.getElementById("who");
+    if (!sb) {
+      who.textContent = "未設定 Supabase";
+      return;
+    }
+    const { data: { session } } = await sb.auth.getSession();
+    if (session && session.user) {
+      who.textContent = "已登入：" + (session.user.email || session.user.id);
+    } else {
+      who.textContent = "未登入";
+    }
+  }
+
+  async function doUpload() {
+    if (!sb) {
+      setStatus("請先填 Supabase 並登入", "err");
+      return;
+    }
+    const url = currentDataUrl || rawDataUrl;
+    if (!url) {
+      setStatus("沒有照片", "err");
+      return;
+    }
+    setStatus("上傳中…");
+    try {
+      const { data, error } = await sb.functions.invoke("create-doll-avatar", {
+        body: { image_base64: url, ext: "jpg" },
+      });
+      if (error) {
+        setStatus("失敗：" + (error.message || JSON.stringify(error)), "err");
+        return;
+      }
+      if (data && data.error) {
+        setStatus("失敗：" + data.error + (data.keys ? " | " + JSON.stringify(data.keys) : ""), "err");
+        return;
+      }
+      setStatus(
+        "成功｜" +
+          ((data && data.note) || "ok") +
+          (data && data.used_key ? "｜key=" + data.used_key : "") +
+          (data && data.doll_url ? "\n" + data.doll_url : ""),
+        "ok"
+      );
+      if (data && data.doll_url) {
+        // 可選：用回傳娃娃圖替換預覽
+      }
+    } catch (e) {
+      setStatus("例外：" + (e.message || e), "err");
+    }
+  }
+
+  document.getElementById("btnStart").onclick = startCamera;
+  document.getElementById("btnCapture").onclick = captureFrame;
+  document.getElementById("btnRetake").onclick = retake;
+  document.getElementById("btnDelete").onclick = deleteShot;
+  document.getElementById("btnSave").onclick = saveLocal;
+  document.getElementById("btnDownload").onclick = downloadPhone;
+
+  document.getElementById("btnUpload").onclick = function () {
+    pendingUpload = true;
+    btnConfirmUpload.classList.remove("hidden");
+    setStatus("請再按一次「確定上傳」以確認");
+  };
+  document.getElementById("btnConfirmUpload").onclick = function () {
+    if (!pendingUpload) return;
+    pendingUpload = false;
+    btnConfirmUpload.classList.add("hidden");
+    doUpload();
+  };
+
+  document.getElementById("btnSaveCfg").onclick = function () {
+    localStorage.setItem("doll_test_url", document.getElementById("supaUrl").value.trim());
+    localStorage.setItem("doll_test_key", document.getElementById("supaKey").value.trim());
+    initSb();
+    setStatus("設定已存", "ok");
+  };
+  document.getElementById("btnLogin").onclick = async function () {
+    if (!sb) initSb();
+    if (!sb) {
+      setStatus("請先填 URL 與 key", "err");
+      return;
+    }
+    const { error } = await sb.auth.signInWithPassword({
+      email: document.getElementById("email").value.trim(),
+      password: document.getElementById("password").value,
+    });
+    if (error) setStatus("登入失敗：" + error.message, "err");
+    else {
+      setStatus("登入成功", "ok");
+      refreshWho();
+    }
+  };
+  document.getElementById("btnLogout").onclick = async function () {
+    if (sb) await sb.auth.signOut();
+    refreshWho();
+    setStatus("已登出");
+  };
+  document.getElementById("btnClearSaves").onclick = function () {
+    localStorage.removeItem(STORAGE_KEY);
+    renderThumbs();
+    setStatus("本機存檔已清空");
+  };
+
+  // 載入設定
+  document.getElementById("supaUrl").value = localStorage.getItem("doll_test_url") || "";
+  document.getElementById("supaKey").value = localStorage.getItem("doll_test_key") || "";
+  initSb();
+  renderThumbs();
+  setStatus("請按「開啟相機」");
+})();
+  </script>
+</body>
+</html>
