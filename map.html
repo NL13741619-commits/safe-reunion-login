@@ -1248,10 +1248,10 @@ async function uploadLocation() {
   };
 
   try {
-    // 先查是否已有自己在此房間的定位（避免 duplicate key）
+    // 先查是否已有自己在此房間的定位（不依賴 id 欄位）
     const existing = await sb
       .from("location_shares")
-      .select("id")
+      .select("user_id,room_id")
       .eq("user_id", me.id)
       .eq("room_id", String(roomId))
       .maybeSingle();
