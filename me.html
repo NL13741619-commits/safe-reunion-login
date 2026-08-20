@@ -67,7 +67,18 @@ button{cursor:pointer}
   color:#ccc;
   font-size:22px;
 }
-
+.doll-cam-btn{
+  border:none;
+  background:#f0f0f0;
+  width:40px;
+  height:40px;
+  border-radius:10px;
+  font-size:20px;
+  flex-shrink:0;
+}
+.doll-cam-btn.hidden{
+  display:none !important;
+}
 .menu-group{
   background:white;
   margin-top:10px;
@@ -564,17 +575,21 @@ button{cursor:pointer}
 
 <div id="home-section" class="section active">
 
-  <div class="profile-header" onclick="openProfile()">
-    <div class="avatar" id="profile-avatar">👤</div>
+   <div class="profile-header">
+    <div class="avatar" id="profile-avatar" onclick="openProfile()">👤</div>
 
-    <div class="profile-info">
+    <div class="profile-info" onclick="openProfile()">
       <div class="profile-name" id="profile-name">使用者</div>
       <div class="profile-id" id="profile-id">點擊設定暱稱與頭像</div>
     </div>
 
-    <div class="profile-arrow">›</div>
-  </div>
+    <!-- 大頭娃娃相機：要隱藏就加 class="doll-cam-btn hidden" -->
+    <button type="button" id="btn-doll-camera" class="doll-cam-btn"
+      onclick="event.stopPropagation(); location.href='doll-camera.html'"
+      title="大頭娃娃拍照">📷</button>
 
+    <div class="profile-arrow" onclick="openProfile()">›</div>
+  </div>
   <div class="menu-group">
 
     <div class="menu-item" onclick="location.href='tools.html'">
