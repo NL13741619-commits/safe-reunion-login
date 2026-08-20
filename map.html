@@ -1248,21 +1248,49 @@ async function uploadLocation() {
   };
 
   try {
-    // 先試 upsert（需要 unique 約束 user_id + room_id）
-    let result = await sb
+    // 先查是否已有自己在此房間的定位（避免 duplicate key）
+    const existing = await sb
       .from("location_shares")
-      .upsert(payload, { onConflict: "user_id,room_id" });
+      .select("id")
+      .eq("user_id", me.id)
+      .eq("room_id", String(roomId))
+      .maybeSingle();
 
-    // 若 upsert 失敗，改用 delete + insert 備援
-    if (result.error) {
-      console.warn("upsert 失敗，改用 insert 備援：", result.error.message);
-      await sb
+    let result;
+
+    if (existing.error && existing.error.code !== "PGRST116") {
+      result = existing;
+    } else if (existing.data) {
+      // 已有 → 只更新座標與時間
+      result = await sb
         .from("location_shares")
-        .delete()
+        .update({
+          lat: payload.lat,
+          lng: payload.lng,
+          display_name: payload.display_name,
+          updated_at: payload.updated_at,
+          heading: payload.heading
+        })
         .eq("user_id", me.id)
         .eq("room_id", String(roomId));
-
+    } else {
+      // 沒有 → 新增
       result = await sb.from("location_shares").insert(payload);
+    }
+
+    // 若仍因競態撞到唯一鍵，再強制 update
+    if (result.error && /duplicate key|unique constraint/i.test(result.error.message || "")) {
+      result = await sb
+        .from("location_shares")
+        .update({
+          lat: payload.lat,
+          lng: payload.lng,
+          display_name: payload.display_name,
+          updated_at: payload.updated_at,
+          heading: payload.heading
+        })
+        .eq("user_id", me.id)
+        .eq("room_id", String(roomId));
     }
 
     if (result.error) {
@@ -1271,8 +1299,7 @@ async function uploadLocation() {
       console.error("定位上傳失敗：", result.error);
       if (shareStatus) {
         shareStatus.style.color = "#c62828";
-        shareStatus.textContent =
-          "上傳失敗（RLS/權限）：" + lastUploadError.slice(0, 60);
+        shareStatus.textContent = "上傳失敗：" + lastUploadError.slice(0, 70);
       }
       return;
     }
@@ -1284,7 +1311,11 @@ async function uploadLocation() {
       shareStatus.style.color = "#166534";
       shareStatus.textContent =
         "定位：分享中 ✓ " +
-        new Date().toLocaleTimeString("zh-TW", { hour: "2-digit", minute: "2-digit", second: "2-digit" });
+        new Date().toLocaleTimeString("zh-TW", {
+          hour: "2-digit",
+          minute: "2-digit",
+          second: "2-digit"
+        });
     }
   } catch (e) {
     lastUploadOk = false;
