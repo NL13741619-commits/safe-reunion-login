@@ -17,9 +17,7 @@
       border-bottom: 1px solid #eee; text-align: center;
       font-size: 17px; font-weight: 700;
     }
-    .status {
-      font-size: 12px; color: #888; text-align: center; padding: 8px;
-    }
+    .status { font-size: 12px; color: #888; text-align: center; padding: 8px; }
     .chat-item {
       display: flex; align-items: center; gap: 12px;
       background: #fff; padding: 12px 16px;
@@ -33,18 +31,12 @@
     }
     .avatar.group { background: #06C755; color: #fff; font-size: 14px; }
     .meta { flex: 1; min-width: 0; }
-    .row1 {
-      display: flex; justify-content: space-between; align-items: baseline; gap: 8px;
-    }
-    .title {
-      font-size: 16px; font-weight: 600;
-      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-    }
+    .row1 { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+    .title { font-size: 16px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .time { font-size: 11px; color: #999; flex-shrink: 0; }
-    .preview {
-      font-size: 13px; color: #888; margin-top: 4px;
-      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-    }
+    .preview { font-size: 13px; color: #888; margin-top: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .preview.live { color: #06C755; font-weight: 700; }
+    .preview.ended { color: #999; }
     .tabbar {
       position: fixed; left: 0; right: 0; bottom: 0;
       height: 58px; background: #fff; border-top: 1px solid #e8e8e8;
@@ -57,9 +49,7 @@
     }
     .tab.on { color: #06C755; font-weight: 600; }
     .tab .ico { font-size: 20px; line-height: 1.2; }
-    .empty {
-      text-align: center; color: #999; padding: 40px 20px; font-size: 14px;
-    }
+    .empty { text-align: center; color: #999; padding: 40px 20px; font-size: 14px; }
   </style>
 </head>
 <body>
@@ -69,183 +59,215 @@
 
   <div class="tabbar">
     <a class="tab on" href="chat.html"><div class="ico">💬</div>聊天</a>
-    <a class="tab" href="contacts.html"><div class="ico">👥</div>通訊錄</a>
-    <a class="tab" href="home.html"><div class="ico">🧭</div>發現</a>
+    <a class="tab" href="contacts.html"><div class="ico">📒</div>通訊錄</a>
+    <a class="tab" href="discover.html"><div class="ico">🧭</div>發現</a>
     <a class="tab" href="me.html"><div class="ico">👤</div>我</a>
   </div>
 
   <script>
   (function () {
-    var SUPABASE_URL = 'https://perfsipperncvjocznhl.supabase.co';
-    var SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBlcmZzaXBwZXJuY3Zqb2N6bmhsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODYwMTUyMzAsImV4cCI6MjEwMTU5MTIzMH0.I7vXkV247kAzRJ0RigDZt3Hzn8KJDyMc6o9E3oHJZoY';
-
+    var SUPABASE_URL = "https://perfsipperncvjocznhl.supabase.co";
+    var SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBlcmZzaXBwZXJuY3Zqb2N6bmhsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODYwMTUyMzAsImV4cCI6MjEwMTU5MTIzMH0.I7vXkV247kAzRJ0RigDZt3Hzn8KJDyMc6o9E3oHJZoY";
     var supabase = null;
     var me = null;
+    var items = [];
 
     function setStatus(t) {
-      document.getElementById('status').textContent = t;
+      document.getElementById("status").textContent = t;
     }
-
     function dmId(a, b) {
       var x = String(a), y = String(b);
-      return 'dm_' + (x < y ? x + '_' + y : y + '_' + x);
+      return "dm_" + (x < y ? x + "_" + y : y + "_" + x);
     }
-
     function previewText(row) {
-      if (!row) return '尚無訊息，點擊開始聊天';
-      if (row.recalled) return '有一則訊息已回收';
-      var k = row.kind || 'text';
-      var b = row.body || '';
-      if (k === 'image') return '[圖片]';
-      if (k === 'video') return '[影片]';
-      if (k === 'audio') return '[語音／音訊]';
-      if (k === 'sticker') return '[貼圖] ' + b;
-      if (k === 'file' || k === 'media' || k === 'camera') return '[檔案]';
-      return b || '…';
+      if (!row) return "尚無訊息，點擊開始聊天";
+      if (row.recalled) return "有一則訊息已回收";
+      var k = row.kind || "text";
+      var b = row.body || "";
+      if (k === "image") return "[圖片]";
+      if (k === "video") return "[影片]";
+      if (k === "audio") return "[語音／音訊]";
+      if (k === "sticker") return "[貼圖] " + b;
+      if (k === "file" || k === "media" || k === "camera") return "[檔案]";
+      if (k === "sos") return "🚨 SOS";
+      if (k === "call") return b || "[通話]";
+      return b || "…";
     }
-
     function timeText(iso) {
-      if (!iso) return '';
+      if (!iso) return "";
       var d = new Date(iso);
       var now = new Date();
-      var hh = d.getHours() + ':' + String(d.getMinutes()).padStart(2, '0');
+      var hh = d.getHours() + ":" + String(d.getMinutes()).padStart(2, "0");
       if (d.toDateString() === now.toDateString()) return hh;
-      return (d.getMonth() + 1) + '/' + d.getDate();
+      return (d.getMonth() + 1) + "/" + d.getDate();
     }
-
     function openRoom(id, name) {
-      location.href = 'room.html?id=' + encodeURIComponent(id) +
-        '&name=' + encodeURIComponent(name || '對話');
+      location.href = "room.html?id=" + encodeURIComponent(id) +
+        "&name=" + encodeURIComponent(name || "對話");
     }
-
     async function lastMessage(roomId) {
       var res = await supabase
-        .from('messages')
-        .select('body,kind,recalled,created_at')
-        .eq('room_id', roomId)
-        .order('created_at', { ascending: false })
+        .from("messages")
+        .select("body,kind,recalled,created_at")
+        .eq("room_id", roomId)
+        .order("created_at", { ascending: false })
         .limit(1)
         .maybeSingle();
       return res.data || null;
     }
 
+    function callPreview(call) {
+      if (!call) return null;
+      var st = String(call.status || "");
+      var mode = call.mode === "audio" ? "語音" : "視訊";
+      if (st === "ringing") return { text: "🔔 " + mode + "來電中", cls: "live" };
+      if (st === "active" || st === "accepted" || st === "in_call") {
+        return { text: "📹 " + mode + "聊天中", cls: "live" };
+      }
+      if (st === "ended" || st === "rejected" || st === "cancelled" || st === "missed") {
+        return { text: mode + "聊天結束", cls: "ended" };
+      }
+      return null;
+    }
+
     function renderItem(opt) {
-      // opt: { id, title, isGroup, last }
-      var div = document.createElement('div');
-      div.className = 'chat-item';
-      var avClass = opt.isGroup ? 'avatar group' : 'avatar';
-      var avText = opt.isGroup ? '群' : String(opt.title || '?').slice(0, 1);
+      var div = document.createElement("div");
+      div.className = "chat-item";
+      var avClass = opt.isGroup ? "avatar group" : "avatar";
+      var avText = opt.isGroup ? "群" : String(opt.title || "?").slice(0, 1);
       div.innerHTML =
-        '<div class="' + avClass + '">' + avText + '</div>' +
+        '<div class="' + avClass + '">' + avText + "</div>" +
         '<div class="meta">' +
           '<div class="row1">' +
             '<div class="title"></div>' +
             '<div class="time"></div>' +
-          '</div>' +
+          "</div>" +
           '<div class="preview"></div>' +
-        '</div>';
-      div.querySelector('.title').textContent = opt.title || '對話';
-      div.querySelector('.time').textContent = timeText(opt.last && opt.last.created_at);
-      div.querySelector('.preview').textContent = previewText(opt.last);
+        "</div>";
+      div.querySelector(".title").textContent = opt.title || "對話";
+      var cp = callPreview(opt.call);
+      var prev = div.querySelector(".preview");
+      if (cp) {
+        prev.textContent = cp.text;
+        prev.className = "preview " + cp.cls;
+        div.querySelector(".time").textContent = timeText(opt.call.updated_at || opt.call.created_at);
+      } else {
+        prev.textContent = previewText(opt.last);
+        div.querySelector(".time").textContent = timeText(opt.last && opt.last.created_at);
+      }
       div.onclick = function () { openRoom(opt.id, opt.title); };
       return div;
     }
 
-    async function boot() {
-      setStatus('檢查登入…');
-      if (!window.supabase) {
-        setStatus('套件載入失敗');
+    function paint() {
+      var list = document.getElementById("list");
+      list.innerHTML = "";
+      if (!items.length) {
+        list.innerHTML = '<div class="empty">尚無聊天<br>到通訊錄加好友或建立群組後，對話會出現在這裡</div>';
+        setStatus("尚無會話");
         return;
       }
+      items.forEach(function (it) { list.appendChild(renderItem(it)); });
+      setStatus("共 " + items.length + " 個聊天");
+    }
+
+    async function loadCalls() {
+      if (!supabase || !items.length) return;
+      try {
+        var ids = items.map(function (it) { return String(it.id); });
+        var res = await supabase
+          .from("call_sessions")
+          .select("id,room_id,callee_id,caller_id,status,mode,created_at,updated_at")
+          .in("status", ["ringing", "active", "accepted", "in_call", "ended", "rejected"])
+          .order("created_at", { ascending: false })
+          .limit(40);
+        var byRoom = {};
+        (res.data || []).forEach(function (c) {
+          var rid = c.room_id ? String(c.room_id) : "";
+          if (rid && ids.indexOf(rid) >= 0 && !byRoom[rid]) byRoom[rid] = c;
+        });
+        items.forEach(function (it) { it.call = byRoom[String(it.id)] || null; });
+        paint();
+      } catch (e) {}
+    }
+
+    async function boot() {
+      setStatus("檢查登入…");
+      if (!window.supabase) { setStatus("套件載入失敗"); return; }
       try {
         supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
         var sess = await supabase.auth.getSession();
         if (!sess.data.session) {
-          setStatus('未登入');
-          location.href = 'login.html';
+          setStatus("未登入");
+          location.href = "login.html";
           return;
         }
         me = sess.data.session.user;
-        setStatus('載入聊天列表…');
+        setStatus("載入聊天列表…");
+        items = [];
 
-        var items = [];
-        var seen = {};
-
-        // 1) 已接受好友 → 一律出現（即使還沒傳過訊）
-        var fr = await supabase
-          .from('friendships')
-          .select('*')
-          .eq('status', 'accepted')
-          .or('user_id.eq.' + me.id + ',friend_id.eq.' + me.id);
-
+        var fr = await supabase.from("friendships").select("*").eq("status", "accepted")
+          .or("user_id.eq." + me.id + ",friend_id.eq." + me.id);
         var friendIds = [];
         (fr.data || []).forEach(function (r) {
           var oid = r.user_id === me.id ? r.friend_id : r.user_id;
           if (friendIds.indexOf(oid) < 0) friendIds.push(oid);
         });
-
         var nameMap = {};
         if (friendIds.length) {
-          var pr = await supabase.from('profiles').select('*').in('id', friendIds);
+          var pr = await supabase.from("profiles").select("*").in("id", friendIds);
           (pr.data || []).forEach(function (p) {
-            nameMap[p.id] = p.nickname || p.username || '好友';
+            nameMap[p.id] = p.nickname || p.username || "好友";
           });
         }
-
         for (var i = 0; i < friendIds.length; i++) {
           var uid = friendIds[i];
           var rid = dmId(me.id, uid);
-          seen[rid] = true;
           var last = await lastMessage(rid);
           items.push({
             id: rid,
-            title: nameMap[uid] || '好友',
+            title: nameMap[uid] || "好友",
             isGroup: false,
             last: last,
+            call: null,
             sort: last ? new Date(last.created_at).getTime() : 0
           });
         }
 
-        // 2) 我的群組
-        var mems = await supabase.from('group_members').select('group_id').eq('user_id', me.id);
+        var mems = await supabase.from("group_members").select("group_id").eq("user_id", me.id);
         var gids = (mems.data || []).map(function (m) { return m.group_id; });
         if (gids.length) {
-          var gs = await supabase.from('chat_groups').select('*').in('id', gids);
+          var gs = await supabase.from("chat_groups").select("*").in("id", gids);
           for (var j = 0; j < (gs.data || []).length; j++) {
             var g = gs.data[j];
-            seen[g.id] = true;
             var glast = await lastMessage(g.id);
             items.push({
               id: g.id,
-              title: g.name || '群組',
+              title: g.name || "群組",
               isGroup: true,
               last: glast,
+              call: null,
               sort: glast ? new Date(glast.created_at).getTime() : 0
             });
           }
         }
 
-        
-
-        // 有訊息的排前面
         items.sort(function (a, b) { return b.sort - a.sort; });
+        paint();
+        await loadCalls();
 
-        var list = document.getElementById('list');
-        list.innerHTML = '';
-        if (!items.length) {
-          list.innerHTML = '<div class="empty">尚無聊天<br>到通訊錄加好友或建立群組後，對話會出現在這裡</div>';
-          setStatus('尚無會話');
-          return;
-        }
-        items.forEach(function (it) {
-          list.appendChild(renderItem(it));
-        });
-        setStatus('共 ' + items.length + ' 個聊天');
+        try {
+          supabase.channel("chat-call-status")
+            .on("postgres_changes", { event: "*", schema: "public", table: "call_sessions" }, function () {
+              loadCalls();
+            })
+            .subscribe();
+        } catch (e) {}
+        setInterval(loadCalls, 4000);
       } catch (e) {
-        setStatus('錯誤：' + (e && e.message ? e.message : e));
+        setStatus("錯誤：" + (e && e.message ? e.message : e));
       }
     }
-
     boot();
   })();
   </script>
