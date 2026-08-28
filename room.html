@@ -2511,7 +2511,49 @@ function rowToLocal(
   };
 
 }
-
+/* 貼進 room.html：rowToLocal 後面，並改 loadMessages / renderMessages 如說明 */
+async function loadSenderProfiles() {
+  var ids = [];
+  messages.forEach(function (m) {
+    if (m.userId && ids.indexOf(m.userId) < 0) ids.push(m.userId);
+  });
+  if (myUser && ids.indexOf(myUser.id) < 0) ids.push(myUser.id);
+  if (!ids.length || !supabase) return;
+  var res = await supabase
+    .from("profiles")
+    .select("id,nickname,username,avatar_url,avatar")
+    .in("id", ids);
+  (res.data || []).forEach(function (p) {
+    profileCache[p.id] = p;
+  });
+}
+function senderProfile(userId) {
+  return (userId && profileCache[userId]) || {};
+}
+function senderNameOf(m) {
+  var p = senderProfile(m.userId);
+  return p.nickname || p.username || m.senderName || "成員";
+}
+function senderAvatarUrl(m) {
+  var p = senderProfile(m.userId);
+  return p.avatar_url || p.avatar || "";
+}
+function appendAvatar(row, m) {
+  var url = senderAvatarUrl(m);
+  var name = senderNameOf(m);
+  if (url) {
+    var img = document.createElement("img");
+    img.className = "msg-avatar";
+    img.src = url;
+    img.alt = name;
+    row.appendChild(img);
+  } else {
+    var avatar = document.createElement("div");
+    avatar.className = "msg-avatar-default";
+    avatar.textContent = String(name).slice(0, 1);
+    row.appendChild(avatar);
+  }
+}
 
 /* =====================================================
    NOTIFY
@@ -2668,28 +2710,7 @@ function renderMessages() {
          對方頭像
       */
 
-      if (!m.mine) {
-
-        var avatar =
-          document.createElement(
-            'div'
-          );
-
-
-        avatar.className =
-          'msg-avatar-default';
-
-
-        avatar.textContent =
-          '👤';
-
-
-        row.appendChild(
-          avatar
-        );
-
-      }
-
+      if (!m.mine) appendAvatar(row, m);
 
       /*
          訊息泡泡
@@ -2758,8 +2779,8 @@ function renderMessages() {
             '<div class="msg-tag" ' +
             'style="color:#555;font-weight:600;margin-bottom:2px">' +
             escapeHtml(
-              m.senderName
-            ) +
+  senderNameOf(m)
+) +
             '</div>';
 
         }
@@ -3510,69 +3531,28 @@ async function sendPayload(
 
 async function loadMessages() {
 
-  setStatus(
-    '載入聊天訊息…'
-  );
+  setStatus("載入聊天訊息…");
 
+  console.log("目前 room_id:", roomId);
 
-  console.log(
-    '目前 room_id:',
-    roomId
-  );
-
-
-  var q =
-    await supabase
-      .from('messages')
-      .select('*')
-      .eq(
-        'room_id',
-        roomId
-      )
-      .order(
-        'created_at',
-        {
-          ascending:true
-        }
-      )
-      .limit(100);
-
+  var q = await supabase
+    .from("messages")
+    .select("*")
+    .eq("room_id", roomId)
+    .order("created_at", { ascending: true })
+    .limit(100);
 
   if (q.error) {
-
-    console.error(
-      'messages 載入錯誤:',
-      q.error
-    );
-
-
-    setStatus(
-      '訊息載入失敗：' +
-      q.error.message
-    );
-
-
+    console.error("messages 載入錯誤:", q.error);
+    setStatus("訊息載入失敗：" + q.error.message);
     return false;
-
   }
 
-
-  messages =
-    (
-      q.data ||
-      []
-    ).map(
-      rowToLocal
-    );
-
-
+  messages = (q.data || []).map(rowToLocal);
+  await loadSenderProfiles();
   renderMessages();
-
-
   return true;
-
 }
-
 
 /* =====================================================
    REALTIME
