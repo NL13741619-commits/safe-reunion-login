@@ -8153,6 +8153,31 @@ document.getElementById("profile-avatar").onclick = function (e) {
   var p = Store.get("profile") || {};
   if (p.avatar) setAvatarEl(p.avatar);
 })();
+  (function () {
+  var box = document.getElementById("profile-avatar");
+  var file = document.getElementById("avatar-file");
+  if (!box || !file) return;
+  var timer = null;
+
+  box.addEventListener("touchstart", function (e) {
+    timer = setTimeout(function () {
+      timer = null;
+      file.click();
+    }, 500);
+  }, { passive: true });
+
+  box.addEventListener("touchend", function () {
+    if (timer) { clearTimeout(timer); timer = null; }
+  });
+  box.addEventListener("touchmove", function () {
+    if (timer) { clearTimeout(timer); timer = null; }
+  });
+
+  box.addEventListener("contextmenu", function (e) {
+    e.preventDefault();
+    file.click();
+  });
+})();
 </script>
 </body>
 </html>
