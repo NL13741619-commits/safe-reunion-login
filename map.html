@@ -705,16 +705,25 @@ async function loadCameras() {
   }
 }
 
+function cameraMarkerIcon() {
+  return L.divIcon({
+    className: "pin-marker",
+    html: '<div class="pin-emoji" style="font-size:22px;transform:none;line-height:1">📷</div>',
+    iconSize: [28, 28],
+    iconAnchor: [14, 14],
+    popupAnchor: [0, -12]
+  });
+}
 function drawCameraMarkers() {
   cameraMarkers.forEach(function (m) {
     if (map.hasLayer(m)) map.removeLayer(m);
   });
   cameraMarkers = [];
   cameras.forEach(function (camera) {
-    const marker = L.circleMarker(
-      [camera.latitude, camera.longitude],
-      { radius: 7, weight: 2, color: "#e53935", fillColor: "transparent", fillOpacity: 0, opacity: 0.9 }
-    );
+    const marker = L.marker([camera.latitude, camera.longitude], {
+      icon: cameraMarkerIcon(),
+      zIndexOffset: 200
+    });
     marker.bindPopup(
       "<strong>📷 測速照相</strong><br>" +
       (camera.address || "未提供地址") +
