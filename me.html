@@ -612,7 +612,10 @@ button{cursor:pointer}
    <div class="profile-header">
     <div class="avatar" id="profile-avatar" title="長按更換頭像">👤</div>
 <input type="file" id="avatar-file" accept="image/*" style="display:none" />
-<div id="avatar-sheet" class="avatar-sheet">
+  <input type="file" id="avatar-cam" accept="image/*" capture="environment" style="display:none">
+
+
+     <div id="avatar-sheet" class="avatar-sheet">
   <div class="avatar-sheet-box">
     <div style="text-align:center;font-weight:700;margin-bottom:8px">更換頭像</div>
     <button type="button" onclick="avatarTakePhoto()">📷 拍照（大頭娃娃頁）</button>
@@ -8088,8 +8091,68 @@ console.log(
   }
 
 })();
-  
-</script>
+  function closeAvatarSheet(){
+  var s = document.getElementById("avatar-sheet");
+  if (s) s.classList.remove("show");
+}
+function openAvatarSheet(){
+  var s = document.getElementById("avatar-sheet");
+  if (s) s.classList.add("show");
+}
+function setAvatarEl(url){
+  var box = document.getElementById("profile-avatar");
+  if (!box) return;
+  if (!url){
+    box.innerHTML = "👤";
+    return;
+  }
+  box.innerHTML = '<img alt="" src="' + url + '">';
+}
+function saveAvatar(url){
+  var profile = Store.get("profile") || {};
+  profile.avatar = url || "";
+  Store.set("profile", profile);
+  setAvatarEl(url);
+  showToast(url ? "頭像已更新" : "已刪除頭像");
+}
+function readAvatarFile(input){
+  var file = input.files && input.files[0];
+  input.value = "";
+  if (!file) return;
+  var reader = new FileReader();
+  reader.onload = function () { saveAvatar(reader.result); };
+  reader.readAsDataURL(file);
+}
+function avatarTakePhoto(){
+  closeAvatarSheet();
+  var cam = document.getElementById("avatar-cam");
+  if (cam) cam.click();
+}
+function avatarPickAlbum(){
+  closeAvatarSheet();
+  var alb = document.getElementById("avatar-file");
+  if (alb) alb.click();
+}
+function avatarRemove(){
+  closeAvatarSheet();
+  saveAvatar("");
+}
 
+document.getElementById("avatar-file").onchange = function () {
+  readAvatarFile(this);
+};
+document.getElementById("avatar-cam").onchange = function () {
+  readAvatarFile(this);
+};
+document.getElementById("profile-avatar").onclick = function (e) {
+  e.stopPropagation();
+  openAvatarSheet();
+};
+
+(function () {
+  var p = Store.get("profile") || {};
+  if (p.avatar) setAvatarEl(p.avatar);
+})();
+</script>
 </body>
 </html>
