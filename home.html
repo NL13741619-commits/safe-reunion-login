@@ -1,0 +1,781 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="screen-orientation" content="portrait">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <title>安全團聚</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { width: 100%; overflow-x: hidden; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: #f5f5f5;
+      min-height: 100vh;
+      min-height: 100dvh;
+      padding-top: calc(56px + env(safe-area-inset-top, 0px));
+      padding-bottom: calc(58px + env(safe-area-inset-bottom, 0px));
+      color: #111;
+    }
+    .header {
+      background: #06C755; color: white;
+      padding: 14px 16px;
+      padding-top: calc(14px + env(safe-area-inset-top, 0px));
+      display: flex; justify-content: space-between; align-items: center;
+      position: fixed; top: 0; left: 0; right: 0; z-index: 2000;
+      min-height: calc(56px + env(safe-area-inset-top, 0px));
+    }
+    .header h1 {
+      font-size: 18px; font-weight: 700;
+      position: absolute; left: 50%; transform: translateX(-50%);
+      margin: 0; pointer-events: none; white-space: nowrap;
+    }
+    .header-right { display: flex; align-items: center; gap: 14px; font-size: 20px; margin-left: auto; }
+    .header-action, .home-header-btn {
+      cursor: pointer; width: 34px; height: 34px;
+      display: flex; align-items: center; justify-content: center;
+      border-radius: 50%; text-decoration: none; color: white;
+      user-select: none; -webkit-tap-highlight-color: transparent; flex-shrink: 0;
+    }
+    .home-header-btn { font-size: 20px; }
+    .header-action:active, .home-header-btn:active { background: rgba(255,255,255,0.18); transform: scale(0.94); }
+    .alert-banner {
+      background: #fdecea; border-left: 5px solid #e74c3c;
+      margin: 12px 12px 0; border-radius: 10px; padding: 14px 16px;
+      display: flex; gap: 12px; align-items: flex-start;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.06); position: relative;
+    }
+    .alert-icon { font-size: 22px; flex-shrink: 0; }
+    .alert-content { flex: 1; padding-right: 24px; }
+    .alert-title { font-size: 14px; font-weight: 700; color: #333; margin-bottom: 4px; }
+    .alert-text { font-size: 13px; color: #555; line-height: 1.4; }
+    .alert-actions { display: flex; gap: 10px; margin-top: 10px; align-items: center; flex-wrap: wrap; }
+    .alert-link { font-size: 13px; color: #06C755; font-weight: 600; text-decoration: none; }
+    .siren-btn { background: #e74c3c; color: white; border: none; border-radius: 8px; padding: 6px 12px; font-size: 12px; font-weight: 600; cursor: pointer; }
+    .alert-close { position: absolute; top: 10px; right: 12px; font-size: 18px; color: #999; cursor: pointer; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; }
+    .content { padding: 16px 12px; }
+    .empty-state { background: white; border-radius: 14px; padding: 32px 20px; text-align: center; margin-bottom: 16px; }
+    .empty-icon { width: 64px; height: 64px; border-radius: 50%; background: #e8f5e9; display: flex; align-items: center; justify-content: center; margin: 0 auto 12px; font-size: 28px; }
+    .empty-title { font-size: 16px; font-weight: 700; margin-bottom: 6px; }
+    .empty-desc { font-size: 13px; color: #888; margin-bottom: 16px; line-height: 1.4; }
+    .btn { display: inline-block; padding: 10px 20px; border-radius: 10px; font-size: 14px; font-weight: 600; border: none; cursor: pointer; }
+    .btn-primary { background: #06C755; color: white; }
+    .btn-outline { background: white; color: #06C755; border: 1px solid #06C755; margin-left: 8px; }
+    .sos-bar {
+      background: #e53935; color: white; border-radius: 12px;
+      padding: 17px 16px; text-align: center; font-size: 17px; font-weight: 800;
+      margin-bottom: 12px; box-shadow: 0 3px 10px rgba(229,57,53,0.25);
+      cursor: pointer; user-select: none; transition: transform 0.1s, opacity 0.1s;
+    }
+    .sos-bar:active { transform: scale(0.98); opacity: 0.9; }
+    .sos-bar.sending { background: #b71c1c; pointer-events: none; }
+    .home-map-wrap {
+      position: relative;
+      height: 48vh;
+      min-height: 280px;
+      margin: 0 0 16px;
+      border-radius: 14px;
+      overflow: hidden;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+      background: #dfe7ef;
+    }
+    #homeMap { width: 100%; height: 100%; }
+    .home-map-label {
+      position: absolute; top: 8px; left: 8px; z-index: 500;
+      background: rgba(255,255,255,.94); border-radius: 10px;
+      padding: 6px 10px; font-size: 12px; font-weight: 700; color: #1565c0;
+      box-shadow: 0 2px 8px rgba(0,0,0,.12);
+    }
+    .home-map-full {
+      position: absolute; top: 8px; right: 8px; z-index: 500;
+      background: #1565c0; color: #fff; border: none; border-radius: 10px;
+      padding: 6px 10px; font-size: 12px; font-weight: 700; text-decoration: none;
+      box-shadow: 0 2px 8px rgba(0,0,0,.18);
+    }
+    .leaflet-control-zoom { margin-top: 42px !important; }
+    .sos-group-panel { display: none; background: white; border-radius: 14px; padding: 16px; margin-bottom: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+    .sos-group-panel.show { display: block; }
+    .sos-group-title { font-size: 15px; font-weight: 700; margin-bottom: 6px; }
+    .sos-group-desc { font-size: 12px; color: #777; margin-bottom: 12px; line-height: 1.4; }
+    .sos-group-select { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 10px; background: white; font-size: 15px; color: #222; outline: none; }
+    .sos-group-select:focus { border-color: #06C755; }
+    .sos-group-actions { display: flex; gap: 8px; margin-top: 12px; }
+    .sos-group-actions button { flex: 1; margin: 0; }
+    .quick-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 16px; }
+    .quick-item { background: white; border-radius: 12px; padding: 14px 6px; text-align: center; text-decoration: none; color: inherit; }
+    .quick-icon { width: 44px; height: 44px; border-radius: 12px; background: #f0f0f0; display: flex; align-items: center; justify-content: center; margin: 0 auto 6px; font-size: 20px; }
+    .quick-label { font-size: 12px; color: #555; }
+    .tabbar {
+      position: fixed; left: 0; right: 0; bottom: 0;
+      height: calc(58px + env(safe-area-inset-bottom, 0px));
+      padding-bottom: env(safe-area-inset-bottom, 0px);
+      background: #fff; border-top: 1px solid #e8e8e8;
+      display: flex; z-index: 2000;
+    }
+    @media screen and (orientation: landscape) {
+      body::before {
+        content: "請直向使用安全團聚";
+        position: fixed; inset: 0; z-index: 99999; background: #06C755; color: #fff;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 18px; font-weight: 700; text-align: center; padding: 24px;
+      }
+    }
+    .tab { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 11px; color: #888; text-decoration: none; }
+    .tab.on { color: #06C755; font-weight: 600; }
+    .tab .ico { font-size: 20px; line-height: 1.2; }
+    .weather-card { background: white; border-radius: 14px; margin-bottom: 16px; padding: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+    .weather-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+    .weather-title { display: flex; align-items: center; gap: 8px; font-size: 15px; font-weight: 700; color: #222; }
+    .weather-location { font-size: 12px; color: #888; margin-top: 3px; font-weight: 400; }
+    .weather-update { font-size: 11px; color: #999; text-align: right; }
+    .weather-main { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+    .weather-current { display: flex; align-items: center; gap: 12px; min-width: 0; }
+    .weather-icon { width: 58px; height: 58px; border-radius: 16px; background: #e8f5e9; display: flex; align-items: center; justify-content: center; font-size: 30px; flex-shrink: 0; }
+    .weather-temp { font-size: 30px; font-weight: 700; color: #222; line-height: 1; }
+    .weather-description { font-size: 12px; color: #777; margin-top: 5px; }
+    .weather-details { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin-top: 14px; }
+    .weather-detail { background: #f7f7f7; border-radius: 10px; padding: 10px; }
+    .weather-detail-label { font-size: 11px; color: #888; margin-bottom: 4px; }
+    .weather-detail-value { font-size: 14px; font-weight: 700; color: #333; }
+    .weather-location-picker { display: flex; align-items: center; gap: 6px; margin-top: 5px; }
+    .weather-location-btn { display: inline-flex; align-items: center; gap: 5px; border: none; background: transparent; padding: 0; color: #06C755; font-size: 13px; font-weight: 600; cursor: pointer; }
+    .weather-location-arrow { font-size: 11px; color: #777; }
+    .weather-location-panel { display: none; margin-top: 12px; padding-top: 12px; border-top: 1px solid #eee; }
+    .weather-location-panel.show { display: block; }
+    .weather-location-search { width: 100%; height: 42px; padding: 0 12px; border: 1px solid #ddd; border-radius: 10px; background: #fff; color: #222; font-size: 14px; outline: none; }
+    .weather-location-results { margin-top: 8px; max-height: 220px; overflow-y: auto; border-radius: 10px; }
+    .weather-location-result { width: 100%; border: none; background: #f7f7f7; padding: 11px 12px; text-align: left; font-size: 13px; color: #333; cursor: pointer; border-bottom: 1px solid #eee; }
+    .weather-location-empty { text-align: center; padding: 12px; color: #999; font-size: 12px; }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <a class="home-header-btn" href="home.html" aria-label="首頁" title="首頁">🏠</a>
+    <h1>安全團聚</h1>
+    <div class="header-right">
+      <a class="header-action" href="safety-center.html" aria-label="安全中心" title="安全中心">📡</a>
+      <a class="header-action" href="settings.html" aria-label="設定" title="設定">⚙️</a>
+    </div>
+  </div>
+
+  <div class="alert-banner" id="alertBanner">
+    <div class="alert-icon">⚠️</div>
+    <div class="alert-content">
+      <div class="alert-title" id="alertTitle">警訊通知</div>
+      <div class="alert-text" id="alertText">載入警訊中…</div>
+      <div class="alert-actions">
+        <a class="alert-link" id="alertLink" href="#" target="_blank" rel="noopener" style="display:none;">查看詳細資訊 →</a>
+        <button type="button" class="siren-btn" id="btnSiren">▶ 播放警笛</button>
+      </div>
+    </div>
+    <div class="alert-close" id="btnCloseAlert">✕</div>
+  </div>
+
+  <div class="content">
+    <div class="weather-card" id="weatherCard">
+      <div class="weather-header">
+        <div>
+          <div class="weather-title">🌤️ 天氣</div>
+          <div class="weather-location-picker">
+            <button type="button" class="weather-location-btn" id="weatherLocationBtn">
+              📍 <span id="weatherLocation">台北市</span>
+              <span class="weather-location-arrow">▾</span>
+            </button>
+          </div>
+          <div class="weather-location-panel" id="weatherLocationPanel">
+            <input type="search" class="weather-location-search" id="weatherLocationSearch" placeholder="搜尋城市，例如：台南、北京、東京" autocomplete="off">
+            <div class="weather-location-results" id="weatherLocationResults">
+              <div class="weather-location-empty">請輸入城市名稱</div>
+            </div>
+          </div>
+        </div>
+        <div class="weather-update" id="weatherUpdated">載入中…</div>
+      </div>
+      <div class="weather-main" id="weatherMain">
+        <div class="weather-current">
+          <div class="weather-icon" id="weatherIcon">🌤️</div>
+          <div>
+            <div class="weather-temp" id="weatherTemp">--°C</div>
+            <div class="weather-description" id="weatherDescription">載入天氣資料…</div>
+          </div>
+        </div>
+      </div>
+      <div class="weather-details">
+        <div class="weather-detail"><div class="weather-detail-label">最高溫</div><div class="weather-detail-value" id="weatherMax">--°C</div></div>
+        <div class="weather-detail"><div class="weather-detail-label">最低溫</div><div class="weather-detail-value" id="weatherMin">--°C</div></div>
+        <div class="weather-detail"><div class="weather-detail-label">降雨機率</div><div class="weather-detail-value" id="weatherRain">--%</div></div>
+        <div class="weather-detail"><div class="weather-detail-label">資料狀態</div><div class="weather-detail-value" id="weatherStatus">載入中</div></div>
+      </div>
+    </div>
+
+    <div class="sos-bar" id="btnSos">🚨 緊急求助 SOS</div>
+
+    <div class="sos-group-panel" id="sosGroupPanel">
+      <div class="sos-group-title">🚨 選擇 SOS 發送群組</div>
+      <div class="sos-group-desc">請選擇要通知的群組。SOS 不會自動發送給你所有群組。</div>
+      <select id="sosGroupSelect" class="sos-group-select">
+        <option value="">載入群組中…</option>
+      </select>
+      <div class="sos-group-actions">
+        <button type="button" class="btn btn-outline" id="btnCancelSos">取消</button>
+        <button type="button" class="btn btn-primary" id="btnConfirmSos">🚨 發送 SOS</button>
+      </div>
+    </div>
+
+    <div class="home-map-wrap">
+      <div class="home-map-label">🗺️ 集合地圖</div>
+      <a class="home-map-full" href="map.html">全畫面</a>
+      <div id="homeMap"></div>
+    </div>
+
+    <div class="empty-state">
+      <div class="empty-icon">👥</div>
+      <div class="empty-title">尚未加入任何成員</div>
+      <div class="empty-desc">邀請家人或同學加入，即可即時掌握彼此安全狀態</div>
+      <button type="button" class="btn btn-primary" onclick="location.href='contacts.html'">去通訊錄</button>
+      <button type="button" class="btn btn-outline" onclick="location.href='contacts.html'">建立群組</button>
+    </div>
+
+    <div class="quick-row">
+      <a class="quick-item" id="adminQuickItem" href="speed-camera-admin.html" style="display:none;">
+        <div class="quick-icon">⚙️</div>
+        <div class="quick-label">後台管理員</div>
+      </a>
+      <a class="quick-item" href="map.html">
+        <div class="quick-icon">🗺️</div>
+        <div class="quick-label">地圖</div>
+      </a>
+      <a class="quick-item" href="chat.html">
+        <div class="quick-icon">💬</div>
+        <div class="quick-label">聊天</div>
+      </a>
+      <a class="quick-item" href="me.html">
+        <div class="quick-icon">📦</div>
+        <div class="quick-label">物資</div>
+      </a>
+      <a class="quick-item" href="chat.html">
+        <div class="quick-icon">📍</div>
+        <div class="quick-label">去聊天設集合</div>
+      </a>
+    </div>
+  </div>
+
+  <div class="tabbar">
+    <a class="tab" href="chat.html" aria-label="聊天">
+      <div class="ico">💬</div>
+      聊天
+    </a>
+    <a class="tab" href="contacts.html" aria-label="通訊錄">
+      <div class="ico">📒</div>
+      通訊錄
+    </a>
+    <a class="tab" href="discover.html" aria-label="發現">
+      <div class="ico">🧭</div>
+      發現
+    </a>
+    <a class="tab" href="me.html" aria-label="我">
+      <div class="ico">👤</div>
+      我
+    </a>
+  </div>
+
+  <script>
+  (function () {
+    var SUPABASE_URL = 'https://perfsipperncvjocznhl.supabase.co';
+    var SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBlcmZzaXBwZXJuY3Zqb2N6bmhsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODYwMTUyMzAsImV4cCI6MjEwMTU5MTIzMH0.I7vXkV247kAzRJ0RigDZt3Hzn8KJDyMc6o9E3oHJZoY';
+    var supabase = null;
+    function initSupabase() {
+      try {
+        if (window.supabase && window.supabase.createClient) {
+          supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+          return true;
+        }
+      } catch (e) { console.error('Supabase 初始化失敗：', e); }
+      return false;
+    }
+    initSupabase();
+
+    var MY_ADMIN_UID = '11dd26d5-42fb-4947-9676-119279b63dd8';
+    async function checkAdminButton() {
+      if (!supabase) return;
+      try {
+        var result = await supabase.auth.getUser();
+        var user = result.data && result.data.user;
+        if (user && user.id === MY_ADMIN_UID) {
+          var adminButton = document.getElementById('adminQuickItem');
+          if (adminButton) adminButton.style.display = 'block';
+        }
+      } catch (e) { console.error('管理員判斷失敗：', e); }
+    }
+    checkAdminButton();
+
+    var audioCtx = null, oscillator = null, gainNode = null, isPlaying = false, stopTimer = null, sweepTimer = null;
+    function stopSiren() {
+      if (stopTimer) { clearTimeout(stopTimer); stopTimer = null; }
+      if (sweepTimer) { clearInterval(sweepTimer); sweepTimer = null; }
+      if (oscillator) { try { oscillator.stop(); } catch (e) {} oscillator = null; }
+      isPlaying = false;
+      var btn = document.getElementById('btnSiren');
+      if (btn) btn.textContent = '▶ 播放警笛';
+    }
+    function playSiren() {
+      if (isPlaying) { stopSiren(); return; }
+      try { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); }
+      catch (e) { alert('此裝置不支援網頁音效'); return; }
+      function startTone() {
+        isPlaying = true;
+        var btn = document.getElementById('btnSiren');
+        if (btn) btn.textContent = '■ 停止警笛';
+        oscillator = audioCtx.createOscillator();
+        gainNode = audioCtx.createGain();
+        oscillator.type = 'sawtooth';
+        gainNode.gain.setValueAtTime(0.12, audioCtx.currentTime);
+        oscillator.connect(gainNode);
+        gainNode.connect(audioCtx.destination);
+        var t0 = audioCtx.currentTime;
+        oscillator.frequency.setValueAtTime(800, t0);
+        oscillator.frequency.linearRampToValueAtTime(1200, t0 + 0.5);
+        oscillator.frequency.linearRampToValueAtTime(800, t0 + 1);
+        oscillator.start();
+        var phase = 0;
+        sweepTimer = setInterval(function () {
+          if (!oscillator || !audioCtx) return;
+          phase += 1;
+          var now = audioCtx.currentTime;
+          try {
+            oscillator.frequency.cancelScheduledValues(now);
+            if (phase % 2 === 1) {
+              oscillator.frequency.setValueAtTime(800, now);
+              oscillator.frequency.linearRampToValueAtTime(1200, now + 0.5);
+            } else {
+              oscillator.frequency.setValueAtTime(1200, now);
+              oscillator.frequency.linearRampToValueAtTime(800, now + 0.5);
+            }
+          } catch (e) {}
+        }, 500);
+        stopTimer = setTimeout(stopSiren, 8000);
+      }
+      if (audioCtx.state === 'suspended') {
+        audioCtx.resume().then(startTone).catch(function () { alert('請再點一次播放警笛（需解除靜音）'); });
+      } else startTone();
+    }
+    function closeAlert() {
+      var banner = document.getElementById('alertBanner');
+      if (banner) banner.style.display = 'none';
+      stopSiren();
+    }
+    async function loadCurrentAlert() {
+      if (!supabase) return;
+      try {
+        var now = new Date().toISOString();
+        var result = await supabase.from('alerts').select('id,title,message,region,start_at,end_at,detail_url,siren_enabled,is_active').eq('is_active', true).lte('start_at', now).gte('end_at', now).order('start_at', { ascending: false }).limit(1);
+        if (result.error) { console.error('讀取 alerts 失敗：', result.error); return; }
+        var alerts = result.data || [];
+        var banner = document.getElementById('alertBanner');
+        if (!banner) return;
+        if (!alerts.length) { banner.style.display = 'none'; return; }
+        var alertData = alerts[0];
+        var title = document.getElementById('alertTitle');
+        if (title) title.textContent = alertData.title || '警訊通知';
+        var text = document.getElementById('alertText');
+        if (text) text.textContent = (alertData.region ? '【' + alertData.region + '】 ' : '') + (alertData.message || '');
+        var link = document.getElementById('alertLink');
+        if (link) {
+          if (alertData.detail_url) { link.href = alertData.detail_url; link.style.display = 'inline'; }
+          else link.style.display = 'none';
+        }
+        var sirenButton = document.getElementById('btnSiren');
+        if (sirenButton) {
+          if (alertData.siren_enabled) { sirenButton.style.display = 'inline-block'; sirenButton.onclick = playSiren; }
+          else sirenButton.style.display = 'none';
+        }
+        var closeButton = document.getElementById('btnCloseAlert');
+        if (closeButton) closeButton.onclick = closeAlert;
+        banner.style.display = 'flex';
+      } catch (e) { console.error('載入目前警訊失敗：', e); }
+    }
+    loadCurrentAlert();
+
+    var sosButton = document.getElementById('btnSos');
+    var sosGroupPanel = document.getElementById('sosGroupPanel');
+    var sosGroupSelect = document.getElementById('sosGroupSelect');
+    var btnCancelSos = document.getElementById('btnCancelSos');
+    var btnConfirmSos = document.getElementById('btnConfirmSos');
+    function cancelSOSSelection() { if (sosGroupPanel) sosGroupPanel.classList.remove('show'); }
+    if (btnCancelSos) btnCancelSos.onclick = cancelSOSSelection;
+
+    async function loadMySOSGroups() {
+      if (!supabase) throw new Error('Supabase 尚未初始化');
+      var sessionResult = await supabase.auth.getSession();
+      if (sessionResult.error) throw sessionResult.error;
+      var session = sessionResult.data && sessionResult.data.session;
+      if (!session) throw new Error('請先登入安全團聚。');
+      var user = session.user;
+      var memberResult = await supabase.from('group_members').select('group_id').eq('user_id', user.id);
+      if (memberResult.error) throw memberResult.error;
+      var memberRows = memberResult.data || [];
+      if (!memberRows.length) return [];
+      var groupIds = memberRows.map(function (row) { return row.group_id; }).filter(Boolean);
+      if (!groupIds.length) return [];
+      var groupResult = await supabase.from('chat_groups').select('id,name').in('id', groupIds);
+      if (groupResult.error) throw groupResult.error;
+      var groupRows = groupResult.data || [];
+      return groupIds.map(function (groupId) {
+        var group = groupRows.find(function (item) { return String(item.id) === String(groupId); });
+        return { id: groupId, name: group && group.name ? group.name : '未命名群組' };
+      });
+    }
+    async function openSOSGroupSelector() {
+      if (!sosGroupPanel) return;
+      sosGroupPanel.classList.add('show');
+      sosGroupSelect.innerHTML = '<option value="">載入群組中…</option>';
+      try {
+        var groups = await loadMySOSGroups();
+        if (!groups.length) {
+          sosGroupSelect.innerHTML = '<option value="">你目前沒有加入任何群組</option>';
+          alert('你目前沒有加入任何群組，因此無法發送 SOS。');
+          return;
+        }
+        sosGroupSelect.innerHTML = '<option value="">請選擇要發送的群組</option>';
+        groups.forEach(function (group) {
+          var option = document.createElement('option');
+          option.value = String(group.id);
+          option.textContent = group.name;
+          sosGroupSelect.appendChild(option);
+        });
+      } catch (error) {
+        console.error('取得 SOS 群組失敗：', error);
+        sosGroupSelect.innerHTML = '<option value="">無法取得群組</option>';
+        alert('無法取得你的群組。\n\n' + (error && error.message ? error.message : error));
+      }
+    }
+    async function sendSOS() {
+      if (!sosButton) return;
+      if (sosButton.classList.contains('sending')) return;
+      if (!supabase) { alert('目前無法連線到安全團聚伺服器，請稍後再試。'); return; }
+      await openSOSGroupSelector();
+    }
+    sosButton.onclick = sendSOS;
+
+    async function confirmSendSOS() {
+      if (!sosGroupSelect) return;
+      var selectedGroupId = sosGroupSelect.value;
+      if (!selectedGroupId) { alert('請先選擇要發送的 SOS 群組。'); return; }
+      if (sosButton.classList.contains('sending')) return;
+      sosButton.classList.add('sending');
+      sosButton.textContent = '📍 正在取得位置…';
+      try {
+        var sessionResult = await supabase.auth.getSession();
+        var session = sessionResult.data && sessionResult.data.session;
+        if (!session) throw new Error('請先登入安全團聚。');
+        var user = session.user;
+        if (!navigator.geolocation) throw new Error('此裝置不支援定位功能。');
+        navigator.geolocation.getCurrentPosition(async function (position) {
+          try {
+            var latitude = position.coords.latitude;
+            var longitude = position.coords.longitude;
+            sosButton.textContent = '🚨 正在發送 SOS…';
+            var displayName = (user.user_metadata && (user.user_metadata.nickname || user.user_metadata.username || user.user_metadata.full_name)) || (user.email ? user.email.split('@')[0] : '成員');
+            var sosMessage = '🚨 SOS 緊急求助！\n' + displayName + ' 正在求救。\n📍 緯度：' + latitude.toFixed(6) + '\n📍 經度：' + longitude.toFixed(6);
+            var eventResult = await supabase.from('sos_events').insert({ room_id: String(selectedGroupId), user_id: user.id, display_name: displayName, lat: latitude, lng: longitude, message: sosMessage }).select().single();
+            if (eventResult.error) throw eventResult.error;
+            var messageResult = await supabase.from('messages').insert({ room_id: String(selectedGroupId), user_id: user.id, sender_name: displayName, kind: 'sos', body: sosMessage, is_all: true });
+            if (messageResult.error) throw messageResult.error;
+            var selectedOption = sosGroupSelect.options[sosGroupSelect.selectedIndex];
+            var selectedGroupName = selectedOption ? selectedOption.textContent : '指定群組';
+            alert('🚨 SOS 已發送！\n\n發送群組：' + selectedGroupName + '\n\n群組成員可以在聊天中看到你的求救訊息。');
+            sosGroupPanel.classList.remove('show');
+            sosGroupSelect.value = '';
+            sosButton.classList.remove('sending');
+            sosButton.textContent = '🚨 緊急求助 SOS';
+          } catch (e) {
+            console.error('SOS 發送錯誤：', e);
+            alert('SOS 發送發生錯誤：\n' + (e && e.message ? e.message : e));
+            sosButton.classList.remove('sending');
+            sosButton.textContent = '🚨 緊急求助 SOS';
+          }
+        }, function (error) {
+          var message = '無法取得你的位置。';
+          if (error.code === 1) message += '\n請允許瀏覽器使用定位功能。';
+          else if (error.code === 2) message += '\n目前無法取得 GPS 位置。';
+          else if (error.code === 3) message += '\n定位逾時，請再試一次。';
+          alert(message);
+          sosButton.classList.remove('sending');
+          sosButton.textContent = '🚨 緊急求助 SOS';
+        }, { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 });
+      } catch (e) {
+        alert('SOS 發送發生錯誤：\n' + (e && e.message ? e.message : e));
+        sosButton.classList.remove('sending');
+        sosButton.textContent = '🚨 緊急求助 SOS';
+      }
+    }
+    if (btnConfirmSos) btnConfirmSos.onclick = confirmSendSOS;
+
+    async function loadWeather() {
+      try {
+        if (!supabase) throw new Error('Supabase 尚未初始化');
+        var result = await supabase.from('weather_data').select('*').order('forecast_date', { ascending: true }).limit(1);
+        if (result.error) {
+          document.getElementById('weatherStatus').textContent = '查詢錯誤：' + result.error.message;
+          return;
+        }
+        var rows = result.data || [];
+        if (!rows.length) { document.getElementById('weatherStatus').textContent = '目前沒有天氣資料'; return; }
+        var weather = rows[0];
+        document.getElementById('weatherLocation').textContent = weather.city_name || '未知地區';
+        document.getElementById('weatherTemp').textContent = weather.temp_max != null ? weather.temp_max + '°C' : '--°C';
+        document.getElementById('weatherMax').textContent = weather.temp_max != null ? weather.temp_max + '°C' : '--°C';
+        document.getElementById('weatherMin').textContent = weather.temp_min != null ? weather.temp_min + '°C' : '--°C';
+        document.getElementById('weatherRain').textContent = weather.rain_probability != null ? weather.rain_probability + '%' : '--%';
+        document.getElementById('weatherDescription').textContent = '天氣資料已載入';
+        document.getElementById('weatherStatus').textContent = '資料正常';
+        if (typeof refreshBeijingWeatherTime === 'function') refreshBeijingWeatherTime();
+      } catch (error) {
+        document.getElementById('weatherStatus').textContent = '讀取失敗';
+      }
+    }
+    setTimeout(loadWeather, 300);
+  })();
+  </script>
+
+  <script>
+  (function () {
+    var locationBtn = document.getElementById('weatherLocationBtn');
+    var locationPanel = document.getElementById('weatherLocationPanel');
+    var locationSearch = document.getElementById('weatherLocationSearch');
+    var locationResults = document.getElementById('weatherLocationResults');
+    if (locationBtn && locationPanel) {
+      locationBtn.onclick = function () {
+        locationPanel.classList.toggle('show');
+        if (locationPanel.classList.contains('show') && locationSearch) {
+          setTimeout(function () { locationSearch.focus(); }, 100);
+        }
+      };
+    }
+    var searchTimer = null;
+    if (locationSearch) {
+      locationSearch.addEventListener('input', function () {
+        var keyword = locationSearch.value.trim();
+        if (searchTimer) clearTimeout(searchTimer);
+        if (!keyword) {
+          locationResults.innerHTML = '<div class="weather-location-empty">請輸入城市名稱</div>';
+          return;
+        }
+        locationResults.innerHTML = '<div class="weather-location-empty">搜尋中…</div>';
+        searchTimer = setTimeout(function () { searchWeatherCities(keyword); }, 400);
+      });
+    }
+    async function searchWeatherCities(keyword) {
+      if (!locationResults) return;
+      try {
+        var url = 'https://nominatim.openstreetmap.org/search?format=jsonv2&q=' + encodeURIComponent(keyword) + '&limit=8&addressdetails=1&accept-language=zh-TW';
+        var response = await fetch(url, { headers: { Accept: 'application/json' } });
+        if (!response.ok) throw new Error('城市搜尋失敗');
+        var results = await response.json();
+        if (!results.length) {
+          locationResults.innerHTML = '<div class="weather-location-empty">找不到這個地點</div>';
+          return;
+        }
+        locationResults.innerHTML = '';
+        results.forEach(function (place) {
+          var button = document.createElement('button');
+          button.type = 'button';
+          button.className = 'weather-location-result';
+          button.textContent = place.display_name;
+          button.addEventListener('click', function () { selectWeatherLocation(place); });
+          locationResults.appendChild(button);
+        });
+      } catch (error) {
+        locationResults.innerHTML = '<div class="weather-location-empty">城市搜尋失敗，請稍後再試</div>';
+      }
+    }
+    function selectWeatherLocation(place) {
+      var address = place.address || {};
+      var cityName = address.city || address.town || address.municipality || address.county || address.state || place.name || place.display_name;
+      var latitude = parseFloat(place.lat);
+      var longitude = parseFloat(place.lon);
+      var locationElement = document.getElementById('weatherLocation');
+      if (locationElement) locationElement.textContent = cityName;
+      if (locationPanel) locationPanel.classList.remove('show');
+      if (locationSearch) locationSearch.value = '';
+      var statusElement = document.getElementById('weatherStatus');
+      var descriptionElement = document.getElementById('weatherDescription');
+      var updatedElement = document.getElementById('weatherUpdated');
+      if (statusElement) statusElement.textContent = '載入天氣中…';
+      if (descriptionElement) descriptionElement.textContent = '正在取得 ' + cityName + ' 的天氣資料…';
+      if (updatedElement) updatedElement.textContent = '更新中…';
+      if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) {
+        if (statusElement) statusElement.textContent = '地點資料錯誤';
+        return;
+      }
+      loadWeatherByLocation(cityName, latitude, longitude);
+    }
+  })();
+
+  function getWeatherDescription(code) {
+    if (code === 0) return { text: '晴天', icon: '☀️' };
+    if (code === 1 || code === 2) return { text: '晴時多雲', icon: '🌤️' };
+    if (code === 3) return { text: '陰天', icon: '☁️' };
+    if (code === 45 || code === 48) return { text: '有霧', icon: '🌫️' };
+    if (code === 51 || code === 53 || code === 55) return { text: '毛毛雨', icon: '🌦️' };
+    if (code === 56 || code === 57) return { text: '凍毛毛雨', icon: '🌧️' };
+    if (code === 61 || code === 63 || code === 65) return { text: '下雨', icon: '🌧️' };
+    if (code === 66 || code === 67) return { text: '凍雨', icon: '🌧️' };
+    if (code === 71 || code === 73 || code === 75) return { text: '下雪', icon: '🌨️' };
+    if (code === 77) return { text: '雪粒', icon: '🌨️' };
+    if (code === 80 || code === 81 || code === 82) return { text: '陣雨', icon: '🌦️' };
+    if (code === 85 || code === 86) return { text: '陣雪', icon: '🌨️' };
+    if (code === 95) return { text: '雷雨', icon: '⛈️' };
+    if (code === 96 || code === 99) return { text: '雷雨伴冰雹', icon: '⛈️' };
+    return { text: '天氣狀況未知', icon: '🌤️' };
+  }
+
+  async function loadWeatherByLocation(cityName, latitude, longitude) {
+    var statusElement = document.getElementById('weatherStatus');
+    var tempElement = document.getElementById('weatherTemp');
+    var maxElement = document.getElementById('weatherMax');
+    var minElement = document.getElementById('weatherMin');
+    var rainElement = document.getElementById('weatherRain');
+    var descriptionElement = document.getElementById('weatherDescription');
+    var updatedElement = document.getElementById('weatherUpdated');
+    var iconElement = document.getElementById('weatherIcon');
+    try {
+      if (statusElement) statusElement.textContent = '載入中…';
+      var url = 'https://api.open-meteo.com/v1/forecast?latitude=' + encodeURIComponent(latitude) + '&longitude=' + encodeURIComponent(longitude) + '&current=temperature_2m,weather_code&daily=temperature_2m_max,temperature_2m_min,precipitation_probability_max&forecast_days=1&timezone=auto';
+      var response = await fetch(url);
+      if (!response.ok) throw new Error('天氣服務回應失敗：' + response.status);
+      var data = await response.json();
+      var current = data.current || {};
+      var daily = data.daily || {};
+      if (tempElement && current.temperature_2m != null) tempElement.textContent = current.temperature_2m + '°C';
+      if (maxElement && daily.temperature_2m_max && daily.temperature_2m_max[0] != null) maxElement.textContent = daily.temperature_2m_max[0] + '°C';
+      if (minElement && daily.temperature_2m_min && daily.temperature_2m_min[0] != null) minElement.textContent = daily.temperature_2m_min[0] + '°C';
+      if (rainElement && daily.precipitation_probability_max && daily.precipitation_probability_max[0] != null) rainElement.textContent = daily.precipitation_probability_max[0] + '%';
+      var weatherInfo = getWeatherDescription(current.weather_code);
+      if (descriptionElement) descriptionElement.textContent = weatherInfo.text;
+      if (iconElement) iconElement.textContent = weatherInfo.icon;
+      if (updatedElement) updatedElement.textContent = '剛剛更新';
+      if (statusElement) statusElement.textContent = '資料正常';
+      try {
+        localStorage.setItem('safeReunionWeatherLocation', JSON.stringify({ cityName: cityName, latitude: latitude, longitude: longitude }));
+      } catch (e) {}
+    } catch (error) {
+      if (statusElement) statusElement.textContent = '讀取失敗';
+      if (descriptionElement) descriptionElement.textContent = '目前無法取得 ' + cityName + ' 的天氣資料';
+      if (updatedElement) updatedElement.textContent = '請稍後再試';
+    }
+  }
+  </script>
+
+  <script src="call-notify.js"></script>
+  <script>
+  (function lockPortrait() {
+    try {
+      if (screen.orientation && screen.orientation.lock) screen.orientation.lock('portrait').catch(function () {});
+      else if (screen.lockOrientation) screen.lockOrientation('portrait');
+      else if (screen.mozLockOrientation) screen.mozLockOrientation('portrait');
+      else if (screen.msLockOrientation) screen.msLockOrientation('portrait');
+    } catch (e) {}
+  })();
+
+  function pad2(n) { return (n < 10 ? '0' : '') + n; }
+  function getBeijingParts() {
+    var fmt = new Intl.DateTimeFormat('en-US', { timeZone: 'Asia/Shanghai', year: 'numeric', month: 'numeric', day: 'numeric', hour: 'numeric', minute: 'numeric', second: 'numeric', hour12: false });
+    var parts = fmt.formatToParts(new Date());
+    var o = {};
+    parts.forEach(function (p) { if (p.type !== 'literal') o[p.type] = p.value; });
+    return { y: parseInt(o.year, 10), m: parseInt(o.month, 10), d: parseInt(o.day, 10), hh: pad2(parseInt(o.hour, 10) % 24), mm: pad2(parseInt(o.minute, 10)), ss: pad2(parseInt(o.second, 10)) };
+  }
+  var LUNAR_INFO = [0x04bd8,0x04ae0,0x0a570,0x054d5,0x0d260,0x0d950,0x16554,0x056a0,0x09d50,0x0e968,0x06e40,0x0ea60,0x06d20,0x0a650,0x0a8d4,0x0a8d0,0x0d250,0x1d255,0x0b540,0x0d6a0,0x0ada2,0x049b0,0x0a774,0x0a4b0,0x0aa50,0x1b255,0x06d20,0x0ada0,0x14b63,0x09370,0x049f8,0x04970,0x064b0,0x168a6,0x05a50,0x06d40,0x1a5c4,0x0b620,0x09368,0x092e0,0x0c960,0x0d4a0,0x0da50,0x07552,0x056a0,0x0abb7,0x025d0,0x092d0,0x0cab5,0x0a950,0x0b4a0,0x0baa4,0x0ad50,0x055d9,0x04ba0,0x0a5b0,0x15176,0x052b0,0x0a930,0x07954,0x06aa0,0x0ad50,0x05b52,0x04b60,0x0a6e6,0x0a4e0,0x0d260,0x0ea65,0x0d530,0x05aa0,0x076a3,0x096d0,0x04afb,0x04ad0,0x0a4d0,0x1d0b6,0x0d250,0x0d520,0x0dd45,0x0b5a0,0x056d0,0x055b2,0x049b0,0x0a577,0x0a4b0,0x0aa50,0x1b255,0x06d20,0x0ada0];
+  var LUNAR_MONTHS = ['正','二','三','四','五','六','七','八','九','十','冬','臘'];
+  var LUNAR_DAYS = ['初一','初二','初三','初四','初五','初六','初七','初八','初九','初十','十一','十二','十三','十四','十五','十六','十七','十八','十九','二十','廿一','廿二','廿三','廿四','廿五','廿六','廿七','廿八','廿九','三十'];
+  function lunarYearDays(y) {
+    var i, sum = 348, info = LUNAR_INFO[y - 1900];
+    if (info == null) return 365;
+    for (i = 0x8000; i > 0x8; i >>= 1) sum += (info & i) ? 1 : 0;
+    return sum + leapDays(y);
+  }
+  function leapMonth(y) { var info = LUNAR_INFO[y - 1900]; return info ? (info & 0xf) : 0; }
+  function leapDays(y) { if (leapMonth(y)) return (LUNAR_INFO[y - 1900] & 0x10000) ? 30 : 29; return 0; }
+  function monthDays(y, m) { return (LUNAR_INFO[y - 1900] & (0x10000 >> m)) ? 30 : 29; }
+  function solarToLunar(y, m, d) {
+    var base = new Date(1900, 0, 31);
+    var obj = new Date(y, m - 1, d);
+    var offset = Math.floor((obj - base) / 86400000);
+    var i, temp = 0, year, month, day, isLeap = false;
+    for (i = 1900; i < 2101 && offset > 0; i++) { temp = lunarYearDays(i); offset -= temp; }
+    if (offset < 0) { offset += temp; i--; }
+    year = i;
+    var leap = leapMonth(year);
+    for (i = 1; i < 13 && offset > 0; i++) {
+      if (leap > 0 && i === (leap + 1) && !isLeap) { --i; isLeap = true; temp = leapDays(year); }
+      else temp = monthDays(year, i);
+      if (isLeap && i === (leap + 1)) isLeap = false;
+      offset -= temp;
+    }
+    if (offset === 0 && leap > 0 && i === leap + 1) {
+      if (isLeap) isLeap = false;
+      else { isLeap = true; --i; }
+    }
+    if (offset < 0) { offset += temp; --i; }
+    month = i; day = offset + 1;
+    return (isLeap ? '閏' : '') + LUNAR_MONTHS[month - 1] + '月' + (LUNAR_DAYS[day - 1] || (day + '日'));
+  }
+  function formatBeijingDateTime() {
+    var p = getBeijingParts();
+    return p.y + '/' + p.m + '/' + p.d + ' ' + p.hh + ':' + p.mm + ':' + p.ss + '\n農曆' + solarToLunar(p.y, p.m, p.d);
+  }
+  function refreshBeijingWeatherTime() {
+    var el = document.getElementById('weatherUpdated');
+    if (!el) return;
+    el.style.whiteSpace = 'pre-line';
+    el.style.textAlign = 'right';
+    el.style.lineHeight = '1.35';
+    el.style.fontSize = '11px';
+    el.textContent = formatBeijingDateTime();
+  }
+  function startBeijingClock() {
+    refreshBeijingWeatherTime();
+    if (window._beijingClockTimer) clearInterval(window._beijingClockTimer);
+    window._beijingClockTimer = setInterval(refreshBeijingWeatherTime, 1000);
+  }
+  startBeijingClock();
+  </script>
+  <script>
+  (function initHomeMap() {
+    if (!window.L || !document.getElementById('homeMap')) return;
+    var map = L.map('homeMap', { zoomControl: true, attributionControl: false }).setView([23.97, 121.0], 8);
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+      maxZoom: 19, subdomains: 'abcd'
+    }).addTo(map);
+    setTimeout(function () { try { map.invalidateSize(); } catch (e) {} }, 200);
+    setTimeout(function () { try { map.invalidateSize(); } catch (e) {} }, 800);
+
+    var meMarker = null;
+    function setMe(lat, lng, heading) {
+      var deg = Number.isFinite(heading) ? heading : 0;
+      var html = '<div style="width:36px;height:36px;display:flex;align-items:center;justify-content:center;transform:rotate(' + deg + 'deg);filter:drop-shadow(0 1px 3px rgba(0,0,0,.45));"><div style="width:0;height:0;border-left:10px solid transparent;border-right:10px solid transparent;border-bottom:22px solid #06C755;"></div></div>';
+      var icon = L.divIcon({ className: '', html: html, iconSize: [36, 36], iconAnchor: [18, 18] });
+      if (!meMarker) {
+        meMarker = L.marker([lat, lng], { icon: icon, zIndexOffset: 1000 }).addTo(map).bindPopup('我的位置');
+        map.setView([lat, lng], 15);
+      } else {
+        meMarker.setLatLng([lat, lng]);
+        meMarker.setIcon(icon);
+      }
+    }
+
+    if (navigator.geolocation) {
+      navigator.geolocation.watchPosition(function (pos) {
+        if (!pos || !pos.coords) return;
+        setMe(pos.coords.latitude, pos.coords.longitude, pos.coords.heading);
+      }, function () {}, { enableHighAccuracy: true, maximumAge: 3000, timeout: 12000 });
+    }
+  })();
+  </script>
+</body>
+</html>
