@@ -902,9 +902,6 @@ function onPosition(position) {
   }
 
   // 導航模式跟隨（Uber-like）
-  if (navigationOn) {
-    map.setView([myLat, myLng], Math.max(map.getZoom(), 16), { animate: true });
-  }
 
   if (navigationOn && camerasLoaded) {
     showCameraWarning(findNearestRelevantCamera(myLat, myLng, heading));
@@ -1512,12 +1509,7 @@ async function loadPeers() {
     }
 
     // 有其他成員時，自動把地圖縮放到大家都能看到
-    if (boundsPts.length >= 2 && !navigationOn) {
-      try {
-        map.fitBounds(boundsPts, { padding: [60, 60], maxZoom: 16 });
-      } catch (e) {}
-    }
-
+    
     scheduleRouteUpdate();
   } catch (e) {
     console.error("成員定位例外：", e);
