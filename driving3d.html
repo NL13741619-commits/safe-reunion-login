@@ -8,7 +8,7 @@
   content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover"
 >
 
-<title>安全團聚｜3D 駕駛導航</title>
+<title>安全團聚｜3D 駕駛模式 V4.1</title>
 
 <link
   rel="stylesheet"
@@ -16,7 +16,6 @@
 >
 
 <style>
-
 * {
   box-sizing: border-box;
 }
@@ -24,15 +23,15 @@
 html,
 body,
 #map {
-  margin: 0;
   width: 100%;
   height: 100%;
+  margin: 0;
+  padding: 0;
 }
 
 body {
   overflow: hidden;
-  background: #111;
-
+  background: #101010;
   font-family:
     -apple-system,
     BlinkMacSystemFont,
@@ -40,582 +39,541 @@ body {
     sans-serif;
 }
 
-
-/* =========================================================
+/* =====================================================
    地圖
-========================================================= */
+===================================================== */
 
 #map {
   position: absolute;
   inset: 0;
 }
 
-
-/* =========================================================
-   返回
-========================================================= */
+/* =====================================================
+   返回地圖
+===================================================== */
 
 #backButton {
-
   position: absolute;
+  z-index: 9999;
 
-  z-index: 10000;
-
-  top:
-    calc(
-      env(safe-area-inset-top, 0px)
-      + 10px
-    );
-
+  top: calc(env(safe-area-inset-top) + 10px);
   left: 10px;
 
   min-width: 78px;
   min-height: 44px;
 
+  padding: 8px 12px;
+
   border: 0;
   border-radius: 12px;
 
   background: rgba(255,255,255,.96);
-
-  color: #111;
+  color: #222;
 
   font-size: 14px;
   font-weight: 900;
 
   box-shadow:
-    0 4px 14px rgba(0,0,0,.45);
+    0 3px 12px rgba(0,0,0,.4);
 }
 
-
-/* =========================================================
+/* =====================================================
    頂部導航
-========================================================= */
+===================================================== */
 
 #navPanel {
-
   position: absolute;
+  z-index: 500;
 
-  z-index: 9000;
+  top: calc(env(safe-area-inset-top) + 10px);
 
-  top:
-    calc(
-      env(safe-area-inset-top, 0px)
-      + 10px
-    );
-
-  left: 95px;
+  left: 96px;
   right: 10px;
-
-  display: flex;
-
-  justify-content: center;
 
   pointer-events: none;
 }
 
-
 #navCard {
+  width: fit-content;
+  max-width: 100%;
 
-  min-width: 205px;
+  margin: 0 auto;
 
-  max-width: calc(100vw - 115px);
-
-  padding: 9px 15px;
+  padding: 8px 18px;
 
   border-radius: 14px;
 
-  background:
-    rgba(18,128,60,.97);
-
+  background: rgba(19,126,59,.97);
   color: white;
 
   text-align: center;
 
   box-shadow:
-    0 4px 16px rgba(0,0,0,.42);
+    0 4px 16px rgba(0,0,0,.4);
 }
 
-
 #turnIcon {
-
-  font-size: 29px;
-
+  font-size: 30px;
   line-height: 1;
 
   font-weight: 900;
 }
 
-
-#turnText {
-
-  margin-top: 2px;
-
-  font-size: 13px;
-
-  font-weight: 800;
-}
-
-
 #roadName {
+  margin-top: 3px;
 
-  margin-top: 2px;
+  max-width: 260px;
 
-  font-size: 16px;
-
-  font-weight: 900;
+  font-size: 15px;
+  font-weight: 800;
 
   white-space: nowrap;
-
   overflow: hidden;
-
   text-overflow: ellipsis;
 }
 
-
 #distanceText {
+  margin-top: 3px;
 
-  margin-top: 2px;
-
-  font-size: 12px;
-
-  opacity: .95;
+  font-size: 13px;
 }
 
-
-/* =========================================================
+/* =====================================================
    車輛
-========================================================= */
+===================================================== */
 
 #vehicle {
-
   position: absolute;
 
-  z-index: 8000;
+  z-index: 900;
 
   left: 50%;
+  bottom: 14%;
 
-  bottom: 19%;
-
-  width: 48px;
-  height: 74px;
+  width: 52px;
+  height: 82px;
 
   transform:
     translateX(-50%);
 
   pointer-events: none;
-}
 
+  filter:
+    drop-shadow(
+      0 5px 8px rgba(0,0,0,.45)
+    );
+}
 
 #vehicleBody {
-
   position: absolute;
 
-  left: 7px;
-  top: 5px;
+  left: 6px;
+  top: 4px;
 
-  width: 34px;
-  height: 60px;
+  width: 40px;
+  height: 72px;
 
   border-radius:
-    16px
-    16px
-    9px
-    9px;
+    18px
+    18px
+    11px
+    11px;
 
   background:
     linear-gradient(
-      90deg,
-      #049c43,
-      #06c755,
-      #049c43
+      to bottom,
+      #18d66c 0%,
+      #06b957 65%,
+      #07883e 100%
     );
 
-  border:
-    3px solid white;
-
-  box-shadow:
-    0 5px 12px rgba(0,0,0,.55);
+  border: 3px solid white;
 }
 
-
 #vehicleGlass {
-
   position: absolute;
 
-  left: 14px;
+  left: 13px;
   top: 12px;
 
-  width: 20px;
-  height: 20px;
+  width: 26px;
+  height: 26px;
 
-  border-radius: 7px;
+  border-radius:
+    9px
+    9px
+    6px
+    6px;
 
   background:
     linear-gradient(
-      145deg,
-      #e9fbff,
-      #83b6c2
+      135deg,
+      #eefaff,
+      #a9d5e1
     );
 
   border:
     2px solid rgba(255,255,255,.9);
 }
 
-
-#vehicleArrow {
-
+#vehicleLightLeft,
+#vehicleLightRight {
   position: absolute;
 
-  left: 18px;
-  top: -4px;
+  top: 62px;
 
-  width: 0;
-  height: 0;
-
-  border-left:
-    6px solid transparent;
-
-  border-right:
-    6px solid transparent;
-
-  border-bottom:
-    12px solid white;
-}
-
-
-/* =========================================================
-   速度
-========================================================= */
-
-#speedCircle {
-
-  position: absolute;
-
-  z-index: 9000;
-
-  left: 14px;
-
-  bottom:
-    calc(
-      env(safe-area-inset-bottom, 0px)
-      + 17px
-    );
-
-  width: 91px;
-  height: 91px;
+  width: 7px;
+  height: 7px;
 
   border-radius: 50%;
 
-  background: white;
-
-  border:
-    5px solid #16803c;
+  background: #fff;
 
   box-shadow:
-    0 4px 16px rgba(0,0,0,.5);
-
-  display: flex;
-
-  flex-direction: column;
-
-  align-items: center;
-
-  justify-content: center;
+    0 0 6px rgba(255,255,255,.9);
 }
 
-
-#speedValue {
-
-  font-size: 31px;
-
-  line-height: 1;
-
-  font-weight: 900;
+#vehicleLightLeft {
+  left: 11px;
 }
 
-
-#speedUnit {
-
-  margin-top: 5px;
-
-  font-size: 11px;
-
-  color: #555;
-}
-
-
-/* =========================================================
-   測速照相警示
-========================================================= */
-
-#cameraWarning {
-
-  position: absolute;
-
-  z-index: 9500;
-
-  left: 50%;
-
-  bottom:
-    calc(
-      env(safe-area-inset-bottom, 0px)
-      + 122px
-    );
-
-  transform:
-    translateX(-50%);
-
-  display: none;
-
-  min-width: 220px;
-
-  padding: 9px 14px;
-
-  border-radius: 12px;
-
-  background:
-    rgba(205,40,40,.96);
-
-  color: white;
-
-  text-align: center;
-
-  font-weight: 900;
-
-  box-shadow:
-    0 4px 14px rgba(0,0,0,.45);
-}
-
-
-#cameraWarning.show {
-
-  display: block;
-}
-
-
-/* =========================================================
-   GPS 狀態
-========================================================= */
-
-#gpsStatus {
-
-  position: absolute;
-
-  z-index: 9000;
-
-  left: 112px;
-
-  right: 112px;
-
-  bottom:
-    calc(
-      env(safe-area-inset-bottom, 0px)
-      + 22px
-    );
-
-  padding: 7px 9px;
-
-  border-radius: 9px;
-
-  background:
-    rgba(0,0,0,.68);
-
-  color: white;
-
-  font-size: 11px;
-
-  text-align: center;
-
-  pointer-events: none;
-}
-
-
-/* =========================================================
-   控制按鈕
-========================================================= */
-
-#controls {
-
-  position: absolute;
-
-  z-index: 10000;
-
+#vehicleLightRight {
   right: 11px;
-
-  bottom:
-    calc(
-      env(safe-area-inset-bottom, 0px)
-      + 17px
-    );
-
-  display: flex;
-
-  flex-direction: column;
-
-  gap: 8px;
 }
 
+/* =====================================================
+   駕駛道路視野漸層
+===================================================== */
 
-.controlButton {
-
-  min-width: 105px;
-
-  min-height: 44px;
-
-  padding: 8px 12px;
-
-  border: 0;
-
-  border-radius: 11px;
-
-  background:
-    rgba(255,255,255,.96);
-
-  color: #111;
-
-  font-size: 13px;
-
-  font-weight: 900;
-
-  box-shadow:
-    0 3px 12px rgba(0,0,0,.42);
-}
-
-
-.controlButton:active {
-
-  transform:
-    scale(.96);
-}
-
-
-/* =========================================================
-   路線光暈
-========================================================= */
-
-#roadGlow {
-
+#roadFade {
   position: absolute;
 
-  z-index: 100;
+  z-index: 300;
 
-  left: 50%;
-
+  left: 0;
+  right: 0;
   bottom: 0;
 
-  width: 100%;
-
-  height: 50%;
-
-  transform:
-    translateX(-50%);
+  height: 38%;
 
   pointer-events: none;
 
   background:
     linear-gradient(
       to top,
-      rgba(255,255,255,.10),
-      rgba(255,255,255,0)
+      rgba(0,0,0,.38),
+      rgba(0,0,0,.12) 40%,
+      rgba(0,0,0,0)
     );
 }
 
+/* =====================================================
+   速度
+===================================================== */
 
-/* =========================================================
-   載入
-========================================================= */
-
-#loading {
-
+#speedPanel {
   position: absolute;
 
-  z-index: 20000;
+  z-index: 1000;
+
+  left: 14px;
+  bottom:
+    calc(
+      env(safe-area-inset-bottom) + 18px
+    );
+
+  width: 92px;
+  height: 92px;
+
+  border-radius: 50%;
+
+  background: white;
+
+  border: 5px solid #16803c;
+
+  box-shadow:
+    0 4px 16px rgba(0,0,0,.5);
+
+  display: flex;
+  flex-direction: column;
+
+  justify-content: center;
+  align-items: center;
+}
+
+#speedValue {
+  font-size: 31px;
+  line-height: 1;
+
+  font-weight: 900;
+}
+
+#speedUnit {
+  margin-top: 4px;
+
+  font-size: 11px;
+
+  color: #555;
+}
+
+/* =====================================================
+   GPS 狀態
+===================================================== */
+
+#gpsStatus {
+  position: absolute;
+
+  z-index: 1000;
+
+  left: 116px;
+  right: 116px;
+
+  bottom:
+    calc(
+      env(safe-area-inset-bottom) + 23px
+    );
+
+  padding: 8px 10px;
+
+  border-radius: 9px;
+
+  background:
+    rgba(0,0,0,.72);
+
+  color: white;
+
+  text-align: center;
+
+  font-size: 12px;
+}
+
+/* =====================================================
+   控制
+===================================================== */
+
+#controls {
+  position: absolute;
+
+  z-index: 1100;
+
+  right: 12px;
+
+  bottom:
+    calc(
+      env(safe-area-inset-bottom) + 18px
+    );
+
+  display: flex;
+  flex-direction: column;
+
+  gap: 8px;
+}
+
+.controlButton {
+  min-width: 104px;
+  min-height: 45px;
+
+  padding: 8px 12px;
+
+  border: 0;
+  border-radius: 12px;
+
+  background: white;
+  color: #222;
+
+  font-size: 14px;
+  font-weight: 800;
+
+  box-shadow:
+    0 3px 12px rgba(0,0,0,.4);
+}
+
+.controlButton:active {
+  transform: scale(.96);
+}
+
+/* =====================================================
+   測速照相
+===================================================== */
+
+#cameraWarning {
+  position: absolute;
+
+  z-index: 1300;
+
+  left: 50%;
+  top: 18%;
+
+  transform:
+    translateX(-50%);
+
+  display: none;
+
+  min-width: 210px;
+
+  padding: 10px 16px;
+
+  border-radius: 12px;
+
+  background:
+    rgba(210,55,35,.96);
+
+  color: white;
+
+  text-align: center;
+
+  font-weight: 900;
+
+  box-shadow:
+    0 4px 16px rgba(0,0,0,.45);
+}
+
+/* =====================================================
+   啟動
+===================================================== */
+
+#loading {
+  position: absolute;
+
+  z-index: 5000;
 
   inset: 0;
 
   display: flex;
 
+  justify-content: center;
   align-items: center;
 
-  justify-content: center;
-
   background:
-    rgba(0,0,0,.78);
+    rgba(0,0,0,.62);
 
   color: white;
 
-  font-size: 16px;
-
+  font-size: 17px;
   font-weight: 800;
 
   text-align: center;
-
-  padding: 30px;
 }
 
+#loadingBox {
+  max-width: 300px;
 
-#loading.hidden {
+  padding: 20px 24px;
 
-  display: none;
+  border-radius: 16px;
+
+  background:
+    rgba(20,20,20,.94);
+
+  box-shadow:
+    0 6px 25px rgba(0,0,0,.5);
 }
 
+/* =====================================================
+   駕駛模式提示
+===================================================== */
+
+#driveModeBadge {
+  position: absolute;
+
+  z-index: 1000;
+
+  left: 50%;
+
+  top:
+    calc(
+      env(safe-area-inset-top) + 78px
+    );
+
+  transform:
+    translateX(-50%);
+
+  padding: 6px 12px;
+
+  border-radius: 999px;
+
+  background:
+    rgba(0,0,0,.62);
+
+  color: white;
+
+  font-size: 11px;
+  font-weight: 800;
+
+  pointer-events: none;
+}
+
+/* =====================================================
+   小螢幕
+===================================================== */
+
+@media (max-width: 430px) {
+
+  #gpsStatus {
+    left: 112px;
+    right: 112px;
+
+    font-size: 11px;
+  }
+
+  #vehicle {
+    bottom: 13%;
+  }
+
+  #navCard {
+    padding-left: 14px;
+    padding-right: 14px;
+  }
+
+}
 </style>
 </head>
-
 
 <body>
 
 <div id="map"></div>
 
-
-<button
-  id="backButton"
-  type="button"
->
-← 地圖
+<button id="backButton" type="button">
+  ← 地圖
 </button>
-
 
 <div id="navPanel">
 
   <div id="navCard">
 
-    <div id="turnIcon">
-      ↑
-    </div>
-
-    <div id="turnText">
-      正在定位
-    </div>
+    <div id="turnIcon">↑</div>
 
     <div id="roadName">
-      駕駛模式
+      尚未建立路線
     </div>
 
     <div id="distanceText">
-      等待 GPS…
+      等待目的地
     </div>
 
   </div>
 
 </div>
 
+<div id="driveModeBadge">
+  🚗 駕駛視角
+</div>
 
 <div id="vehicle">
-
-  <div id="vehicleArrow"></div>
 
   <div id="vehicleBody"></div>
 
   <div id="vehicleGlass"></div>
 
+  <div id="vehicleLightLeft"></div>
+
+  <div id="vehicleLightRight"></div>
+
 </div>
 
+<div id="roadFade"></div>
 
-<div id="roadGlow"></div>
-
-
-<div id="speedCircle">
+<div id="speedPanel">
 
   <div id="speedValue">
     0
@@ -627,105 +585,65 @@ body {
 
 </div>
 
-
-<div id="cameraWarning">
-  ⚠ 前方測速照相
-</div>
-
-
 <div id="gpsStatus">
-  正在啟動…
+  正在啟動 GPS…
 </div>
-
 
 <div id="controls">
 
   <button
     id="followButton"
     class="controlButton"
-    type="button"
-  >
+    type="button">
     🎯 回到駕駛
   </button>
 
+  <button
+    id="routeButton"
+    class="controlButton"
+    type="button">
+    🛣️ 建立路線
+  </button>
 
   <button
     id="modeButton"
     class="controlButton"
-    type="button"
-  >
+    type="button">
     🗺️ 平面
   </button>
 
 </div>
 
+<div id="cameraWarning">
+  ⚠️ 前方測速照相
+</div>
 
 <div id="loading">
-  正在載入 3D 駕駛引擎…
+
+  <div id="loadingBox">
+    正在啟動駕駛引擎…
+  </div>
+
 </div>
 
 
 <script src="https://unpkg.com/maplibre-gl@5.15.0/dist/maplibre-gl.js"></script>
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
-
 <script>
+"use strict";
 
-/* =========================================================
-   V3 CONFIG
-========================================================= */
-
-const CONFIG = {
-
-  mapStyle:
-    "https://tiles.openfreemap.org/styles/liberty",
-
-  osrmProfile:
-    "driving",
-
-  osrmBase:
-    "https://router.project-osrm.org",
-
-  routeTable:
-    "navigation_routes",
-
-  stepTable:
-    "navigation_route_steps",
-
-  sessionTable:
-    "navigation_sessions",
-
-  cameraTable:
-    "speed_cameras",
-
-  routeCameraRadiusMeters:
-    150,
-
-  cameraLookAheadMeters:
-    5000
-
-};
-
-
-/* =========================================================
+/* =====================================================
    全域狀態
-========================================================= */
+===================================================== */
 
 let map = null;
-
-let supabase = null;
-
-let supabaseReady = false;
 
 let gpsWatchId = null;
 
 let currentLat = null;
-
 let currentLng = null;
 
 let currentHeading = 0;
-
 let currentSpeed = 0;
 
 let lastGPS = null;
@@ -736,541 +654,80 @@ let drivingMode = true;
 
 let routeData = null;
 
-let routeCoordinates = [];
-
 let routeSteps = [];
 
 let currentStepIndex = 0;
 
-let routeId = null;
+let routeCoordinates = [];
 
-let sessionId = null;
+let routeDestination = null;
 
-let cachedCameras = [];
+let routeReady = false;
 
-let routeRequestBusy = false;
+let cameraData = [];
 
-let lastRouteLat = null;
+let cameraMarkers = [];
 
-let lastRouteLng = null;
+let lastRouteRequest = 0;
 
-let lastCameraCheck = 0;
+let mapReady = false;
 
-let destination = null;
+let lastCameraBearing = 0;
 
 
-/* =========================================================
-   工具
-========================================================= */
+/* =====================================================
+   DOM
+===================================================== */
 
-function $(id) {
-
+const $ = function(id) {
   return document.getElementById(id);
-
-}
-
-
-function clamp(value,min,max) {
-
-  return Math.max(
-    min,
-    Math.min(max,value)
-  );
-
-}
-
-
-function normalizeHeading(value) {
-
-  return (
-    (
-      Number(value) % 360
-    ) + 360
-  ) % 360;
-
-}
-
-
-function formatDistance(meters) {
-
-  meters = Number(meters) || 0;
-
-  if (meters < 1000) {
-
-    return Math.round(meters) + " 公尺";
-
-  }
-
-  return (
-    (meters / 1000)
-      .toFixed(1)
-      .replace(".0","")
-    + " 公里"
-  );
-
-}
-
-
-/* =========================================================
-   從 map.html 自動讀取 Supabase 設定
-   不把 anon key 再寫死一份
-========================================================= */
-
-async function loadSupabaseConfig() {
-
-  try {
-
-    const response =
-      await fetch(
-        "map.html",
-        {
-          cache: "no-store"
-        }
-      );
-
-    if (!response.ok) {
-
-      throw new Error(
-        "無法讀取 map.html"
-      );
-
-    }
-
-    const html =
-      await response.text();
-
-
-    let url = null;
-
-    let key = null;
-
-
-    const patterns = [
-
-      /SUPABASE_URL\s*=\s*["'`]([^"'`]+)["'`]/,
-
-      /supabaseUrl\s*[:=]\s*["'`]([^"'`]+)["'`]/
-
-    ];
-
-
-    const keyPatterns = [
-
-      /SUPABASE_ANON_KEY\s*=\s*["'`]([^"'`]+)["'`]/,
-
-      /SUPABASE_KEY\s*=\s*["'`]([^"'`]+)["'`]/,
-
-      /supabaseKey\s*[:=]\s*["'`]([^"'`]+)["'`]/,
-
-      /anonKey\s*[:=]\s*["'`]([^"'`]+)["'`]/
-
-    ];
-
-
-    for (
-      const pattern of patterns
-    ) {
-
-      const match =
-        html.match(pattern);
-
-      if (match) {
-
-        url =
-          match[1];
-
-        break;
-
-      }
-
-    }
-
-
-    for (
-      const pattern of keyPatterns
-    ) {
-
-      const match =
-        html.match(pattern);
-
-      if (match) {
-
-        key =
-          match[1];
-
-        break;
-
-      }
-
-    }
-
-
-    /*
-       也支援直接從 createClient 找
-    */
-
-    if (!url || !key) {
-
-      const createMatch =
-        html.match(
-          /createClient\s*\(\s*["'`]([^"'`]+)["'`]\s*,\s*["'`]([^"'`]+)["'`]/
-        );
-
-      if (createMatch) {
-
-        url =
-          createMatch[1];
-
-        key =
-          createMatch[2];
-
-      }
-
-    }
-
-
-    if (
-      !url ||
-      !key
-    ) {
-
-      throw new Error(
-        "找不到 Supabase 設定"
-      );
-
-    }
-
+};
+
+
+/* =====================================================
+   URL 目的地
+===================================================== */
+
+function getDestinationFromURL() {
+
+  const params =
+    new URLSearchParams(
+      window.location.search
+    );
+
+  const lat =
+    Number(
+      params.get("lat")
+    );
+
+  const lng =
+    Number(
+      params.get("lng")
+    );
+
+  if (
+    Number.isFinite(lat) &&
+    Number.isFinite(lng) &&
+    lat >= -90 &&
+    lat <= 90 &&
+    lng >= -180 &&
+    lng <= 180
+  ) {
 
     return {
-      url,
-      key
+      lat: lat,
+      lng: lng
     };
 
-  } catch (error) {
-
-    console.warn(
-      "Supabase config:",
-      error
-    );
-
-    return null;
-
   }
 
+  return null;
 }
 
 
-/* =========================================================
-   初始化 Supabase
-========================================================= */
-
-async function initializeSupabase() {
-
-  const config =
-    await loadSupabaseConfig();
-
-
-  if (!config) {
-
-    $("gpsStatus").textContent =
-      "GPS 已啟動｜Supabase 尚未連線";
-
-    return;
-
-  }
-
-
-  try {
-
-    supabase =
-      window.supabase.createClient(
-        config.url,
-        config.key
-      );
-
-    supabaseReady = true;
-
-
-    $("gpsStatus").textContent =
-      "✓ GPS + Supabase 已啟動";
-
-  } catch (error) {
-
-    console.warn(
-      "Supabase 初始化失敗:",
-      error
-    );
-
-  }
-
-}
-
-
-/* =========================================================
-   建立地圖
-========================================================= */
-
-function initializeMap() {
-
-  map =
-    new maplibregl.Map({
-
-      container: "map",
-
-      style:
-        CONFIG.mapStyle,
-
-      center: [
-        121.5654,
-        25.0330
-      ],
-
-      zoom: 17,
-
-      pitch: 60,
-
-      bearing: 0,
-
-      maxPitch: 75,
-
-      antialias: true
-
-    });
-
-
-  map.addControl(
-
-    new maplibregl.NavigationControl({
-      showCompass: true
-    }),
-
-    "top-right"
-
-  );
-
-
-  /*
-     手動拖曳：
-     立即停止 GPS 自動跟隨
-  */
-
-  map.on(
-    "dragstart",
-    function() {
-
-      followMode = false;
-
-      $("gpsStatus").textContent =
-        "已暫停自動跟隨｜可查看前方道路";
-
-    }
-  );
-
-
-  map.on(
-    "load",
-    function() {
-
-      $("loading")
-        .classList
-        .add("hidden");
-
-      $("gpsStatus").textContent =
-        "3D 駕駛引擎已啟動｜等待 GPS";
-
-      /*
-         Route source
-      */
-
-      map.addSource(
-        "navigation-route",
-        {
-          type: "geojson",
-
-          data: {
-            type: "FeatureCollection",
-            features: []
-          }
-        }
-      );
-
-
-      map.addLayer({
-
-        id: "navigation-route-outline",
-
-        type: "line",
-
-        source: "navigation-route",
-
-        layout: {
-
-          "line-cap": "round",
-
-          "line-join": "round"
-
-        },
-
-        paint: {
-
-          "line-color":
-            "#ffffff",
-
-          "line-width":
-            9,
-
-          "line-opacity":
-            .75
-
-        }
-
-      });
-
-
-      map.addLayer({
-
-        id: "navigation-route",
-
-        type: "line",
-
-        source: "navigation-route",
-
-        layout: {
-
-          "line-cap": "round",
-
-          "line-join": "round"
-
-        },
-
-        paint: {
-
-          "line-color":
-            "#16803c",
-
-          "line-width":
-            6,
-
-          "line-opacity":
-            .95
-
-        }
-
-      });
-
-
-      /*
-         測速照相
-      */
-
-      map.addSource(
-        "speed-cameras",
-        {
-          type: "geojson",
-
-          data: {
-            type: "FeatureCollection",
-            features: []
-          }
-        }
-      );
-
-
-      map.addLayer({
-
-        id: "speed-cameras",
-
-        type: "circle",
-
-        source: "speed-cameras",
-
-        paint: {
-
-          "circle-radius": 7,
-
-          "circle-color":
-            "#e53935",
-
-          "circle-stroke-color":
-            "#ffffff",
-
-          "circle-stroke-width":
-            2
-
-        }
-
-      });
-
-
-      /*
-         Route arrows
-      */
-
-      map.addSource(
-        "route-arrow",
-        {
-          type: "geojson",
-
-          data: {
-            type: "FeatureCollection",
-            features: []
-          }
-        }
-      );
-
-
-      map.addLayer({
-
-        id: "route-arrow",
-
-        type: "symbol",
-
-        source: "route-arrow",
-
-        layout: {
-
-          "text-field":
-            "➤",
-
-          "text-size":
-            24,
-
-          "text-rotate":
-            [
-              "get",
-              "bearing"
-            ],
-
-          "text-allow-overlap":
-            true
-
-        },
-
-        paint: {
-
-          "text-color":
-            "#ffffff",
-
-          "text-halo-color":
-            "#16803c",
-
-          "text-halo-width":
-            3
-
-        }
-
-      });
-
-    }
-
-  );
-
-}
-
-
-/* =========================================================
+/* =====================================================
    距離
-========================================================= */
+===================================================== */
 
 function distanceBetween(
   lat1,
@@ -1292,47 +749,35 @@ function distanceBetween(
     180;
 
   const dp =
-    (lat2-lat1) *
+    (lat2 - lat1) *
     Math.PI /
     180;
 
   const dl =
-    (lng2-lng1) *
+    (lng2 - lng1) *
     Math.PI /
     180;
 
-
   const a =
-
-    Math.sin(dp/2) *
-    Math.sin(dp/2)
-
-    +
-
+    Math.sin(dp / 2) ** 2 +
     Math.cos(p1) *
     Math.cos(p2) *
-
-    Math.sin(dl/2) *
-    Math.sin(dl/2);
-
+    Math.sin(dl / 2) ** 2;
 
   return (
-
     R *
     2 *
     Math.atan2(
       Math.sqrt(a),
-      Math.sqrt(1-a)
+      Math.sqrt(1 - a)
     )
-
   );
-
 }
 
 
-/* =========================================================
+/* =====================================================
    Bearing
-========================================================= */
+===================================================== */
 
 function calculateBearing(
   lat1,
@@ -1352,1613 +797,49 @@ function calculateBearing(
     180;
 
   const dl =
-    (lng2-lng1) *
+    (lng2 - lng1) *
     Math.PI /
     180;
-
 
   const y =
     Math.sin(dl) *
     Math.cos(p2);
 
-
   const x =
-
     Math.cos(p1) *
-    Math.sin(p2)
-
-    -
-
+    Math.sin(p2) -
     Math.sin(p1) *
     Math.cos(p2) *
     Math.cos(dl);
 
-
-  return normalizeHeading(
-    Math.atan2(y,x) *
+  return (
+    Math.atan2(y, x) *
     180 /
-    Math.PI
-  );
-
-}
-
-
-/* =========================================================
-   最近 Route 點
-========================================================= */
-
-function findNearestRoutePoint(
-  lat,
-  lng
-) {
-
-  if (
-    !routeCoordinates.length
-  ) {
-
-    return null;
-
-  }
-
-
-  let nearest = null;
-
-  let bestDistance =
-    Infinity;
-
-
-  for (
-    let i = 0;
-    i < routeCoordinates.length;
-    i++
-  ) {
-
-    const point =
-      routeCoordinates[i];
-
-
-    const d =
-      distanceBetween(
-        lat,
-        lng,
-        point[1],
-        point[0]
-      );
-
-
-    if (
-      d <
-      bestDistance
-    ) {
-
-      bestDistance = d;
-
-      nearest = {
-
-        index: i,
-
-        coordinate: point,
-
-        distance: d
-
-      };
-
-    }
-
-  }
-
-
-  return nearest;
-
-}
-
-
-/* =========================================================
-   Route arrows
-========================================================= */
-
-function updateRouteArrows() {
-
-  if (
-    !map ||
-    !routeCoordinates.length
-  ) {
-
-    return;
-
-  }
-
-
-  const features = [];
-
-  const gap = 15;
-
-
-  for (
-    let i = 0;
-    i < routeCoordinates.length - 1;
-    i += gap
-  ) {
-
-    const a =
-      routeCoordinates[i];
-
-    const b =
-      routeCoordinates[
-        Math.min(
-          i + 2,
-          routeCoordinates.length - 1
-        )
-      ];
-
-
-    const bearing =
-      calculateBearing(
-        a[1],
-        a[0],
-        b[1],
-        b[0]
-      );
-
-
-    features.push({
-
-      type: "Feature",
-
-      geometry: {
-
-        type: "Point",
-
-        coordinates: a
-
-      },
-
-      properties: {
-
-        bearing:
-          bearing
-
-      }
-
-    });
-
-  }
-
-
-  const source =
-    map.getSource(
-      "route-arrow"
-    );
-
-
-  if (source) {
-
-    source.setData({
-
-      type:
-        "FeatureCollection",
-
-      features
-
-    });
-
-  }
-
-}
-
-
-/* =========================================================
-   Route 顯示
-========================================================= */
-
-function drawRoute(route) {
-
-  if (
-    !map ||
-    !route ||
-    !route.geometry
-  ) {
-
-    return;
-
-  }
-
-
-  routeCoordinates =
-    route.geometry.coordinates ||
-    [];
-
-
-  const source =
-    map.getSource(
-      "navigation-route"
-    );
-
-
-  if (source) {
-
-    source.setData({
-
-      type: "Feature",
-
-      geometry:
-        route.geometry,
-
-      properties: {}
-
-    });
-
-  }
-
-
-  updateRouteArrows();
-
-}
-
-
-/* =========================================================
-   Route 步驟
-========================================================= */
-
-function normalizeRouteSteps(route) {
-
-  const steps = [];
-
-
-  if (
-    !route ||
-    !route.legs
-  ) {
-
-    return steps;
-
-  }
-
-
-  for (
-    const leg of route.legs
-  ) {
-
-    for (
-      const step of (
-        leg.steps || []
-      )
-    ) {
-
-      steps.push(step);
-
-    }
-
-  }
-
-
-  return steps;
-
-}
-
-
-/* =========================================================
-   找目前下一個 step
-========================================================= */
-
-function updateCurrentStep() {
-
-  if (
-    !routeSteps.length ||
-    currentLat === null
-  ) {
-
-    return;
-
-  }
-
-
-  let nearestStep =
-    currentStepIndex;
-
-
-  for (
-    let i =
-      currentStepIndex;
-
-    i <
-      routeSteps.length;
-
-    i++
-  ) {
-
-    const step =
-      routeSteps[i];
-
-
-    const loc =
-      step.maneuver &&
-      step.maneuver.location;
-
-
-    if (
-      !loc
-    ) {
-
-      continue;
-
-    }
-
-
-    const d =
-      distanceBetween(
-        currentLat,
-        currentLng,
-        loc[1],
-        loc[0]
-      );
-
-
-    if (
-      d < 35
-    ) {
-
-      nearestStep =
-        Math.min(
-          i + 1,
-          routeSteps.length - 1
-        );
-
-    }
-
-  }
-
-
-  currentStepIndex =
-    nearestStep;
-
-
-  const step =
-    routeSteps[
-      currentStepIndex
-    ];
-
-
-  if (!step) {
-
-    return;
-
-  }
-
-
-  const maneuver =
-    step.maneuver || {};
-
-
-  const loc =
-    maneuver.location;
-
-
-  let distance = 0;
-
-
-  if (loc) {
-
-    distance =
-      distanceBetween(
-        currentLat,
-        currentLng,
-        loc[1],
-        loc[0]
-      );
-
-  }
-
-
-  const type =
-    String(
-      maneuver.type || ""
-    );
-
-
-  const modifier =
-    String(
-      maneuver.modifier || ""
-    );
-
-
-  let icon = "↑";
-
-  let text = "直行";
-
-
-  if (
-    modifier.includes("left")
-  ) {
-
-    icon =
-      modifier.includes("sharp")
-        ? "↙"
-        : modifier.includes("slight")
-          ? "↖"
-          : "←";
-
-    text = "左轉";
-
-  }
-
-
-  if (
-    modifier.includes("right")
-  ) {
-
-    icon =
-      modifier.includes("sharp")
-        ? "↘"
-        : modifier.includes("slight")
-          ? "↗"
-          : "→";
-
-    text = "右轉";
-
-  }
-
-
-  if (
-    type === "roundabout" ||
-    type === "rotary"
-  ) {
-
-    icon = "⟳";
-
-    text = "進入圓環";
-
-  }
-
-
-  if (
-    type === "arrive"
-  ) {
-
-    icon = "🏁";
-
-    text = "即將抵達";
-
-  }
-
-
-  const road =
-    step.name ||
-    "前方道路";
-
-
-  $("turnIcon").textContent =
-    icon;
-
-  $("turnText").textContent =
-    text;
-
-  $("roadName").textContent =
-    road;
-
-  $("distanceText").textContent =
-    distance > 0
-      ? "前方 " +
-        formatDistance(distance)
-      : "導航中";
-
-}
-
-
-/* =========================================================
-   建立 Route
-========================================================= */
-
-async function requestRoute(
-  startLat,
-  startLng
-) {
-
-  if (
-    !destination ||
-    routeRequestBusy
-  ) {
-
-    return;
-
-  }
-
-
-  routeRequestBusy = true;
-
-
-  try {
-
-    const url =
-
-      CONFIG.osrmBase +
-
-      "/route/v1/" +
-
-      CONFIG.osrmProfile +
-
-      "/" +
-
-      startLng +
-      "," +
-      startLat +
-      ";" +
-      destination.lng +
-      "," +
-      destination.lat +
-
-      "?overview=full" +
-
-      "&geometries=geojson" +
-
-      "&steps=true" +
-
-      "&alternatives=false";
-
-
-    const response =
-      await fetch(
-        url
-      );
-
-
-    if (!response.ok) {
-
-      throw new Error(
-        "Route HTTP " +
-        response.status
-      );
-
-    }
-
-
-    const data =
-      await response.json();
-
-
-    if (
-      data.code !== "Ok" ||
-      !data.routes ||
-      !data.routes[0]
-    ) {
-
-      throw new Error(
-        "找不到道路 Route"
-      );
-
-    }
-
-
-    const route =
-      data.routes[0];
-
-
-    routeData =
-      route;
-
-
-    routeSteps =
-      normalizeRouteSteps(
-        route
-      );
-
-
-    currentStepIndex =
-      0;
-
-
-    lastRouteLat =
-      startLat;
-
-    lastRouteLng =
-      startLng;
-
-
-    drawRoute(route);
-
-    updateCurrentStep();
-
-
-    await cacheRouteToSupabase(
-      route
-    );
-
-
-    await loadRouteCameras(
-      route
-    );
-
-
-    $("gpsStatus").textContent =
-      "✓ 真實道路 Route 已建立";
-
-
-  } catch (error) {
-
-    console.error(
-      "Route:",
-      error
-    );
-
-
-    $("gpsStatus").textContent =
-      "Route 建立失敗｜GPS 仍可使用";
-
-  } finally {
-
-    routeRequestBusy =
-      false;
-
-  }
-
-}
-
-
-/* =========================================================
-   Supabase：建立 Session
-========================================================= */
-
-async function createNavigationSession() {
-
-  if (
-    !supabaseReady
-  ) {
-
-    return;
-
-  }
-
-
-  try {
-
-    const row = {
-
-      started_at:
-        new Date().toISOString(),
-
-      status:
-        "active",
-
-      mode:
-        "3d"
-
-    };
-
-
-    const result =
-      await supabase
-
-        .from(
-          CONFIG.sessionTable
-        )
-
-        .insert(row)
-
-        .select("id")
-
-        .single();
-
-
-    if (
-      result.error
-    ) {
-
-      console.warn(
-        "navigation_sessions:",
-        result.error
-      );
-
-      return;
-
-    }
-
-
-    sessionId =
-      result.data.id;
-
-
-  } catch (error) {
-
-    console.warn(
-      "Session:",
-      error
-    );
-
-  }
-
-}
-
-
-/* =========================================================
-   Supabase：Route 快取
-========================================================= */
-
-async function cacheRouteToSupabase(
-  route
-) {
-
-  if (
-    !supabaseReady ||
-    !route
-  ) {
-
-    return;
-
-  }
-
-
-  try {
-
-    const row = {
-
-      session_id:
-        sessionId,
-
-      destination_lat:
-        destination
-          ? destination.lat
-          : null,
-
-      destination_lng:
-        destination
-          ? destination.lng
-          : null,
-
-      distance_m:
-        route.distance || 0,
-
-      duration_s:
-        route.duration || 0,
-
-      geometry:
-        route.geometry || null,
-
-      created_at:
-        new Date().toISOString()
-
-    };
-
-
-    const result =
-      await supabase
-
-        .from(
-          CONFIG.routeTable
-        )
-
-        .insert(row)
-
-        .select("id")
-
-        .single();
-
-
-    if (
-      result.error
-    ) {
-
-      console.warn(
-        "navigation_routes:",
-        result.error
-      );
-
-      return;
-
-    }
-
-
-    routeId =
-      result.data.id;
-
-
-    /*
-       Route steps
-    */
-
-    const rows = [];
-
-
-    let order = 0;
-
-
-    for (
-      const step of routeSteps
-    ) {
-
-      const maneuver =
-        step.maneuver || {};
-
-
-      rows.push({
-
-        route_id:
-          routeId,
-
-        step_order:
-          order++,
-
-        name:
-          step.name || "",
-
-        distance_m:
-          step.distance || 0,
-
-        duration_s:
-          step.duration || 0,
-
-        maneuver_type:
-          maneuver.type || "",
-
-        maneuver_modifier:
-          maneuver.modifier || "",
-
-        maneuver_lat:
-          maneuver.location
-            ? maneuver.location[1]
-            : null,
-
-        maneuver_lng:
-          maneuver.location
-            ? maneuver.location[0]
-            : null,
-
-        geometry:
-          step.geometry || null
-
-      });
-
-    }
-
-
-    if (
-      rows.length
-    ) {
-
-      const stepResult =
-        await supabase
-
-          .from(
-            CONFIG.stepTable
-          )
-
-          .insert(rows);
-
-
-      if (
-        stepResult.error
-      ) {
-
-        console.warn(
-          "navigation_route_steps:",
-          stepResult.error
-        );
-
-      }
-
-    }
-
-  } catch (error) {
-
-    console.warn(
-      "Route cache:",
-      error
-    );
-
-  }
-
-}
-
-
-/* =========================================================
-   Route 附近測速照相
-========================================================= */
-
-async function loadRouteCameras(
-  route
-) {
-
-  if (
-    !supabaseReady ||
-    !route ||
-    !route.geometry
-  ) {
-
-    return;
-
-  }
-
-
-  const now =
-    Date.now();
-
-
-  if (
-    now -
-    lastCameraCheck <
-    15000
-  ) {
-
-    return;
-
-  }
-
-
-  lastCameraCheck =
-    now;
-
-
-  try {
-
-    /*
-       先取得 Route bounding box
-    */
-
-    const coords =
-      route.geometry.coordinates || [];
-
-
-    if (
-      !coords.length
-    ) {
-
-      return;
-
-    }
-
-
-    let minLat = 90;
-
-    let maxLat = -90;
-
-    let minLng = 180;
-
-    let maxLng = -180;
-
-
-    for (
-      const point of coords
-    ) {
-
-      const lng =
-        Number(point[0]);
-
-      const lat =
-        Number(point[1]);
-
-
-      if (
-        !Number.isFinite(lat) ||
-        !Number.isFinite(lng)
-      ) {
-
-        continue;
-
-      }
-
-
-      minLat =
-        Math.min(
-          minLat,
-          lat
-        );
-
-      maxLat =
-        Math.max(
-          maxLat,
-          lat
-        );
-
-      minLng =
-        Math.min(
-          minLng,
-          lng
-        );
-
-      maxLng =
-        Math.max(
-          maxLng,
-          lng
-        );
-
-    }
-
-
-    /*
-       留一點緩衝範圍
-    */
-
-    const buffer =
-      0.003;
-
-
-    minLat -= buffer;
-    maxLat += buffer;
-
-    minLng -= buffer;
-    maxLng += buffer;
-
-
-    /*
-       你的 speed_cameras 欄位
-       先使用 lat / lng
-    */
-
-    const result =
-      await supabase
-
-        .from(
-          CONFIG.cameraTable
-        )
-
-        .select("*")
-
-        .gte(
-          "lat",
-          minLat
-        )
-
-        .lte(
-          "lat",
-          maxLat
-        )
-
-        .gte(
-          "lng",
-          minLng
-        )
-
-        .lte(
-          "lng",
-          maxLng
-        );
-
-
-    if (
-      result.error
-    ) {
-
-      console.warn(
-        "speed_cameras:",
-        result.error
-      );
-
-      return;
-
-    }
-
-
-    const cameras =
-      result.data || [];
-
-
-    /*
-       再精確判斷：
-       測速照相是否真的靠近 Route
-    */
-
-    cachedCameras =
-      cameras.filter(
-        camera => {
-
-          const lat =
-            Number(
-              camera.lat
-            );
-
-          const lng =
-            Number(
-              camera.lng
-            );
-
-
-          if (
-            !Number.isFinite(lat) ||
-            !Number.isFinite(lng)
-          ) {
-
-            return false;
-
-          }
-
-
-          let nearest =
-            Infinity;
-
-
-          /*
-             不必掃整條 Route
-             每隔數個點判斷
-          */
-
-          for (
-            let i = 0;
-            i < coords.length;
-            i += 5
-          ) {
-
-            const point =
-              coords[i];
-
-
-            const d =
-              distanceBetween(
-                lat,
-                lng,
-                point[1],
-                point[0]
-              );
-
-
-            nearest =
-              Math.min(
-                nearest,
-                d
-              );
-
-            if (
-              nearest <=
-              CONFIG.routeCameraRadiusMeters
-            ) {
-
-              return true;
-
-            }
-
-          }
-
-
-          return nearest <=
-            CONFIG.routeCameraRadiusMeters;
-
-        }
-      );
-
-
-    drawSpeedCameras();
-
-
-  } catch (error) {
-
-    console.warn(
-      "Camera cache:",
-      error
-    );
-
-  }
-
-}
-
-
-/* =========================================================
-   顯示測速照相
-========================================================= */
-
-function drawSpeedCameras() {
-
-  if (
-    !map
-  ) {
-
-    return;
-
-  }
-
-
-  const features =
-    cachedCameras.map(
-      camera => {
-
-        const lat =
-          Number(
-            camera.lat
-          );
-
-        const lng =
-          Number(
-            camera.lng
-          );
-
-
-        return {
-
-          type: "Feature",
-
-          geometry: {
-
-            type: "Point",
-
-            coordinates: [
-              lng,
-              lat
-            ]
-
-          },
-
-          properties: {
-
-            id:
-              camera.id || "",
-
-            speed:
-              camera.speed_limit ||
-              camera.limit ||
-              ""
-
-          }
-
-        };
-
-      }
-    );
-
-
-  const source =
-    map.getSource(
-      "speed-cameras"
-    );
-
-
-  if (source) {
-
-    source.setData({
-
-      type:
-        "FeatureCollection",
-
-      features
-
-    });
-
-  }
-
-}
-
-
-/* =========================================================
-   檢查前方測速照相
-========================================================= */
-
-function updateCameraWarning() {
-
-  if (
-    !cachedCameras.length ||
-    currentLat === null
-  ) {
-
-    $("cameraWarning")
-      .classList
-      .remove("show");
-
-    return;
-
-  }
-
-
-  let nearest =
-    null;
-
-  let nearestDistance =
-    Infinity;
-
-
-  for (
-    const camera of cachedCameras
-  ) {
-
-    const lat =
-      Number(
-        camera.lat
-      );
-
-    const lng =
-      Number(
-        camera.lng
-      );
-
-
-    if (
-      !Number.isFinite(lat) ||
-      !Number.isFinite(lng)
-    ) {
-
-      continue;
-
-    }
-
-
-    const d =
-      distanceBetween(
-        currentLat,
-        currentLng,
-        lat,
-        lng
-      );
-
-
-    if (
-      d <
-      nearestDistance
-    ) {
-
-      nearestDistance =
-        d;
-
-      nearest =
-        camera;
-
-    }
-
-  }
-
-
-  /*
-     先做距離警示。
-     方向欄位等我們確認你資料實際欄位後，
-     再接南北向精準判斷。
-  */
-
-  if (
-    nearest &&
-    nearestDistance <=
-      CONFIG.cameraLookAheadMeters
-  ) {
-
-    $("cameraWarning").textContent =
-      "⚠ 前方約 " +
-      formatDistance(
-        nearestDistance
-      ) +
-      " 測速照相";
-
-    $("cameraWarning")
-      .classList
-      .add("show");
-
-  } else {
-
-    $("cameraWarning")
-      .classList
-      .remove("show");
-
-  }
-
+    Math.PI +
+    360
+  ) % 360;
 }
 
 
 /* =====================================================
-   V4 真正駕駛攝影機
-   第二張圖風格：
-   車輛位於畫面下方
-   視線朝前方道路
-   不再把 GPS 點固定在畫面正中央
+   角度差
 ===================================================== */
-let lastCameraHeading = 0;
-let cameraMoving = false;
-function updateDrivingCamera() {
-  if (
-    !map ||
-    currentLat === null ||
-    currentLng === null ||
-    !followMode
-  ) {
-    return;
-  }
-  /*
-     -------------------------------
-     1. 平滑處理車頭方向
-     -------------------------------
-  */
-  let targetHeading =
-    Number(currentHeading);
-  if (!Number.isFinite(targetHeading)) {
-    targetHeading = lastCameraHeading;
-  }
-  targetHeading =
-    ((targetHeading % 360) + 360) % 360;
-  /*
-     避免 359° → 0° 突然旋轉 359 度
-  */
-  const diff =
-    angleDifference(
-      targetHeading,
-      lastCameraHeading
-    );
-  /*
-     低速時不要因 GPS heading 漂移
-     讓整個畫面一直轉。
-  */
-  if (
-    currentSpeed < 3 &&
-    Math.abs(diff) > 25
-  ) {
-    targetHeading =
-      lastCameraHeading;
-  } else {
-    /*
-       平滑轉向
-    */
-    targetHeading =
-      lastCameraHeading +
-      diff * 0.22;
-  }
-  targetHeading =
-    ((targetHeading % 360) + 360) % 360;
-  lastCameraHeading =
-    targetHeading;
-  /*
-     -------------------------------
-     2. 真正駕駛視角
-     -------------------------------
-     不把 camera center 放在車子上。
-     而是把中心推到「車前方」。
-     這就是駕駛導航與普通地圖
-     最大的差別之一。
-  */
-  let lookAhead = 0.00055;
-  if (currentSpeed >= 20) {
-    lookAhead = 0.00085;
-  }
-  if (currentSpeed >= 50) {
-    lookAhead = 0.00120;
-  }
-  if (currentSpeed >= 80) {
-    lookAhead = 0.00155;
-  }
-  const headingRad =
-    targetHeading *
-    Math.PI /
-    180;
-  /*
-     緯度方向
-  */
-  const targetLat =
-    currentLat +
-    Math.cos(headingRad) *
-    lookAhead;
-  /*
-     經度需要考慮緯度
-  */
-  const cosLat =
-    Math.max(
-      0.2,
-      Math.cos(
-        currentLat *
-        Math.PI /
-        180
-      )
-    );
-  const targetLng =
-    currentLng +
-    (
-      Math.sin(headingRad) *
-      lookAhead /
-      cosLat
-    );
-  /*
-     -------------------------------
-     3. 駕駛鏡頭參數
-     -------------------------------
-  */
-  let zoom =
-    17.7;
-  if (currentSpeed >= 30) {
-    zoom = 17.4;
-  }
-  if (currentSpeed >= 60) {
-    zoom = 17.1;
-  }
-  if (currentSpeed >= 90) {
-    zoom = 16.8;
-  }
-  /*
-     Pitch 不要太高。
-     60° 比較像鳥瞰。
-     這裡降低成真正前視感。
-  */
-  let pitch = 67;
-  /*
-     高速時稍微降低 pitch，
-     增加道路向前延伸的感覺。
-  */
-  if (currentSpeed >= 50) {
-    pitch = 63;
-  }
-  if (currentSpeed >= 90) {
-    pitch = 60;
-  }
-  /*
-     -------------------------------
-     4. Padding
-     -------------------------------
-     把視覺焦點往上推，
-     車就會自然落在畫面下方。
-  */
-  const bottomPadding =
-    Math.round(
-      window.innerHeight * 0.32
-    );
-  /*
-     -------------------------------
-     5. 更新攝影機
-     -------------------------------
-  */
-  cameraMoving = true;
-  map.easeTo({
-    center: [
-      targetLng,
-      targetLat
-    ],
-    zoom: zoom,
-    pitch: pitch,
-    bearing: targetHeading,
-    padding: {
-      top: 70,
-      bottom: bottomPadding,
-      left: 0,
-      right: 0
-    },
-    duration:
-      currentSpeed > 5
-        ? 450
-        : 650,
-    essential: true
-  });
-  /*
-     -------------------------------
-     6. 車輛方向
-     -------------------------------
-     車本身不需要跟著地圖旋轉。
-     因為地圖已經按照 heading 旋轉，
-     車頭永遠朝向畫面上方。
-  */
-  const vehicle =
-    document.getElementById(
-      "vehicle"
-    );
-  if (vehicle) {
-    vehicle.style.transform =
-      "translateX(-50%) rotate(0deg)";
-  }
+
+function angleDifference(
+  a,
+  b
+) {
+
+  return (
+    (a - b + 540) %
+    360
+  ) - 180;
 }
+
+
 /* =====================================================
-   V4 回到駕駛
-===================================================== */
-function returnToDrivingView() {
-  if (!map) {
-    return;
-  }
-  followMode = true;
-  drivingMode = true;
-  const button =
-    document.getElementById(
-      "modeButton"
-    );
-  if (button) {
-    button.textContent =
-      "🗺️ 平面";
-  }
-  updateDrivingCamera();
-  setGPSStatus(
-    "✓ 已回到駕駛視角"
-  );
-}
-/* =====================================================
-   使用者手動拖動地圖
-===================================================== */
-if (map) {
-  map.on(
-    "dragstart",
-    function() {
-      followMode = false;
-      setGPSStatus(
-        "已暫停跟隨｜可查看前方道路"
-      );
-    }
-  );
-}
-/* =========================================================
    GPS
-========================================================= */
+===================================================== */
 
 function startGPS() {
 
@@ -2966,13 +847,13 @@ function startGPS() {
     !navigator.geolocation
   ) {
 
-    $("gpsStatus").textContent =
-      "此裝置不支援 GPS";
+    setGPSStatus(
+      "此裝置不支援 GPS"
+    );
 
     return;
 
   }
-
 
   gpsWatchId =
     navigator.geolocation.watchPosition(
@@ -2981,23 +862,25 @@ function startGPS() {
 
       function(error) {
 
-        $("gpsStatus").textContent =
+        console.error(
+          "GPS error:",
+          error
+        );
+
+        setGPSStatus(
           "GPS：" +
-          error.message;
+          (
+            error.message ||
+            "定位失敗"
+          )
+        );
 
       },
 
       {
-
-        enableHighAccuracy:
-          true,
-
-        maximumAge:
-          1000,
-
-        timeout:
-          15000
-
+        enableHighAccuracy: true,
+        maximumAge: 1000,
+        timeout: 15000
       }
 
     );
@@ -3005,48 +888,42 @@ function startGPS() {
 }
 
 
-/* =========================================================
+/* =====================================================
    GPS 更新
-========================================================= */
+===================================================== */
 
-async function handleGPS(
-  position
-) {
+function handleGPS(position) {
+
+  if (
+    !position ||
+    !position.coords
+  ) {
+    return;
+  }
 
   const c =
     position.coords;
 
-
   const lat =
-    Number(
-      c.latitude
-    );
+    Number(c.latitude);
 
   const lng =
-    Number(
-      c.longitude
-    );
-
+    Number(c.longitude);
 
   if (
     !Number.isFinite(lat) ||
     !Number.isFinite(lng)
   ) {
-
     return;
-
   }
 
 
-  /*
-     Speed
-  */
+  /* ---------------------------------------------------
+     速度
+  --------------------------------------------------- */
 
   let speed =
-    Number(
-      c.speed
-    );
-
+    Number(c.speed);
 
   if (
     !Number.isFinite(speed) ||
@@ -3062,26 +939,79 @@ async function handleGPS(
   }
 
 
+  /*
+     GPS 沒有速度時，
+     使用兩次定位估算。
+  */
+
+  if (
+    speed <= 0 &&
+    lastGPS
+  ) {
+
+    const d =
+      distanceBetween(
+        lastGPS.lat,
+        lastGPS.lng,
+        lat,
+        lng
+      );
+
+    const dt =
+      (
+        position.timestamp -
+        lastGPS.time
+      ) / 1000;
+
+    if (
+      dt > 0.2 &&
+      dt < 30 &&
+      d > 1
+    ) {
+
+      speed =
+        d /
+        dt *
+        3.6;
+
+    }
+
+  }
+
+
   currentSpeed =
-    clamp(
-      speed,
+    Math.max(
       0,
-      200
+      Math.min(
+        200,
+        speed
+      )
     );
+
+
+  /* ---------------------------------------------------
+     方向
+  --------------------------------------------------- */
+
+  let heading =
+    Number(c.heading);
+
+  if (
+    !Number.isFinite(heading)
+  ) {
+
+    heading = null;
+
+  }
 
 
   /*
-     Heading
+     如果 GPS heading 不可靠，
+     用移動方向估算。
   */
 
-  let heading =
-    Number(
-      c.heading
-    );
-
-
   if (
-    !Number.isFinite(heading) &&
+    heading === null &&
     lastGPS
   ) {
 
@@ -3093,9 +1023,8 @@ async function handleGPS(
         lng
       );
 
-
     if (
-      moved > 5
+      moved >= 4
     ) {
 
       heading =
@@ -3114,140 +1043,78 @@ async function handleGPS(
   if (
     Number.isFinite(heading) &&
     (
-      currentSpeed > 2 ||
-      !lastGPS
+      currentSpeed >= 2 ||
+      lastGPS === null
     )
   ) {
 
     currentHeading =
-      normalizeHeading(
-        heading
-      );
+      (
+        heading +
+        360
+      ) % 360;
 
   }
 
 
-  currentLat =
-    lat;
+  currentLat = lat;
 
-  currentLng =
-    lng;
+  currentLng = lng;
 
 
-  /*
-     UI
-  */
+  /* ---------------------------------------------------
+     HUD
+  --------------------------------------------------- */
 
   $("speedValue").textContent =
-    Math.round(
-      currentSpeed
+    String(
+      Math.round(
+        currentSpeed
+      )
     );
 
 
-  $("gpsStatus").textContent =
+  const accuracy =
+    Number(c.accuracy);
+
+
+  setGPSStatus(
+
     "GPS ±" +
-    Math.round(
-      c.accuracy || 0
+    (
+      Number.isFinite(accuracy)
+        ? Math.round(accuracy)
+        : "?"
     ) +
     "m｜" +
     Math.round(
       currentHeading
     ) +
-    "°";
+    "°"
+
+  );
 
 
-  /*
+  /* ---------------------------------------------------
      Route
-  */
+  --------------------------------------------------- */
 
   if (
-    destination &&
-    !routeData &&
-    !routeRequestBusy
+    routeReady
   ) {
 
-    await requestRoute(
-      lat,
-      lng
-    );
+    updateRouteProgress();
 
   }
 
 
-  /*
-     如果離開 Route 太遠，
-     重新計算
-  */
+  /* ---------------------------------------------------
+     駕駛攝影機
+  --------------------------------------------------- */
 
   if (
-    routeData &&
-    !routeRequestBusy &&
-    lastRouteLat !== null
-  ) {
-
-    const movedFromRouteStart =
-      distanceBetween(
-        lat,
-        lng,
-        lastRouteLat,
-        lastRouteLng
-      );
-
-
-    if (
-      movedFromRouteStart >
-      800
-    ) {
-
-      await requestRoute(
-        lat,
-        lng
-      );
-
-    }
-
-  }
-
-
-  /*
-     找 Route 上的位置
-  */
-
-  if (
-    routeCoordinates.length
-  ) {
-
-    const nearest =
-      findNearestRoutePoint(
-        lat,
-        lng
-      );
-
-
-    if (
-      nearest &&
-      nearest.distance >
-      120
-    ) {
-
-      /*
-         GPS 明顯偏離道路。
-         不立刻旋轉畫面，
-         等下一次 GPS。
-      */
-
-    }
-
-  }
-
-
-  updateCurrentStep();
-
-  updateCameraWarning();
-
-
-  if (
-    followMode
+    followMode &&
+    mapReady
   ) {
 
     updateDrivingCamera();
@@ -3257,8 +1124,9 @@ async function handleGPS(
 
   lastGPS = {
 
-    lat,
-    lng,
+    lat: lat,
+
+    lng: lng,
 
     time:
       position.timestamp
@@ -3268,119 +1136,1473 @@ async function handleGPS(
 }
 
 
-/* =========================================================
-   目的地
-========================================================= */
+/* =====================================================
+   MapLibre 地圖
+===================================================== */
 
-function readDestination() {
+function createMap() {
 
-  const params =
-    new URLSearchParams(
-      window.location.search
+  try {
+
+    map =
+      new maplibregl.Map({
+
+        container: "map",
+
+        style:
+          "https://tiles.openfreemap.org/styles/liberty",
+
+        center: [
+          121.5654,
+          25.0330
+        ],
+
+        zoom: 17,
+
+        pitch: 63,
+
+        bearing: 0,
+
+        maxPitch: 75,
+
+        attributionControl: true,
+
+        antialias: true
+
+      });
+
+
+    /*
+       不使用 NavigationControl 的
+       觸控旋轉功能作為駕駛控制。
+    */
+
+    map.addControl(
+
+      new maplibregl.NavigationControl({
+        showCompass: true
+      }),
+
+      "top-right"
+
     );
 
 
-  const lat =
-    Number(
-      params.get(
-        "destLat"
-      )
+    /*
+       使用者開始拖動地圖：
+       停止自動跟隨。
+    */
+
+    map.on(
+      "dragstart",
+      function() {
+
+        if (
+          !mapReady
+        ) {
+          return;
+        }
+
+        followMode = false;
+
+        setGPSStatus(
+          "已暫停跟隨｜可自由查看道路"
+        );
+
+      }
     );
 
 
-  const lng =
-    Number(
-      params.get(
-        "destLng"
-      )
+    /*
+       使用者開始旋轉地圖：
+       也停止跟隨。
+    */
+
+    map.on(
+      "rotatestart",
+      function() {
+
+        if (
+          !mapReady
+        ) {
+          return;
+        }
+
+        followMode = false;
+
+        setGPSStatus(
+          "已暫停駕駛跟隨"
+        );
+
+      }
     );
+
+
+    /*
+       地圖載入完成。
+    */
+
+    map.on(
+      "load",
+      function() {
+
+        mapReady = true;
+
+        addRouteLayer();
+
+        hideLoading();
+
+        setGPSStatus(
+          "✓ 駕駛引擎已啟動"
+        );
+
+
+        /*
+           如果 GPS 已經先取得，
+           立即進入駕駛視角。
+        */
+
+        if (
+          currentLat !== null
+        ) {
+
+          updateDrivingCamera();
+
+        }
+
+
+        /*
+           如果 URL 有目的地，
+           自動建立路線。
+        */
+
+        if (
+          routeDestination &&
+          currentLat !== null
+        ) {
+
+          buildRoute();
+
+        }
+
+      }
+    );
+
+
+    /*
+       MapLibre 錯誤不要讓整個頁面卡死。
+    */
+
+    map.on(
+      "error",
+      function(event) {
+
+        console.error(
+          "MapLibre error:",
+          event
+        );
+
+      }
+    );
+
+  } catch (error) {
+
+    console.error(
+      "Map creation error:",
+      error
+    );
+
+    hideLoading();
+
+    setGPSStatus(
+      "地圖啟動失敗，請重新整理"
+    );
+
+  }
+
+}
+
+
+/* =====================================================
+   Route 圖層
+===================================================== */
+
+function addRouteLayer() {
+
+  if (
+    !map ||
+    !mapReady
+  ) {
+    return;
+  }
 
 
   if (
-    Number.isFinite(lat) &&
-    Number.isFinite(lng) &&
-    Math.abs(lat) <= 90 &&
-    Math.abs(lng) <= 180
+    map.getSource(
+      "navigation-route"
+    )
   ) {
 
-    return {
-
-      lat,
-      lng
-
-    };
+    return;
 
   }
 
 
-  return null;
+  map.addSource(
+    "navigation-route",
+    {
 
-}
+      type: "geojson",
 
+      data: {
+        type:
+          "FeatureCollection",
 
-/* =========================================================
-   如果沒有目的地
-========================================================= */
+        features: []
 
-function showWaitingDestination() {
-
-  $("turnIcon").textContent =
-    "↑";
-
-  $("turnText").textContent =
-    "駕駛模式";
-
-  $("roadName").textContent =
-    "等待導航目的地";
-
-  $("distanceText").textContent =
-    "由 map.html 傳入目的地後開始 Route";
-
-}
-
-
-/* =========================================================
-   按鈕：回到駕駛
-========================================================= */
-
-$("followButton")
-  .addEventListener(
-    "click",
-    function() {
-
-      followMode =
-        true;
-
-      drivingMode =
-        true;
-
-      this.textContent =
-        "🎯 已回到駕駛";
-
-      $("modeButton").textContent =
-        "🗺️ 平面";
-
-
-      updateDrivingCamera();
-
-
-      setTimeout(
-        () => {
-
-          this.textContent =
-            "🎯 回到駕駛";
-
-        },
-        1200
-      );
+      }
 
     }
   );
 
 
-/* =========================================================
-   按鈕：3D / 平面
-========================================================= */
+  map.addLayer({
+
+    id:
+      "navigation-route-shadow",
+
+    type:
+      "line",
+
+    source:
+      "navigation-route",
+
+    layout: {
+
+      "line-cap":
+        "round",
+
+      "line-join":
+        "round"
+
+    },
+
+    paint: {
+
+      "line-color":
+        "#ffffff",
+
+      "line-width":
+        13,
+
+      "line-opacity":
+        0.82
+
+    }
+
+  });
+
+
+  map.addLayer({
+
+    id:
+      "navigation-route-line",
+
+    type:
+      "line",
+
+    source:
+      "navigation-route",
+
+    layout: {
+
+      "line-cap":
+        "round",
+
+      "line-join":
+        "round"
+
+    },
+
+    paint: {
+
+      "line-color":
+        "#16803c",
+
+      "line-width":
+        8,
+
+      "line-opacity":
+        0.98
+
+    }
+
+  });
+
+}
+
+
+/* =====================================================
+   Route GeoJSON
+===================================================== */
+
+function setRouteGeoJSON(
+  geometry
+) {
+
+  if (
+    !map ||
+    !mapReady ||
+    !geometry
+  ) {
+
+    return;
+
+  }
+
+
+  const source =
+    map.getSource(
+      "navigation-route"
+    );
+
+
+  if (!source) {
+
+    return;
+
+  }
+
+
+  source.setData({
+
+    type:
+      "Feature",
+
+    properties: {},
+
+    geometry:
+      geometry
+
+  });
+
+}
+
+
+/* =====================================================
+   V4.1 真正駕駛攝影機
+===================================================== */
+
+function updateDrivingCamera() {
+
+  if (
+    !map ||
+    !mapReady ||
+    currentLat === null ||
+    currentLng === null ||
+    !followMode
+  ) {
+
+    return;
+
+  }
+
+
+  /*
+     -----------------------------------------------
+     1. 平滑車頭方向
+  -----------------------------------------------
+  */
+
+  let targetBearing =
+    Number(currentHeading);
+
+
+  if (
+    !Number.isFinite(targetBearing)
+  ) {
+
+    targetBearing =
+      lastCameraBearing;
+
+  }
+
+
+  targetBearing =
+    (
+      targetBearing +
+      360
+    ) % 360;
+
+
+  const bearingDiff =
+    angleDifference(
+      targetBearing,
+      lastCameraBearing
+    );
+
+
+  /*
+     停車時不要因 GPS 雜訊亂旋轉。
+  */
+
+  if (
+    currentSpeed < 2 &&
+    Math.abs(
+      bearingDiff
+    ) > 30
+  ) {
+
+    targetBearing =
+      lastCameraBearing;
+
+  } else {
+
+    /*
+       平滑旋轉。
+    */
+
+    targetBearing =
+      lastCameraBearing +
+      bearingDiff *
+      0.25;
+
+  }
+
+
+  targetBearing =
+    (
+      targetBearing +
+      360
+    ) % 360;
+
+
+  lastCameraBearing =
+    targetBearing;
+
+
+  /*
+     -----------------------------------------------
+     2. Look Ahead
+  -----------------------------------------------
+
+     駕駛模式不是把 GPS 放在畫面中心。
+
+     鏡頭中心在車前方。
+  */
+
+  let lookAheadMeters =
+    55;
+
+
+  if (
+    currentSpeed >= 30
+  ) {
+
+    lookAheadMeters =
+      75;
+
+  }
+
+
+  if (
+    currentSpeed >= 60
+  ) {
+
+    lookAheadMeters =
+      105;
+
+  }
+
+
+  if (
+    currentSpeed >= 90
+  ) {
+
+    lookAheadMeters =
+      135;
+
+  }
+
+
+  /*
+     米 → 緯度。
+  */
+
+  const metersPerDegreeLat =
+    111320;
+
+
+  const headingRad =
+    targetBearing *
+    Math.PI /
+    180;
+
+
+  const targetLat =
+    currentLat +
+    (
+      Math.cos(
+        headingRad
+      ) *
+      lookAheadMeters /
+      metersPerDegreeLat
+    );
+
+
+  const cosLat =
+    Math.max(
+      0.2,
+      Math.cos(
+        currentLat *
+        Math.PI /
+        180
+      )
+    );
+
+
+  const metersPerDegreeLng =
+    metersPerDegreeLat *
+    cosLat;
+
+
+  const targetLng =
+    currentLng +
+    (
+      Math.sin(
+        headingRad
+      ) *
+      lookAheadMeters /
+      metersPerDegreeLng
+    );
+
+
+  /*
+     -----------------------------------------------
+     3. Zoom
+  -----------------------------------------------
+  */
+
+  let zoom =
+    17.8;
+
+
+  if (
+    currentSpeed >= 30
+  ) {
+
+    zoom =
+      17.5;
+
+  }
+
+
+  if (
+    currentSpeed >= 60
+  ) {
+
+    zoom =
+      17.2;
+
+  }
+
+
+  if (
+    currentSpeed >= 90
+  ) {
+
+    zoom =
+      16.9;
+
+  }
+
+
+  /*
+     -----------------------------------------------
+     4. Pitch
+  -----------------------------------------------
+
+     不用 90°。
+
+     60～68° 是前視 3D 的主要範圍。
+  */
+
+  let pitch =
+    66;
+
+
+  if (
+    currentSpeed >= 60
+  ) {
+
+    pitch =
+      63;
+
+  }
+
+
+  /*
+     -----------------------------------------------
+     5. Padding
+  -----------------------------------------------
+
+     讓車落在畫面下方。
+  */
+
+  const bottomPadding =
+    Math.round(
+      window.innerHeight *
+      0.34
+    );
+
+
+  /*
+     -----------------------------------------------
+     6. Camera
+  -----------------------------------------------
+  */
+
+  try {
+
+    map.easeTo({
+
+      center: [
+        targetLng,
+        targetLat
+      ],
+
+      zoom:
+        zoom,
+
+      pitch:
+        drivingMode
+          ? pitch
+          : 0,
+
+      bearing:
+        drivingMode
+          ? targetBearing
+          : 0,
+
+      padding: {
+
+        top: 90,
+
+        bottom:
+          drivingMode
+            ? bottomPadding
+            : 0,
+
+        left: 0,
+
+        right: 0
+
+      },
+
+      duration:
+        currentSpeed >= 5
+          ? 420
+          : 650,
+
+      essential: true
+
+    });
+
+  } catch (error) {
+
+    console.error(
+      "Camera error:",
+      error
+    );
+
+  }
+
+}
+
+
+/* =====================================================
+   回到駕駛
+===================================================== */
+
+function returnToDrivingView() {
+
+  followMode =
+    true;
+
+  drivingMode =
+    true;
+
+  $("modeButton").textContent =
+    "🗺️ 平面";
+
+  updateDrivingCamera();
+
+  setGPSStatus(
+    "✓ 已回到駕駛視角"
+  );
+
+}
+
+
+/* =====================================================
+   建立 Route
+===================================================== */
+
+async function buildRoute() {
+
+  if (
+    currentLat === null ||
+    currentLng === null
+  ) {
+
+    setGPSStatus(
+      "尚未取得 GPS，請稍候"
+    );
+
+    return;
+
+  }
+
+
+  /*
+     沒有目的地就不建立假的路線。
+  */
+
+  if (
+    !routeDestination
+  ) {
+
+    setGPSStatus(
+      "請先從 map.html 選擇目的地"
+    );
+
+    return;
+
+  }
+
+
+  const now =
+    Date.now();
+
+
+  if (
+    now -
+    lastRouteRequest <
+    3000
+  ) {
+
+    return;
+
+  }
+
+
+  lastRouteRequest =
+    now;
+
+
+  routeReady =
+    false;
+
+
+  setGPSStatus(
+    "正在計算真實道路路線…"
+  );
+
+
+  /*
+     OSRM：
+
+     lng,lat
+     →
+     lng,lat
+  */
+
+  const url =
+    "https://router.project-osrm.org/route/v1/driving/" +
+
+    encodeURIComponent(
+      currentLng
+    ) +
+
+    "," +
+
+    encodeURIComponent(
+      currentLat
+    ) +
+
+    ";" +
+
+    encodeURIComponent(
+      routeDestination.lng
+    ) +
+
+    "," +
+
+    encodeURIComponent(
+      routeDestination.lat
+    ) +
+
+    "?steps=true" +
+
+    "&geometries=geojson" +
+
+    "&overview=full" +
+
+    "&alternatives=false";
+
+
+  try {
+
+    const response =
+      await fetch(
+        url,
+        {
+          method:
+            "GET",
+
+          headers: {
+            "Accept":
+              "application/json"
+          }
+        }
+      );
+
+
+    if (
+      !response.ok
+    ) {
+
+      throw new Error(
+        "Route HTTP " +
+        response.status
+      );
+
+    }
+
+
+    const data =
+      await response.json();
+
+
+    if (
+      !data ||
+      data.code !== "Ok" ||
+      !Array.isArray(
+        data.routes
+      ) ||
+      !data.routes.length
+    ) {
+
+      throw new Error(
+        "找不到道路路線"
+      );
+
+    }
+
+
+    routeData =
+      data.routes[0];
+
+
+    routeCoordinates =
+      Array.isArray(
+        routeData.geometry?.coordinates
+      )
+        ? routeData.geometry.coordinates
+        : [];
+
+
+    routeSteps =
+      [];
+
+
+    for (
+      const leg of
+      routeData.legs || []
+    ) {
+
+      for (
+        const step of
+        leg.steps || []
+      ) {
+
+        routeSteps.push(
+          step
+        );
+
+      }
+
+    }
+
+
+    currentStepIndex =
+      0;
+
+
+    routeReady =
+      routeCoordinates.length > 1;
+
+
+    if (
+      !routeReady
+    ) {
+
+      throw new Error(
+        "Route 資料不完整"
+      );
+
+    }
+
+
+    setRouteGeoJSON(
+      routeData.geometry
+    );
+
+
+    updateNavigationHUD();
+
+
+    setGPSStatus(
+      "✓ 真實道路 Route 已載入"
+    );
+
+
+    followMode =
+      true;
+
+
+    updateDrivingCamera();
+
+  } catch (error) {
+
+    console.error(
+      "Route error:",
+      error
+    );
+
+
+    setGPSStatus(
+      "Route 失敗：" +
+      (
+        error.message ||
+        "未知錯誤"
+      )
+    );
+
+  }
+
+}
+
+
+/* =====================================================
+   Route 進度
+===================================================== */
+
+function updateRouteProgress() {
+
+  if (
+    !routeSteps.length ||
+    currentLat === null
+  ) {
+
+    return;
+
+  }
+
+
+  let bestIndex =
+    currentStepIndex;
+
+  let bestDistance =
+    Infinity;
+
+
+  const start =
+    Math.max(
+      0,
+      currentStepIndex - 1
+    );
+
+
+  const end =
+    Math.min(
+      routeSteps.length - 1,
+      currentStepIndex + 5
+    );
+
+
+  for (
+    let i = start;
+    i <= end;
+    i++
+  ) {
+
+    const step =
+      routeSteps[i];
+
+
+    const location =
+      step?.maneuver?.location;
+
+
+    if (
+      !Array.isArray(
+        location
+      ) ||
+      location.length < 2
+    ) {
+
+      continue;
+
+    }
+
+
+    const d =
+      distanceBetween(
+
+        currentLat,
+        currentLng,
+
+        Number(location[1]),
+        Number(location[0])
+
+      );
+
+
+    if (
+      Number.isFinite(d) &&
+      d < bestDistance
+    ) {
+
+      bestDistance =
+        d;
+
+      bestIndex =
+        i;
+
+    }
+
+  }
+
+
+  currentStepIndex =
+    bestIndex;
+
+
+  updateNavigationHUD();
+
+}
+
+
+/* =====================================================
+   導航 HUD
+===================================================== */
+
+function updateNavigationHUD() {
+
+  if (
+    !routeSteps.length
+  ) {
+
+    return;
+
+  }
+
+
+  const step =
+    routeSteps[
+      currentStepIndex
+    ];
+
+
+  if (!step) {
+    return;
+  }
+
+
+  const maneuver =
+    step.maneuver ||
+    {};
+
+
+  const type =
+    String(
+      maneuver.type ||
+      ""
+    ).toLowerCase();
+
+
+  const modifier =
+    String(
+      maneuver.modifier ||
+      ""
+    ).toLowerCase();
+
+
+  let icon =
+    "↑";
+
+
+  if (
+    type === "arrive"
+  ) {
+
+    icon =
+      "🏁";
+
+  } else if (
+    modifier.includes(
+      "uturn"
+    )
+  ) {
+
+    icon =
+      "↶";
+
+  } else if (
+    modifier.includes(
+      "left"
+    )
+  ) {
+
+    icon =
+      "↰";
+
+  } else if (
+    modifier.includes(
+      "right"
+    )
+  ) {
+
+    icon =
+      "↱";
+
+  }
+
+
+  $("turnIcon").textContent =
+    icon;
+
+
+  const road =
+    step.name ||
+    "前方道路";
+
+
+  $("roadName").textContent =
+    road;
+
+
+  const distance =
+    Number(
+      step.distance || 0
+    );
+
+
+  $("distanceText").textContent =
+    formatDistance(
+      distance
+    );
+
+}
+
+
+/* =====================================================
+   距離格式
+===================================================== */
+
+function formatDistance(
+  meters
+) {
+
+  if (
+    !Number.isFinite(
+      meters
+    )
+  ) {
+
+    return "—";
+
+  }
+
+
+  if (
+    meters < 1000
+  ) {
+
+    return (
+      Math.max(
+        0,
+        Math.round(
+          meters
+        )
+      ) +
+      " 公尺"
+    );
+
+  }
+
+
+  return (
+    (
+      meters /
+      1000
+    ).toFixed(1) +
+    " 公里"
+  );
+
+}
+
+
+/* =====================================================
+   測速照相 Marker
+===================================================== */
+
+function createCameraMarker(
+  camera
+) {
+
+  if (
+    !map ||
+    !mapReady
+  ) {
+
+    return;
+
+  }
+
+
+  const el =
+    document.createElement(
+      "div"
+    );
+
+
+  el.style.width =
+    "34px";
+
+  el.style.height =
+    "34px";
+
+  el.style.borderRadius =
+    "50%";
+
+  el.style.background =
+    "#e53935";
+
+  el.style.border =
+    "3px solid white";
+
+  el.style.boxShadow =
+    "0 3px 10px rgba(0,0,0,.55)";
+
+  el.style.display =
+    "flex";
+
+  el.style.alignItems =
+    "center";
+
+  el.style.justifyContent =
+    "center";
+
+  el.style.fontSize =
+    "18px";
+
+  el.textContent =
+    "⚠";
+
+
+  const marker =
+    new maplibregl.Marker({
+      element: el
+    })
+    .setLngLat([
+      camera.lng,
+      camera.lat
+    ])
+    .addTo(map);
+
+
+  cameraMarkers.push(
+    marker
+  );
+
+}
+
+
+/* =====================================================
+   測速照相資料介面
+===================================================== */
+
+function setSpeedCameras(
+  rows
+) {
+
+  cameraData =
+    Array.isArray(rows)
+      ? rows
+      : [];
+
+
+  for (
+    const marker of
+    cameraMarkers
+  ) {
+
+    try {
+      marker.remove();
+    } catch (_) {}
+
+  }
+
+
+  cameraMarkers =
+    [];
+
+
+  for (
+    const row of
+    cameraData
+  ) {
+
+    const lat =
+      Number(
+        row.lat ??
+        row.latitude
+      );
+
+    const lng =
+      Number(
+        row.lng ??
+        row.longitude
+      );
+
+
+    if (
+      !Number.isFinite(lat) ||
+      !Number.isFinite(lng)
+    ) {
+
+      continue;
+
+    }
+
+
+    createCameraMarker({
+
+      lat: lat,
+
+      lng: lng
+
+    });
+
+  }
+
+}
+
+
+/* =====================================================
+   測速照相警告
+===================================================== */
+
+function checkSpeedCameraWarning() {
+
+  if (
+    currentLat === null ||
+    currentLng === null
+  ) {
+
+    return;
+
+  }
+
+
+  let nearest =
+    null;
+
+  let nearestDistance =
+    Infinity;
+
+
+  for (
+    const camera of
+    cameraData
+  ) {
+
+    if (
+      !camera ||
+      !Number.isFinite(
+        Number(camera.lat)
+      ) ||
+      !Number.isFinite(
+        Number(camera.lng)
+      )
+    ) {
+
+      continue;
+
+    }
+
+
+    const d =
+      distanceBetween(
+
+        currentLat,
+        currentLng,
+
+        Number(camera.lat),
+        Number(camera.lng)
+
+      );
+
+
+    if (
+      d < nearestDistance
+    ) {
+
+      nearestDistance =
+        d;
+
+      nearest =
+        camera;
+
+    }
+
+  }
+
+
+  const warning =
+    $("cameraWarning");
+
+
+  if (
+    nearest &&
+    nearestDistance <= 500
+  ) {
+
+    warning.style.display =
+      "block";
+
+    warning.textContent =
+      "⚠️ 前方約 " +
+      Math.round(
+        nearestDistance
+      ) +
+      " 公尺測速照相";
+
+  } else {
+
+    warning.style.display =
+      "none";
+
+  }
+
+}
+
+
+/* =====================================================
+   平面／駕駛
+===================================================== */
 
 $("modeButton")
   .addEventListener(
@@ -3395,35 +2617,61 @@ $("modeButton")
         drivingMode
       ) {
 
-        followMode =
-          true;
-
         this.textContent =
           "🗺️ 平面";
 
+        followMode =
+          true;
+
         updateDrivingCamera();
 
+        setGPSStatus(
+          "✓ 駕駛視角"
+        );
+
       } else {
+
+        this.textContent =
+          "🚗 駕駛";
 
         followMode =
           false;
 
-        this.textContent =
-          "🚗 3D";
 
-        if (map) {
+        if (
+          map &&
+          mapReady
+        ) {
 
           map.easeTo({
 
-            pitch: 0,
+            pitch:
+              0,
 
-            duration: 350,
+            bearing:
+              0,
 
-            essential: true
+            padding: {
+              top: 0,
+              bottom: 0,
+              left: 0,
+              right: 0
+            },
+
+            duration:
+              450,
+
+            essential:
+              true
 
           });
 
         }
+
+
+        setGPSStatus(
+          "已切換平面地圖"
+        );
 
       }
 
@@ -3431,55 +2679,184 @@ $("modeButton")
   );
 
 
-/* =========================================================
-   返回 map.html
-========================================================= */
+/* =====================================================
+   回到駕駛
+===================================================== */
 
-$("backButton")
+$("followButton")
   .addEventListener(
     "click",
     function() {
 
-      window.location.href =
-        "map.html";
+      returnToDrivingView();
 
     }
   );
 
 
-/* =========================================================
-   啟動
-========================================================= */
+/* =====================================================
+   建立路線
+===================================================== */
 
-async function startApplication() {
+$("routeButton")
+  .addEventListener(
+    "click",
+    function() {
 
-  destination =
-    readDestination();
-
-
-  initializeMap();
-
-
-  await initializeSupabase();
+      const destination =
+        getDestinationFromURL();
 
 
-  await createNavigationSession();
+      if (
+        destination
+      ) {
+
+        routeDestination =
+          destination;
+
+      }
 
 
-  startGPS();
+      buildRoute();
+
+    }
+  );
 
 
-  if (!destination) {
+/* =====================================================
+   返回 map.html
+===================================================== */
 
-    showWaitingDestination();
+$("backButton")
+  .addEventListener(
+    "click",
+    function(event) {
+
+      event.preventDefault();
+
+      event.stopPropagation();
+
+      window.location.href =
+        "./map.html";
+
+    }
+  );
+
+
+/* =====================================================
+   GPS 狀態
+===================================================== */
+
+function setGPSStatus(
+  text
+) {
+
+  const el =
+    $("gpsStatus");
+
+
+  if (
+    el
+  ) {
+
+    el.textContent =
+      String(text);
 
   }
 
 }
 
 
-startApplication();
+/* =====================================================
+   Loading
+===================================================== */
 
+function hideLoading() {
+
+  const el =
+    $("loading");
+
+
+  if (
+    el
+  ) {
+
+    el.style.display =
+      "none";
+
+  }
+
+}
+
+
+/* =====================================================
+   視窗大小
+===================================================== */
+
+window.addEventListener(
+  "resize",
+  function() {
+
+    if (
+      map &&
+      mapReady
+    ) {
+
+      map.resize();
+
+      if (
+        followMode
+      ) {
+
+        updateDrivingCamera();
+
+      }
+
+    }
+
+  }
+);
+
+
+/* =====================================================
+   測速照相定時檢查
+===================================================== */
+
+setInterval(
+  function() {
+
+    checkSpeedCameraWarning();
+
+  },
+  1000
+);
+
+
+/* =====================================================
+   啟動
+===================================================== */
+
+(function init() {
+
+  const destination =
+    getDestinationFromURL();
+
+
+  if (
+    destination
+  ) {
+
+    routeDestination =
+      destination;
+
+  }
+
+
+  createMap();
+
+  startGPS();
+
+})();
 </script>
 
 </body>
