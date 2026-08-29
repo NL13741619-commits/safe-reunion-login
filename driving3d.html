@@ -3,28 +3,29 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport"
-      content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+      content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 
-<title>安全團聚｜3D 駕駛模式</title>
+<title>安全團聚｜3D 駕駛</title>
 
 <link
-  href="https://unpkg.com/maplibre-gl@5.15.0/dist/maplibre-gl.css"
   rel="stylesheet"
-/>
+  href="https://unpkg.com/maplibre-gl@5.15.0/dist/maplibre-gl.css"
+>
 
 <style>
+
 html,
 body,
 #map {
-  margin: 0;
-  padding: 0;
-  width: 100%;
-  height: 100%;
+  margin:0;
+  padding:0;
+  width:100%;
+  height:100%;
+  overflow:hidden;
 }
 
 body {
-  overflow: hidden;
-  background: #111;
+  background:#111;
   font-family:
     -apple-system,
     BlinkMacSystemFont,
@@ -32,151 +33,359 @@ body {
     sans-serif;
 }
 
-/* =========================
-   上方導航資訊
-========================= */
+/* =====================================================
+   頂部導航卡
+===================================================== */
 
-#navigationPanel {
-  position: absolute;
-  z-index: 20;
+#navPanel {
 
-  top: env(safe-area-inset-top, 12px);
-  left: 12px;
-  right: 12px;
+  position:absolute;
 
-  margin-top: 8px;
+  z-index:100;
 
-  background: rgba(20, 128, 60, .96);
-  color: white;
+  top:calc(env(safe-area-inset-top) + 10px);
 
-  border-radius: 14px;
+  left:10px;
+  right:10px;
 
-  padding: 12px 16px;
+  pointer-events:none;
 
-  text-align: center;
-
-  box-shadow:
-    0 4px 15px rgba(0,0,0,.35);
-
-  pointer-events: none;
 }
 
-#direction {
-  font-size: 24px;
-  font-weight: 900;
+#navCard {
+
+  width:fit-content;
+
+  max-width:92%;
+
+  margin:auto;
+
+  padding:10px 20px;
+
+  border-radius:14px;
+
+  background:rgba(18,128,60,.97);
+
+  color:white;
+
+  text-align:center;
+
+  box-shadow:
+    0 4px 16px rgba(0,0,0,.45);
+
+}
+
+#turnIcon {
+
+  font-size:30px;
+
+  font-weight:900;
+
+  line-height:1;
+
 }
 
 #roadName {
-  margin-top: 4px;
-  font-size: 15px;
-  font-weight: 700;
+
+  margin-top:3px;
+
+  font-size:15px;
+
+  font-weight:800;
+
 }
 
-#distance {
-  margin-top: 3px;
-  font-size: 13px;
+#distanceText {
+
+  margin-top:2px;
+
+  font-size:13px;
+
+  opacity:.95;
+
 }
 
-/* =========================
-   車速
-========================= */
 
-#speedPanel {
-  position: absolute;
-  z-index: 20;
+/* =====================================================
+   駕駛速度
+===================================================== */
 
-  left: 14px;
-  bottom: calc(env(safe-area-inset-bottom, 14px) + 14px);
+#speedCircle {
 
-  width: 88px;
-  height: 88px;
+  position:absolute;
 
-  border-radius: 50%;
+  z-index:100;
 
-  background: white;
+  left:14px;
 
-  border: 5px solid #16803c;
+  bottom:calc(env(safe-area-inset-bottom) + 18px);
+
+  width:88px;
+
+  height:88px;
+
+  border-radius:50%;
+
+  background:white;
+
+  border:5px solid #16803c;
 
   box-shadow:
-    0 4px 14px rgba(0,0,0,.4);
+    0 4px 16px rgba(0,0,0,.5);
 
-  display: flex;
-  flex-direction: column;
+  display:flex;
 
-  justify-content: center;
-  align-items: center;
+  flex-direction:column;
+
+  justify-content:center;
+
+  align-items:center;
+
 }
 
-#speed {
-  font-size: 30px;
-  font-weight: 900;
-  line-height: 1;
+#speedValue {
+
+  font-size:31px;
+
+  line-height:1;
+
+  font-weight:900;
+
 }
 
 #speedUnit {
-  margin-top: 5px;
-  font-size: 11px;
-  color: #555;
+
+  margin-top:4px;
+
+  font-size:11px;
+
+  color:#555;
+
 }
 
-/* =========================
-   控制
-========================= */
 
-#controls {
-  position: absolute;
-  z-index: 20;
+/* =====================================================
+   右側按鈕
+===================================================== */
 
-  right: 12px;
-  bottom: calc(env(safe-area-inset-bottom, 14px) + 14px);
+#buttons {
 
-  display: flex;
-  flex-direction: column;
+  position:absolute;
 
-  gap: 8px;
+  z-index:110;
+
+  right:12px;
+
+  bottom:calc(env(safe-area-inset-bottom) + 18px);
+
+  display:flex;
+
+  flex-direction:column;
+
+  gap:8px;
+
 }
 
-.controlButton {
-  min-width: 86px;
-  min-height: 44px;
+.navButton {
 
-  border: none;
-  border-radius: 11px;
+  min-width:100px;
 
-  background: white;
+  min-height:45px;
 
-  font-size: 14px;
-  font-weight: 800;
+  border:0;
+
+  border-radius:12px;
+
+  background:white;
+
+  color:#222;
+
+  font-size:14px;
+
+  font-weight:800;
 
   box-shadow:
-    0 3px 12px rgba(0,0,0,.35);
+    0 3px 12px rgba(0,0,0,.4);
+
 }
 
-/* =========================
+.navButton:active {
+
+  transform:scale(.96);
+
+}
+
+
+/* =====================================================
    GPS 狀態
-========================= */
+===================================================== */
 
 #gpsStatus {
-  position: absolute;
-  z-index: 20;
 
-  left: 110px;
-  right: 110px;
+  position:absolute;
 
-  bottom: calc(env(safe-area-inset-bottom, 14px) + 20px);
+  z-index:100;
 
-  padding: 8px 10px;
+  left:112px;
 
-  border-radius: 9px;
+  right:120px;
 
-  background: rgba(0,0,0,.65);
+  bottom:calc(env(safe-area-inset-bottom) + 21px);
 
-  color: white;
+  padding:8px 10px;
 
-  text-align: center;
+  border-radius:9px;
 
-  font-size: 12px;
+  background:rgba(0,0,0,.7);
+
+  color:white;
+
+  font-size:12px;
+
+  text-align:center;
+
 }
+
+
+/* =====================================================
+   駕駛模式中央車輛
+===================================================== */
+
+#vehicle {
+
+  position:absolute;
+
+  z-index:90;
+
+  left:50%;
+
+  bottom:27%;
+
+  transform:translateX(-50%);
+
+  width:34px;
+
+  height:58px;
+
+  pointer-events:none;
+
+}
+
+#vehicle::before {
+
+  content:"";
+
+  position:absolute;
+
+  left:3px;
+
+  top:0;
+
+  width:28px;
+
+  height:52px;
+
+  border-radius:
+    13px
+    13px
+    8px
+    8px;
+
+  background:#06C755;
+
+  border:3px solid white;
+
+  box-shadow:
+    0 3px 9px rgba(0,0,0,.55);
+
+}
+
+#vehicle::after {
+
+  content:"";
+
+  position:absolute;
+
+  left:10px;
+
+  top:7px;
+
+  width:14px;
+
+  height:20px;
+
+  border-radius:6px;
+
+  background:#dff8ff;
+
+}
+
+
+/* =====================================================
+   前方道路光暈
+===================================================== */
+
+#roadGlow {
+
+  position:absolute;
+
+  z-index:50;
+
+  pointer-events:none;
+
+  left:50%;
+
+  bottom:0;
+
+  transform:translateX(-50%);
+
+  width:70%;
+
+  height:45%;
+
+  background:
+    linear-gradient(
+      to top,
+      rgba(255,255,255,.12),
+      rgba(255,255,255,0)
+    );
+
+}
+
+
+/* =====================================================
+   返回按鈕特別提高層級
+===================================================== */
+
+#backButton {
+
+  position:absolute;
+
+  z-index:9999;
+
+  top:calc(env(safe-area-inset-top) + 10px);
+
+  left:10px;
+
+  min-width:78px;
+
+  min-height:44px;
+
+  border:0;
+
+  border-radius:11px;
+
+  background:white;
+
+  font-size:14px;
+
+  font-weight:900;
+
+  box-shadow:
+    0 3px 12px rgba(0,0,0,.45);
+
+}
+
 </style>
 </head>
 
@@ -184,25 +393,43 @@ body {
 
 <div id="map"></div>
 
-<div id="navigationPanel">
 
-  <div id="direction">
-    ↑
-  </div>
+<button
+  id="backButton"
+  type="button">
+  ← 地圖
+</button>
 
-  <div id="roadName">
-    3D 駕駛模式
-  </div>
 
-  <div id="distance">
-    正在取得 GPS…
+<div id="navPanel">
+
+  <div id="navCard">
+
+    <div id="turnIcon">
+      ↑
+    </div>
+
+    <div id="roadName">
+      駕駛模式
+    </div>
+
+    <div id="distanceText">
+      正在取得 GPS…
+    </div>
+
   </div>
 
 </div>
 
-<div id="speedPanel">
 
-  <div id="speed">
+<div id="vehicle"></div>
+
+<div id="roadGlow"></div>
+
+
+<div id="speedCircle">
+
+  <div id="speedValue">
     0
   </div>
 
@@ -212,80 +439,92 @@ body {
 
 </div>
 
-<div id="controls">
+
+<div id="gpsStatus">
+  正在啟動 GPS…
+</div>
+
+
+<div id="buttons">
 
   <button
-    class="controlButton"
-    id="followButton">
-    🎯 跟隨
+    class="navButton"
+    id="followButton"
+    type="button">
+    🎯 回到駕駛
   </button>
 
   <button
-    class="controlButton"
-    id="flatButton">
+    class="navButton"
+    id="modeButton"
+    type="button">
     🗺️ 平面
   </button>
 
-  <button
-    class="controlButton"
-    id="backButton">
-    ← 地圖
-  </button>
-
-</div>
-
-<div id="gpsStatus">
-  正在啟動 3D 地圖…
 </div>
 
 
-<script src="https://unpkg.com/maplibre-gl@5.15.0/dist/maplibre-gl.js"></script>
+<script
+  src="https://unpkg.com/maplibre-gl@5.15.0/dist/maplibre-gl.js">
+</script>
+
 
 <script>
 
 let map = null;
 
-let userMarker = null;
+
+/* =====================================================
+   GPS 狀態
+===================================================== */
 
 let currentLat = null;
+
 let currentLng = null;
 
 let currentHeading = 0;
+
 let currentSpeed = 0;
 
+let lastGPS = null;
+
+
+/* =====================================================
+   駕駛模式
+===================================================== */
+
+let drivingMode = true;
+
 let followMode = true;
-let is3D = true;
-
-let lastPosition = null;
 
 
-/* =========================================
-   建立 MapLibre 真正 WebGL 地圖
-========================================= */
+/* =====================================================
+   建立地圖
+===================================================== */
 
-function initialize3DMap() {
+function createMap() {
 
   map = new maplibregl.Map({
 
-    container: "map",
+    container:"map",
 
     style:
       "https://tiles.openfreemap.org/styles/liberty",
 
-    center: [
+    center:[
       121.5654,
       25.0330
     ],
 
-    zoom: 16,
+    zoom:17,
 
-    pitch: 68,
+    pitch:68,
 
-    bearing: 0,
+    bearing:0,
 
-    maxPitch: 75,
+    maxPitch:75,
 
-    antialias: true
+    antialias:true
 
   });
 
@@ -293,7 +532,7 @@ function initialize3DMap() {
   map.addControl(
 
     new maplibregl.NavigationControl({
-      showCompass: true
+      showCompass:true
     }),
 
     "top-right"
@@ -301,151 +540,153 @@ function initialize3DMap() {
   );
 
 
-  map.on("load", function() {
+  /*
+     使用者開始拖曳地圖
+     → 解除自動跟隨
+  */
 
-    document.getElementById(
-      "gpsStatus"
-    ).textContent =
-      "✓ WebGL 3D 地圖已啟動，等待 GPS…";
+  map.on(
+    "dragstart",
+    function(){
 
-  });
+      followMode=false;
+
+      document.getElementById(
+        "gpsStatus"
+      ).textContent =
+        "已暫停跟隨｜拖動查看前方道路";
+
+    }
+  );
+
+
+  map.on(
+    "load",
+    function(){
+
+      document.getElementById(
+        "gpsStatus"
+      ).textContent =
+        "✓ 3D 駕駛畫面已啟動";
+
+    }
+  );
 
 }
 
 
-/* =========================================
-   計算兩點距離
-========================================= */
+/* =====================================================
+   距離
+===================================================== */
 
 function distanceBetween(
   lat1,
   lng1,
   lat2,
   lng2
-) {
+){
 
-  const R = 6371000;
+  const R=6371000;
 
   const p1 =
-    lat1 * Math.PI / 180;
+    lat1*Math.PI/180;
 
   const p2 =
-    lat2 * Math.PI / 180;
+    lat2*Math.PI/180;
 
   const dp =
-    (lat2 - lat1) *
-    Math.PI / 180;
+    (lat2-lat1)*Math.PI/180;
 
   const dl =
-    (lng2 - lng1) *
-    Math.PI / 180;
+    (lng2-lng1)*Math.PI/180;
 
   const a =
-    Math.sin(dp / 2) *
-    Math.sin(dp / 2) +
 
-    Math.cos(p1) *
-    Math.cos(p2) *
+    Math.sin(dp/2)**2 +
 
-    Math.sin(dl / 2) *
-    Math.sin(dl / 2);
+    Math.cos(p1)*
+    Math.cos(p2)*
+
+    Math.sin(dl/2)**2;
 
   return (
+
     R *
+
     2 *
+
     Math.atan2(
       Math.sqrt(a),
-      Math.sqrt(1 - a)
+      Math.sqrt(1-a)
     )
+
   );
 
 }
 
 
-/* =========================================
-   計算行進方向
-========================================= */
+/* =====================================================
+   計算方向
+===================================================== */
 
 function calculateBearing(
   lat1,
   lng1,
   lat2,
   lng2
-) {
+){
 
   const p1 =
-    lat1 * Math.PI / 180;
+    lat1*Math.PI/180;
 
   const p2 =
-    lat2 * Math.PI / 180;
+    lat2*Math.PI/180;
 
   const dl =
-    (lng2 - lng1) *
-    Math.PI / 180;
+    (lng2-lng1)*Math.PI/180;
 
   const y =
-    Math.sin(dl) *
+    Math.sin(dl)*
     Math.cos(p2);
 
   const x =
-    Math.cos(p1) *
-    Math.sin(p2) -
 
-    Math.sin(p1) *
-    Math.cos(p2) *
+    Math.cos(p1)*
+    Math.sin(p2)
+
+    -
+
+    Math.sin(p1)*
+    Math.cos(p2)*
     Math.cos(dl);
 
   return (
-    Math.atan2(y, x) *
-    180 /
-    Math.PI +
+
+    Math.atan2(y,x)*
+    180/
+    Math.PI+
+
     360
-  ) % 360;
+
+  )%360;
 
 }
 
 
-/* =========================================
-   建立自己的車輛圖示
-========================================= */
-
-function createVehicleElement() {
-
-  const vehicle =
-    document.createElement("div");
-
-  vehicle.style.width = "0";
-  vehicle.style.height = "0";
-
-  vehicle.style.borderLeft =
-    "14px solid transparent";
-
-  vehicle.style.borderRight =
-    "14px solid transparent";
-
-  vehicle.style.borderBottom =
-    "38px solid #06C755";
-
-  vehicle.style.filter =
-    "drop-shadow(0 3px 4px rgba(0,0,0,.5))";
-
-  return vehicle;
-
-}
-
-
-/* =========================================
+/* =====================================================
    GPS
-========================================= */
+===================================================== */
 
-function startGPS() {
+function startGPS(){
 
-  if (!navigator.geolocation) {
+  if(
+    !navigator.geolocation
+  ){
 
     document.getElementById(
       "gpsStatus"
     ).textContent =
-      "此裝置不支援 GPS";
+      "裝置不支援 GPS";
 
     return;
 
@@ -454,29 +695,25 @@ function startGPS() {
 
   navigator.geolocation.watchPosition(
 
-    function(position) {
+    handleGPS,
 
-      updateGPS(position);
-
-    },
-
-    function(error) {
+    function(error){
 
       document.getElementById(
         "gpsStatus"
       ).textContent =
-        "GPS 定位失敗：" +
+        "GPS：" +
         error.message;
 
     },
 
     {
 
-      enableHighAccuracy: true,
+      enableHighAccuracy:true,
 
-      maximumAge: 1000,
+      maximumAge:1000,
 
-      timeout: 15000
+      timeout:15000
 
     }
 
@@ -485,76 +722,81 @@ function startGPS() {
 }
 
 
-/* =========================================
-   更新 GPS
-========================================= */
+/* =====================================================
+   GPS 更新
+===================================================== */
 
-function updateGPS(position) {
+function handleGPS(position){
 
-  const coords =
+  const c =
     position.coords;
 
+
   const lat =
-    Number(coords.latitude);
+    Number(c.latitude);
 
   const lng =
-    Number(coords.longitude);
+    Number(c.longitude);
 
 
-  if (
+  if(
     !Number.isFinite(lat) ||
     !Number.isFinite(lng)
-  ) {
+  ){
     return;
   }
 
 
-  /* ---------- 速度 ---------- */
+  /* -------------------------------
+     速度
+  -------------------------------- */
 
   let speed =
-    Number(coords.speed);
+    Number(c.speed);
 
 
-  if (
+  if(
     !Number.isFinite(speed) ||
-    speed < 0
-  ) {
+    speed<0
+  ){
 
-    speed = 0;
+    speed=0;
 
-  } else {
+  }else{
 
-    speed *= 3.6;
+    speed*=3.6;
 
   }
 
 
   currentSpeed =
-    Math.max(
-      0,
-      Math.min(
-        200,
+    Math.min(
+      200,
+      Math.max(
+        0,
         speed
       )
     );
 
 
-  /* ---------- 方向 ---------- */
+  /* -------------------------------
+     方向
+  -------------------------------- */
 
   let heading =
-    Number(coords.heading);
+    Number(c.heading);
 
 
-  if (
+  if(
     !Number.isFinite(heading) &&
-    lastPosition
-  ) {
+    lastGPS
+  ){
 
     const moved =
       distanceBetween(
 
-        lastPosition.lat,
-        lastPosition.lng,
+        lastGPS.lat,
+        lastGPS.lng,
 
         lat,
         lng
@@ -562,13 +804,13 @@ function updateGPS(position) {
       );
 
 
-    if (moved > 5) {
+    if(moved>5){
 
       heading =
         calculateBearing(
 
-          lastPosition.lat,
-          lastPosition.lng,
+          lastGPS.lat,
+          lastGPS.lng,
 
           lat,
           lng
@@ -580,10 +822,10 @@ function updateGPS(position) {
   }
 
 
-  if (
+  if(
     Number.isFinite(heading) &&
-    currentSpeed > 2
-  ) {
+    currentSpeed>2
+  ){
 
     currentHeading =
       heading;
@@ -591,100 +833,70 @@ function updateGPS(position) {
   }
 
 
-  currentLat = lat;
+  currentLat=lat;
 
-  currentLng = lng;
-
-
-  /* ---------- 車輛 ---------- */
-
-  if (!userMarker) {
-
-    userMarker =
-      new maplibregl.Marker({
-
-        element:
-          createVehicleElement(),
-
-        rotationAlignment:
-          "map",
-
-        pitchAlignment:
-          "map"
-
-      })
-
-      .setLngLat([
-        lng,
-        lat
-      ])
-
-      .addTo(map);
-
-  } else {
-
-    userMarker
-      .setLngLat([
-        lng,
-        lat
-      ]);
-
-  }
+  currentLng=lng;
 
 
-  /* ---------- 顯示速度 ---------- */
+  /* -------------------------------
+     UI
+  -------------------------------- */
 
   document.getElementById(
-    "speed"
+    "speedValue"
   ).textContent =
     Math.round(
       currentSpeed
     );
 
 
-  /* ---------- GPS 狀態 ---------- */
-
   document.getElementById(
     "gpsStatus"
   ).textContent =
-    "GPS ±" +
+    "GPS ±"+
     Math.round(
-      coords.accuracy || 0
-    ) +
-    "m｜方向 " +
+      c.accuracy||0
+    )+
+    "m｜"+
     Math.round(
       currentHeading
-    ) +
+    )+
     "°";
 
 
-  /* ---------- 駕駛攝影機 ---------- */
+  /* -------------------------------
+     地圖中心
+  -------------------------------- */
 
-  updateDrivingCamera();
+  if(
+    followMode
+  ){
+
+    updateDrivingCamera();
+
+  }
 
 
-  lastPosition = {
-
-    lat: lat,
-
-    lng: lng
-
+  lastGPS={
+    lat,
+    lng,
+    time:position.timestamp
   };
 
 }
 
 
-/* =========================================
-   真正 3D 駕駛攝影機
-========================================= */
+/* =====================================================
+   駕駛攝影機
+===================================================== */
 
-function updateDrivingCamera() {
+function updateDrivingCamera(){
 
-  if (
+  if(
     !map ||
-    currentLat === null ||
+    currentLat===null ||
     !followMode
-  ) {
+  ){
 
     return;
 
@@ -693,35 +905,35 @@ function updateDrivingCamera() {
 
   map.easeTo({
 
-    center: [
+    center:[
       currentLng,
       currentLat
     ],
 
-    zoom: 18,
+    zoom:18,
 
     pitch:
-      is3D
-        ? 68
+      drivingMode
+        ? 70
         : 0,
 
     bearing:
-      is3D
+      drivingMode
         ? currentHeading
         : 0,
 
-    duration: 250,
+    duration:250,
 
-    essential: true
+    essential:true
 
   });
 
 }
 
 
-/* =========================================
-   跟隨
-========================================= */
+/* =====================================================
+   回到駕駛
+===================================================== */
 
 document
   .getElementById(
@@ -729,9 +941,16 @@ document
   )
   .addEventListener(
     "click",
-    function() {
+    function(){
 
-      followMode = true;
+      followMode=true;
+
+      drivingMode=true;
+
+      document.getElementById(
+        "modeButton"
+      ).textContent =
+        "🗺️ 平面";
 
       updateDrivingCamera();
 
@@ -739,24 +958,38 @@ document
   );
 
 
-/* =========================================
+/* =====================================================
    3D / 平面
-========================================= */
+===================================================== */
 
 document
   .getElementById(
-    "flatButton"
+    "modeButton"
   )
   .addEventListener(
     "click",
-    function() {
+    function(){
 
-      is3D = !is3D;
+      drivingMode=
+        !drivingMode;
 
-      this.textContent =
-        is3D
-          ? "🗺️ 平面"
-          : "🚗 3D";
+      if(
+        drivingMode
+      ){
+
+        this.textContent=
+          "🗺️ 平面";
+
+        followMode=true;
+
+      }else{
+
+        this.textContent=
+          "🚗 3D";
+
+        followMode=false;
+
+      }
 
       updateDrivingCamera();
 
@@ -764,9 +997,9 @@ document
   );
 
 
-/* =========================================
-   回到 map.html
-========================================= */
+/* =====================================================
+   返回 map.html
+===================================================== */
 
 document
   .getElementById(
@@ -774,20 +1007,21 @@ document
   )
   .addEventListener(
     "click",
-    function() {
+    function(){
 
-      window.location.href =
-        "map.html";
+      window.location.replace(
+        "map.html"
+      );
 
     }
   );
 
 
-/* =========================================
+/* =====================================================
    啟動
-========================================= */
+===================================================== */
 
-initialize3DMap();
+createMap();
 
 startGPS();
 
