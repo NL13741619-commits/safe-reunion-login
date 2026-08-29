@@ -1960,109 +1960,917 @@ document.getElementById("btnAddMap").onclick = function () {
 };
 
 /* =========================================================
-   17. 路線（自己實線、其他人虛線）
+   17. 路線＋逐步語音導航
+   自己：實線
+   其他成員：虛線
    ========================================================= */
+
 function clearAllRouteLines() {
   Object.keys(routeLines).forEach(function (key) {
-    if (map.hasLayer(routeLines[key])) map.removeLayer(routeLines[key]);
+    if (map.hasLayer(routeLines[key])) {
+      map.removeLayer(routeLines[key]);
+    }
   });
   routeLines = {};
 }
+
+
+/* ---------------------------------------------------------
+   目前使用的集合點
+--------------------------------------------------------- */
 
 function getActiveMeetingPoint() {
   if (!waypoints || !waypoints.length) return null;
   return waypoints[0];
 }
 
+
+/* ---------------------------------------------------------
+   OSRM 路線
+   steps=true → 同時取得逐步導航資料
+--------------------------------------------------------- */
+
 async function fetchRouteCoords(fromLat, fromLng, toLat, toLng) {
+
   const url =
     "https://router.project-osrm.org/route/v1/driving/" +
-    fromLng + "," + fromLat + ";" + toLng + "," + toLat +
-    "?overview=full&geometries=geojson";
+    fromLng + "," + fromLat + ";" +
+    toLng + "," + toLat +
+    "?overview=full" +
+    "&geometries=geojson" +
+    "&steps=true";
+
   try {
+
     const res = await fetch(url);
-    if (!res.ok) return null;
+
+    if (!res.ok) {
+      console.error("OSRM HTTP 錯誤：", res.status);
+      return null;
+    }
+
     const data = await res.json();
-    if (!data.routes || !data.routes.length) return null;
-    const coords = data.routes[0].geometry.coordinates.map(function (c) {
-      return [c[1], c[0]];
-    });
+
+    if (
+      !data.routes ||
+      !data.routes.length
+    ) {
+      return null;
+    }
+
+    const route = data.routes[0];
+
+    const coords =
+      route.geometry.coordinates.map(function (c) {
+        return [c[1], c[0]];
+      });
+
+    /*
+       取得逐步導航步驟
+    */
+
+    let steps = [];
+
+    if (
+      route.legs &&
+      route.legs.length
+    ) {
+
+      route.legs.forEach(function (leg) {
+
+        if (
+          leg.steps &&
+          Array.isArray(leg.steps)
+        ) {
+
+          steps = steps.concat(leg.steps);
+
+        }
+
+      });
+
+    }
+
     return {
       coords: coords,
-      distance: data.routes[0].distance,
-      duration: data.routes[0].duration
+      distance: route.distance,
+      duration: route.duration,
+      steps: steps
     };
+
   } catch (e) {
+
     console.error("路線取得失敗：", e);
+
     return null;
+
   }
+
 }
+
+
+/* ---------------------------------------------------------
+   畫路線
+--------------------------------------------------------- */
 
 function drawRouteLine(key, coords, isSelf, color) {
-  if (routeLines[key] && map.hasLayer(routeLines[key])) {
+
+  if (
+    routeLines[key] &&
+    map.hasLayer(routeLines[key])
+  ) {
     map.removeLayer(routeLines[key]);
   }
-  if (!coords || coords.length < 2) return;
-  const line = L.polyline(coords, {
-    color: color || (isSelf ? "#1565c0" : "#7e57c2"),
-    weight: isSelf ? 5 : 4,
-    opacity: isSelf ? 0.9 : 0.65,
-    dashArray: isSelf ? null : "10, 10",
-    lineJoin: "round"
-  }).addTo(map);
-  routeLines[key] = line;
-}
 
-async function updateAllRoutes() {
-  const target = getActiveMeetingPoint();
-  if (!target || !Number.isFinite(target.lat) || !Number.isFinite(target.lng)) {
-    clearAllRouteLines();
-    if (navEtaBox) navEtaBox.style.display = "none";
+  if (
+    !coords ||
+    coords.length < 2
+  ) {
     return;
   }
 
-  // 自己
-  if (myLat != null && myLng != null) {
-    const mine = await fetchRouteCoords(myLat, myLng, target.lat, target.lng);
-    if (mine) {
-      drawRouteLine("me", mine.coords, true, "#1565c0");
-      if (navEtaBox && navigationOn) {
-        navEtaBox.style.display = "";
-        navEtaEl.textContent = formatDuration(mine.duration);
-        navDistEl.textContent = formatDistance(mine.distance);
-      }
-    } else {
-      // fallback 直線
-      drawRouteLine("me", [[myLat, myLng], [target.lat, target.lng]], true, "#1565c0");
-    }
-  }
+  const line =
+    L.polyline(
+      coords,
+      {
+        color:
+          color ||
+          (isSelf ? "#1565c0" : "#7e57c2"),
 
-  // 其他人
-  if (window._lastPeerRows && Array.isArray(window._lastPeerRows)) {
-    for (let i = 0; i < window._lastPeerRows.length; i++) {
-      const row = window._lastPeerRows[i];
-      if (!row || !row.user_id) continue;
-      if (me && String(row.user_id) === String(me.id)) continue;
-      const lat = Number(row.lat);
-      const lng = Number(row.lng);
-      if (!Number.isFinite(lat) || !Number.isFinite(lng)) continue;
+        weight:
+          isSelf ? 5 : 4,
 
-      const color = memberColorFromId(row.user_id);
-      const route = await fetchRouteCoords(lat, lng, target.lat, target.lng);
-      if (route) {
-        drawRouteLine("peer_" + row.user_id, route.coords, false, color);
+        opacity:
+          isSelf ? 0.9 : 0.65,
+
+        dashArray:
+          isSelf ? null : "10, 10",
+
+        lineJoin: "round"
       }
-    }
-  }
+    ).addTo(map);
+
+  routeLines[key] = line;
+
 }
+
+
+/* =========================================================
+   語音導航
+   ========================================================= */
+
+let navigationSteps = [];
+let navigationStepIndex = 0;
+let navigationLastAnnounce = 0;
+let navigationLastStepIndex = -1;
+
+
+/* ---------------------------------------------------------
+   將 OSRM maneuver 轉成中文
+--------------------------------------------------------- */
+
+function getManeuverText(step) {
+
+  if (!step || !step.maneuver) {
+    return "繼續行駛";
+  }
+
+  const type =
+    step.maneuver.type || "";
+
+  const modifier =
+    step.maneuver.modifier || "";
+
+  const name =
+    step.name || "";
+
+  let action = "";
+
+  if (type === "depart") {
+    action = "出發";
+  }
+
+  else if (type === "arrive") {
+    action = "抵達目的地";
+  }
+
+  else if (type === "turn") {
+
+    if (modifier === "left") {
+      action = "左轉";
+    }
+
+    else if (modifier === "right") {
+      action = "右轉";
+    }
+
+    else if (
+      modifier === "slight left"
+    ) {
+      action = "向左前方";
+    }
+
+    else if (
+      modifier === "slight right"
+    ) {
+      action = "向右前方";
+    }
+
+    else if (
+      modifier === "sharp left"
+    ) {
+      action = "向左急轉";
+    }
+
+    else if (
+      modifier === "sharp right"
+    ) {
+      action = "向右急轉";
+    }
+
+    else {
+      action = "轉彎";
+    }
+
+  }
+
+  else if (
+    type === "continue"
+  ) {
+
+    if (modifier === "left") {
+      action = "靠左行駛";
+    }
+
+    else if (modifier === "right") {
+      action = "靠右行駛";
+    }
+
+    else {
+      action = "繼續直行";
+    }
+
+  }
+
+  else if (
+    type === "new name"
+  ) {
+
+    action = "繼續行駛";
+
+  }
+
+  else if (
+    type === "merge"
+  ) {
+
+    action = "併入道路";
+
+  }
+
+  else if (
+    type === "on ramp"
+  ) {
+
+    action = "進入匝道";
+
+  }
+
+  else if (
+    type === "off ramp"
+  ) {
+
+    action = "離開匝道";
+
+  }
+
+  else if (
+    type === "fork"
+  ) {
+
+    if (modifier === "left") {
+      action = "在岔路靠左";
+    }
+
+    else if (modifier === "right") {
+      action = "在岔路靠右";
+    }
+
+    else {
+      action = "通過岔路";
+    }
+
+  }
+
+  else if (
+    type === "roundabout" ||
+    type === "rotary"
+  ) {
+
+    action = "進入圓環";
+
+  }
+
+  else if (
+    type === "exit roundabout" ||
+    type === "exit rotary"
+  ) {
+
+    action = "離開圓環";
+
+  }
+
+  else if (
+    type === "uturn"
+  ) {
+
+    action = "迴轉";
+
+  }
+
+  else if (
+    type === "notification"
+  ) {
+
+    action = "注意前方道路";
+
+  }
+
+  else {
+
+    action = "繼續行駛";
+
+  }
+
+
+  /*
+     如果有道路名稱
+  */
+
+  if (
+    name &&
+    type !== "arrive"
+  ) {
+
+    return action + "，進入 " + name;
+
+  }
+
+  return action;
+
+}
+
+
+/* ---------------------------------------------------------
+   距離格式
+--------------------------------------------------------- */
+
+function formatNavigationDistance(meters) {
+
+  meters = Number(meters) || 0;
+
+  if (meters >= 1000) {
+
+    return (
+      (meters / 1000)
+        .toFixed(meters >= 10000 ? 0 : 1)
+      + " 公里"
+    );
+
+  }
+
+  if (meters >= 100) {
+
+    return (
+      Math.round(meters / 10) * 10
+      + " 公尺"
+    );
+
+  }
+
+  return (
+    Math.max(10, Math.round(meters / 10) * 10)
+    + " 公尺"
+  );
+
+}
+
+
+/* ---------------------------------------------------------
+   導航步驟初始化
+--------------------------------------------------------- */
+
+function prepareNavigationSteps(route) {
+
+  navigationSteps = [];
+
+  navigationStepIndex = 0;
+
+  navigationLastAnnounce = 0;
+
+  navigationLastStepIndex = -1;
+
+  if (
+    !route ||
+    !Array.isArray(route.steps)
+  ) {
+    return;
+  }
+
+  navigationSteps =
+    route.steps.filter(function (step) {
+
+      if (!step || !step.maneuver) {
+        return false;
+      }
+
+      const type =
+        step.maneuver.type || "";
+
+      return (
+        type !== "depart"
+      );
+
+    });
+
+}
+
+
+/* ---------------------------------------------------------
+   尋找目前最接近的導航步驟
+--------------------------------------------------------- */
+
+function getNavigationStepDistance(step) {
+
+  if (
+    !step ||
+    !step.maneuver ||
+    !step.maneuver.location
+  ) {
+    return Infinity;
+  }
+
+  const loc =
+    step.maneuver.location;
+
+  if (
+    !Array.isArray(loc) ||
+    loc.length < 2
+  ) {
+    return Infinity;
+  }
+
+  const lng = Number(loc[0]);
+  const lat = Number(loc[1]);
+
+  if (
+    !Number.isFinite(lat) ||
+    !Number.isFinite(lng)
+  ) {
+    return Infinity;
+  }
+
+  return distanceMeters(
+    myLat,
+    myLng,
+    lat,
+    lng
+  );
+
+}
+
+
+/* ---------------------------------------------------------
+   導航語音判斷
+--------------------------------------------------------- */
+
+function updateNavigationVoice() {
+
+  if (
+    !navigationOn ||
+    !voiceOn ||
+    myLat == null ||
+    myLng == null ||
+    !navigationSteps.length
+  ) {
+    return;
+  }
+
+
+  /*
+     從目前步驟開始尋找最近的轉彎
+  */
+
+  let bestIndex =
+    navigationStepIndex;
+
+  let bestDistance =
+    Infinity;
+
+
+  for (
+    let i = navigationStepIndex;
+    i < navigationSteps.length;
+    i++
+  ) {
+
+    const d =
+      getNavigationStepDistance(
+        navigationSteps[i]
+      );
+
+    if (d < bestDistance) {
+
+      bestDistance = d;
+
+      bestIndex = i;
+
+    }
+
+  }
+
+
+  navigationStepIndex =
+    bestIndex;
+
+
+  const step =
+    navigationSteps[navigationStepIndex];
+
+  if (!step) return;
+
+
+  const distance =
+    getNavigationStepDistance(step);
+
+
+  const now =
+    Date.now();
+
+
+  /*
+     抵達
+  */
+
+  if (
+    step.maneuver &&
+    step.maneuver.type === "arrive"
+  ) {
+
+    if (
+      now - navigationLastAnnounce > 15000
+    ) {
+
+      speak("您已抵達目的地");
+
+      navigationLastAnnounce = now;
+
+    }
+
+    return;
+
+  }
+
+
+  const instruction =
+    getManeuverText(step);
+
+
+  /*
+     500 公尺提醒
+  */
+
+  if (
+    distance <= 550 &&
+    distance > 250 &&
+    navigationLastStepIndex !==
+      navigationStepIndex
+  ) {
+
+    speak(
+      "前方約 " +
+      formatNavigationDistance(distance) +
+      "，" +
+      instruction
+    );
+
+    navigationLastStepIndex =
+      navigationStepIndex;
+
+    navigationLastAnnounce =
+      now;
+
+    return;
+
+  }
+
+
+  /*
+     200 公尺再次提醒
+  */
+
+  if (
+    distance <= 250 &&
+    distance > 80 &&
+    now - navigationLastAnnounce > 12000
+  ) {
+
+    speak(
+      "前方 " +
+      formatNavigationDistance(distance) +
+      "，" +
+      instruction
+    );
+
+    navigationLastAnnounce =
+      now;
+
+    return;
+
+  }
+
+
+  /*
+     80 公尺內再次提醒
+  */
+
+  if (
+    distance <= 80 &&
+    now - navigationLastAnnounce > 10000
+  ) {
+
+    speak(
+      "現在，" +
+      instruction
+    );
+
+    navigationLastAnnounce =
+      now;
+
+    /*
+       進入下一步
+    */
+
+    if (
+      navigationStepIndex <
+      navigationSteps.length - 1
+    ) {
+
+      navigationStepIndex++;
+
+    }
+
+  }
+
+}
+
+
+/* =========================================================
+   導航位置更新
+   每次 GPS 更新都可以呼叫
+========================================================= */
+
+function updateNavigationPosition() {
+
+  if (!navigationOn) return;
+
+  updateNavigationVoice();
+
+}
+
+
+/* =========================================================
+   更新全部路線
+========================================================= */
+
+async function updateAllRoutes() {
+
+  const target =
+    getActiveMeetingPoint();
+
+
+  if (
+    !target ||
+    !Number.isFinite(
+      Number(target.lat)
+    ) ||
+    !Number.isFinite(
+      Number(target.lng)
+    )
+  ) {
+
+    clearAllRouteLines();
+
+    navigationSteps = [];
+
+    if (navEtaBox) {
+      navEtaBox.style.display = "none";
+    }
+
+    return;
+
+  }
+
+
+  /* =======================================================
+     自己
+  ======================================================= */
+
+  if (
+    myLat != null &&
+    myLng != null
+  ) {
+
+    const mine =
+      await fetchRouteCoords(
+        myLat,
+        myLng,
+        Number(target.lat),
+        Number(target.lng)
+      );
+
+
+    if (mine) {
+
+      drawRouteLine(
+        "me",
+        mine.coords,
+        true,
+        "#1565c0"
+      );
+
+
+      /*
+         導航模式下保存逐步導航資料
+      */
+
+      if (navigationOn) {
+
+        prepareNavigationSteps(mine);
+
+      }
+
+
+      /*
+         ETA
+      */
+
+      if (
+        navEtaBox &&
+        navigationOn
+      ) {
+
+        navEtaBox.style.display = "";
+
+        navEtaEl.textContent =
+          formatDuration(
+            mine.duration
+          );
+
+        navDistEl.textContent =
+          formatDistance(
+            mine.distance
+          );
+
+      }
+
+    }
+
+    else {
+
+      /*
+         OSRM 失敗時保留直線 fallback
+      */
+
+      drawRouteLine(
+        "me",
+        [
+          [myLat, myLng],
+          [
+            Number(target.lat),
+            Number(target.lng)
+          ]
+        ],
+        true,
+        "#1565c0"
+      );
+
+    }
+
+  }
+
+
+  /* =======================================================
+     其他成員
+  ======================================================= */
+
+  if (
+    window._lastPeerRows &&
+    Array.isArray(
+      window._lastPeerRows
+    )
+  ) {
+
+    for (
+      let i = 0;
+      i < window._lastPeerRows.length;
+      i++
+    ) {
+
+      const row =
+        window._lastPeerRows[i];
+
+      if (
+        !row ||
+        !row.user_id
+      ) {
+        continue;
+      }
+
+
+      if (
+        me &&
+        String(row.user_id) ===
+        String(me.id)
+      ) {
+        continue;
+      }
+
+
+      const lat =
+        Number(
+          row.lat != null
+            ? row.lat
+            : row.latitude
+        );
+
+      const lng =
+        Number(
+          row.lng != null
+            ? row.lng
+            : row.longitude
+        );
+
+
+      if (
+        !Number.isFinite(lat) ||
+        !Number.isFinite(lng)
+      ) {
+        continue;
+      }
+
+
+      const color =
+        memberColorFromId(
+          row.user_id
+        );
+
+
+      const route =
+        await fetchRouteCoords(
+          lat,
+          lng,
+          Number(target.lat),
+          Number(target.lng)
+        );
+
+
+      if (route) {
+
+        drawRouteLine(
+          "peer_" + row.user_id,
+          route.coords,
+          false,
+          color
+        );
+
+      }
+
+    }
+
+  }
+
+}
+
+
+/* ---------------------------------------------------------
+   避免 GPS / Realtime 太頻繁重新算路線
+--------------------------------------------------------- */
 
 function scheduleRouteUpdate() {
-  if (routeUpdateTimer) clearTimeout(routeUpdateTimer);
-  routeUpdateTimer = setTimeout(function () {
-    updateAllRoutes();
-  }, 1500);
-}
 
+  if (routeUpdateTimer) {
+    clearTimeout(routeUpdateTimer);
+  }
+
+  routeUpdateTimer =
+    setTimeout(function () {
+
+      updateAllRoutes();
+
+    }, 1500);
+
+}
 /* =========================================================
    18. 長按大頭針
    ========================================================= */
