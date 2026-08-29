@@ -317,6 +317,9 @@ input, select {
   </div>
   <button type="button" class="top-btn" id="voiceBtn" title="語音">🔊</button>
   <button type="button" class="top-btn nav" id="navigationBtn">開始導航</button>
+  <button id="btn3DMode" type="button" class="btn btn-outline">
+  🚗 3D駕駛
+</button>
   <button type="button" class="sos-top" id="btnSosTop">SOS</button>
 </div>
 
@@ -2624,7 +2627,204 @@ function updateNavigationVoice() {
   }
 
 }
+/* =========================================================
+   17A. 2D / 3D 駕駛模式
+   ========================================================= */
 
+let driving3D = false;
+let driving3DOverlay = null;
+let driving3DFrame = null;
+
+const btn3DMode = document.getElementById("btn3DMode");
+
+function setDriving3D(on) {
+  driving3D = !!on;
+
+  if (btn3DMode) {
+    btn3DMode.textContent =
+      driving3D ? "🗺️ 平面模式" : "🚗 3D駕駛";
+
+    btn3DMode.classList.toggle("btn-green", driving3D);
+    btn3DMode.classList.toggle("btn-outline", !driving3D);
+  }
+
+  if (driving3D) {
+    startDriving3D();
+  } else {
+    stopDriving3D();
+  }
+}
+
+function startDriving3D() {
+  if (!map || driving3DOverlay) return;
+
+  const container = map.getContainer();
+
+  driving3DOverlay = document.createElement("div");
+
+  driving3DOverlay.id = "driving3DOverlay";
+
+  driving3DOverlay.style.cssText =
+    "position:absolute;" +
+    "left:0;" +
+    "right:0;" +
+    "top:0;" +
+    "bottom:0;" +
+    "pointer-events:none;" +
+    "z-index:450;" +
+    "overflow:hidden;" +
+    "perspective:700px;";
+
+  container.appendChild(driving3DOverlay);
+
+  renderDriving3D();
+
+  if (driving3DFrame) {
+    cancelAnimationFrame(driving3DFrame);
+  }
+
+  function loop() {
+    if (!driving3D) return;
+
+    renderDriving3D();
+
+    driving3DFrame =
+      requestAnimationFrame(loop);
+  }
+
+  loop();
+}
+
+function stopDriving3D() {
+  if (driving3DFrame) {
+    cancelAnimationFrame(driving3DFrame);
+    driving3DFrame = null;
+  }
+
+  if (driving3DOverlay) {
+    driving3DOverlay.remove();
+    driving3DOverlay = null;
+  }
+
+  if (map) {
+    map.dragging.enable();
+    map.touchZoom.enable();
+    map.scrollWheelZoom.enable();
+    map.doubleClickZoom.enable();
+  }
+}
+
+function renderDriving3D() {
+  if (!driving3DOverlay) return;
+
+  const width =
+    driving3DOverlay.clientWidth;
+
+  const height =
+    driving3DOverlay.clientHeight;
+
+  driving3DOverlay.innerHTML = "";
+
+  /*
+     前方道路
+  */
+
+  const road = document.createElement("div");
+
+  road.style.cssText =
+    "position:absolute;" +
+    "left:50%;" +
+    "top:45%;" +
+    "width:42%;" +
+    "height:80%;" +
+    "transform:translateX(-50%) perspective(500px) rotateX(62deg);" +
+    "transform-origin:50% 100%;" +
+    "background:rgba(80,80,80,.55);" +
+    "clip-path:polygon(38% 0,62% 0,100% 100%,0 100%);";
+
+  driving3DOverlay.appendChild(road);
+
+  /*
+     白色道路中心線
+  */
+
+  for (let i = 0; i < 7; i++) {
+
+    const line = document.createElement("div");
+
+    const y =
+      15 + i * 12;
+
+    const scale =
+      0.25 + i * 0.13;
+
+    line.style.cssText =
+      "position:absolute;" +
+      "left:50%;" +
+      "top:" + y + "%;" +
+      "width:" + (18 * scale) + "%;" +
+      "height:" + Math.max(2, 5 * scale) + "px;" +
+      "transform:translateX(-50%);" +
+      "background:white;" +
+      "border-radius:5px;" +
+      "opacity:" + (0.45 + i * 0.07) + ";";
+
+    driving3DOverlay.appendChild(line);
+  }
+
+  /*
+     導航箭頭
+  */
+
+  const arrow = document.createElement("div");
+
+  arrow.innerHTML = "↑";
+
+  arrow.style.cssText =
+    "position:absolute;" +
+    "left:50%;" +
+    "bottom:18%;" +
+    "transform:translateX(-50%);" +
+    "font-size:64px;" +
+    "font-weight:900;" +
+    "color:white;" +
+    "text-shadow:0 2px 5px rgba(0,0,0,.7);";
+
+  driving3DOverlay.appendChild(arrow);
+
+  /*
+     綠色導航資訊框
+  */
+
+  const navBox =
+    document.createElement("div");
+
+  navBox.style.cssText =
+    "position:absolute;" +
+    "top:15px;" +
+    "left:50%;" +
+    "transform:translateX(-50%);" +
+    "background:#16803c;" +
+    "color:white;" +
+    "padding:10px 22px;" +
+    "border-radius:10px;" +
+    "font-size:18px;" +
+    "font-weight:700;" +
+    "text-align:center;" +
+    "box-shadow:0 3px 10px rgba(0,0,0,.35);";
+
+  navBox.innerHTML =
+    "↑ 前方道路<br>" +
+    "<span style='font-size:14px'>導航模式</span>";
+
+  driving3DOverlay.appendChild(navBox);
+}
+
+if (btn3DMode) {
+  btn3DMode.onclick = function () {
+    setDriving3D(!driving3D);
+  };
+}
 
 /* =========================================================
    導航位置更新
