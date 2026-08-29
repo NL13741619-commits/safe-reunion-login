@@ -2725,72 +2725,237 @@ function updateCameraWarning() {
 }
 
 
-/* =========================================================
-   駕駛攝影機
-========================================================= */
-
+/* =====================================================
+   V4 真正駕駛攝影機
+   第二張圖風格：
+   車輛位於畫面下方
+   視線朝前方道路
+   不再把 GPS 點固定在畫面正中央
+===================================================== */
+let lastCameraHeading = 0;
+let cameraMoving = false;
 function updateDrivingCamera() {
-
   if (
     !map ||
     currentLat === null ||
+    currentLng === null ||
     !followMode
   ) {
-
     return;
-
   }
-
-
   /*
-     使用 offset：
-     把目前車輛視覺位置壓到畫面下方，
-     讓前方道路佔據主要視野。
+     -------------------------------
+     1. 平滑處理車頭方向
+     -------------------------------
   */
-
-  const height =
-    window.innerHeight;
-
-
-  const offsetY =
-    Math.round(
-      height * 0.23
+  let targetHeading =
+    Number(currentHeading);
+  if (!Number.isFinite(targetHeading)) {
+    targetHeading = lastCameraHeading;
+  }
+  targetHeading =
+    ((targetHeading % 360) + 360) % 360;
+  /*
+     避免 359° → 0° 突然旋轉 359 度
+  */
+  const diff =
+    angleDifference(
+      targetHeading,
+      lastCameraHeading
     );
-
-
+  /*
+     低速時不要因 GPS heading 漂移
+     讓整個畫面一直轉。
+  */
+  if (
+    currentSpeed < 3 &&
+    Math.abs(diff) > 25
+  ) {
+    targetHeading =
+      lastCameraHeading;
+  } else {
+    /*
+       平滑轉向
+    */
+    targetHeading =
+      lastCameraHeading +
+      diff * 0.22;
+  }
+  targetHeading =
+    ((targetHeading % 360) + 360) % 360;
+  lastCameraHeading =
+    targetHeading;
+  /*
+     -------------------------------
+     2. 真正駕駛視角
+     -------------------------------
+     不把 camera center 放在車子上。
+     而是把中心推到「車前方」。
+     這就是駕駛導航與普通地圖
+     最大的差別之一。
+  */
+  let lookAhead = 0.00055;
+  if (currentSpeed >= 20) {
+    lookAhead = 0.00085;
+  }
+  if (currentSpeed >= 50) {
+    lookAhead = 0.00120;
+  }
+  if (currentSpeed >= 80) {
+    lookAhead = 0.00155;
+  }
+  const headingRad =
+    targetHeading *
+    Math.PI /
+    180;
+  /*
+     緯度方向
+  */
+  const targetLat =
+    currentLat +
+    Math.cos(headingRad) *
+    lookAhead;
+  /*
+     經度需要考慮緯度
+  */
+  const cosLat =
+    Math.max(
+      0.2,
+      Math.cos(
+        currentLat *
+        Math.PI /
+        180
+      )
+    );
+  const targetLng =
+    currentLng +
+    (
+      Math.sin(headingRad) *
+      lookAhead /
+      cosLat
+    );
+  /*
+     -------------------------------
+     3. 駕駛鏡頭參數
+     -------------------------------
+  */
+  let zoom =
+    17.7;
+  if (currentSpeed >= 30) {
+    zoom = 17.4;
+  }
+  if (currentSpeed >= 60) {
+    zoom = 17.1;
+  }
+  if (currentSpeed >= 90) {
+    zoom = 16.8;
+  }
+  /*
+     Pitch 不要太高。
+     60° 比較像鳥瞰。
+     這裡降低成真正前視感。
+  */
+  let pitch = 67;
+  /*
+     高速時稍微降低 pitch，
+     增加道路向前延伸的感覺。
+  */
+  if (currentSpeed >= 50) {
+    pitch = 63;
+  }
+  if (currentSpeed >= 90) {
+    pitch = 60;
+  }
+  /*
+     -------------------------------
+     4. Padding
+     -------------------------------
+     把視覺焦點往上推，
+     車就會自然落在畫面下方。
+  */
+  const bottomPadding =
+    Math.round(
+      window.innerHeight * 0.32
+    );
+  /*
+     -------------------------------
+     5. 更新攝影機
+     -------------------------------
+  */
+  cameraMoving = true;
   map.easeTo({
-
     center: [
-      currentLng,
-      currentLat
+      targetLng,
+      targetLat
     ],
-
-    zoom: 18.2,
-
-    pitch:
-      drivingMode
-        ? 60
-        : 0,
-
-    bearing:
-      drivingMode
-        ? currentHeading
-        : 0,
-
-    offset: [
-      0,
-      offsetY
-    ],
-
-    duration: 350,
-
+    zoom: zoom,
+    pitch: pitch,
+    bearing: targetHeading,
+    padding: {
+      top: 70,
+      bottom: bottomPadding,
+      left: 0,
+      right: 0
+    },
+    duration:
+      currentSpeed > 5
+        ? 450
+        : 650,
     essential: true
-
   });
-
+  /*
+     -------------------------------
+     6. 車輛方向
+     -------------------------------
+     車本身不需要跟著地圖旋轉。
+     因為地圖已經按照 heading 旋轉，
+     車頭永遠朝向畫面上方。
+  */
+  const vehicle =
+    document.getElementById(
+      "vehicle"
+    );
+  if (vehicle) {
+    vehicle.style.transform =
+      "translateX(-50%) rotate(0deg)";
+  }
 }
-
-
+/* =====================================================
+   V4 回到駕駛
+===================================================== */
+function returnToDrivingView() {
+  if (!map) {
+    return;
+  }
+  followMode = true;
+  drivingMode = true;
+  const button =
+    document.getElementById(
+      "modeButton"
+    );
+  if (button) {
+    button.textContent =
+      "🗺️ 平面";
+  }
+  updateDrivingCamera();
+  setGPSStatus(
+    "✓ 已回到駕駛視角"
+  );
+}
+/* =====================================================
+   使用者手動拖動地圖
+===================================================== */
+if (map) {
+  map.on(
+    "dragstart",
+    function() {
+      followMode = false;
+      setGPSStatus(
+        "已暫停跟隨｜可查看前方道路"
+      );
+    }
+  );
+}
 /* =========================================================
    GPS
 ========================================================= */
