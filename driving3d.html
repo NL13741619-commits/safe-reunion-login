@@ -1,0 +1,872 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+
+<meta
+name=“viewport”
+content=“width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no”
+
+<title>安全團聚｜3D 駕駛模式</title>
+<link
+  rel="stylesheet"
+  href="https://unpkg.com/maplibre-gl@6.6.0/dist/maplibre-gl.css"
+>
+<style>
+*{
+  box-sizing:border-box;
+}
+html,
+body,
+#map{
+  margin:0;
+  width:100%;
+  height:100%;
+  overflow:hidden;
+}
+body{
+  background:#111;
+  font-family:
+    -apple-system,
+    BlinkMacSystemFont,
+    "Noto Sans TC",
+    sans-serif;
+}
+/* =========================
+   頂部導航資訊
+========================= */
+#navPanel{
+  position:fixed;
+  top:
+    max(
+      12px,
+      env(safe-area-inset-top)
+    );
+  left:12px;
+  right:12px;
+  z-index:100;
+  display:flex;
+  justify-content:center;
+  pointer-events:none;
+}
+#navCard{
+  min-width:220px;
+  max-width:90%;
+  padding:
+    10px
+    18px;
+  border-radius:14px;
+  background:#16803c;
+  color:white;
+  text-align:center;
+  box-shadow:
+    0 4px 14px
+    rgba(0,0,0,.38);
+}
+#navMain{
+  font-size:21px;
+  font-weight:900;
+  line-height:1.25;
+}
+#navSub{
+  margin-top:4px;
+  font-size:13px;
+  opacity:.96;
+}
+/* =========================
+   車輛
+========================= */
+#car{
+  position:fixed;
+  left:50%;
+  bottom:18%;
+  transform:
+    translateX(-50%);
+  width:52px;
+  height:72px;
+  z-index:90;
+  pointer-events:none;
+  filter:
+    drop-shadow(
+      0 4px 6px
+      rgba(0,0,0,.5)
+    );
+}
+#carBody{
+  position:absolute;
+  left:9px;
+  top:0;
+  width:34px;
+  height:66px;
+  border-radius:
+    16px
+    16px
+    8px
+    8px;
+  background:#06C755;
+  border:3px solid white;
+}
+#carWindow{
+  position:absolute;
+  left:16px;
+  top:9px;
+  width:20px;
+  height:24px;
+  border-radius:7px;
+  background:
+    rgba(255,255,255,.92);
+}
+/* =========================
+   速度
+========================= */
+#speed{
+  position:fixed;
+  left:14px;
+  bottom:
+    max(
+      18px,
+      env(safe-area-inset-bottom)
+    );
+  width:94px;
+  height:94px;
+  z-index:100;
+  border-radius:50%;
+  background:white;
+  border:5px solid #16803c;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  box-shadow:
+    0 4px 15px
+    rgba(0,0,0,.4);
+}
+#speedNumber{
+  font-size:31px;
+  font-weight:900;
+  line-height:1;
+}
+#speedUnit{
+  margin-top:5px;
+  font-size:11px;
+  color:#555;
+}
+/* =========================
+   右側按鈕
+========================= */
+#controls{
+  position:fixed;
+  right:12px;
+  top:
+    max(
+      78px,
+      calc(
+        env(safe-area-inset-top)
+        + 65px
+      )
+    );
+  z-index:110;
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+}
+.controlBtn{
+  border:0;
+  border-radius:11px;
+  padding:
+    10px
+    13px;
+  background:
+    rgba(255,255,255,.96);
+  color:#222;
+  font-size:13px;
+  font-weight:700;
+  box-shadow:
+    0 3px 12px
+    rgba(0,0,0,.35);
+}
+/* =========================
+   GPS
+========================= */
+#gpsInfo{
+  position:fixed;
+  right:12px;
+  bottom:
+    max(
+      18px,
+      env(safe-area-inset-bottom)
+    );
+  z-index:100;
+  padding:
+    8px
+    11px;
+  border-radius:10px;
+  background:
+    rgba(0,0,0,.70);
+  color:white;
+  font-size:11px;
+  text-align:right;
+}
+/* =========================
+   啟動畫面
+========================= */
+#loading{
+  position:fixed;
+  inset:0;
+  z-index:500;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:
+    rgba(0,0,0,.72);
+}
+#loadingCard{
+  width:
+    min(
+      330px,
+      88%
+    );
+  padding:25px;
+  border-radius:17px;
+  background:
+    rgba(25,25,25,.97);
+  color:white;
+  text-align:center;
+}
+#loadingTitle{
+  font-size:21px;
+  font-weight:900;
+  margin-bottom:10px;
+}
+#loadingText{
+  font-size:13px;
+  line-height:1.7;
+}
+#loading.hidden{
+  display:none;
+}
+/* =========================
+   MapLibre 控制項
+========================= */
+.maplibregl-ctrl-attrib{
+  font-size:9px !important;
+}
+</style>
+</head>
+<body>
+<div id="map"></div>
+<!-- 導航牌 -->
+<div id="navPanel">
+  <div id="navCard">
+<div id="navMain">
+  3D 駕駛模式
+</div>
+<div id="navSub">
+  正在取得 GPS…
+</div>
+  </div>
+</div>
+<!-- 車輛 -->
+<div id="car">
+  <div id="carBody"></div>
+  <div id="carWindow"></div>
+</div>
+<!-- 控制 -->
+<div id="controls">
+
+<button
+id=“btnDriver”
+class=“controlBtn”
+
+🚗 駕駛視角
+  </button>
+
+<button
+id=“btnFlat”
+class=“controlBtn”
+
+🗺️ 平面
+  </button>
+
+<button
+id=“btnBack”
+class=“controlBtn”
+
+← 返回地圖
+  </button>
+</div>
+<!-- 速度 -->
+<div id="speed">
+  <div id="speedNumber">
+    0
+  </div>
+  <div id="speedUnit">
+    km/h
+  </div>
+</div>
+<!-- GPS -->
+<div id="gpsInfo">
+  GPS 定位中…
+</div>
+<!-- Loading -->
+<div id="loading">
+  <div id="loadingCard">
+<div id="loadingTitle">
+  🚗 3D 駕駛導航
+</div>
+<div id="loadingText">
+  正在載入 3D 地圖…
+</div>
+  </div>
+</div>
+<script type="module">
+import * as maplibregl
+  from
+  "https://unpkg.com/maplibre-gl@6.6.0/dist/maplibre-gl.mjs";
+/* =========================================================
+   變數
+========================================================= */
+let map = null;
+let watchId = null;
+let currentLat = 25.0330;
+let currentLng = 121.5654;
+let currentHeading = 0;
+let currentSpeed = 0;
+let lastPosition = null;
+let drivingMode = true;
+/* =========================================================
+   DOM
+========================================================= */
+const navMain =
+  document.getElementById(
+    "navMain"
+  );
+const navSub =
+  document.getElementById(
+    "navSub"
+  );
+const speedNumber =
+  document.getElementById(
+    "speedNumber"
+  );
+const gpsInfo =
+  document.getElementById(
+    "gpsInfo"
+  );
+const loading =
+  document.getElementById(
+    "loading"
+  );
+const loadingText =
+  document.getElementById(
+    "loadingText"
+  );
+/* =========================================================
+   距離
+========================================================= */
+function distanceMeters(
+  lat1,
+  lng1,
+  lat2,
+  lng2
+){
+  const R = 6371000;
+  const p1 =
+    lat1 *
+    Math.PI /
+    180;
+  const p2 =
+    lat2 *
+    Math.PI /
+    180;
+  const dp =
+    (
+      lat2 -
+      lat1
+    ) *
+    Math.PI /
+    180;
+  const dl =
+    (
+      lng2 -
+      lng1
+    ) *
+    Math.PI /
+    180;
+  const a =
+    Math.sin(dp / 2) ** 2
+    +
+    Math.cos(p1)
+    *
+    Math.cos(p2)
+    *
+    Math.sin(dl / 2) ** 2;
+  return
+    R *
+    2 *
+    Math.atan2(
+      Math.sqrt(a),
+      Math.sqrt(1 - a)
+    );
+}
+/* =========================================================
+   方位角
+========================================================= */
+function bearingDegrees(
+  lat1,
+  lng1,
+  lat2,
+  lng2
+){
+  const p1 =
+    lat1 *
+    Math.PI /
+    180;
+  const p2 =
+    lat2 *
+    Math.PI /
+    180;
+  const dl =
+    (
+      lng2 -
+      lng1
+    ) *
+    Math.PI /
+    180;
+  const y =
+    Math.sin(dl) *
+    Math.cos(p2);
+  const x =
+    Math.cos(p1) *
+    Math.sin(p2)
+    -
+    Math.sin(p1) *
+    Math.cos(p2) *
+    Math.cos(dl);
+  return (
+    Math.atan2(y,x)
+    *
+    180 /
+    Math.PI
+    +
+    360
+  ) % 360;
+}
+/* =========================================================
+   建立地圖
+========================================================= */
+function createMap(){
+  map =
+    new maplibregl.Map({
+      container:
+        "map",
+      style:
+        "https://tiles.openfreemap.org/styles/liberty",
+      center:[
+        currentLng,
+        currentLat
+      ],
+      zoom:17.5,
+      pitch:68,
+      bearing:0,
+      maxPitch:85,
+      antialias:true,
+      attributionControl:true
+    });
+  map.addControl(
+    new maplibregl.NavigationControl({
+      showCompass:false,
+      showZoom:false
+    }),
+    "bottom-right"
+  );
+  map.on(
+    "load",
+    function(){
+      addTerrain();
+      addBuildings();
+      hideLoading();
+    }
+  );
+}
+/* =========================================================
+   真正 3D Terrain
+========================================================= */
+function addTerrain(){
+  if(
+    map.getSource(
+      "terrainSource"
+    )
+  ){
+    return;
+  }
+  map.addSource(
+    "terrainSource",
+    {
+      type:"raster-dem",
+      url:
+        "https://demotiles.maplibre.org/terrain-tiles/tiles.json",
+      tileSize:256
+    }
+  );
+  map.setTerrain({
+    source:
+      "terrainSource",
+    exaggeration:1.15
+  });
+}
+/* =========================================================
+   3D 建築
+========================================================= */
+function addBuildings(){
+  try{
+    const layers =
+      map.getStyle()
+        .layers
+        || [];
+    for(
+      const layer
+      of layers
+    ){
+      if(
+        layer.type ===
+        "fill-extrusion"
+      ){
+        layer.paint =
+          layer.paint || {};
+        break;
+      }
+    }
+  }catch(error){
+    console.warn(
+      "3D 建築處理：",
+      error
+    );
+  }
+}
+/* =========================================================
+   Loading
+========================================================= */
+function hideLoading(){
+  loading.classList.add(
+    "hidden"
+  );
+}
+/* =========================================================
+   駕駛視角
+========================================================= */
+function setDriverView(){
+  drivingMode = true;
+  if(!map)
+    return;
+  map.easeTo({
+    center:[
+      currentLng,
+      currentLat
+    ],
+    zoom:18,
+    pitch:70,
+    bearing:
+      currentHeading,
+    duration:500,
+    essential:true
+  });
+  navMain.textContent =
+    "🚗 駕駛視角";
+  navSub.textContent =
+    "前方道路 3D 模式";
+}
+/* =========================================================
+   平面
+========================================================= */
+function setFlatView(){
+  drivingMode = false;
+  if(!map)
+    return;
+  map.easeTo({
+    center:[
+      currentLng,
+      currentLat
+    ],
+    zoom:16,
+    pitch:0,
+    bearing:0,
+    duration:500,
+    essential:true
+  });
+  navMain.textContent =
+    "🗺️ 平面地圖";
+  navSub.textContent =
+    "2D 地圖模式";
+}
+/* =========================================================
+   GPS
+========================================================= */
+function startGPS(){
+  if(
+    !navigator.geolocation
+  ){
+    gpsInfo.textContent =
+      "此裝置不支援 GPS";
+    return;
+  }
+  watchId =
+    navigator
+      .geolocation
+      .watchPosition(
+        onPosition,
+        function(error){
+          console.warn(
+            "GPS：",
+            error
+          );
+          gpsInfo.textContent =
+            "GPS 權限或訊號異常";
+        },
+        {
+          enableHighAccuracy:true,
+          maximumAge:1000,
+          timeout:15000
+        }
+      );
+}
+/* =========================================================
+   GPS Position
+========================================================= */
+function onPosition(
+  position
+){
+  if(
+    !position
+    ||
+    !position.coords
+  ){
+    return;
+  }
+  const c =
+    position.coords;
+  const lat =
+    Number(
+      c.latitude
+    );
+  const lng =
+    Number(
+      c.longitude
+    );
+  const accuracy =
+    Number(
+      c.accuracy
+    );
+  if(
+    !Number.isFinite(lat)
+    ||
+    !Number.isFinite(lng)
+  ){
+    return;
+  }
+  /* -------------------------
+     速度
+  ------------------------- */
+  let speed =
+    Number(
+      c.speed
+    );
+  if(
+    Number.isFinite(speed)
+    &&
+    speed >= 0
+  ){
+    speed *= 3.6;
+  }else if(
+    lastPosition
+  ){
+    const d =
+      distanceMeters(
+        lastPosition.coords.latitude,
+        lastPosition.coords.longitude,
+        lat,
+        lng
+      );
+    const dt =
+      (
+        position.timestamp
+        -
+        lastPosition.timestamp
+      ) / 1000;
+    if(
+      dt > 0
+      &&
+      dt < 10
+    ){
+      speed =
+        d /
+        dt *
+        3.6;
+    }else{
+      speed = 0;
+    }
+  }else{
+    speed = 0;
+  }
+  if(
+    !Number.isFinite(speed)
+    ||
+    speed < 0
+  ){
+    speed = 0;
+  }
+  if(speed > 200)
+    speed = 200;
+  currentSpeed =
+    currentSpeed * .65
+    +
+    speed * .35;
+  /* -------------------------
+     方向
+  ------------------------- */
+  let heading =
+    Number(
+      c.heading
+    );
+  if(
+    !Number.isFinite(heading)
+    &&
+    lastPosition
+  ){
+    const moved =
+      distanceMeters(
+        lastPosition.coords.latitude,
+        lastPosition.coords.longitude,
+        lat,
+        lng
+      );
+    if(moved >= 5){
+      heading =
+        bearingDegrees(
+          lastPosition.coords.latitude,
+          lastPosition.coords.longitude,
+          lat,
+          lng
+        );
+    }
+  }
+  if(
+    Number.isFinite(heading)
+    &&
+    currentSpeed >= 3
+  ){
+    currentHeading =
+      heading;
+  }
+  currentLat =
+    lat;
+  currentLng =
+    lng;
+  /* -------------------------
+     UI
+  ------------------------- */
+  speedNumber.textContent =
+    Math.round(
+      currentSpeed
+    );
+  gpsInfo.innerHTML =
+    "GPS ±"
+    +
+    (
+      Number.isFinite(
+        accuracy
+      )
+      ?
+      Math.round(
+        accuracy
+      )
+      :
+      "--"
+    )
+    +
+    "m<br>"
+    +
+    Math.round(
+      currentHeading
+    )
+    +
+    "°";
+  /* -------------------------
+     3D Camera
+  ------------------------- */
+  if(
+    map
+    &&
+    drivingMode
+  ){
+    map.easeTo({
+      center:[
+        currentLng,
+        currentLat
+      ],
+      zoom:18,
+      pitch:70,
+      bearing:
+        currentHeading,
+      duration:300,
+      essential:true
+    });
+  }
+  lastPosition =
+    position;
+}
+/* =========================================================
+   按鈕
+========================================================= */
+document
+  .getElementById(
+    "btnDriver"
+  )
+  .onclick =
+  setDriverView;
+document
+  .getElementById(
+    "btnFlat"
+  )
+  .onclick =
+  setFlatView;
+document
+  .getElementById(
+    "btnBack"
+  )
+  .onclick =
+  function(){
+    if(
+      document.referrer
+    ){
+      history.back();
+    }else{
+      location.href =
+        "map.html";
+    }
+  };
+/* =========================================================
+   啟動
+========================================================= */
+createMap();
+startGPS();
+/* =========================================================
+   離開頁面
+========================================================= */
+window.addEventListener(
+  "beforeunload",
+  function(){
+    if(
+      watchId !== null
+    ){
+      navigator
+        .geolocation
+        .clearWatch(
+          watchId
+        );
+    }
+  }
+);
+</script>
+</body>
+</html>
