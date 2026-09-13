@@ -1,0 +1,199 @@
+name: Fix SOS location flow
+
+on:
+  push:
+    paths:
+      - 'map.html'
+      - '.github/workflows/fix-sos-location-v2.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  patch-sos:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Patch SOS location flow
+        env:
+          FILE: map.html
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+
+          p = Path('map.html')
+          s = p.read_text(encoding='utf-8')
+
+          pattern = r'async function sendSOS\(\) \{.*?\n\}\n\ndocument\.getElementById\(\s*"btnSosTop"\s*\)\.onclick ='
+
+          replacement = r'''async function sendSOS() {
+  if (!me) {
+    alert("請先登入");
+    return;
+  }
+
+  if (!confirm("向本群組／活動發送 SOS 求助？")) {
+    return;
+  }
+
+  /*
+   * SOS 必須先取得「剛剛的裝置定位」。
+   * 不再允許 lat/lng 為 null 時仍建立 SOS。
+   * maximumAge: 0 = 不接受快取位置。
+   */
+  let freshPosition = null;
+
+  try {
+    if (!navigator.geolocation) {
+      throw new Error("此裝置不支援定位");
+    }
+
+    freshPosition = await new Promise(function (resolve, reject) {
+      navigator.geolocation.getCurrentPosition(
+        resolve,
+        reject,
+        {
+          enableHighAccuracy: true,
+          timeout: 15000,
+          maximumAge: 0
+        }
+      );
+    });
+
+    onPosition(freshPosition);
+  } catch (e) {
+    console.error("[SOS] 無法取得新定位：", e);
+
+    alert(
+      "SOS 暫時無法發送：目前沒有取得手機定位。\n\n" +
+      "請確認：\n" +
+      "1. 已允許瀏覽器使用定位\n" +
+      "2. 手機定位服務已開啟\n" +
+      "3. 稍等幾秒再按 SOS"
+    );
+
+    return;
+  }
+
+  const lat = Number(
+    freshPosition && freshPosition.coords
+      ? freshPosition.coords.latitude
+      : myLat
+  );
+
+  const lng = Number(
+    freshPosition && freshPosition.coords
+      ? freshPosition.coords.longitude
+      : myLng
+  );
+
+  if (!Number.isFinite(lat) || !Number.isFinite(lng)) {
+    alert("SOS 暫時無法發送：定位座標無效，請稍後再試。");
+    return;
+  }
+
+  myLat = lat;
+  myLng = lng;
+
+  /*
+   * SOS 前先把最新座標寫進 location_shares。
+   * 即使使用者平常沒有開啟「定位分享」，SOS 也會留下最新位置，
+   * 讓接收端可以立即看到求救者。
+   */
+  const locationPayload = {
+    user_id: me.id,
+    room_id: String(roomId),
+    lat: lat,
+    lng: lng,
+    display_name:
+      (me.user_metadata &&
+        (me.user_metadata.full_name || me.user_metadata.name)) ||
+      (me.email ? me.email.split("@")[0] : "成員"),
+    updated_at: new Date().toISOString(),
+    heading:
+      myHeading != null
+        ? Number(myHeading)
+        : (lastHeading != null ? Number(lastHeading) : null)
+  };
+
+  const locationResult = await sb
+    .from("location_shares")
+    .upsert(locationPayload, {
+      onConflict: "user_id,room_id"
+    });
+
+  if (locationResult.error) {
+    console.error("[SOS] 最新位置寫入失敗：", locationResult.error);
+    alert(
+      "SOS 暫時無法發送：最新位置尚未成功同步。\n\n" +
+      locationResult.error.message
+    );
+    return;
+  }
+
+  const result = await sb
+    .from("sos_events")
+    .insert({
+      room_id: roomId,
+      user_id: me.id,
+      display_name:
+        (me.email || "user").split("@")[0],
+      lat: lat,
+      lng: lng,
+      message: "遇到危險或迷路，需要協助"
+    });
+
+  if (result.error) {
+    alert("SOS 失敗：" + result.error.message);
+    return;
+  }
+
+  L.circleMarker(
+    [lat, lng],
+    {
+      radius: 12,
+      color: "#c62828",
+      fillColor: "#c62828",
+      fillOpacity: 0.5
+    }
+  )
+    .addTo(map)
+    .bindPopup("🚨 SOS")
+    .openPopup();
+
+  map.setView(
+    [lat, lng],
+    Math.max(map.getZoom(), 15),
+    { animate: true }
+  );
+
+  showSosBanner("🚨 SOS 已發送給群組｜位置已同步", 5000);
+
+  if (navigator.vibrate) {
+    navigator.vibrate([200, 100, 200, 100, 400]);
+  }
+}
+
+document.getElementById("btnSosTop").onclick ='''
+
+          ns, n = re.subn(pattern, replacement, s, count=1, flags=re.S)
+          if n != 1:
+              raise SystemExit('SOS function block not found; no changes made')
+
+          p.write_text(ns, encoding='utf-8')
+          print('patched SOS:', n)
+          PY
+
+      - name: Commit patch
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add map.html
+          if git diff --cached --quiet; then
+            echo "No changes"
+            exit 0
+          fi
+          git commit -m "fix: force fresh location before SOS"
+          git push
