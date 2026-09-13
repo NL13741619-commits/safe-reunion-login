@@ -1,0 +1,45 @@
+name: GNSS location layer
+on:
+  push:
+    paths:
+      - 'GNSS_PATCH_TRIGGER.txt'
+  workflow_dispatch:
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - name: Patch map.html
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path('map.html')
+          s = p.read_text(encoding='utf-8')
+          old = '''let myLat = null;\nlet myLng = null;'''
+          new = '''let myLat = null;\nlet myLng = null;\n\n// GNSS 高精度定位資訊：手機系統會自行融合 GPS／北斗等可用 GNSS。\nlet gnssAccuracy = null;\nlet gnssAltitude = null;\nlet gnssAltitudeAccuracy = null;\nlet gnssSpeed = null;\nlet gnssHeading = null;\nlet gnssTimestamp = null;'''
+          if old not in s:
+              raise SystemExit('定位變數區塊找不到，停止修改')
+          s = s.replace(old, new, 1)
+          old2 = '''function onPosition(position) {\n\n  if ('''
+          new2 = '''function onPosition(position) {\n\n  if (position && position.coords) {\n    gnssAccuracy = Number.isFinite(position.coords.accuracy) ? position.coords.accuracy : null;\n    gnssAltitude = Number.isFinite(position.coords.altitude) ? position.coords.altitude : null;\n    gnssAltitudeAccuracy = Number.isFinite(position.coords.altitudeAccuracy) ? position.coords.altitudeAccuracy : null;\n    gnssSpeed = Number.isFinite(position.coords.speed) ? position.coords.speed : null;\n    gnssHeading = Number.isFinite(position.coords.heading) ? position.coords.heading : null;\n    gnssTimestamp = position.timestamp || Date.now();\n  }\n\n  if ('''
+          if old2 not in s:
+              raise SystemExit('onPosition 找不到，停止修改')
+          s = s.replace(old2, new2, 1)
+          old3 = '''enableHighAccuracy:\n          true,\n\n        maximumAge:\n          1000,\n\n        timeout:\n          12000'''
+          new3 = '''enableHighAccuracy:\n          true,\n\n        // 不使用舊快取；要求手機提供最新高精度 GNSS 定位結果。\n        maximumAge:\n          0,\n\n        timeout:\n          20000'''
+          if old3 not in s:
+              raise SystemExit('watchPosition 定位參數找不到，停止修改')
+          s = s.replace(old3, new3, 1)
+          p.write_text(s, encoding='utf-8')
+          print('GNSS layer patched')
+          PY
+      - name: Commit
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add map.html
+          git diff --cached --quiet && exit 0
+          git commit -m 'Improve high-accuracy GNSS location layer'
+          git push
