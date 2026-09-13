@@ -1,0 +1,144 @@
+name: Fix SOS location
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    if: ${{ !contains(github.event.head_commit.message, '[sos-fix]') }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Patch map.html SOS location
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+
+          p = Path('map.html')
+          s = p.read_text(encoding='utf-8')
+
+          old = '''  /*
+     SOS 前先確認目前位置
+  */
+
+  if (
+    myLat == null ||
+    myLng == null
+  ) {
+    try {
+      await new Promise(
+        function (resolve) {
+          if (
+            !navigator.geolocation
+          ) {
+            resolve();
+            return;
+          }
+
+          navigator.geolocation.getCurrentPosition(
+            function (position) {
+              onPosition(
+                position
+              );
+
+              resolve();
+            },
+            function () {
+              resolve();
+            },
+            {
+              enableHighAccuracy: true,
+              timeout: 8000,
+              maximumAge: 3000
+            }
+          );
+        }
+      );
+    } catch (e) {
+      console.warn(
+        "SOS 定位補抓失敗：",
+        e
+      );
+    }
+  }
+
+  const result ='''
+
+          new = '''  /*
+     SOS 發送前強制取得一次最新座標。
+     不使用舊快取，避免成都等跨區域測試時
+     SOS 只有通知卻沒有 lat/lng。
+  */
+
+  if (!navigator.geolocation) {
+    alert("此裝置不支援定位，無法發送帶位置的 SOS");
+    return;
+  }
+
+  let sosPositionOK = false;
+
+  try {
+    await new Promise(
+      function (resolve) {
+        navigator.geolocation.getCurrentPosition(
+          function (position) {
+            onPosition(position);
+            sosPositionOK =
+              Number.isFinite(Number(position.coords.latitude)) &&
+              Number.isFinite(Number(position.coords.longitude));
+            resolve();
+          },
+          function (error) {
+            console.warn(
+              "SOS 最新定位失敗：",
+              error
+            );
+            resolve();
+          },
+          {
+            enableHighAccuracy: true,
+            timeout: 15000,
+            maximumAge: 0
+          }
+        );
+      }
+    );
+  } catch (e) {
+    console.warn("SOS 定位補抓失敗：", e);
+  }
+
+  if (
+    !sosPositionOK ||
+    !Number.isFinite(Number(myLat)) ||
+    !Number.isFinite(Number(myLng))
+  ) {
+    alert(
+      "目前無法取得手機最新位置，為了避免發送沒有座標的 SOS，請確認已允許定位後再試。"
+    );
+    return;
+  }
+
+  const result ='''
+
+          if old not in s:
+              raise SystemExit('SOS target block not found; no file changed')
+
+          s = s.replace(old, new, 1)
+          p.write_text(s, encoding='utf-8')
+          print('SOS patch applied')
+          PY
+
+      - name: Commit and push
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add map.html
+          git diff --cached --quiet && exit 0
+          git commit -m "fix: SOS must include fresh location [sos-fix]"
+          git push
