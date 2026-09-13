@@ -1,0 +1,42 @@
+name: Fix me Google fallback
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    if: github.event.head_commit.message != 'Fix me page map fallback'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Patch me.html
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p = Path('me.html')
+          s = p.read_text(encoding='utf-8')
+          old = '''  if(\n    !window.google ||\n    !window.google.maps\n  ){\n\n    alert(\n      "Google Maps 尚未載入"\n    );\n\n    return;\n\n  }\n\n\n  showToast(\n    "正在搜尋地址…"\n  );'''
+          new = '''  if(\n    !window.google ||\n    !window.google.maps\n  ){\n\n    showToast("正在使用備用地址搜尋…");\n    fetch("https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&accept-language=zh-TW&q=" + encodeURIComponent(address))\n      .then(function(r){ return r.json(); })\n      .then(function(data){\n        if(!data || !data.length){ alert("找不到這個地址"); return; }\n        saveMapSearchResult(Number(data[0].lat), Number(data[0].lon), data[0].display_name || address);\n        showToast("已找到地址");\n      })\n      .catch(function(){ alert("地址搜尋失敗，請稍後再試"); });\n    return;\n\n  }\n\n\n  showToast(\n    "正在搜尋地址…"\n  );'''
+          if old not in s:
+              raise SystemExit('geocode target not found')
+          s = s.replace(old, new, 1)
+          old2 = '''  if(\n    !window.google ||\n    !window.google.maps ||\n    !window.googleMapInstance\n  ){\n\n    alert(\n      "Google Maps 尚未載入"\n    );\n\n    return;\n\n  }\n\n\n  showToast(\n    "正在取得目前位置…"\n  );'''
+          new2 = '''  if(\n    !window.google ||\n    !window.google.maps ||\n    !window.googleMapInstance\n  ){\n\n    window.location.href = "https://maps.apple.com/?daddr=" + encodeURIComponent(destLat + "," + destLng) + "&dirflg=d";\n    return;\n\n  }\n\n\n  showToast(\n    "正在取得目前位置…"\n  );'''
+          if old2 not in s:
+              raise SystemExit('navigation target not found')
+          s = s.replace(old2, new2, 1)
+          p.write_text(s, encoding='utf-8')
+          PY
+      - name: Commit
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add me.html
+          git diff --cached --check
+          git commit -m "Fix me page map fallback"
+          git push
