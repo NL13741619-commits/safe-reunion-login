@@ -1,0 +1,48 @@
+name: Remove speed camera map markers
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/remove-camera-markers.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Disable camera marker rendering only
+        shell: python
+        run: |
+          from pathlib import Path
+          import re
+          p = Path('map.html')
+          s = p.read_text(encoding='utf-8')
+          pattern = r'function\s+drawCameraMarkers\s*\(\s*\)\s*\{.*?\n\}'
+          replacement = '''function drawCameraMarkers() {
+            cameraMarkers.forEach(function (m) {
+              if (map && map.hasLayer(m)) map.removeLayer(m);
+            });
+            cameraMarkers = [];
+          }'''
+          s, n = re.subn(pattern, replacement, s, count=1, flags=re.S)
+          s, calls = re.subn(r'^\s*drawCameraMarkers\s*\(\s*\)\s*;\s*$', '', s, flags=re.M)
+          if n == 0:
+              raise SystemExit('drawCameraMarkers() not found; map.html was not changed')
+          p.write_text(s, encoding='utf-8')
+          print(f'drawCameraMarkers replaced={n}, calls_removed={calls}')
+          Path('.github/workflows/remove-camera-markers.yml').unlink()
+
+      - name: Commit and push
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add map.html .github/workflows/remove-camera-markers.yml
+          git diff --cached --check
+          git commit -m "Hide speed camera markers without disabling warnings"
+          git push
