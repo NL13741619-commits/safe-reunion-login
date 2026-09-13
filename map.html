@@ -511,9 +511,22 @@ select {
   }
 }
 </style>
+
+<style id="gnss-status-style">
+#gnssStatusPanel{position:fixed;top:66px;right:8px;z-index:1850;background:rgba(255,255,255,.96);border-radius:12px;padding:7px 9px;box-shadow:0 2px 10px rgba(0,0,0,.2);font-size:11px;line-height:1.45;min-width:150px;pointer-events:none}
+#gnssStatusPanel .ok{color:#14833b;font-weight:800}
+#gnssStatusPanel .wait{color:#b26a00;font-weight:800}
+#gnssStatusPanel .bad{color:#c62828;font-weight:800}
+</style>
 </head>
 
 <body>
+<div id="gnssStatusPanel">
+  <div>📡 GNSS 定位：<span id="gnssAcquireStatus" class="wait">等待定位…</span></div>
+  <div>精度：<span id="gnssAccuracyText">—</span></div>
+  <div>座標：<span id="gnssCoordText">—</span></div>
+</div>
+
 
 <div id="map"></div>
 
@@ -1955,6 +1968,8 @@ function getSpeed(position) {
 
 function onPosition(position) {
 
+  if (window.updateGnssStatus) window.updateGnssStatus('ok', '已取得定位');
+
   if (position && position.coords) {
     gnssAccuracy = Number.isFinite(position.coords.accuracy) ? position.coords.accuracy : null;
     gnssAltitude = Number.isFinite(position.coords.altitude) ? position.coords.altitude : null;
@@ -1962,6 +1977,7 @@ function onPosition(position) {
     gnssSpeed = Number.isFinite(position.coords.speed) ? position.coords.speed : null;
     gnssHeading = Number.isFinite(position.coords.heading) ? position.coords.heading : null;
     gnssTimestamp = position.timestamp || Date.now();
+    if (window.updateGnssStatus) window.updateGnssStatus('ok', '已取得定位');
   }
 
   if (
@@ -2363,6 +2379,7 @@ function startGPS() {
       onPosition,
 
       function (error) {
+          if (window.updateGnssStatus) window.updateGnssStatus('bad', '取得失敗：' + (error && error.message ? error.message : '無法定位'));
 
         console.error(
           "[GPS] 定位錯誤：",
