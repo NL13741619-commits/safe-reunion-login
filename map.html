@@ -1679,65 +1679,10 @@ function cameraMarkerIcon() {
 }
 
 function drawCameraMarkers() {
-
-  cameraMarkers.forEach(
-    function (m) {
-
-      if (
-        map.hasLayer(m)
-      ) {
-        map.removeLayer(m);
-      }
-
-    }
-  );
-
+  cameraMarkers.forEach(function (m) {
+    if (map.hasLayer(m)) map.removeLayer(m);
+  });
   cameraMarkers = [];
-
-  cameras.forEach(
-    function (camera) {
-
-      const marker =
-        L.marker(
-          [
-            camera.latitude,
-            camera.longitude
-          ],
-          {
-            icon:
-              cameraMarkerIcon(),
-            zIndexOffset:
-              200
-          }
-        );
-
-      marker.bindPopup(
-        "<strong>📷 測速照相</strong><br>" +
-        (
-          camera.address ||
-          "未提供地址"
-        ) +
-        "<br>速限：" +
-        (
-          camera.speedLimit ??
-          "--"
-        ) +
-        " km/h" +
-        "<br>方向：" +
-        (
-          camera.direct ||
-          "--"
-        )
-      );
-
-      marker.addTo(map);
-
-      cameraMarkers.push(
-        marker
-      );
-
-    }
-  );
 }
 
 function findNearestRelevantCamera(
@@ -8453,7 +8398,6 @@ async function loadCameras() {
       return Number.isFinite(c.latitude) && Number.isFinite(c.longitude);
     });
     camerasLoaded = true;
-    drawCameraMarkers();
     console.log("測速資料：", cameras.length);
   } catch (e) {
     console.error("測速資料載入例外：", e);
@@ -8573,8 +8517,7 @@ function onPosition(position) {
   if (!Number.isFinite(lat) || !Number.isFinite(lng)) return;
 
   if (Number.isFinite(accuracy) && accuracy > 300) {
-    subEl.textContent = "GPS 訊號較弱 ±" + Math.round(accuracy) + "m";
-    return;
+    subEl.textContent = "GPS 訊號較弱 ±" + Math.round(accuracy) + "m｜仍持續分享";
   }
 
   // 速度
