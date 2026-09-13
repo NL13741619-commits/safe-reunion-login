@@ -1193,6 +1193,14 @@ let uploadTimer = null;
 let myLat = null;
 let myLng = null;
 
+// GNSS 高精度定位資訊：手機系統會自行融合 GPS／北斗等可用 GNSS。
+let gnssAccuracy = null;
+let gnssAltitude = null;
+let gnssAltitudeAccuracy = null;
+let gnssSpeed = null;
+let gnssHeading = null;
+let gnssTimestamp = null;
+
 let myMarker = null;
 let accuracyCircle = null;
 
@@ -1947,6 +1955,15 @@ function getSpeed(position) {
 
 function onPosition(position) {
 
+  if (position && position.coords) {
+    gnssAccuracy = Number.isFinite(position.coords.accuracy) ? position.coords.accuracy : null;
+    gnssAltitude = Number.isFinite(position.coords.altitude) ? position.coords.altitude : null;
+    gnssAltitudeAccuracy = Number.isFinite(position.coords.altitudeAccuracy) ? position.coords.altitudeAccuracy : null;
+    gnssSpeed = Number.isFinite(position.coords.speed) ? position.coords.speed : null;
+    gnssHeading = Number.isFinite(position.coords.heading) ? position.coords.heading : null;
+    gnssTimestamp = position.timestamp || Date.now();
+  }
+
   if (
     !position ||
     !position.coords
@@ -2361,11 +2378,12 @@ function startGPS() {
         enableHighAccuracy:
           true,
 
+        // 不使用舊快取；要求手機提供最新高精度 GNSS 定位結果。
         maximumAge:
-          1000,
+          0,
 
         timeout:
-          12000
+          20000
       }
     );
 
