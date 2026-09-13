@@ -2,14 +2,14 @@ name: Fix SOS location
 
 on:
   push:
-    branches: [main]
+    branches:
+      - main
 
 permissions:
   contents: write
 
 jobs:
   patch:
-    if: ${{ !contains(github.event.head_commit.message, '[sos-fix]') }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -95,10 +95,7 @@ jobs:
             resolve();
           },
           function (error) {
-            console.warn(
-              "SOS 最新定位失敗：",
-              error
-            );
+            console.warn("SOS 最新定位失敗：", error);
             resolve();
           },
           {
@@ -118,9 +115,7 @@ jobs:
     !Number.isFinite(Number(myLat)) ||
     !Number.isFinite(Number(myLng))
   ) {
-    alert(
-      "目前無法取得手機最新位置，為了避免發送沒有座標的 SOS，請確認已允許定位後再試。"
-    );
+    alert("目前無法取得手機最新位置，為了避免發送沒有座標的 SOS，請確認已允許定位後再試。");
     return;
   }
 
@@ -134,11 +129,12 @@ jobs:
           print('SOS patch applied')
           PY
 
-      - name: Commit and push
+      - name: Commit patch and remove temporary workflow
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add map.html
-          git diff --cached --quiet && exit 0
+          git rm .github/workflows/fix-sos-location.yml
+          git diff --cached --check
           git commit -m "fix: SOS must include fresh location [sos-fix]"
           git push
