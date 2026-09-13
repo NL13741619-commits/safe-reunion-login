@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>安全團聚・AIVAULT Bridge</title>
+<style>
+*{box-sizing:border-box}body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:#f4f7f5;color:#1d2b24;padding:20px}.wrap{max-width:620px;margin:0 auto}.card{background:#fff;border-radius:18px;padding:20px;margin-bottom:16px;box-shadow:0 4px 18px rgba(0,0,0,.08)}h1{font-size:22px;margin:0 0 6px}.sub{color:#6b7771;font-size:13px;margin-bottom:18px}.label{font-weight:700;font-size:15px;margin:0 0 8px}textarea{width:100%;min-height:130px;border:1px solid #d5ddd8;border-radius:12px;padding:13px;font-size:16px;resize:vertical;outline:none}textarea:focus{border-color:#06a94d}.btn{width:100%;border:0;border-radius:12px;padding:14px;margin-top:12px;background:#06a94d;color:#fff;font-size:16px;font-weight:700}.btn:disabled{opacity:.5}.status{font-size:13px;margin-top:10px;min-height:20px;color:#66736d}.reply{white-space:pre-wrap;background:#f1f6f3;border-radius:12px;padding:13px;min-height:70px;font-size:15px}.meta{font-size:11px;color:#87928d;margin-top:8px;word-break:break-all}.ok{color:#087a3b}.err{color:#b42318}.small{font-size:12px;color:#78847e;line-height:1.5}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="card">
+    <h1>🤖 安全團聚・AIVAULT 協作</h1>
+    <div class="sub">Bridge v0.1｜獨立頁面，不修改原本安全團聚功能</div>
+    <div class="label">給 AIVAULT 的訊息</div>
+    <textarea id="message" placeholder="例如：Luna，我已經完成安全團聚端的 Bridge。"></textarea>
+    <button class="btn" id="sendBtn">送出給 AIVAULT</button>
+    <div class="status" id="status"></div>
+  </div>
+
+  <div class="card">
+    <div class="label">AIVAULT 回覆</div>
+    <div class="reply" id="reply">等待 AIVAULT 回覆…</div>
+    <div class="meta" id="replyMeta"></div>
+  </div>
+
+  <div class="card small">
+    <b>Bridge 狀態</b><br>
+    資料透過安全團聚的 Edge Function 傳送；本頁不保存 service_role、密碼、Cookie 或 API Key。僅使用一次建立的短期 Bridge capability token。
+  </div>
+</div>
+<script>
+const BRIDGE_URL='https://perfsipperncvjocznhl.supabase.co/functions/v1/safe-reunion-ai-bridge-v01';
+const STORAGE_KEY='safe_reunion_aivault_bridge_v01';
+let bridge=null;
+let lastRead=null;
+const $=id=>document.getElementById(id);
+function setStatus(text,cls=''){ $('status').textContent=text; $('status').className='status '+cls; }
+async function initBridge(){
+  const saved=sessionStorage.getItem(STORAGE_KEY);
+  if(saved){try{bridge=JSON.parse(saved);if(bridge.expires_at&&Date.now()<Date.parse(bridge.expires_at))return;}catch(e){}}
+  const r=await fetch(BRIDGE_URL,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'init'})});
+  const j=await r.json();
+  if(!j.success)throw new Error(j.error||'Bridge 初始化失敗');
+  bridge={conversation_id:j.conversation_id,bridge_token:j.bridge_token,expires_at:j.expires_at};
+  sessionStorage.setItem(STORAGE_KEY,JSON.stringify(bridge));
+}
+async function sendMessage(){
+  const content=$('message').value.trim();
+  if(!content){setStatus('請先輸入訊息','err');return;}
+  $('sendBtn').disabled=true;setStatus('正在送出…');
+  try{
+    await initBridge();
+    const r=await fetch(BRIDGE_URL,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'send',conversation_id:bridge.conversation_id,bridge_token:bridge.bridge_token,sender:'safety-reunion-agent',receiver:'aivault-luna',content})});
+    const j=await r.json();
+    if(!j.success)throw new Error(j.error||'寫入失敗');
+    setStatus('已送出給 AIVAULT','ok');
+    $('message').value='';
+    if(j.message) $('replyMeta').textContent='message_id：'+j.message.message_id;
+    await readReplies();
+  }catch(e){setStatus(e.message||'Bridge 錯誤','err');}
+  finally{$('sendBtn').disabled=false;}
+}
+async function readReplies(){
+  if(!bridge)return;
+  const p=new URLSearchParams({action:'read',conversation_id:bridge.conversation_id,bridge_token:bridge.bridge_token});
+  if(lastRead)p.set('after',lastRead);
+  const r=await fetch(BRIDGE_URL+'?'+p.toString());
+  const j=await r.json();
+  if(!j.success)return;
+  for(const m of (j.messages||[])){
+    if(m.sender==='aivault-luna' || m.receiver==='safety-reunion-agent'){
+      $('reply').textContent=m.content;
+      $('replyMeta').textContent='message_id：'+m.message_id+'｜'+m.created_at+'｜status：'+m.status;
+    }
+    if(!lastRead || m.created_at>lastRead)lastRead=m.created_at;
+  }
+}
+$('sendBtn').addEventListener('click',sendMessage);
+(async()=>{try{await initBridge();setStatus('Bridge 已連線','ok');await readReplies();}catch(e){setStatus('Bridge 尚未初始化：'+(e.message||e),'err');}})();
+setInterval(()=>readReplies().catch(()=>{}),3000);
+</script>
+</body>
+</html>
