@@ -1640,8 +1640,6 @@ async function loadCameras() {
 
     camerasLoaded = true;
 
-    drawCameraMarkers();
-
     console.log(
       "測速資料：",
       cameras.length
@@ -1679,65 +1677,10 @@ function cameraMarkerIcon() {
 }
 
 function drawCameraMarkers() {
-
-  cameraMarkers.forEach(
-    function (m) {
-
-      if (
-        map.hasLayer(m)
-      ) {
-        map.removeLayer(m);
-      }
-
-    }
-  );
-
+  cameraMarkers.forEach(function (m) {
+    if (map && map.hasLayer(m)) map.removeLayer(m);
+  });
   cameraMarkers = [];
-
-  cameras.forEach(
-    function (camera) {
-
-      const marker =
-        L.marker(
-          [
-            camera.latitude,
-            camera.longitude
-          ],
-          {
-            icon:
-              cameraMarkerIcon(),
-            zIndexOffset:
-              200
-          }
-        );
-
-      marker.bindPopup(
-        "<strong>📷 測速照相</strong><br>" +
-        (
-          camera.address ||
-          "未提供地址"
-        ) +
-        "<br>速限：" +
-        (
-          camera.speedLimit ??
-          "--"
-        ) +
-        " km/h" +
-        "<br>方向：" +
-        (
-          camera.direct ||
-          "--"
-        )
-      );
-
-      marker.addTo(map);
-
-      cameraMarkers.push(
-        marker
-      );
-
-    }
-  );
 }
 
 function findNearestRelevantCamera(
