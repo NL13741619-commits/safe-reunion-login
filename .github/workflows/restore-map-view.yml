@@ -1,0 +1,84 @@
+name: Restore map view
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/restore-map-view.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Restore visible Leaflet map and own location fallback
+        shell: python
+        run: |
+          from pathlib import Path
+          p = Path('map.html')
+          s = p.read_text(encoding='utf-8')
+          marker = '<!-- SAFE-REUNION-MAP-VIEW-FALLBACK -->'
+          if marker not in s:
+              block = r'''<!-- SAFE-REUNION-MAP-VIEW-FALLBACK -->
+<script>
+(function () {
+  function startMapFallback() {
+    var el = document.getElementById('map');
+    if (!el || !window.L) return;
+
+    if (!el.querySelector('.leaflet-container')) {
+      try {
+        var fallbackMap = L.map(el, { zoomControl: true, attributionControl: true }).setView([23.7, 121.0], 7);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+          maxZoom: 19,
+          attribution: '&copy; OpenStreetMap contributors'
+        }).addTo(fallbackMap);
+
+        if (navigator.geolocation) {
+          navigator.geolocation.watchPosition(function (pos) {
+            var lat = pos.coords.latitude;
+            var lng = pos.coords.longitude;
+            if (!Number.isFinite(lat) || !Number.isFinite(lng)) return;
+            if (!window.__safeFallbackMarker) {
+              window.__safeFallbackMarker = L.circleMarker([lat, lng], {
+                radius: 9,
+                weight: 3,
+                fillOpacity: 0.85
+              }).addTo(fallbackMap).bindPopup('我的位置');
+            } else {
+              window.__safeFallbackMarker.setLatLng([lat, lng]);
+            }
+            fallbackMap.setView([lat, lng], Math.max(fallbackMap.getZoom(), 15));
+          }, function () {}, { enableHighAccuracy: true, maximumAge: 1000, timeout: 10000 });
+        }
+        window.__safeReunionFallbackMap = fallbackMap;
+        setTimeout(function () { fallbackMap.invalidateSize(); }, 300);
+      } catch (e) {
+        console.error('安全團聚地圖備援初始化失敗', e);
+      }
+    }
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', startMapFallback, { once: true });
+  } else {
+    startMapFallback();
+  }
+})();
+</script>
+'''
+              s = s.replace('</body>', block + '\n</body>', 1)
+              p.write_text(s, encoding='utf-8')
+
+      - name: Commit and remove workflow
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          rm -f .github/workflows/restore-map-view.yml
+          git add map.html .github/workflows/restore-map-view.yml
+          git commit -m "Restore visible map and own location fallback" || exit 0
+          git push
