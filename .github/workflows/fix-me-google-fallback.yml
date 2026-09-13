@@ -1,137 +1,136 @@
-name: Fix me page Google Maps fallback
+name: Fix SOS location patch
 
 on:
   push:
     branches: [main]
-    paths:
-      - '.github/workflows/fix-me-google-fallback.yml'
 
 permissions:
   contents: write
 
 jobs:
   patch:
+    if: ${{ !contains(github.event.head_commit.message, '[sos-fix]') }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Patch me.html only
+      - name: Patch map.html SOS
         shell: python
         run: |
           from pathlib import Path
-          import re
-          p = Path('me.html')
+          p = Path('map.html')
           s = p.read_text(encoding='utf-8')
-          old = s
 
-          # Address search: if Google JS is unavailable, use Nominatim instead of showing the Google-not-loaded alert.
-          old_block = '''  if(
-    !window.google ||
-    !window.google.maps
-  ){
+          old = '''  /*
+     SOS 前先確認目前位置
+  */
 
-    alert(
-      "Google Maps 尚未載入"
-    );
+  if (
+    myLat == null ||
+    myLng == null
+  ) {
+    try {
+      await new Promise(
+        function (resolve) {
+          if (
+            !navigator.geolocation
+          ) {
+            resolve();
+            return;
+          }
 
-    return;
+          navigator.geolocation.getCurrentPosition(
+            function (position) {
+              onPosition(
+                position
+              );
 
-  }
-
-
-  showToast(
-    "正在搜尋地址…"
-  );'''
-          new_block = '''  if(
-    !window.google ||
-    !window.google.maps
-  ){
-
-    showToast("正在使用備用地址搜尋…");
-
-    fetch(
-      "https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&accept-language=zh-TW&q=" +
-      encodeURIComponent(address)
-    )
-      .then(function(r){ return r.json(); })
-      .then(function(data){
-        if(!data || !data.length){
-          alert("找不到這個地址");
-          return;
+              resolve();
+            },
+            function () {
+              resolve();
+            },
+            {
+              enableHighAccuracy: true,
+              timeout: 8000,
+              maximumAge: 3000
+            }
+          );
         }
-        const lat = Number(data[0].lat);
-        const lng = Number(data[0].lon);
-        saveMapSearchResult(lat, lng, data[0].display_name || address);
-        showToast("已找到地址");
-      })
-      .catch(function(){
-        alert("地址搜尋失敗，請稍後再試");
-      });
-
-    return;
-
+      );
+    } catch (e) {
+      console.warn(
+        "SOS 定位補抓失敗：",
+        e
+      );
+    }
   }
 
+  const result ='''
 
-  showToast(
-    "正在搜尋地址…"
-  );'''
-          if old_block not in s:
-              raise SystemExit('geocodeGoogle target not found')
-          s = s.replace(old_block, new_block, 1)
+          new = '''  /*
+     SOS 發送前強制取得一次最新座標。
+     不使用舊快取，避免成都等跨區域測試時
+     SOS 只有通知卻沒有 lat/lng。
+  */
 
-          # Taiwan navigation: never block the user with a Google-JS-not-loaded alert.
-          old_nav = '''  if(
-    !window.google ||
-    !window.google.maps ||
-    !window.googleMapInstance
-  ){
+  if (!navigator.geolocation) {
+    alert("此裝置不支援定位，無法發送帶位置的 SOS");
+    return;
+  }
 
-    alert(
-      "Google Maps 尚未載入"
+  let sosPositionOK = false;
+
+  try {
+    await new Promise(
+      function (resolve) {
+        navigator.geolocation.getCurrentPosition(
+          function (position) {
+            onPosition(position);
+            sosPositionOK =
+              Number.isFinite(Number(position.coords.latitude)) &&
+              Number.isFinite(Number(position.coords.longitude));
+            resolve();
+          },
+          function (error) {
+            console.warn("SOS 最新定位失敗：", error);
+            resolve();
+          },
+          {
+            enableHighAccuracy: true,
+            timeout: 15000,
+            maximumAge: 0
+          }
+        );
+      }
     );
-
-    return;
-
+  } catch (e) {
+    console.warn("SOS 定位補抓失敗：", e);
   }
 
-
-  showToast(
-    "正在取得目前位置…"
-  );'''
-          new_nav = '''  if(
-    !window.google ||
-    !window.google.maps ||
-    !window.googleMapInstance
-  ){
-
-    const appleUrl =
-      "https://maps.apple.com/?daddr=" +
-      encodeURIComponent(destLat + "," + destLng) +
-      "&dirflg=d";
-
-    window.location.href = appleUrl;
+  if (
+    !sosPositionOK ||
+    !Number.isFinite(Number(myLat)) ||
+    !Number.isFinite(Number(myLng))
+  ) {
+    alert("目前無法取得手機最新位置，為了避免發送沒有座標的 SOS，請確認已允許定位後再試。");
     return;
-
   }
 
+  const result ='''
 
-  showToast(
-    "正在取得目前位置…"
-  );'''
-          if old_nav not in s:
-              raise SystemExit('navigateGoogle target not found')
-          s = s.replace(old_nav, new_nav, 1)
+          if old not in s:
+              raise SystemExit('SOS target block not found; no file changed')
 
+          s = s.replace(old, new, 1)
           p.write_text(s, encoding='utf-8')
-          print('me.html changed:', s != old)
-          Path('.github/workflows/fix-me-google-fallback.yml').unlink()
+          print('SOS patch applied')
 
       - name: Commit
         shell: bash
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add me.html .github/workflows/fix-me-google-fallback.yml
+          git add map.html
           git diff --cached --check
-          git commit -m "Fix me page map fallback"
+          git commit -m "fix: SOS must include fresh location [sos-fix]"
           git push
