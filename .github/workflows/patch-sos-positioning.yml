@@ -1,0 +1,164 @@
+name: Patch SOS positioning
+
+on:
+  push:
+    branches: [fix/sos-positioning]
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: fix/sos-positioning
+          fetch-depth: 0
+      - name: Patch only sendSOS
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path('map.html')
+          s = p.read_text(encoding='utf-8')
+          start = s.find('async function sendSOS() {')
+          if start < 0: raise SystemExit('sendSOS start not found')
+          markers = [
+              'document.getElementById("btnSosTop").onclick =\n  sendSOS;',
+              'document.getElementById("btnSosTop").onclick = sendSOS;'
+          ]
+          end = -1
+          marker = None
+          for m in markers:
+              end = s.find(m, start)
+              if end >= 0:
+                  marker = m
+                  break
+          if end < 0: raise SystemExit('sendSOS end marker not found')
+          end += len(marker)
+          new_block = r'''async function sendSOS() {
+  if (!me) {
+    alert("請先登入");
+    return;
+  }
+
+  if (!confirm("向本群組／活動發送 SOS 求助？")) {
+    return;
+  }
+
+  if (!navigator.geolocation) {
+    const message = "🚨 SOS 無法發送：此裝置不支援定位功能。";
+    showSosBanner(message, 7000);
+    alert(message);
+    return;
+  }
+
+  showSosBanner("📍 正在取得目前位置…", 5000);
+
+  let sosPosition;
+  try {
+    sosPosition = await new Promise(function (resolve, reject) {
+      navigator.geolocation.getCurrentPosition(
+        function (position) { resolve(position); },
+        function (error) { reject(error); },
+        {
+          enableHighAccuracy: true,
+          timeout: 15000,
+          maximumAge: 0
+        }
+      );
+    });
+  } catch (e) {
+    const code = e && e.code;
+    let message = "🚨 SOS 無法發送：尚未取得手機定位。";
+    if (code === 1) message = "🚨 SOS 無法發送：請允許瀏覽器使用定位權限後再試。";
+    else if (code === 2) message = "🚨 SOS 無法發送：目前無法取得手機定位，請稍後再試。";
+    else if (code === 3) message = "🚨 SOS 無法發送：定位逾時，請到訊號較好的地方再試。";
+    console.warn("SOS 定位失敗：", e);
+    showSosBanner(message, 7000);
+    alert(message);
+    return;
+  }
+
+  const lat = Number(sosPosition.coords.latitude);
+  const lng = Number(sosPosition.coords.longitude);
+  if (!Number.isFinite(lat) || !Number.isFinite(lng)) {
+    const message = "🚨 SOS 無法發送：手機沒有回傳有效座標。";
+    showSosBanner(message, 7000);
+    alert(message);
+    return;
+  }
+
+  myLat = lat;
+  myLng = lng;
+
+  try {
+    onPosition(sosPosition);
+  } catch (e) {
+    console.warn("SOS onPosition 處理失敗，仍使用 SOS 專用座標：", e);
+  }
+
+  try {
+    const shareResult = await sb
+      .from("location_shares")
+      .upsert({
+        user_id: me.id,
+        room_id: roomId,
+        lat: lat,
+        lng: lng,
+        display_name: (me.email || "user").split("@")[0],
+        updated_at: new Date().toISOString()
+      }, { onConflict: "user_id,room_id" });
+    if (shareResult.error) console.warn("SOS location_shares 寫入失敗：", shareResult.error);
+  } catch (e) {
+    console.warn("SOS location_shares 備援寫入失敗：", e);
+  }
+
+  const result = await sb
+    .from("sos_events")
+    .insert({
+      room_id: roomId,
+      user_id: me.id,
+      display_name: (me.email || "user").split("@")[0],
+      lat: lat,
+      lng: lng,
+      message: "遇到危險或迷路，需要協助"
+    });
+
+  if (result.error) {
+    alert("SOS 失敗：" + result.error.message);
+    return;
+  }
+
+  L.circleMarker([lat, lng], {
+    radius: 12,
+    color: "#c62828",
+    fillColor: "#c62828",
+    fillOpacity: 0.5
+  })
+    .addTo(map)
+    .bindPopup("🚨 SOS")
+    .openPopup();
+
+  showSosBanner("🚨 SOS 已發送給群組（已附目前定位）", 5000);
+
+  if (navigator.vibrate) {
+    navigator.vibrate([200, 100, 200, 100, 400]);
+  }
+}
+
+document.getElementById("btnSosTop").onclick =
+  sendSOS;'''
+          p.write_text(s[:start] + new_block + s[end:], encoding='utf-8')
+          print('SOS block patched')
+          PY
+      - name: Verify and commit
+        run: |
+          git diff --check
+          git diff -- map.html
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add map.html
+          git rm -f .github/workflows/patch-sos-positioning.yml
+          git commit -m "Fix SOS current location capture"
+          git push origin HEAD:fix/sos-positioning
