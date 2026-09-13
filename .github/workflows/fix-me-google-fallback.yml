@@ -1,0 +1,137 @@
+name: Fix me page Google Maps fallback
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/fix-me-google-fallback.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Patch me.html only
+        shell: python
+        run: |
+          from pathlib import Path
+          import re
+          p = Path('me.html')
+          s = p.read_text(encoding='utf-8')
+          old = s
+
+          # Address search: if Google JS is unavailable, use Nominatim instead of showing the Google-not-loaded alert.
+          old_block = '''  if(
+    !window.google ||
+    !window.google.maps
+  ){
+
+    alert(
+      "Google Maps 尚未載入"
+    );
+
+    return;
+
+  }
+
+
+  showToast(
+    "正在搜尋地址…"
+  );'''
+          new_block = '''  if(
+    !window.google ||
+    !window.google.maps
+  ){
+
+    showToast("正在使用備用地址搜尋…");
+
+    fetch(
+      "https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&accept-language=zh-TW&q=" +
+      encodeURIComponent(address)
+    )
+      .then(function(r){ return r.json(); })
+      .then(function(data){
+        if(!data || !data.length){
+          alert("找不到這個地址");
+          return;
+        }
+        const lat = Number(data[0].lat);
+        const lng = Number(data[0].lon);
+        saveMapSearchResult(lat, lng, data[0].display_name || address);
+        showToast("已找到地址");
+      })
+      .catch(function(){
+        alert("地址搜尋失敗，請稍後再試");
+      });
+
+    return;
+
+  }
+
+
+  showToast(
+    "正在搜尋地址…"
+  );'''
+          if old_block not in s:
+              raise SystemExit('geocodeGoogle target not found')
+          s = s.replace(old_block, new_block, 1)
+
+          # Taiwan navigation: never block the user with a Google-JS-not-loaded alert.
+          old_nav = '''  if(
+    !window.google ||
+    !window.google.maps ||
+    !window.googleMapInstance
+  ){
+
+    alert(
+      "Google Maps 尚未載入"
+    );
+
+    return;
+
+  }
+
+
+  showToast(
+    "正在取得目前位置…"
+  );'''
+          new_nav = '''  if(
+    !window.google ||
+    !window.google.maps ||
+    !window.googleMapInstance
+  ){
+
+    const appleUrl =
+      "https://maps.apple.com/?daddr=" +
+      encodeURIComponent(destLat + "," + destLng) +
+      "&dirflg=d";
+
+    window.location.href = appleUrl;
+    return;
+
+  }
+
+
+  showToast(
+    "正在取得目前位置…"
+  );'''
+          if old_nav not in s:
+              raise SystemExit('navigateGoogle target not found')
+          s = s.replace(old_nav, new_nav, 1)
+
+          p.write_text(s, encoding='utf-8')
+          print('me.html changed:', s != old)
+          Path('.github/workflows/fix-me-google-fallback.yml').unlink()
+
+      - name: Commit
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add me.html .github/workflows/fix-me-google-fallback.yml
+          git diff --cached --check
+          git commit -m "Fix me page map fallback"
+          git push
