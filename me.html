@@ -3208,10 +3208,15 @@ function geocodeGoogle(
     !window.google.maps
   ){
 
-    alert(
-      "Google Maps 尚未載入"
-    );
-
+    showToast("正在使用備用地址搜尋…");
+    fetch("https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&accept-language=zh-TW&q=" + encodeURIComponent(address))
+      .then(function(r){ return r.json(); })
+      .then(function(data){
+        if(!data || !data.length){ alert("找不到這個地址"); return; }
+        saveMapSearchResult(Number(data[0].lat), Number(data[0].lon), data[0].display_name || address);
+        showToast("已找到地址");
+      })
+      .catch(function(){ alert("地址搜尋失敗，請稍後再試"); });
     return;
 
   }
@@ -3992,10 +3997,7 @@ function navigateGoogle(
     !window.googleMapInstance
   ){
 
-    alert(
-      "Google Maps 尚未載入"
-    );
-
+    window.location.href = "https://maps.apple.com/?daddr=" + encodeURIComponent(destLat + "," + destLng) + "&dirflg=d";
     return;
 
   }
