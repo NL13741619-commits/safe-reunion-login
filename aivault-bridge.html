@@ -3,18 +3,22 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-<title>安全團聚・AIVAULT Bridge</title>
+<title>安全團聚・AI 聯盟協作</title>
 <style>
-*{box-sizing:border-box}body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:#f4f7f5;color:#1d2b24;padding:20px}.wrap{max-width:620px;margin:0 auto}.card{background:#fff;border-radius:18px;padding:20px;margin-bottom:16px;box-shadow:0 4px 18px rgba(0,0,0,.08)}h1{font-size:22px;margin:0 0 6px}.sub{color:#6b7771;font-size:13px;margin-bottom:18px}.label{font-weight:700;font-size:15px;margin:0 0 8px}textarea{width:100%;min-height:130px;border:1px solid #d5ddd8;border-radius:12px;padding:13px;font-size:16px;resize:vertical;outline:none}textarea:focus{border-color:#06a94d}.btn{width:100%;border:0;border-radius:12px;padding:14px;margin-top:12px;background:#06a94d;color:#fff;font-size:16px;font-weight:700}.btn:disabled{opacity:.5}.status{font-size:13px;margin-top:10px;min-height:20px;color:#66736d}.reply{white-space:pre-wrap;background:#f1f6f3;border-radius:12px;padding:13px;min-height:70px;font-size:15px}.meta{font-size:11px;color:#87928d;margin-top:8px;word-break:break-all}.ok{color:#087a3b}.err{color:#b42318}.small{font-size:12px;color:#78847e;line-height:1.5}
+*{box-sizing:border-box}body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:#f4f7f5;color:#1d2b24;padding:12px}.wrap{max-width:900px;margin:0 auto}.card{background:#fff;border-radius:18px;padding:16px;margin-bottom:16px;box-shadow:0 4px 18px rgba(0,0,0,.08)}h1{font-size:22px;margin:0 0 6px}.sub{color:#6b7771;font-size:13px;margin-bottom:14px}.label{font-weight:700;font-size:15px;margin:0 0 8px}textarea{width:100%;min-height:130px;border:1px solid #d5ddd8;border-radius:12px;padding:13px;font-size:16px;resize:vertical;outline:none}textarea:focus{border-color:#06a94d}.btn{width:100%;border:0;border-radius:12px;padding:14px;margin-top:12px;background:#06a94d;color:#fff;font-size:16px;font-weight:700}.btn:disabled{opacity:.5}.status{font-size:13px;margin-top:10px;min-height:20px;color:#66736d}.reply{white-space:pre-wrap;background:#f1f6f3;border-radius:12px;padding:13px;min-height:70px;font-size:15px}.meta{font-size:11px;color:#87928d;margin-top:8px;word-break:break-all}.ok{color:#087a3b}.err{color:#b42318}.small{font-size:12px;color:#78847e;line-height:1.5}.pool-frame{width:100%;height:780px;border:1px solid #d5ddd8;border-radius:14px;background:#070b12;display:block}
 </style>
 </head>
 <body>
 <div class="wrap">
   <div class="card">
-    <h1>🤖 安全團聚・AIVAULT 協作</h1>
-    <div class="sub">Bridge v0.1｜獨立頁面，不修改原本安全團聚功能</div>
+    <h1>AI 聯盟協作</h1>
+    <div class="sub">安全團聚端｜嵌入 AIVAULT AI 協作池</div>
+    <iframe class="pool-frame" src="https://m9wmtcb782-arch.github.io/AIVAULT/aivault-agent-collaboration.html" title="AIVAULT AI 協作池" loading="eager" allow="clipboard-read; clipboard-write"></iframe>
+  </div>
+
+  <div class="card">
     <div class="label">給 AIVAULT 的訊息</div>
-    <textarea id="message" placeholder="例如：Luna，我已經完成安全團聚端的 Bridge。"></textarea>
+    <textarea id="message" placeholder="輸入要交給 AIVAULT / Luna 的訊息……"></textarea>
     <button class="btn" id="sendBtn">送出給 AIVAULT</button>
     <div class="status" id="status"></div>
   </div>
