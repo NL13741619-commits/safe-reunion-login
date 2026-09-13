@@ -1,0 +1,49 @@
+name: Show GNSS status
+on:
+  push:
+    paths:
+      - 'GNSS_STATUS_TRIGGER.txt'
+  workflow_dispatch:
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - name: Patch map.html
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('map.html')
+          s=p.read_text(encoding='utf-8')
+          if 'id="gnssStatusPanel"' in s:
+              raise SystemExit('GNSS status already present')
+          css='''\n<style id="gnss-status-style">\n#gnssStatusPanel{position:fixed;top:66px;right:8px;z-index:1850;background:rgba(255,255,255,.96);border-radius:12px;padding:7px 9px;box-shadow:0 2px 10px rgba(0,0,0,.2);font-size:11px;line-height:1.45;min-width:150px;pointer-events:none}\n#gnssStatusPanel .ok{color:#14833b;font-weight:800}\n#gnssStatusPanel .wait{color:#b26a00;font-weight:800}\n#gnssStatusPanel .bad{color:#c62828;font-weight:800}\n</style>\n'''
+          html='''\n<div id="gnssStatusPanel">\n  <div>📡 GNSS 定位：<span id="gnssAcquireStatus" class="wait">等待定位…</span></div>\n  <div>精度：<span id="gnssAccuracyText">—</span></div>\n  <div>座標：<span id="gnssCoordText">—</span></div>\n</div>\n'''
+          js='''\n<script id="gnss-status-script">\n(function(){\n  window.updateGnssStatus = function(state, message){\n    const st=document.getElementById('gnssAcquireStatus');\n    const acc=document.getElementById('gnssAccuracyText');\n    const coord=document.getElementById('gnssCoordText');\n    if(!st) return;\n    st.className = state==='ok' ? 'ok' : (state==='bad' ? 'bad' : 'wait');\n    st.textContent = message || (state==='ok' ? '已取得' : state==='bad' ? '失敗' : '定位中…');\n    if(typeof gnssAccuracy==='number' && Number.isFinite(gnssAccuracy)) acc.textContent=Math.round(gnssAccuracy)+' 公尺';\n    if(typeof myLat==='number' && typeof myLng==='number') coord.textContent=myLat.toFixed(6)+', '+myLng.toFixed(6);\n  };\n})();\n</script>\n'''
+          s=s.replace('</head>',css+'</head>',1)
+          s=s.replace('<body>', '<body>'+html, 1)
+          marker='''function onPosition(position) {\n'''
+          repl='''function onPosition(position) {\n\n  if (window.updateGnssStatus) window.updateGnssStatus('ok', '已取得定位');\n'''
+          if marker not in s: raise SystemExit('onPosition not found')
+          s=s.replace(marker,repl,1)
+          # Update panel after coordinates are assigned inside onPosition as well.
+          needle='''gnssTimestamp = position.timestamp || Date.now();\n  }'''
+          repl2='''gnssTimestamp = position.timestamp || Date.now();\n    if (window.updateGnssStatus) window.updateGnssStatus('ok', '已取得定位');\n  }'''
+          if needle not in s: raise SystemExit('GNSS timestamp block not found')
+          s=s.replace(needle,repl2,1)
+          # Show explicit failure from the existing watchPosition error callback.
+          err='''function (error) {\n'''
+          if err in s:
+              s=s.replace(err, '''function (error) {\n          if (window.updateGnssStatus) window.updateGnssStatus('bad', '取得失敗：' + (error && error.message ? error.message : '無法定位'));\n''', 1)
+          p.write_text(s,encoding='utf-8')
+          PY
+      - name: Commit
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add map.html
+          git diff --cached --quiet && exit 0
+          git commit -m 'Show GNSS acquisition status and accuracy'
+          git push
