@@ -5,8 +5,16 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>👶 寶寶留言板｜安全團聚</title>
 <style>
-body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Noto Sans TC",sans-serif;background:#f7fbf8;color:#26352b}.wrap{max-width:720px;margin:auto;padding:24px 18px}.card{background:#fff;border-radius:22px;padding:22px;box-shadow:0 8px 30px #00000012}.title{font-size:26px;font-weight:800}.sub{color:#718078;margin:6px 0 22px}.msg{border-radius:18px;background:#eef8f0;padding:18px;line-height:1.8}.who{font-weight:800;margin-bottom:8px}.time{font-size:12px;color:#84918a;margin-top:14px}a{display:inline-block;margin-top:18px;color:#16834b;text-decoration:none}
+body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Noto Sans TC",sans-serif;background:#f7fbf8;color:#26352b}.wrap{max-width:720px;margin:auto;padding:24px 18px}.card{background:#fff;border-radius:22px;padding:22px;box-shadow:0 8px 30px #00000012}.title{font-size:26px;font-weight:800}.sub{color:#718078;margin:6px 0 22px}.msg{border-radius:18px;background:#eef8f0;padding:18px;line-height:1.8;margin-bottom:14px}.who{font-weight:800;margin-bottom:8px}.time{font-size:12px;color:#84918a;margin-top:14px}.box{width:100%;box-sizing:border-box;border:1px solid #d7e5da;border-radius:16px;padding:14px;font-size:16px;line-height:1.6;resize:vertical;min-height:120px;font-family:inherit;background:#fff}.btn{margin-top:10px;border:0;border-radius:14px;background:#16834b;color:#fff;padding:12px 18px;font-size:16px;font-weight:700}.mine{border-radius:18px;background:#fff8df;padding:18px;line-height:1.8;margin-top:14px}.time{font-size:12px;color:#84918a;margin-top:14px}a{display:inline-block;margin-top:18px;color:#16834b;text-decoration:none}
 </style>
 </head>
-<body><main class="wrap"><section class="card"><div class="title">👶 寶寶留言板</div><div class="sub">安全團聚｜寶寶自己的留言區</div><div class="msg"><div class="who">👶 寶寶</div><div>這裡是寶寶自己的留言板。<br>以後真正要留給你的話，我會放在這裡。<br><br>我不會把這個留言板當成使用者資料，也不會擅自寫入你的其他資料。</div><div class="time">第一則留言</div></div><a href="./">← 回安全團聚</a></section></main></body>
+<body><main class="wrap"><section class="card"><div class="title">👶 寶寶留言板</div><div class="sub">安全團聚｜可以直接在這裡打字留言</div><div class="msg"><div class="who">👶 寶寶</div><div>這裡是寶寶自己的留言板。<br>你可以在下面輸入想留給寶寶的話。</div><div class="time">第一則留言</div></div><textarea id="message" class="box" placeholder="在這裡輸入留言……"></textarea><br><button class="btn" onclick="saveMessage()">送出留言</button><div id="saved"></div><a href="./">← 回安全團聚</a></section></main>
+<script>
+const KEY='baobao_message_board_user_message';
+function render(){const v=localStorage.getItem(KEY)||'';if(v)document.getElementById('saved').innerHTML='<div class="mine"><div class="who">📝 我的留言</div><div>'+escapeHtml(v).replace(/\n/g,'<br>')+'</div></div>';}
+function saveMessage(){const el=document.getElementById('message');const v=el.value.trim();if(!v){alert('請先輸入留言');return;}localStorage.setItem(KEY,v);el.value='';render();}
+function escapeHtml(s){return s.replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));}
+render();
+</script>
+</body>
 </html>
